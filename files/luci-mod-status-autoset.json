@@ -1,0 +1,10 @@
+{
+	"luci-mod-status-autoset": {
+		"description": "Grant access to autoset",
+		"read": {
+			"ubus": {
+				"luci": [ "getCPUInfo", "getTempInfo" ]
+			}
+		}
+	}
+}
