@@ -1,0 +1,511 @@
+diff --git a/lang/golang/golang-build.sh b/lang/golang/golang-build.sh
+index e0e4ea637..fe8718ee7 100644
+--- a/lang/golang/golang-build.sh
++++ b/lang/golang/golang-build.sh
+@@ -1,4 +1,10 @@
+ #!/bin/sh
++#
++# Copyright (C) 2020, 2022 Jeffery To
++#
++# This is free software, licensed under the GNU General Public License v2.
++# See /LICENSE for more information.
++#
+ 
+ nl="
+ "
+diff --git a/lang/golang/golang-compiler.mk b/lang/golang/golang-compiler.mk
+index c6c836017..144f2a4af 100644
+--- a/lang/golang/golang-compiler.mk
++++ b/lang/golang/golang-compiler.mk
+@@ -1,5 +1,5 @@
+ #
+-# Copyright (C) 2018, 2020 Jeffery To
++# Copyright (C) 2018, 2020-2021, 2023 Jeffery To
+ #
+ # This is free software, licensed under the GNU General Public License v2.
+ # See /LICENSE for more information.
+@@ -27,7 +27,10 @@ define GoCompiler/Default/Make
+ 		cd "$(1)/src" ; \
+ 		$(if $(2),GOROOT_FINAL="$(2)/lib/go-$(3)") \
+ 		$(4) \
+-		$(BASH) make.bash --no-banner ; \
++		$(BASH) make.bash \
++		$(if $(findstring s,$(OPENWRT_VERBOSE)),-v) \
++		--no-banner \
++		; \
+ 	)
+ endef
+ 
+@@ -73,8 +76,10 @@ define GoCompiler/Default/Install/Bin
+ 	$(INSTALL_BIN) -p "$(1)/bin/$(4)"/* "$(2)/lib/go-$(3)/bin/"
+   endif
+ 
+-	$(INSTALL_DIR) "$(2)/lib/go-$(3)/pkg"
+-	$(CP) "$(1)/pkg/$(4)$(if $(5),_$(5))" "$(2)/lib/go-$(3)/pkg/"
++	if [ -d "$(1)/pkg/$(4)$(if $(5),_$(5))" ]; then \
++		$(INSTALL_DIR) "$(2)/lib/go-$(3)/pkg" ; \
++		$(CP) "$(1)/pkg/$(4)$(if $(5),_$(5))" "$(2)/lib/go-$(3)/pkg/" ; \
++	fi
+ 
+ 	$(INSTALL_DIR) "$(2)/lib/go-$(3)/pkg/tool/$(4)"
+ 	$(INSTALL_BIN) -p "$(1)/pkg/tool/$(4)"/* "$(2)/lib/go-$(3)/pkg/tool/$(4)/"
+diff --git a/lang/golang/golang-host-build.mk b/lang/golang/golang-host-build.mk
+index 4b9e29873..7c7551fd1 100644
+--- a/lang/golang/golang-host-build.mk
++++ b/lang/golang/golang-host-build.mk
+@@ -1,5 +1,5 @@
+ #
+-# Copyright (C) 2020 Jeffery To
++# Copyright (C) 2020, 2022 Jeffery To
+ #
+ # This is free software, licensed under the GNU General Public License v2.
+ # See /LICENSE for more information.
+diff --git a/lang/golang/golang-package.mk b/lang/golang/golang-package.mk
+index 20a993726..4f164c4c1 100644
+--- a/lang/golang/golang-package.mk
++++ b/lang/golang/golang-package.mk
+@@ -1,5 +1,5 @@
+ #
+-# Copyright (C) 2018-2020 Jeffery To
++# Copyright (C) 2018-2022 Jeffery To
+ #
+ # This is free software, licensed under the GNU General Public License v2.
+ # See /LICENSE for more information.
+diff --git a/lang/golang/golang-values.mk b/lang/golang/golang-values.mk
+index 2cd656dad..469629b7e 100644
+--- a/lang/golang/golang-values.mk
++++ b/lang/golang/golang-values.mk
+@@ -1,5 +1,5 @@
+ #
+-# Copyright (C) 2018, 2020 Jeffery To
++# Copyright (C) 2018-2023 Jeffery To
+ #
+ # This is free software, licensed under the GNU General Public License v2.
+ # See /LICENSE for more information.
+@@ -65,6 +65,10 @@ unexport \
+   GOPPC64 \
+   GOWASM
+ 
++# Environment variables for use with code coverage:
++unexport \
++  GOCOVERDIR
++
+ # Special-purpose environment variables:
+ unexport \
+   GCCGOTOOLDIR \
+@@ -197,17 +201,16 @@ endif
+ 
+ # Target Go
+ 
+-GO_ARCH_DEPENDS:=@(aarch64||arm||i386||i686||mips||mips64||mips64el||mipsel||powerpc64||x86_64)
++GO_ARCH_DEPENDS:=@(aarch64||arm||i386||i686||mips||mips64||mips64el||mipsel||powerpc64||riscv64||x86_64)
+ 
+ 
+ # ASLR/PIE
+ 
+-# From https://go.dev/src/cmd/internal/sys/supported.go
++# From https://go.dev/src/internal/platform/supported.go
+ GO_PIE_SUPPORTED_OS_ARCH:= \
+   android_386  android_amd64  android_arm  android_arm64 \
+   linux_386    linux_amd64    linux_arm    linux_arm64 \
+-  \
+-  windows_386  windows_amd64  windows_arm \
++  windows_386  windows_amd64  windows_arm  windows_arm64 \
+   \
+   darwin_amd64 darwin_arm64 \
+   ios_amd64    ios_arm64 \
+@@ -219,7 +222,7 @@ GO_PIE_SUPPORTED_OS_ARCH:= \
+   linux_ppc64le linux_riscv64 linux_s390x
+ 
+ # From https://go.dev/src/cmd/go/internal/work/init.go
+-go_pie_install_suffix=$(if $(filter $(1),aix_ppc64 windows_386 windows_amd64 windows_arm),,shared)
++go_pie_install_suffix=$(if $(filter $(1),aix_ppc64 windows_386 windows_amd64 windows_arm windows_arm64),,shared)
+ 
+ ifneq ($(filter $(GO_HOST_OS_ARCH),$(GO_PIE_SUPPORTED_OS_ARCH)),)
+   GO_HOST_PIE_SUPPORTED:=1
+diff --git a/lang/golang/golang/Makefile b/lang/golang/golang/Makefile
+index 44539a129..f167b3f7a 100644
+--- a/lang/golang/golang/Makefile
++++ b/lang/golang/golang/Makefile
+@@ -1,5 +1,5 @@
+ #
+-# Copyright (C) 2018, 2020 Jeffery To
++# Copyright (C) 2018-2023 Jeffery To
+ #
+ # This is free software, licensed under the GNU General Public License v2.
+ # See /LICENSE for more information.
+@@ -7,8 +7,8 @@
+ 
+ include $(TOPDIR)/rules.mk
+ 
+-GO_VERSION_MAJOR_MINOR:=1.19
+-GO_VERSION_PATCH:=8
++GO_VERSION_MAJOR_MINOR:=1.20
++GO_VERSION_PATCH:=7
+ 
+ PKG_NAME:=golang
+ PKG_VERSION:=$(GO_VERSION_MAJOR_MINOR)$(if $(GO_VERSION_PATCH),.$(GO_VERSION_PATCH))
+@@ -20,7 +20,7 @@ GO_SOURCE_URLS:=https://dl.google.com/go/ \
+ 
+ PKG_SOURCE:=go$(PKG_VERSION).src.tar.gz
+ PKG_SOURCE_URL:=$(GO_SOURCE_URLS)
+-PKG_HASH:=1d7a67929dccafeaf8a29e55985bc2b789e0499cb1a17100039f084e3238da2f
++PKG_HASH:=2c5ee9c9ec1e733b0dbbc2bdfed3f62306e51d8172bf38f4f4e542b27520f597
+ 
+ PKG_MAINTAINER:=Jeffery To <jeffery.to@gmail.com>
+ PKG_LICENSE:=BSD-3-Clause
+@@ -63,6 +63,8 @@ HOST_GO_VALID_OS_ARCH:= \
+   aix_ppc64 \
+   js_wasm \
+   \
++  freebsd_riscv64 \
++  \
+   linux_ppc64 linux_ppc64le \
+   linux_mips linux_mipsle linux_mips64 linux_mips64le \
+   linux_loong64 linux_riscv64 linux_s390x \
+@@ -86,6 +88,12 @@ BOOTSTRAP_GO_VALID_OS_ARCH:= \
+                  solaris_amd64 \
+   windows_386    windows_amd64
+ 
++BOOTSTRAP_1_17_SOURCE:=go1.17.13.src.tar.gz
++BOOTSTRAP_1_17_SOURCE_URL:=$(GO_SOURCE_URLS)
++BOOTSTRAP_1_17_HASH:=a1a48b23afb206f95e7bbaa9b898d965f90826f6f1d1fc0c1d784ada0cd300fd
++
++BOOTSTRAP_1_17_BUILD_DIR:=$(HOST_BUILD_DIR)/.go_bootstrap_1.17
++
+ include $(INCLUDE_DIR)/host-build.mk
+ include $(INCLUDE_DIR)/package.mk
+ include ../golang-compiler.mk
+@@ -94,6 +102,7 @@ include ../golang-package.mk
+ PKG_UNPACK:=$(HOST_TAR) -C "$(PKG_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(PKG_SOURCE)"
+ HOST_UNPACK:=$(HOST_TAR) -C "$(HOST_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(PKG_SOURCE)"
+ BOOTSTRAP_UNPACK:=$(HOST_TAR) -C "$(BOOTSTRAP_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(BOOTSTRAP_SOURCE)"
++BOOTSTRAP_1_17_UNPACK:=$(HOST_TAR) -C "$(BOOTSTRAP_1_17_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(BOOTSTRAP_1_17_SOURCE)"
+ 
+ # don't strip ELF executables in test data
+ RSTRIP:=:
+@@ -181,8 +190,7 @@ ifeq ($(BOOTSTRAP_ROOT_DIR),)
+   $(eval $(call Download,golang-bootstrap))
+ 
+   define Bootstrap/Prepare
+-	mkdir -p "$(BOOTSTRAP_BUILD_DIR)"
+-	$(BOOTSTRAP_UNPACK)
++	mkdir -p "$(BOOTSTRAP_BUILD_DIR)" && $(BOOTSTRAP_UNPACK) ;
+   endef
+   Hooks/HostPrepare/Post+=Bootstrap/Prepare
+ 
+@@ -190,6 +198,23 @@ ifeq ($(BOOTSTRAP_ROOT_DIR),)
+ endif
+ 
+ 
++# Bootstrap 1.17
++
++define Download/golang-bootstrap-1.17
++  FILE:=$(BOOTSTRAP_1_17_SOURCE)
++  URL:=$(BOOTSTRAP_1_17_SOURCE_URL)
++  HASH:=$(BOOTSTRAP_1_17_HASH)
++endef
++$(eval $(call Download,golang-bootstrap-1.17))
++
++define Bootstrap-1.17/Prepare
++	mkdir -p "$(BOOTSTRAP_1_17_BUILD_DIR)" && $(BOOTSTRAP_1_17_UNPACK) ;
++endef
++Hooks/HostPrepare/Post+=Bootstrap-1.17/Prepare
++
++$(eval $(call GoCompiler/AddProfile,Bootstrap-1.17,$(BOOTSTRAP_1_17_BUILD_DIR),,bootstrap-1.17,$(GO_HOST_OS_ARCH)))
++
++
+ # Host
+ 
+ ifeq ($(GO_HOST_PIE_SUPPORTED),1)
+@@ -202,23 +227,31 @@ endif
+ $(eval $(call GoCompiler/AddProfile,Host,$(HOST_BUILD_DIR),$(HOST_GO_PREFIX),$(HOST_GO_VERSION_ID),$(GO_HOST_OS_ARCH),$(HOST_GO_INSTALL_SUFFIX)))
+ 
+ HOST_GO_VARS= \
++	GOHOSTARCH="$(GO_HOST_ARCH)" \
+ 	GOCACHE="$(GO_BUILD_CACHE_DIR)" \
+ 	GOENV=off \
+ 	CC="$(HOSTCC_NOCACHE)" \
+ 	CXX="$(HOSTCXX_NOCACHE)"
+ 
+-define Host/Compile
++define Host/Configure
+ 	$(call GoCompiler/Bootstrap/CheckHost,$(BOOTSTRAP_GO_VALID_OS_ARCH))
+ 	$(call GoCompiler/Host/CheckHost,$(HOST_GO_VALID_OS_ARCH))
+ 
+ 	mkdir -p "$(GO_BUILD_CACHE_DIR)"
++endef
+ 
++define Host/Compile
+ 	$(call GoCompiler/Bootstrap/Make, \
+ 		$(HOST_GO_VARS) \
+ 	)
+ 
+-	$(call GoCompiler/Host/Make, \
++	$(call GoCompiler/Bootstrap-1.17/Make, \
+ 		GOROOT_BOOTSTRAP="$(BOOTSTRAP_ROOT_DIR)" \
++		$(HOST_GO_VARS) \
++	)
++
++	$(call GoCompiler/Host/Make, \
++		GOROOT_BOOTSTRAP="$(BOOTSTRAP_1_17_BUILD_DIR)" \
+ 		$(if $(HOST_GO_ENABLE_PIE),GO_LDFLAGS="-buildmode pie") \
+ 		$(HOST_GO_VARS) \
+ 	)
+@@ -271,6 +304,7 @@ PKG_GO_ZBOOTSTRAP_MODS:= \
+ PKG_GO_ZBOOTSTRAP_PATH:=$(PKG_BUILD_DIR)/src/internal/buildcfg/zbootstrap.go
+ 
+ PKG_GO_VARS= \
++	GOHOSTARCH="$(GO_HOST_ARCH)" \
+ 	GOCACHE="$(GO_BUILD_CACHE_DIR)" \
+ 	GOENV=off \
+ 	GO_GCC_HELPER_PATH="$$$$PATH" \
+@@ -299,9 +333,11 @@ PKG_GO_INSTALL_ARGS= \
+ 	$(if $(PKG_GO_ASMFLAGS),-asmflags "all=$(PKG_GO_ASMFLAGS)") \
+ 	$(if $(filter $(GO_PKG_ENABLE_PIE),1),-buildmode pie)
+ 
+-define Build/Compile
++define Build/Configure
+ 	mkdir -p "$(GO_BUILD_CACHE_DIR)"
++endef
+ 
++define Build/Compile
+ 	@echo "Building target Go first stage"
+ 
+ 	$(call GoCompiler/Package/Make, \
+diff --git a/lang/golang/golang/files/go-gcc-helper b/lang/golang/golang/files/go-gcc-helper
+index b396e302c..b21457b55 100644
+--- a/lang/golang/golang/files/go-gcc-helper
++++ b/lang/golang/golang/files/go-gcc-helper
+@@ -1,4 +1,10 @@
+ #!/bin/sh
++#
++# Copyright (C) 2018, 2020 Jeffery To
++#
++# This is free software, licensed under the GNU General Public License v2.
++# See /LICENSE for more information.
++#
+ 
+ me=go-gcc-helper
+ name="${0##*/}"
+diff --git a/lang/golang/golang/patches/001-cmd-link-use-gold-on-ARM-ARM64-only-if-gold-is-available.patch b/lang/golang/golang/patches/001-cmd-link-use-gold-on-ARM-ARM64-only-if-gold-is-available.patch
+index 57d108c1b..aecf5309f 100644
+--- a/lang/golang/golang/patches/001-cmd-link-use-gold-on-ARM-ARM64-only-if-gold-is-available.patch
++++ b/lang/golang/golang/patches/001-cmd-link-use-gold-on-ARM-ARM64-only-if-gold-is-available.patch
+@@ -13,7 +13,7 @@ Fixes #22040.
+ 
+ --- a/src/cmd/link/internal/ld/lib.go
+ +++ b/src/cmd/link/internal/ld/lib.go
+-@@ -1515,25 +1515,20 @@ func (ctxt *Link) hostlink() {
++@@ -1548,25 +1548,20 @@ func (ctxt *Link) hostlink() {
+  		}
+  
+  		if ctxt.Arch.InFamily(sys.ARM, sys.ARM64) && buildcfg.GOOS == "linux" {
+diff --git a/utils/containerd/Makefile b/utils/containerd/Makefile
+index da49541cf..78aee46fa 100644
+--- a/utils/containerd/Makefile
++++ b/utils/containerd/Makefile
+@@ -1,21 +1,21 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=containerd
+-PKG_VERSION:=1.6.13
++PKG_VERSION:=1.7.1
+ PKG_RELEASE:=1
+ PKG_LICENSE:=Apache-2.0
+ PKG_LICENSE_FILES:=LICENSE
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://codeload.github.com/containerd/containerd/tar.gz/v${PKG_VERSION}?
+-PKG_HASH:=d6d022385c4dadd81edf4fb5ad4b084dcfc3d6d921ed433bb3aa0d2e0bfbb19d
++PKG_HASH:=fd844af82afda7242d8eba5e0086c5a0d54ddc3041c1bbdd4d3c62bfee844e3a
+ 
+ PKG_MAINTAINER:=Gerard Ryan <G.M0N3Y.2503@gmail.com>
+ 
+ PKG_BUILD_DEPENDS:=golang/host
+ PKG_BUILD_PARALLEL:=1
+ PKG_INSTALL:=1
+-PKG_USE_MIPS16:=0
++PKG_BUILD_FLAGS:=no-mips16
+ 
+ GO_PKG:=github.com/containerd/containerd
+ 
+diff --git a/utils/docker-compose/Makefile b/utils/docker-compose/Makefile
+index 71d9800e6..fa7d7838e 100644
+--- a/utils/docker-compose/Makefile
++++ b/utils/docker-compose/Makefile
+@@ -1,20 +1,20 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=compose
+-PKG_VERSION:=2.15.1
++PKG_VERSION:=2.18.1
+ PKG_RELEASE:=1
+ PKG_LICENSE:=Apache-2.0
+ PKG_LICENSE_FILES:=LICENSE
+ 
+ PKG_SOURCE:=v$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://codeload.github.com/docker/compose/tar.gz/v${PKG_VERSION}?
+-PKG_HASH:=8ace5441826c6f07f5aa12c1864f73d30a362703492d9ed4b2e2314d3b353b1b
++PKG_HASH:=192c47c177d9bfd8492ed0c49214af0c740586da6db0b7e9c9a07da37c9dc722
+ 
+ PKG_MAINTAINER:=Javier Marcet <javier@marcet.info>
+ 
+ PKG_BUILD_DEPENDS:=golang/host
+ PKG_BUILD_PARALLEL:=1
+-PKG_USE_MIPS16:=0
++PKG_BUILD_FLAGS:=no-mips16
+ 
+ GO_PKG:=github.com/docker/compose/v2
+ GO_PKG_BUILD_PKG:=github.com/docker/compose/v2/cmd
+diff --git a/utils/docker/Makefile b/utils/docker/Makefile
+index b21b65081..fda077e52 100644
+--- a/utils/docker/Makefile
++++ b/utils/docker/Makefile
+@@ -1,7 +1,7 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=docker
+-PKG_VERSION:=20.10.22
++PKG_VERSION:=24.0.5
+ PKG_RELEASE:=1
+ PKG_LICENSE:=Apache-2.0
+ PKG_LICENSE_FILES:=LICENSE
+@@ -10,14 +10,14 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_GIT_URL:=github.com/docker/cli
+ PKG_GIT_REF:=v$(PKG_VERSION)
+ PKG_SOURCE_URL:=https://codeload.$(PKG_GIT_URL)/tar.gz/$(PKG_GIT_REF)?
+-PKG_HASH:=84d71ac2b508b54e8df9f3ea425aa33e254fd3645fe9bad5619b98eaffb33408
+-PKG_GIT_SHORT_COMMIT:=3a2c30b # SHA1 used within the docker executables
++PKG_HASH:=fa32b5f3c2f85fba9ef6e1b5099a4b608fa20af45ba71b3da2194e8728037eec
++PKG_GIT_SHORT_COMMIT:=ced0996 # SHA1 used within the docker executables
+ 
+ PKG_MAINTAINER:=Gerard Ryan <G.M0N3Y.2503@gmail.com>
+ 
+ PKG_BUILD_DEPENDS:=golang/host
+ PKG_BUILD_PARALLEL:=1
+-PKG_USE_MIPS16:=0
++PKG_BUILD_FLAGS:=no-mips16
+ 
+ GO_PKG:=$(PKG_GIT_URL)
+ 
+@@ -40,6 +40,7 @@ GO_PKG_BUILD_VARS += GO111MODULE=auto
+ TAR_OPTIONS:=--strip-components 1 $(TAR_OPTIONS)
+ TAR_CMD=$(HOST_TAR) -C $(1) $(TAR_OPTIONS)
+ TARGET_LDFLAGS += $(if $(CONFIG_USE_GLIBC),-lc -lgcc_eh)
++GO_PKG_INSTALL_EXTRA:=cli/compose/schema/data
+ 
+ define Build/Prepare
+ 	$(Build/Prepare/Default)
+diff --git a/utils/dockerd/Makefile b/utils/dockerd/Makefile
+index ba3f30143..fb0929903 100644
+--- a/utils/dockerd/Makefile
++++ b/utils/dockerd/Makefile
+@@ -1,7 +1,7 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=dockerd
+-PKG_VERSION:=20.10.22
++PKG_VERSION:=24.0.5
+ PKG_RELEASE:=1
+ PKG_LICENSE:=Apache-2.0
+ PKG_LICENSE_FILES:=LICENSE
+@@ -10,14 +10,14 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_GIT_URL:=github.com/moby/moby
+ PKG_GIT_REF:=v$(PKG_VERSION)
+ PKG_SOURCE_URL:=https://codeload.$(PKG_GIT_URL)/tar.gz/$(PKG_GIT_REF)?
+-PKG_HASH:=ee0e2168e27ec87f1b0650e86af5d3e167a07fd2ff8c1ce3bb588f0b4f9a4658
+-PKG_GIT_SHORT_COMMIT:=42c8b31 # SHA1 used within the docker executables
++PKG_HASH:=837d7d667fb64508bf6e53cb5915b4b5ef356599294ffdd5ca8678168230cb38
++PKG_GIT_SHORT_COMMIT:=a61e2b4 # SHA1 used within the docker executables
+ 
+ PKG_MAINTAINER:=Gerard Ryan <G.M0N3Y.2503@gmail.com>
+ 
+ PKG_BUILD_DEPENDS:=golang/host
+ PKG_BUILD_PARALLEL:=1
+-PKG_USE_MIPS16:=0
++PKG_BUILD_FLAGS:=no-mips16
+ 
+ GO_PKG:=github.com/docker/docker
+ 
+@@ -45,9 +45,9 @@ define Package/dockerd
+     +kmod-ipt-physdev \
+     +kmod-nf-ipvs \
+     +kmod-veth \
+-    +libnetwork \
+     +tini \
+-    +uci-firewall
++    +uci-firewall \
++    @!(mips||mipsel)
+   USERID:=docker:docker
+   MENU:=1
+ endef
+@@ -96,7 +96,6 @@ define Build/Prepare
+ 
+ 	# Verify dependencies are the vendored version
+ 	$(call EnsureVendoredVersion,../containerd/Makefile,containerd.installer)
+-	$(call EnsureVendoredCommit,../libnetwork/Makefile,proxy.installer)
+ 	$(call EnsureVendoredVersion,../runc/Makefile,runc.installer)
+ 	$(call EnsureVendoredVersion,../tini/Makefile,tini.installer)
+ 
+@@ -142,6 +141,7 @@ endef
+ define Package/dockerd/install
+ 	$(INSTALL_DIR) $(1)/usr/bin/
+ 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bundles/binary-daemon/dockerd $(1)/usr/bin/
++	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bundles/binary-daemon/docker-proxy $(1)/usr/bin/
+ 
+ 	$(INSTALL_DIR) $(1)/opt/docker/
+ 
+diff --git a/utils/dockerd/patches/001-libdevmapper_name_fix.patch b/utils/dockerd/patches/001-libdevmapper_name_fix.patch
+index b9b0a6b8c..8070090d4 100644
+--- a/utils/dockerd/patches/001-libdevmapper_name_fix.patch
++++ b/utils/dockerd/patches/001-libdevmapper_name_fix.patch
+@@ -1,11 +1,11 @@
+ --- a/hack/make.sh
+ +++ b/hack/make.sh
+-@@ -95,7 +95,7 @@ fi
++@@ -98,7 +98,7 @@ fi
++ # functionality. We favour libdm_dlsym_deferred_remove over
++ # libdm_no_deferred_remove in dynamic cases because the binary could be shipped
+  # with a newer libdevmapper than the one it was built with.
+- if
+- 	command -v gcc &> /dev/null \
+--		&& ! (echo -e '#include <libdevmapper.h>\nint main() { dm_task_deferred_remove(NULL); }' | gcc -xc - -o /dev/null $(pkg-config --libs devmapper) &> /dev/null) \
+-+		&& ! (echo -e '#include <libdevmapper.h>\nint main() { dm_task_deferred_remove(NULL); }' | gcc -xc - -o /dev/null $(pkg-config --libs libdevmapper) &> /dev/null) \
+- 		;
+- then
++-if command -v gcc &> /dev/null && ! (echo -e '#include <libdevmapper.h>\nint main() { dm_task_deferred_remove(NULL); }' | gcc -xc - -o /dev/null $(${PKG_CONFIG} --libs devmapper 2> /dev/null) &> /dev/null); then
+++if command -v gcc &> /dev/null && ! (echo -e '#include <libdevmapper.h>\nint main() { dm_task_deferred_remove(NULL); }' | gcc -xc - -o /dev/null $(${PKG_CONFIG} --libs libdevmapper 2> /dev/null) &> /dev/null); then
+  	add_buildtag libdm dlsym_deferred_remove
++ fi
++ 
+diff --git a/utils/runc/Makefile b/utils/runc/Makefile
+index 568f26ef3..265a81974 100644
+--- a/utils/runc/Makefile
++++ b/utils/runc/Makefile
+@@ -1,21 +1,21 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=runc
+-PKG_VERSION:=1.1.4
+-PKG_RELEASE:=$(AUTORELEASE)
++PKG_VERSION:=1.1.8
++PKG_RELEASE:=1
+ PKG_LICENSE:=Apache-2.0
+ PKG_LICENSE_FILES:=LICENSE
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://codeload.github.com/opencontainers/runc/tar.gz/v${PKG_VERSION}?
+-PKG_HASH:=4f02077432642eebd768fc857318ae7929290b3a3511eb1be338005e360cfa34
++PKG_HASH:=9076322ded5c7ae30471ea8a6a43e7c62fb357957592f5cb668abc2f7cb5e4bb
+ 
+ PKG_MAINTAINER:=Gerard Ryan <G.M0N3Y.2503@gmail.com>
+ 
+ PKG_BUILD_DEPENDS:=golang/host
+ PKG_BUILD_PARALLEL:=1
+ PKG_INSTALL:=1
+-PKG_USE_MIPS16:=0
++PKG_BUILD_FLAGS:=no-mips16
+ 
+ GO_PKG:=github.com/opencontainers/runc
+ 

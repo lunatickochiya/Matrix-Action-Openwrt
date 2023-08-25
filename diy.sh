@@ -10,13 +10,24 @@
 sleep 3
 rm -rf package/lean/luci-app-ssr-plus package/lean/default-settings
 sleep 3
-
+function patch_openwrt() {
         for i in $( ls mypatch ); do
             echo Applying mypatch $i
             patch -p1 < mypatch/$i
         done
+        }
+function patch_package() {
+        for packagepatch in $( ls feeds/packages/my-package-patch ); do
+            cd feeds/packages/
+            echo Applying my-package-patch $packagepatch
+            patch -p1 < my-package-patch/$packagepatch
+        done
+        }
+patch_openwrt
+patch_package
 sleep 6
 
+cd ../..
 # add luci
 
 cat <<EOF >>.config
@@ -68,6 +79,8 @@ CONFIG_PACKAGE_luci-app-filetransfer=y
 CONFIG_PACKAGE_luci-app-fileassistant=y
 CONFIG_PACKAGE_luci-app-modechange=y
 CONFIG_PACKAGE_luci-app-mosdns=y
+CONFIG_PACKAGE_luci-app-kodexplorer=y
+CONFIG_PACKAGE_php8-mod-ftp=y
 CONFIG_PACKAGE_luci-app-netwizard=y
 CONFIG_PACKAGE_luci-app-nvr=y
 CONFIG_PACKAGE_luci-app-openclash=y
