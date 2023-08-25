@@ -24,8 +24,8 @@ on:
     types: [started]
 
 env:
-  REPO_URL: https://github.com/lunatickochiya/lunatic-lede
-  REPO_BRANCH: lede-17.01-lienol
+  REPO_URL: https://github.com/lunatickochiya/openwrt-22.03-s805
+  REPO_BRANCH: openwrt-22.03.5
   DIY_P1_SH: diy.sh
   DIY_P2_SH: after_build.sh
   UPLOAD_BIN_DIR: false
@@ -39,18 +39,14 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-18.04
+    runs-on: Ubuntu-22.04
     
     name: Build OpenWrt ${{matrix.target}}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - target: 7620
-          - target: 7620-tkv
-          - target: 7621
-          - target: ar71xx
-          - target: at
+          - target: meson
 
     steps:
     - name: Checkout
@@ -60,9 +56,13 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq update
-        sudo -E apt-get -qq install $(curl -fsSL git.io/depends-ubuntu-1804)
+        sudo -E apt-get -qq install build-essential clang flex g++ gawk gcc-multilib gettext \
+        git libncurses5-dev libssl-dev python3-distutils python3-pyelftools python3-setuptools \
+        libpython3-dev rsync unzip zlib1g-dev swig aria2 jq subversion qemu-utils ccache rename \
+        libelf-dev device-tree-compiler libgnutls28-dev coccinelle libgmp3-dev libmpc-dev
+        sudo -E apt-get -qq purge azure-cli ghc* zulu* llvm* firefox powershell openjdk* dotnet* google* mysql* php* android*
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
@@ -100,11 +100,14 @@ jobs:
     - name: Load custom configuration 
       if: steps.feeds.outputs.status == 'success'
       run: |
+        chmod +x $DIY_P1_SH $DIY_P2_SH add-machine.sh refineconfig.sh
+        $GITHUB_WORKSPACE/add-machine.sh
         [ -e files ] && mv files openwrt/files
         [ -e arch-configs/${{matrix.target}}.config ] && mv arch-configs/${{matrix.target}}.config openwrt/.config
-        chmod +x $DIY_P1_SH $DIY_P2_SH
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
+        make defconfig
+        $GITHUB_WORKSPACE/refineconfig.sh
 
     - name: SSH connection to Actions
       uses: P3TERX/ssh2actions@v1.0.0
@@ -117,7 +120,6 @@ jobs:
       id: package
       run: |
         cd openwrt
-        make defconfig
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
