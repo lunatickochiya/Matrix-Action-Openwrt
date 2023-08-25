@@ -20,6 +20,8 @@ sleep 6
 # add luci
 
 cat <<EOF >>.config
+CONFIG_TARGET_KERNEL_PARTSIZE=16
+CONFIG_TARGET_ROOTFS_PARTSIZE=512
 CONFIG_PACKAGE_luci-app-alist=y
 CONFIG_PACKAGE_luci-app-argon-config=y
 CONFIG_PACKAGE_luci-app-aria2=y
@@ -41,6 +43,27 @@ CONFIG_PACKAGE_luci-app-diskman_INCLUDE_mdadm=y
 CONFIG_PACKAGE_luci-app-diskman_INCLUDE_kmod_md_raid456=y
 CONFIG_PACKAGE_luci-app-diskman_INCLUDE_kmod_md_linear=y
 CONFIG_PACKAGE_luci-app-dockerman=y
+CONFIG_PACKAGE_dockerd=y
+CONFIG_DOCKER_CHECK_CONFIG=y
+CONFIG_DOCKER_CGROUP_OPTIONS=y
+CONFIG_DOCKER_OPTIONAL_FEATURES=y
+
+#
+# Network
+#
+CONFIG_DOCKER_NET_OVERLAY=y
+CONFIG_DOCKER_NET_ENCRYPT=y
+CONFIG_DOCKER_NET_MACVLAN=y
+CONFIG_DOCKER_NET_TFTP=y
+# end of Network
+
+#
+# Storage
+#
+CONFIG_DOCKER_STO_DEVMAPPER=y
+CONFIG_DOCKER_STO_EXT4=y
+CONFIG_DOCKER_STO_BTRFS=y
+# end of Storage
 CONFIG_PACKAGE_luci-app-filetransfer=y
 CONFIG_PACKAGE_luci-app-fileassistant=y
 CONFIG_PACKAGE_luci-app-modechange=y

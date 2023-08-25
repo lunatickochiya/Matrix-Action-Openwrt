@@ -12,7 +12,7 @@ mkdir ipks
 mkdir sdk
 rm -rf build_dir/target* build_dir/toolchain* staging_dir/target* staging_dir/toolchain*
 cp -u -f bin/targets/*/*/packages/* kernelipks/
-cp -u -f bin/targets/*/*/*-*-squashfs-sysupgrade.bin out/
+cp -u -f bin/targets/*/*/* out/
 cp -u -f -r bin/packages/* ipks/
 zip -qq -r kernelipks.zip kernelipks
 zip -qq -r out.zip out
