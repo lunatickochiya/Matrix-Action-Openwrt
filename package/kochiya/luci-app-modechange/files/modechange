@@ -1,0 +1,3 @@
+config router
+config ap
+config networkrestart

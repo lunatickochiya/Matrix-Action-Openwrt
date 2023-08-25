@@ -1,0 +1,15 @@
+
+config cifs
+	option workgroup 'WORKGROUP'
+	option iocharset 'utf8'
+	option delay '5'
+	option mountarea '/mnt/dw33d'
+	option enabled '0'
+
+config natshare
+	option guest '1'
+	option agm 'rw'
+	option natpath '//192.168.17.1/dw33d'
+	option server 'Lede'
+	option name 'Lede'
+

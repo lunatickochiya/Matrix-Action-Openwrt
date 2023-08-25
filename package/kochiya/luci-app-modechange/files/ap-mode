@@ -1,0 +1,23 @@
+#!/bin/sh /etc/rc.common
+
+start()
+{
+uci set network.wan=interface
+uci set network.wan.proto='dhcp'
+uci set network.wan.ifname='eth0'
+uci set network.lan._orig_ifname='eth0'
+uci set network.lan._orig_bridge='false'
+uci delete network.lan.ifname
+uci delete network.lan.type
+uci commit
+}
+
+stop()
+{
+uci delete network.wan
+uci delete network.lan._orig_ifname
+uci delete network.lan._orig_bridge
+uci set network.lan.ifname='eth0'
+uci set network.lan.type='bridge'
+uci commit
+}
