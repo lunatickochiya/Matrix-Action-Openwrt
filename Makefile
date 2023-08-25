@@ -9,7 +9,7 @@ include $(INCLUDE_DIR)/package.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=4.0
-PKG_RELEASE:=0
+PKG_RELEASE:=1
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -30,7 +30,7 @@ define Package/autoset/default
   CATEGORY:=LuCI
   TITLE:=Support Packages for router
   PKGARCH:=all
-  MAINTAINER:=lunatickochiya<125438787@qq.com>
+  MAINTAINER:=lunatickochiya <125438787@qq.com>
 endef
 
 define Package/autoset
@@ -73,15 +73,19 @@ define Package/auto-resize-rootfs-script
   HIDDEN:=1
 endef
 
+define Package/drop-fw4-nftables
+  $(Package/autoset/default)
+  TITLE:=drop fw4 nftables (null package)
+  DEPENDS:=autoset
+  CONFLICTS:=firewall4 kmod-nft-offload nftables
+  HIDDEN:=1
+endef
+
 define Package/luci-temperature-script
   $(Package/autoset/default)
   TITLE:=luci temperature script
   DEPENDS:=autoset
   HIDDEN:=1
-endef
-
-define Package/autoset-oneport/description
-	Support Packages for oneport router.
 endef
 
 define Package/$(PKG_NAME)/config
@@ -99,17 +103,19 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_RESIZEFS
 	select PACKAGE_mkf2fs
 	select PACKAGE_mount-utils
 	select PACKAGE_auto-resize-rootfs-script
+	select PACKAGE_kmod-loop
 	select @PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
 	depends on PACKAGE_$(PKG_NAME)
 	default y if aarch64||arm||i386||x86_64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_FW3_IPTABLE_LEGACY
-	bool "ADD FW3 IPTABLE LEGACY"
+	bool "REVERT TO FW3 IPTABLE LEGACY"
 	select PACKAGE_iptables
 	select PACKAGE_iptables-zz-legacy
 	select PACKAGE_ip6tables
 	select PACKAGE_ip6tables-zz-legacy
 	select PACKAGE_firewall
+	select PACKAGE_drop-fw4-nftables
 	depends on PACKAGE_$(PKG_NAME)
 	default n
 
@@ -125,7 +131,6 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_temperature
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
 	bool "Kernel filesystem"
-	select PACKAGE_kmod-loop
 	select PACKAGE_kmod-fs-ext4
 	select PACKAGE_kmod-fs-btrfs
 	select PACKAGE_kmod-fs-exfat
@@ -146,7 +151,9 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_usb_storage
 
 choice
 	prompt "Select UCI Script"
-	default PACKAGE_$(PKG_NAME)_INCLUDE_uci
+	depends on PACKAGE_$(PKG_NAME)
+	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_meson if TARGET_meson=y
+	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_rockchip if TARGET_rockchip=y
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci
 	bool "Common UCI"
@@ -225,3 +232,5 @@ $(eval $(call BuildPackage,autoset-uci-oneport))
 $(eval $(call BuildPackage,autoset-uci-rockchip))
 $(eval $(call BuildPackage,autoset-uci-meson))
 $(eval $(call BuildPackage,auto-resize-rootfs-script))
+$(eval $(call BuildPackage,drop-fw4-nftables))
+
