@@ -1,5 +1,6 @@
 name: Build Istore
 
+# Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
   contents: write
 
@@ -207,7 +208,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件发布
-      uses: softprops/action-gh-release@master
+      uses: softprops/action-gh-release@v1
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

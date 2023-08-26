@@ -8,6 +8,7 @@
 
 name: Build OpenWrt Arch
 
+# Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
   contents: write
 
@@ -45,7 +46,7 @@ env:
 jobs:
   build:
     runs-on: Ubuntu-22.04
-    
+
     name: Build OpenWrt ${{matrix.target}}
     strategy:
       fail-fast: false
@@ -252,7 +253,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to release
-      uses: softprops/action-gh-release@master
+      uses: softprops/action-gh-release@v1
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
