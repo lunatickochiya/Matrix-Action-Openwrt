@@ -12,7 +12,8 @@ on:
     branches:
       - master
     paths:
-      - 'startcompileistore'
+      - 'startcompile-istore'
+      - 'startcompileall'
     
 env:
   UPLOAD_BIN_DIR: true
@@ -145,10 +146,12 @@ jobs:
 
     - name: 上传bin目录
       uses: actions/upload-artifact@main
+      continue-on-error: true
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
-        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: openwrt/bin
+        name: ${{ env.VERSION }}_${{matrix.target}}
+        path: |
+          openwrt/bin/targets/
 
     - name: 整理文件
       id: organize
@@ -209,7 +212,7 @@ jobs:
         files: "${{ env.FIRMWARE }}/*"
         name: ${{ env.date2 }} ${{matrix.target}}
         tag_name: ${{ env.date }}_${{matrix.target}}
-        body_path: version.txt
+        body_path: release.txt
 
     - name: 删除工作流
       uses: Mattraks/delete-workflow-runs@main

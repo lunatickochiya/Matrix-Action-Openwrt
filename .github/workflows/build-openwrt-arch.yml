@@ -10,13 +10,15 @@ name: Build OpenWrt Arch
 
 on:
   repository_dispatch:
+  workflow_dispatch:
   release:
     types: [published]
   push:
     branches:
       - master
     paths:
-      - 'startcompileall-arch'
+      - 'startcompile-arch'
+      - 'startcompileall'
 #  schedule:
 #    - cron: 0 8 * * 5
   watch:
@@ -179,22 +181,29 @@ jobs:
 
     - name: Upload bin directory
       uses: actions/upload-artifact@main
+      continue-on-error: true
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
-        name: OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: openwrt/bin
+        name: ${{ env.VERSION }}_${{matrix.target}}
+        path: |
+          openwrt/bin/targets/
 
 
     - name: Organize files
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        cp openwrt/.config  ./openwrt/bin/targets/*/*/${{matrix.target}}.config
-        cp openwrt/compile.log  ./openwrt/bin/targets/*/*/${{matrix.target}}.compile.log
-        cd openwrt/bin/targets/*/*
-        rm -rf packages
+        mkdir firmware
+        mv -f openwrt/bin/targets/*/*/{*combined*,*sysupgrade*,*ext4*} ./firmware/ 2>/dev/null || true
+        cp openwrt/.config  ./firmware/${{matrix.target}}.config
+        cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
+        cd firmware
+        echo "v${{ env.date2 }}" > version.txt
+        md5=$((md5sum *squashfs-sysupgrade* || md5sum *squashfs-combined-efi* || *ext4*) | awk '{print $1}') 2>/dev/null
+        echo $md5 >> version.txt
+        echo ${{matrix.target}} >> version.txt
+        rm -rf sha256sums
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "status=success" >> $GITHUB_OUTPUT
 
     - name: After Build
       id: afb

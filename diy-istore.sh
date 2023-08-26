@@ -9,8 +9,8 @@
 #=================================================
 sleep 3
 rm -rf package/lean/luci-app-ssr-plus package/lean/default-settings
-svn co https://github.com/lunatickochiya/openwrt-22.03-s805/trunk/target/linux/meson target/linux/meson
-sleep 3
+svn export https://github.com/lunatickochiya/openwrt-22.03-s805/trunk/target/linux/meson target/linux/meson
+sleep 20
 function patch_openwrt() {
         for i in $( ls mypatch ); do
             echo Applying mypatch $i
