@@ -123,10 +123,12 @@ jobs:
         find dl -size -1024c -exec rm -f {} \;
 
     - name: 缓存
-      uses: klever1988/cachewrtbuild@main
+      uses: stupidloud/cachewrtbuild@main
       if: env.USE_Cache == 'true' && !cancelled()
       with:
         ccache: 'true'
+        mixkey: ${{ matrix.target }}
+        clean: ${{ contains(github.event.action, 'nocache') }}
         prefix: ${{ github.workspace }}/openwrt
 
     - name: 编译固件
