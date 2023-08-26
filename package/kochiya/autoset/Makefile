@@ -13,7 +13,6 @@ PKG_RELEASE:=1
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
-PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_RESIZEFS \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_FW3_IPTABLE_LEGACY \
@@ -36,6 +35,9 @@ endef
 define Package/autoset
   $(Package/autoset/default)
   TITLE:=Support Packages for router default
+endef
+
+define Build/Compile
 endef
 
 define Package/autoset-uci
@@ -73,13 +75,13 @@ define Package/auto-resize-rootfs-script
   HIDDEN:=1
 endef
 
-define Package/drop-fw4-nftables
-  $(Package/autoset/default)
-  TITLE:=drop fw4 nftables (null package)
-  DEPENDS:=autoset
-  CONFLICTS:=firewall4 kmod-nft-offload nftables
-  HIDDEN:=1
-endef
+#define Package/drop-fw4-nftables
+#  $(Package/autoset/default)
+#  TITLE:=drop fw4 nftables (null package)
+#  DEPENDS:=autoset
+#  CONFLICTS:=firewall4 kmod-nft-offload nftables
+#  HIDDEN:=1
+#endef
 
 define Package/luci-temperature-script
   $(Package/autoset/default)
@@ -109,13 +111,12 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_RESIZEFS
 	default y if aarch64||arm||i386||x86_64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_FW3_IPTABLE_LEGACY
-	bool "REVERT TO FW3 IPTABLE LEGACY"
+	bool "ADD FW3 IPTABLE LEGACY"
 	select PACKAGE_iptables
 	select PACKAGE_iptables-zz-legacy
 	select PACKAGE_ip6tables
 	select PACKAGE_ip6tables-zz-legacy
 	select PACKAGE_firewall
-	select PACKAGE_drop-fw4-nftables
 	depends on PACKAGE_$(PKG_NAME)
 	default n
 
@@ -175,42 +176,29 @@ endchoice
 endef
 
 define Package/autoset/install
+	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
+	$(CP) ./files/luci-mod-status-autoset.json $(1)/usr/share/rpcd/acl.d/
 endef
 
 define Package/autoset-uci-rockchip/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-#	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/zzz-autoset-rockchip $(1)/etc/uci-defaults/zz99-autoset
-#	$(INSTALL_BIN) ./files/nand-overlay $(1)/etc/init.d/init-nand-flash
-	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(CP) ./files/luci-mod-status-autoset.json $(1)/usr/share/rpcd/acl.d/
 endef
 
 define Package/autoset-uci-meson/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-#	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/zzz-autoset-meson $(1)/etc/uci-defaults/zz99-autoset
-#	$(INSTALL_BIN) ./files/nand-overlay $(1)/etc/init.d/init-nand-flash
-	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(CP) ./files/luci-mod-status-autoset.json $(1)/usr/share/rpcd/acl.d/
 endef
 
 define Package/autoset-uci/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-#	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/zzz-autoset $(1)/etc/uci-defaults/zz99-autoset
-#	$(INSTALL_BIN) ./files/nand-overlay $(1)/etc/init.d/init-nand-flash
-	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(CP) ./files/luci-mod-status-autoset.json $(1)/usr/share/rpcd/acl.d/
+
 endef
 
 define Package/autoset-uci-oneport/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-#	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_BIN) ./files/zzz-autoset-oneport $(1)/etc/uci-defaults/zz99-autoset-oneport
-#	$(INSTALL_BIN) ./files/nand-overlay $(1)/etc/init.d/init-nand-flash
-	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(CP) ./files/luci-mod-status-autoset.json $(1)/usr/share/rpcd/acl.d/
 endef
 
 define Package/auto-resize-rootfs-script/install
@@ -232,5 +220,5 @@ $(eval $(call BuildPackage,autoset-uci-oneport))
 $(eval $(call BuildPackage,autoset-uci-rockchip))
 $(eval $(call BuildPackage,autoset-uci-meson))
 $(eval $(call BuildPackage,auto-resize-rootfs-script))
-$(eval $(call BuildPackage,drop-fw4-nftables))
+#$(eval $(call BuildPackage,drop-fw4-nftables))
 

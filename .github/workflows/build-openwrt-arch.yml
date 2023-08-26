@@ -122,10 +122,11 @@ jobs:
         chmod +x $DIY_P1_SH $DIY_P2_SH add-machine.sh refineconfig.sh
         $GITHUB_WORKSPACE/add-machine.sh
         [ -d my-package-patch ] && mv -f my-package-patch openwrt/feeds/packages/my-package-patch
+        [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
         [ -e files ] && mv files openwrt/files
         [ -e arch-configs/${{matrix.target}}.config ] && mv arch-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
+        $GITHUB_WORKSPACE/$DIY_P1_SH ws1508-istore
         make defconfig
         $GITHUB_WORKSPACE/refineconfig.sh
 
