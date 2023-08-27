@@ -127,7 +127,7 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       run: |
         chmod +x $DIY_P1_SH $DIY_P2_SH add-machine.sh refineconfig.sh
-        $GITHUB_WORKSPACE/add-machine.sh
+        $GITHUB_WORKSPACE/add-machine.sh ws1508
         [ -d my-package-patch ] && mv -f my-package-patch openwrt/feeds/packages/my-package-patch
         [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
         [ -e files ] && mv files openwrt/files
@@ -264,6 +264,7 @@ jobs:
             openwrt/out/*
             openwrt/kernelipks.zip
             openwrt/ipks.zip
+            "${{ env.FIRMWARE }}/*"
 
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main

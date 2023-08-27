@@ -31,7 +31,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: meson
+          - target: ws1508
+          - target: onecloud
     
     steps:
     - name: 检查
@@ -108,7 +109,7 @@ jobs:
     - name: 自定义配置（修复feeds）
       run: |
         chmod +x diy-istore.sh after_build.sh add-machine.sh refineconfig.sh
-        $GITHUB_WORKSPACE/add-machine.sh
+        $GITHUB_WORKSPACE/add-machine.sh ${{matrix.target}}
         [ -d istoreos-package-patch ] && mv -f istoreos-package-patch openwrt/feeds/packages/istoreos-package-patch
         [ -e files ] && mv files openwrt/files
         [ -e arch-configs/${{matrix.target}}.config ] && mv arch-configs/${{matrix.target}}.config openwrt/.config

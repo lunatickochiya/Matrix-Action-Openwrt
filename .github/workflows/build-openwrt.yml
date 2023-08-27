@@ -31,7 +31,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: meson
+          - target: ws1508
+          - target: onecloud
     
     steps:
     - name: 检查
@@ -106,7 +107,7 @@ jobs:
     - name: 自定义配置（修复feeds）
       run: |
         chmod +x diy.sh after_build.sh add-machine.sh refineconfig.sh
-        $GITHUB_WORKSPACE/add-machine.sh
+        $GITHUB_WORKSPACE/add-machine.sh ${{matrix.target}}
         [ -d my-package-patch ] && mv -f my-package-patch openwrt/feeds/packages/my-package-patch
         [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
         [ -e files ] && mv files openwrt/files
