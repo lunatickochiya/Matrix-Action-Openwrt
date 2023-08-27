@@ -193,21 +193,6 @@ jobs:
         path: |
           openwrt/bin/targets/
 
-
-    - name: Organize files
-      id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
-      run: |
-        mkdir firmware
-        mv -f openwrt/bin/targets/*/*/{*combined*,*sysupgrade*,*ext4*} ./firmware/ 2>/dev/null || true
-        cp openwrt/.config  ./firmware/${{matrix.target}}.config
-        cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
-        cd firmware
-        echo "v${{ env.date2 }}" > version.txt
-        echo ${{matrix.target}} >> version.txt
-        rm -rf sha256sums
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-
     - name: After Build
       id: afb
       continue-on-error: true
@@ -216,6 +201,20 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
         echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Organize files
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      run: |
+        mkdir firmware
+        cp openwrt/bin/targets/*/*/{*combined*,*sysupgrade*,*ext4*} firmware
+        cp openwrt/.config  ./firmware/${{matrix.target}}.config
+        cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
+        cd firmware
+        echo "v${{ env.date2 }}" > version.txt
+        echo ${{matrix.target}} >> version.txt
+        rm -rf sha256sums
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
 
     - name: Upload firmware directory
       uses: actions/upload-artifact@main

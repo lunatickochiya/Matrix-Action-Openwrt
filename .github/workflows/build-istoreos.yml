@@ -77,6 +77,7 @@ jobs:
 
     - name: 克隆源代码
       working-directory: /workdir
+      id: clone
       run: |
         df -hT $PWD
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
@@ -84,6 +85,7 @@ jobs:
         cd openwrt
         sed -i '$a src-git kenzo https://github.com/kenzok8/openwrt-packages' feeds.conf.default
         sed -i '$a src-git small https://github.com/kenzok8/small' feeds.conf.default
+        echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Free up disk space
       env:
@@ -95,18 +97,26 @@ jobs:
         ln -sf /mnt/openwrt/staging_dir openwrt/staging_dir
 
     - name: 自定义安装包(优先于feeds)
+      if: steps.clone.outputs.status == 'success'
+      id: files
       run: |
         [ -d mypatch ] && mv -f mypatch openwrt/mypatch
         [ -d package ] && mv -f package openwrt/package
         [ -d target ] && mv -f target/linux/meson openwrt/target/linux/meson
+        echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 更新 & 安装 feeds
-      working-directory: ./openwrt
+      if: steps.files.outputs.status == 'success'
+      id: feeds
       run: |
+        cd openwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
-        
+        echo "status=success" >> $GITHUB_OUTPUT
+
     - name: 自定义配置（修复feeds）
+      if: steps.feeds.outputs.status == 'success'
+      id: config
       run: |
         chmod +x diy-istore.sh after_build.sh add-machine.sh refineconfig.sh
         $GITHUB_WORKSPACE/add-machine.sh ${{matrix.target}}
@@ -115,12 +125,14 @@ jobs:
         [ -e arch-configs/${{matrix.target}}.config ] && mv arch-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
         $GITHUB_WORKSPACE/diy-istore.sh ws1508-istore
-        make defconfig
-        $GITHUB_WORKSPACE/refineconfig.sh
-        
+
     - name: 下载包文件
-      working-directory: ./openwrt
+      if: steps.config.outputs.status == 'success'
       run: |
+        cd openwrt
+        make defconfig
+        sleep 10
+        $GITHUB_WORKSPACE/refineconfig.sh
         make download -j$(nproc)
         find dl -size -1024c -exec rm -f {} \;
 
