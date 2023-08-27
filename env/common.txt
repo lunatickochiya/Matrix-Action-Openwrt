@@ -1,4 +1,4 @@
-USE_Cache="false"
+USE_Cache="true"
 UPLOAD_BIN_DIR="true"
 UPLOAD_FIRMWARE="true"
 UPLOAD_COWTRANSFER="false"

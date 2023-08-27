@@ -43,7 +43,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: meson
+          - target: ws1508
+          - target: onecloud
 
     steps:
     - name: Checkout
@@ -126,12 +127,11 @@ jobs:
     - name: Load custom configuration 
       if: steps.feeds.outputs.status == 'success'
       run: |
-        chmod +x $DIY_P1_SH $DIY_P2_SH add-machine.sh refineconfig.sh
-        $GITHUB_WORKSPACE/add-machine.sh ws1508
+        chmod +x $DIY_P1_SH $DIY_P2_SH refineconfig.sh
         [ -d my-package-patch ] && mv -f my-package-patch openwrt/feeds/packages/my-package-patch
         [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
         [ -e files ] && mv files openwrt/files
-        [ -e arch-configs/${{matrix.target}}.config ] && mv arch-configs/${{matrix.target}}.config openwrt/.config
+        [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH ws1508-istore
         make defconfig
@@ -266,16 +266,16 @@ jobs:
             "${{ env.FIRMWARE }}/*"
 
     - name: Delete workflow runs
-      uses: GitRML/delete-workflow-runs@main
+      uses: Mattraks/delete-workflow-runs@main
       with:
-        retain_days: 1
-        keep_minimum_runs: 6
+        retain_days: 2
+        keep_minimum_runs: 3
 
     - name: Remove old Releases
-      uses: dev-drprasad/delete-older-releases@v0.1.0
+      uses: dev-drprasad/delete-older-releases@master
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
-        keep_latest: 10
+        keep_latest: 15
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

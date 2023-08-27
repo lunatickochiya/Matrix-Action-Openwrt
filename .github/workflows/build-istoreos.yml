@@ -118,11 +118,10 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        chmod +x diy-istore.sh after_build.sh add-machine.sh refineconfig.sh
-        $GITHUB_WORKSPACE/add-machine.sh ${{matrix.target}}
+        chmod +x diy-istore.sh after_build.sh refineconfig.sh
         [ -d istoreos-package-patch ] && mv -f istoreos-package-patch openwrt/feeds/packages/istoreos-package-patch
         [ -e files ] && mv files openwrt/files
-        [ -e arch-configs/${{matrix.target}}.config ] && mv arch-configs/${{matrix.target}}.config openwrt/.config
+        [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
         $GITHUB_WORKSPACE/diy-istore.sh ws1508-istore
         make defconfig
@@ -235,13 +234,13 @@ jobs:
       uses: Mattraks/delete-workflow-runs@main
       with:
         retain_days: 2
-        keep_minimum_runs: 1
+        keep_minimum_runs: 3
 
     - name: 删除旧版本
       uses: dev-drprasad/delete-older-releases@master
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
-        keep_latest: 6
+        keep_latest: 15
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
