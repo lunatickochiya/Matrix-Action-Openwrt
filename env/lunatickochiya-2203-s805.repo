@@ -1,0 +1,3 @@
+REPO_URL="https://github.com/lunatickochiya/openwrt-22.03-s805"
+REPO_BRANCH="openwrt-22.03.5"
+DIY_SH="diy.sh"
