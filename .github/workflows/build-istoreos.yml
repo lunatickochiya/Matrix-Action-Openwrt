@@ -102,6 +102,7 @@ jobs:
       run: |
         [ -d mypatch ] && mv -f mypatch openwrt/mypatch
         [ -d package ] && mv -f package openwrt/package
+        [ -d target ] && mv -f target openwrt/target
 
     - name: 更新 & 安装 feeds
       working-directory: ./openwrt
