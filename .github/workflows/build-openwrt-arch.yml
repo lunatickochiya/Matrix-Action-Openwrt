@@ -81,7 +81,6 @@ jobs:
         echo "date=$(date +'%m/%d_%Y_%H/%M')" >> $GITHUB_ENV
         echo "date2=$(date +'%Y/%m %d')" >> $GITHUB_ENV
         echo "date3=$(date +'%m.%d')" >> $GITHUB_ENV
-        echo "DOCKERTAG=${{ secrets.DOCKER_ID }}/openwrt-6p:latest" >> $GITHUB_ENV
         VERSION="$(echo "${{github.event.action}}" | grep -Eo " [0-9.]+" | sed -e 's/ //')" || true
         [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
 
@@ -177,7 +176,7 @@ jobs:
       run: df -hT
 
     - name: Upload compilelog
-      if: steps.compile.outputs.status == 'failed'
+      continue-on-error: true
       uses: actions/upload-artifact@main
       with:
         name: ${{ env.date3 }}_${{matrix.target}}
@@ -203,15 +202,14 @@ jobs:
         cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
         cd firmware
         echo "v${{ env.date2 }}" > version.txt
-        md5=$((md5sum *squashfs-sysupgrade* || md5sum *squashfs-combined-efi* || *ext4*) | awk '{print $1}') 2>/dev/null
-        echo $md5 >> version.txt
         echo ${{matrix.target}} >> version.txt
         rm -rf sha256sums
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
 
     - name: After Build
       id: afb
-      if: steps.organize.outputs.status == 'success' && !cancelled()
+      continue-on-error: true
+      if: steps.compile.outputs.status == 'success' && !cancelled()
       run: |
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
