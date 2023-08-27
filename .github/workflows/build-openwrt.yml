@@ -100,7 +100,7 @@ jobs:
     - name: 自定义安装包(优先于feeds)
       run: |
         [ -d mypatch ] && mv -f mypatch openwrt/mypatch
-        [ -d package ] && mv -f package openwrt/package
+        [ -d package ] && mv -f package/* openwrt/package
 
     - name: 更新 & 安装 feeds
       working-directory: ./openwrt

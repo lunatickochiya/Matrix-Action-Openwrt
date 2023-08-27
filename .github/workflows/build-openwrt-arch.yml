@@ -108,7 +108,7 @@ jobs:
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
         [ -d mypatch ] && mv -f mypatch openwrt/mypatch
-        [ -d package ] && mv -f package openwrt/package
+        [ -d package ] && mv -f package/* openwrt/package
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Update feeds
