@@ -125,14 +125,20 @@ jobs:
         [ -e arch-configs/${{matrix.target}}.config ] && mv arch-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
         $GITHUB_WORKSPACE/diy-istore.sh ws1508-istore
+        make defconfig
+        $GITHUB_WORKSPACE/refineconfig.sh
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Run awk command
+      if: steps.config.outputs.status == 'success'
+      working-directory: ./openwrt
+      run: |
+        awk '/${{matrix.target}}/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
       run: |
         cd openwrt
-        make defconfig
-        sleep 10
-        $GITHUB_WORKSPACE/refineconfig.sh
         make download -j$(nproc)
         find dl -size -1024c -exec rm -f {} \;
 
