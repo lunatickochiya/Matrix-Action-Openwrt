@@ -34,7 +34,7 @@ env:
   DIY_P1_SH: diy.sh
   DIY_P2_SH: after_build.sh
   UPLOAD_BIN_DIR: true
-  USE_Cache: false
+  USE_Cache: true
   SSH_ACTIONS: false
   UPLOAD_FIRMWARE: true
   UPLOAD_COWTRANSFER: true
