@@ -13,10 +13,11 @@
 固件默认不带密码~
 
 固件名称不带burn的写入sd卡 然后进入U盘 把boot分区里 boot.scr.universal改为 boot.scr
-刷入hzyitc的底包启动(在此感谢制作uboot底包并开源) 底包地址:https://github.com/hzyitc/u-boot-onecloud/releases/download/build-20221028-0940/eMMC.burn.img
+使用 USB_Burning_Tool刷入hzyitc的底包启动(在此感谢制作uboot底包并开源) 底包地址:https://github.com/hzyitc/u-boot-onecloud/releases/download/build-20221028-0940/eMMC.burn.img
 
 带burn的固件 解压后 使用 USB_Burning_Tool 刷入使用 不需要刷底包
 进入burn固件后使用bash resize.sh 自动扩容
+
 
 建议使用istoreos
 
