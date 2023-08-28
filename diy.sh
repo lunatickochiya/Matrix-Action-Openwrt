@@ -8,7 +8,7 @@
 # delete his package confict with yours
 #=================================================
 sleep 3
-rm -rf package/lean/luci-app-ssr-plus package/lean/default-settings
+rm -rf feeds/luci/applications/luci-app-dockerman feeds/kiddin9/rtl8821cu
 sleep 3
 function patch_openwrt() {
         for i in $( ls mypatch ); do

@@ -1,4 +1,4 @@
-name: Build Istore
+name: Build IstoreOS Burn
 
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
@@ -26,7 +26,7 @@ jobs:
     runs-on: Ubuntu-22.04   
     if: github.event.repository.owner.id == github.event.sender.id
 
-    name: Build Istore ${{matrix.target}}
+    name: Build Istore ${{matrix.target}} Burn
     strategy:
       fail-fast: false
       matrix:
@@ -125,6 +125,7 @@ jobs:
         [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
         $GITHUB_WORKSPACE/diy-istore.sh ws1508-istore
+        ./scripts/feeds install -a
         make defconfig
         $GITHUB_WORKSPACE/refineconfig.sh
         echo "status=success" >> $GITHUB_OUTPUT
@@ -172,11 +173,46 @@ jobs:
         path: |
           openwrt/bin/targets/
 
-    - name: 整理文件
-      id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+    - name: 生成ipk和固件的zip
+      id: afb
+      continue-on-error: true
+      if: steps.compile.outputs.status == 'success' && !cancelled()
       run: |
+        $GITHUB_WORKSPACE/after_build.sh
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 整理文件 make burn
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && steps.afb.outputs.status == 'success' && !cancelled()
+      run: |
+        sudo apt update
+        sudo apt install img2simg
+        curl -L -o ./AmlImg https://github.com/hzyitc/AmlImg/releases/download/v0.3.1/AmlImg_v0.3.1_linux_amd64
+        chmod +x ./AmlImg
+        curl -L -o ./uboot.img https://github.com/hzyitc/u-boot-onecloud/releases/download/build-20221028-0940/eMMC.burn.img
+        ./AmlImg unpack ./uboot.img burn/
+        echo "::end-uboot-unpack::"
+        mkdir openwrt/bin/out
+        cp -u -f openwrt/bin/targets/*/*/*.gz openwrt/bin/out/
+        gunzip openwrt/bin/out/*.gz
+        diskimg=$(ls openwrt/bin/out/*.img)
+        loop=$(sudo losetup --find --show --partscan $diskimg)
+        sudo img2simg ${loop}p1 burn/boot.simg
+        sudo img2simg ${loop}p2 burn/rootfs.simg
+        sudo losetup -d $loop
+        echo "::end-unpackext4::"
+        cat <<EOF >>burn/commands.txt
+        PARTITION:boot:sparse:boot.simg
+        PARTITION:rootfs:sparse:rootfs.simg
+        EOF
+        prefix=$(ls openwrt/bin/out/*.img | sed 's/\.img$//')
+        burnimg=${prefix}.burn.img
+        ./AmlImg pack $burnimg burn/
+        gzip -9 openwrt/bin/out/*.burn.img
         mkdir firmware
+        cp -u -f openwrt/bin/out/*.burn.img.gz firmware
+        cp -u -f openwrt/kernelipks.zip firmware
+        cp -u -f openwrt/ipks.zip firmware
         mv -f openwrt/bin/targets/*/*/{*combined*,*sysupgrade*,*ext4*} ./firmware/ 2>/dev/null || true
         cp openwrt/.config  ./firmware/${{matrix.target}}.config
         cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
@@ -241,7 +277,7 @@ jobs:
       uses: dev-drprasad/delete-older-releases@master
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
-        keep_latest: 15
+        keep_latest: 16
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

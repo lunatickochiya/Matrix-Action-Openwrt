@@ -8,7 +8,7 @@
 # delete his package confict with yours
 #=================================================
 sleep 3
-rm -rf package/lean/luci-app-ssr-plus package/lean/default-settings
+rm -rf package/kochiya/ntfs3-mount package/kochiya/ntfs3-oot package/kochiya/ntfsprogs feeds/kenzo/luci-app-dockerman feeds/kenzo/luci-app-argon-config feeds/kenzo/luci-theme-argon feeds/kenzo/luci-app-vlmcsd feeds/kenzo/luci-lib-fs
 sleep 20
 function patch_openwrt() {
         for i in $( ls mypatch ); do

@@ -206,7 +206,7 @@ define Package/auto-resize-rootfs-script/install
 	$(INSTALL_BIN) ./files/resize.sh $(1)/root/resize.sh
 endef
 
-define Package/auto-resize-rootfs-script/install
+define Package/luci-temperature-script/install
 	$(INSTALL_DIR) $(1)/sbin
 	$(INSTALL_BIN) ./files/cpuinfo $(1)/sbin/
 ifneq ($(filter ipq% mediatek%, $(TARGETID)),)
@@ -220,5 +220,6 @@ $(eval $(call BuildPackage,autoset-uci-oneport))
 $(eval $(call BuildPackage,autoset-uci-rockchip))
 $(eval $(call BuildPackage,autoset-uci-meson))
 $(eval $(call BuildPackage,auto-resize-rootfs-script))
+$(eval $(call BuildPackage,luci-temperature-script))
 #$(eval $(call BuildPackage,drop-fw4-nftables))
 
