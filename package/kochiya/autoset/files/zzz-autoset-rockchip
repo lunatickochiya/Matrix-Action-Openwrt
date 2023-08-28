@@ -25,7 +25,7 @@
 #	set network.lan.macaddr=F0:D7:DC:00:56:10
 
 uci -q batch <<-EOF >/dev/null
-	set system.@system[0].hostname=Tpm312
+	set system.@system[0].hostname=Rockchip
 	set system.@system[0].timezone=CST-8
 	set system.@system[0].zonename=Asia/Shanghai
 	set system.@system[0].log_size='256'

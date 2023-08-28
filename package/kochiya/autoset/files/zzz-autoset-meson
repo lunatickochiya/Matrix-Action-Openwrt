@@ -25,7 +25,7 @@
 #	set network.lan.macaddr=F0:D7:DC:00:56:10
 
 uci -q batch <<-EOF >/dev/null
-	set system.@system[0].hostname=ZQB-LLBH
+	set system.@system[0].hostname=Meson
 	set system.@system[0].timezone=CST-8
 	set system.@system[0].zonename=Asia/Shanghai
 	set system.@system[0].log_size='128'
@@ -45,11 +45,6 @@ EOF
 sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/openwrt#g' /etc/opkg/distfeeds.conf
 
 sed -i 's#targets/meson/meson8b/packages#targets/at91/sama5/packages#g' /etc/opkg/distfeeds.conf
-
-mv /usr/sbin/iptables /usr/sbin/iptables-origin
-mv /usr/sbin/ip6tables usr/sbin/ip6tables-origin
-mv /usr/sbin/iptables-legacy /usr/sbin/iptables
-mv /usr/sbin/ip6tables-legacy /usr/sbin/ip6tables
 
 #sed -i '/DISTRIB_REVISION/d' /etc/openwrt_release
 #echo "DISTRIB_REVISION='2U4U'" >> /etc/openwrt_release

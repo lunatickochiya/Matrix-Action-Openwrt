@@ -12,6 +12,7 @@ FAT32_BLOCKS=$(shell echo $$(($(CONFIG_TARGET_KERNEL_PARTSIZE)*1024*1024/$(FAT32
 define Build/boot-script
 	# Make an U-boot image and copy it to the boot partition
 	mkimage -C none -A arm -T script -d $(if $(1),$(1),mmc).bootscript $(KDIR)/boot.scr
+	mkimage -C none -A arm -T script -d $(if $(1),$(1),mmc).bootscript.universal $(KDIR)/boot.scr.universal
 endef
 
 define Build/sdcard-common
@@ -21,7 +22,9 @@ define Build/sdcard-common
 	mkdir -p $(KDIR)/boot.fat
 
 	$(CP) $(KDIR)/boot.scr $(KDIR)/boot.fat/boot.scr
+	$(CP) $(KDIR)/boot.scr.universal $(KDIR)/boot.fat/boot.scr.universal
 	mcopy -i $@.boot $(KDIR)/boot.scr ::
+	mcopy -i $@.boot $(KDIR)/boot.scr.universal ::
 	$(CP) $(IMAGE_KERNEL) $(KDIR)/boot.fat/uImage
 	mcopy -i $@.boot $(KDIR)/boot.fat/uImage ::
 
