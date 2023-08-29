@@ -7,9 +7,12 @@
 # under this directory mypatch should put your patch
 # delete his package confict with yours
 #=================================================
-sleep 3
+function remove_error_package() {
 rm -rf feeds/luci/applications/luci-app-dockerman feeds/kiddin9/rtl8821cu
-sleep 3
+rm -rf tmp package/feeds
+echo "Remove error package success!"
+        }
+
 function patch_openwrt() {
         for i in $( ls mypatch ); do
             echo Applying mypatch $i
@@ -32,11 +35,6 @@ function patch_kiddin9() {
             cd ../..
         done
         }
-
-patch_openwrt
-patch_package
-patch_kiddin9
-sleep 6
 
 # add luci
 function add_full_istore_luci_for_ws1508() {
@@ -232,6 +230,19 @@ CONFIG_PACKAGE_luci-app-istorex=y
 CONFIG_PACKAGE_kmod-fs-ntfs3-oot=y
 CONFIG_PACKAGE_ntfsprogs=y
 CONFIG_PACKAGE_ntfs3-mount=y
+CONFIG_PACKAGE_openvpn-openssl=y
+CONFIG_OPENVPN_openssl_ENABLE_LZO=y
+CONFIG_OPENVPN_openssl_ENABLE_LZ4=y
+CONFIG_OPENVPN_openssl_ENABLE_X509_ALT_USERNAME=y
+CONFIG_OPENVPN_openssl_ENABLE_MANAGEMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_FRAGMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_MULTIHOME=y
+CONFIG_OPENVPN_openssl_ENABLE_PORT_SHARE=y
+CONFIG_OPENVPN_openssl_ENABLE_DEF_AUTH=y
+CONFIG_OPENVPN_openssl_ENABLE_PF=y
+CONFIG_OPENVPN_openssl_ENABLE_IPROUTE2=y
+CONFIG_OPENVPN_openssl_ENABLE_SMALL=y
+CONFIG_PACKAGE_uuidgen=y
 EOF
 }
 
@@ -427,15 +438,36 @@ CONFIG_LIBCURL_NTLM=y
 CONFIG_PACKAGE_kmod-fs-ntfs3-oot=y
 CONFIG_PACKAGE_ntfsprogs=y
 CONFIG_PACKAGE_ntfs3-mount=y
+CONFIG_PACKAGE_openvpn-openssl=y
+CONFIG_OPENVPN_openssl_ENABLE_LZO=y
+CONFIG_OPENVPN_openssl_ENABLE_LZ4=y
+CONFIG_OPENVPN_openssl_ENABLE_X509_ALT_USERNAME=y
+CONFIG_OPENVPN_openssl_ENABLE_MANAGEMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_FRAGMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_MULTIHOME=y
+CONFIG_OPENVPN_openssl_ENABLE_PORT_SHARE=y
+CONFIG_OPENVPN_openssl_ENABLE_DEF_AUTH=y
+CONFIG_OPENVPN_openssl_ENABLE_PF=y
+CONFIG_OPENVPN_openssl_ENABLE_IPROUTE2=y
+CONFIG_OPENVPN_openssl_ENABLE_SMALL=y
+CONFIG_PACKAGE_uuidgen=y
 EOF
 }
 
 
 
 if [ "$1" == "ws1508-istore" ]; then
+remove_error_package
+patch_openwrt
+patch_package
+patch_kiddin9
 add_full_istore_luci_for_ws1508
 elif [ "$1" == "ws1508" ]; then
 add_luci_packages_for_ws1508
+remove_error_package
+patch_openwrt
+patch_package
+patch_kiddin9
 else
 echo "Invalid argument"
 fi

@@ -126,6 +126,7 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/diy-istore.sh ws1508-istore
         ./scripts/feeds install -a
+        sleep 10
         make defconfig
         $GITHUB_WORKSPACE/refineconfig.sh
         echo "status=success" >> $GITHUB_OUTPUT

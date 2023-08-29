@@ -124,6 +124,7 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/diy.sh ws1508
         ./scripts/feeds install -a
+        sleep 10
         make defconfig
         $GITHUB_WORKSPACE/refineconfig.sh
         echo "status=success" >> $GITHUB_OUTPUT
