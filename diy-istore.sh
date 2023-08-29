@@ -9,10 +9,41 @@
 #=================================================
 
 function remove_error_package() {
-sleep 3
-rm -rf package/kochiya/ntfs3-mount package/kochiya/ntfs3-oot package/kochiya/ntfsprogs feeds/kenzo/luci-app-dockerman feeds/kenzo/luci-app-argon-config feeds/kenzo/luci-theme-argon feeds/kenzo/luci-app-vlmcsd feeds/kenzo/luci-lib-fs
-rm -rf tmp package/feeds
-echo "Remove error package success!"
+packages=(
+    "luci-app-dockerman"
+    "luci-app-argon-config"
+    "luci-theme-argon"
+    "luci-app-vlmcsd"
+)
+
+for package in "${packages[@]}"; do
+        echo "卸载软件包 $package ..."
+        ./scripts/feeds uninstall $package
+        echo "软件包 $package 已卸载。"
+done
+
+directories=(
+    "package/package/kochiya/ntfs3-mount"
+    "package/package/kochiya/ntfs3-oot"
+    "package/package/kochiya/ntfsprogs"
+    "feeds/kenzo/luci-app-dockerman"
+    "feeds/kenzo/luci-app-argon-config"
+    "feeds/kenzo/luci-app-argon"
+    "feeds/kenzo/luci-app-vlmcsd"
+)
+
+for directory in "${directories[@]}"; do
+    if [ -d "$directory" ]; then
+        echo "目录 $directory 存在，进行删除操作..."
+        rm -r "$directory"
+        echo "目录 $directory 已删除。"
+    else
+        echo "目录 $directory 不存在。"
+    fi
+done
+
+./scripts/feeds update -i
+./scripts/feeds install -a -d y
         }
 function patch_openwrt() {
         for i in $( ls mypatch ); do

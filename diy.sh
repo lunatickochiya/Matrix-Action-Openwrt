@@ -8,9 +8,35 @@
 # delete his package confict with yours
 #=================================================
 function remove_error_package() {
-rm -rf feeds/luci/applications/luci-app-dockerman feeds/kiddin9/rtl8821cu
-rm -rf tmp package/feeds
-echo "Remove error package success!"
+
+packages=(
+    "luci-app-dockerman"
+    "rtl8821cu"
+)
+
+for package in "${packages[@]}"; do
+        echo "卸载软件包 $package ..."
+        ./scripts/feeds uninstall $package
+        echo "软件包 $package 已卸载。"
+done
+
+directories=(
+    "feeds/luci/applications/luci-app-dockerman"
+    "feeds/kiddin9/rtl8821cu"
+)
+
+for directory in "${directories[@]}"; do
+    if [ -d "$directory" ]; then
+        echo "目录 $directory 存在，进行删除操作..."
+        rm -r "$directory"
+        echo "目录 $directory 已删除。"
+    else
+        echo "目录 $directory 不存在。"
+    fi
+done
+rm -rf tmp
+./scripts/feeds update -i
+./scripts/feeds install -a -d y
         }
 
 function patch_openwrt() {

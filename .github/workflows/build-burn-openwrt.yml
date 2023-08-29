@@ -123,8 +123,6 @@ jobs:
         [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
         $GITHUB_WORKSPACE/diy.sh ws1508
-        ./scripts/feeds install -a
-        sleep 10
         make defconfig
         $GITHUB_WORKSPACE/refineconfig.sh
         echo "status=success" >> $GITHUB_OUTPUT
@@ -134,6 +132,8 @@ jobs:
       working-directory: ./openwrt
       run: |
         awk '/${{matrix.target}}/ { print }' .config
+        echo "------------------------"
+        awk '/docker/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
