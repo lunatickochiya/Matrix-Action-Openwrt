@@ -7,9 +7,38 @@
 # under this directory mypatch should put your patch
 # delete his package confict with yours
 #=================================================
-sleep 3
-rm -rf feeds/luci/applications/luci-app-dockerman feeds/kiddin9/rtl8821cu
-sleep 3
+function remove_error_package() {
+
+packages=(
+    "luci-app-dockerman"
+    "rtl8821cu"
+)
+
+for package in "${packages[@]}"; do
+        echo "卸载软件包 $package ..."
+        ./scripts/feeds uninstall $package
+        echo "软件包 $package 已卸载。"
+done
+
+directories=(
+    "feeds/luci/applications/luci-app-dockerman"
+    "feeds/kiddin9/rtl8821cu"
+)
+
+for directory in "${directories[@]}"; do
+    if [ -d "$directory" ]; then
+        echo "目录 $directory 存在，进行删除操作..."
+        rm -r "$directory"
+        echo "目录 $directory 已删除。"
+    else
+        echo "目录 $directory 不存在。"
+    fi
+done
+rm -rf tmp
+./scripts/feeds update -i
+./scripts/feeds install -a -d y
+        }
+
 function patch_openwrt() {
         for i in $( ls mypatch ); do
             echo Applying mypatch $i
@@ -32,11 +61,6 @@ function patch_kiddin9() {
             cd ../..
         done
         }
-
-patch_openwrt
-patch_package
-patch_kiddin9
-sleep 6
 
 # add luci
 function add_full_istore_luci_for_ws1508() {
@@ -232,6 +256,19 @@ CONFIG_PACKAGE_luci-app-istorex=y
 CONFIG_PACKAGE_kmod-fs-ntfs3-oot=y
 CONFIG_PACKAGE_ntfsprogs=y
 CONFIG_PACKAGE_ntfs3-mount=y
+CONFIG_PACKAGE_openvpn-openssl=y
+CONFIG_OPENVPN_openssl_ENABLE_LZO=y
+CONFIG_OPENVPN_openssl_ENABLE_LZ4=y
+CONFIG_OPENVPN_openssl_ENABLE_X509_ALT_USERNAME=y
+CONFIG_OPENVPN_openssl_ENABLE_MANAGEMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_FRAGMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_MULTIHOME=y
+CONFIG_OPENVPN_openssl_ENABLE_PORT_SHARE=y
+CONFIG_OPENVPN_openssl_ENABLE_DEF_AUTH=y
+CONFIG_OPENVPN_openssl_ENABLE_PF=y
+CONFIG_OPENVPN_openssl_ENABLE_IPROUTE2=y
+CONFIG_OPENVPN_openssl_ENABLE_SMALL=y
+CONFIG_PACKAGE_uuidgen=y
 EOF
 }
 
@@ -427,15 +464,36 @@ CONFIG_LIBCURL_NTLM=y
 CONFIG_PACKAGE_kmod-fs-ntfs3-oot=y
 CONFIG_PACKAGE_ntfsprogs=y
 CONFIG_PACKAGE_ntfs3-mount=y
+CONFIG_PACKAGE_openvpn-openssl=y
+CONFIG_OPENVPN_openssl_ENABLE_LZO=y
+CONFIG_OPENVPN_openssl_ENABLE_LZ4=y
+CONFIG_OPENVPN_openssl_ENABLE_X509_ALT_USERNAME=y
+CONFIG_OPENVPN_openssl_ENABLE_MANAGEMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_FRAGMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_MULTIHOME=y
+CONFIG_OPENVPN_openssl_ENABLE_PORT_SHARE=y
+CONFIG_OPENVPN_openssl_ENABLE_DEF_AUTH=y
+CONFIG_OPENVPN_openssl_ENABLE_PF=y
+CONFIG_OPENVPN_openssl_ENABLE_IPROUTE2=y
+CONFIG_OPENVPN_openssl_ENABLE_SMALL=y
+CONFIG_PACKAGE_uuidgen=y
 EOF
 }
 
 
 
 if [ "$1" == "ws1508-istore" ]; then
+remove_error_package
+patch_openwrt
+patch_package
+patch_kiddin9
 add_full_istore_luci_for_ws1508
 elif [ "$1" == "ws1508" ]; then
 add_luci_packages_for_ws1508
+remove_error_package
+patch_openwrt
+patch_package
+patch_kiddin9
 else
 echo "Invalid argument"
 fi

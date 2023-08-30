@@ -3,6 +3,7 @@ name: Build OpenWrt Burn
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
   contents: write
+  actions: write
 
 on:
   repository_dispatch:
@@ -116,14 +117,13 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        chmod +x diy.sh after_build.sh refineconfig.sh
+        chmod +x diy.sh after_build.sh refineconfig.sh gen-sha256sum.sh
         [ -d my-package-patch ] && mv -f my-package-patch openwrt/feeds/packages/my-package-patch
         [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
         [ -e files ] && mv files openwrt/files
         [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
         $GITHUB_WORKSPACE/diy.sh ws1508
-        ./scripts/feeds install -a
         make defconfig
         $GITHUB_WORKSPACE/refineconfig.sh
         echo "status=success" >> $GITHUB_OUTPUT
@@ -133,6 +133,8 @@ jobs:
       working-directory: ./openwrt
       run: |
         awk '/${{matrix.target}}/ { print }' .config
+        echo "------------------------"
+        awk '/docker/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
@@ -219,6 +221,7 @@ jobs:
         echo ${{matrix.target}} >> version.txt
         rm -rf sha256sums
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件目录
       uses: actions/upload-artifact@main
@@ -247,9 +250,10 @@ jobs:
 
     - name: 生成发布标签
       id: tag
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true' && !cancelled()
       run: |
         touch release.txt
+        $GITHUB_WORKSPACE/gen-sha256sum.sh
         [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
         [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
@@ -261,7 +265,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: "${{ env.FIRMWARE }}/*"
-        name: ${{ env.date2 }} ${{matrix.target}}
+        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-22.03.5
         tag_name: ${{ env.date }}_${{matrix.target}}
         body_path: release.txt
 

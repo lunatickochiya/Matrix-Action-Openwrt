@@ -7,9 +7,44 @@
 # under this directory mypatch should put your patch
 # delete his package confict with yours
 #=================================================
-sleep 3
-rm -rf package/kochiya/ntfs3-mount package/kochiya/ntfs3-oot package/kochiya/ntfsprogs feeds/kenzo/luci-app-dockerman feeds/kenzo/luci-app-argon-config feeds/kenzo/luci-theme-argon feeds/kenzo/luci-app-vlmcsd feeds/kenzo/luci-lib-fs
-sleep 20
+
+function remove_error_package() {
+packages=(
+    "luci-app-dockerman"
+    "luci-app-argon-config"
+    "luci-theme-argon"
+    "luci-app-vlmcsd"
+)
+
+for package in "${packages[@]}"; do
+        echo "卸载软件包 $package ..."
+        ./scripts/feeds uninstall $package
+        echo "软件包 $package 已卸载。"
+done
+
+directories=(
+    "package/package/kochiya/ntfs3-mount"
+    "package/package/kochiya/ntfs3-oot"
+    "package/package/kochiya/ntfsprogs"
+    "feeds/kenzo/luci-app-dockerman"
+    "feeds/kenzo/luci-app-argon-config"
+    "feeds/kenzo/luci-app-argon"
+    "feeds/kenzo/luci-app-vlmcsd"
+)
+
+for directory in "${directories[@]}"; do
+    if [ -d "$directory" ]; then
+        echo "目录 $directory 存在，进行删除操作..."
+        rm -r "$directory"
+        echo "目录 $directory 已删除。"
+    else
+        echo "目录 $directory 不存在。"
+    fi
+done
+
+./scripts/feeds update -i
+./scripts/feeds install -a -d y
+        }
 function patch_openwrt() {
         for i in $( ls mypatch ); do
             echo Applying mypatch $i
@@ -33,10 +68,7 @@ function patch_kiddin9() {
         done
         }
 
-patch_openwrt
-patch_package
 
-sleep 6
 
 # add luci
 function add_full_istore_luci_for_ws1508() {
@@ -232,6 +264,19 @@ CONFIG_PACKAGE_luci-app-istorex=y
 CONFIG_PACKAGE_kmod-fs-ntfs3-oot=y
 CONFIG_PACKAGE_ntfsprogs=y
 CONFIG_PACKAGE_ntfs3-mount=y
+CONFIG_PACKAGE_openvpn-openssl=y
+CONFIG_OPENVPN_openssl_ENABLE_LZO=y
+CONFIG_OPENVPN_openssl_ENABLE_LZ4=y
+CONFIG_OPENVPN_openssl_ENABLE_X509_ALT_USERNAME=y
+CONFIG_OPENVPN_openssl_ENABLE_MANAGEMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_FRAGMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_MULTIHOME=y
+CONFIG_OPENVPN_openssl_ENABLE_PORT_SHARE=y
+CONFIG_OPENVPN_openssl_ENABLE_DEF_AUTH=y
+CONFIG_OPENVPN_openssl_ENABLE_PF=y
+CONFIG_OPENVPN_openssl_ENABLE_IPROUTE2=y
+CONFIG_OPENVPN_openssl_ENABLE_SMALL=y
+CONFIG_PACKAGE_uuidgen=y
 EOF
 }
 
@@ -427,14 +472,33 @@ CONFIG_LIBCURL_NTLM=y
 CONFIG_PACKAGE_kmod-fs-ntfs3-oot=y
 CONFIG_PACKAGE_ntfsprogs=y
 CONFIG_PACKAGE_ntfs3-mount=y
+CONFIG_PACKAGE_openvpn-openssl=y
+CONFIG_OPENVPN_openssl_ENABLE_LZO=y
+CONFIG_OPENVPN_openssl_ENABLE_LZ4=y
+CONFIG_OPENVPN_openssl_ENABLE_X509_ALT_USERNAME=y
+CONFIG_OPENVPN_openssl_ENABLE_MANAGEMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_FRAGMENT=y
+CONFIG_OPENVPN_openssl_ENABLE_MULTIHOME=y
+CONFIG_OPENVPN_openssl_ENABLE_PORT_SHARE=y
+CONFIG_OPENVPN_openssl_ENABLE_DEF_AUTH=y
+CONFIG_OPENVPN_openssl_ENABLE_PF=y
+CONFIG_OPENVPN_openssl_ENABLE_IPROUTE2=y
+CONFIG_OPENVPN_openssl_ENABLE_SMALL=y
+CONFIG_PACKAGE_uuidgen=y
 EOF
 }
 
 
 
 if [ "$1" == "ws1508-istore" ]; then
+remove_error_package
+patch_openwrt
+patch_package
 add_full_istore_luci_for_ws1508
 elif [ "$1" == "ws1508" ]; then
+remove_error_package
+patch_openwrt
+patch_package
 add_luci_packages_for_ws1508
 else
 echo "Invalid argument"
