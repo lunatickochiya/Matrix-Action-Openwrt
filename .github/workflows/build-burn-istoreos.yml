@@ -270,7 +270,7 @@ jobs:
       with:
         files: "${{ env.FIRMWARE }}/*"
         name: ${{ env.date2 }} ${{matrix.target}}-istoreos
-        tag_name: ${{ env.date }}_${{matrix.target}}
+        tag_name: ${{ env.date }}_${{matrix.target}}-istoreos
         body_path: release.txt
 
     - name: 删除工作流

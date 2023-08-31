@@ -266,7 +266,7 @@ jobs:
       with:
         files: "${{ env.FIRMWARE }}/*"
         name: ${{ env.date2 }} ${{matrix.target}}-openwrt-22.03.5
-        tag_name: ${{ env.date }}_${{matrix.target}}
+        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-22.03.5
         body_path: release.txt
 
     - name: 删除工作流
