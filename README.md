@@ -18,7 +18,7 @@ LAN默认地址：192.168.11.1
 进入burn固件后使用bash resize.sh 自动扩容
 
 
-建议使用istoreos
+istoreos 无法启动 请勿下载
 
 目前只支持meson8b 玩客云 onecloud  流量宝盒 ws1508
 

@@ -13,12 +13,6 @@ on:
         description: 'SSH connection to Actions'
         required: false
         default: 'false'
-  push:
-    branches:
-      - master
-    paths:
-      - 'startcompile-istore'
-      - 'startcompileall'
 env:
   TZ: Asia/Shanghai
 
