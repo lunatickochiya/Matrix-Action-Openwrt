@@ -1,4 +1,4 @@
-name: Build OpenWrt Burn
+name: Build Istore IPK Burn
 
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
@@ -27,7 +27,7 @@ jobs:
     runs-on: Ubuntu-22.04   
     if: github.event.repository.owner.id == github.event.sender.id
 
-    name: Build ${{matrix.target}} Burn
+    name: Build ${{matrix.target}} Burn Istore
     strategy:
       fail-fast: false
       matrix:
@@ -124,7 +124,7 @@ jobs:
         [ -e files ] && mv files openwrt/files
         [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
-        $GITHUB_WORKSPACE/diy.sh ws1508
+        $GITHUB_WORKSPACE/diy.sh ws1508-istore
         make defconfig
         $GITHUB_WORKSPACE/refineconfig.sh
         echo "status=success" >> $GITHUB_OUTPUT
@@ -266,8 +266,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: "${{ env.FIRMWARE }}/*"
-        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-22.03.5
-        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-22.03.5
+        name: ${{ env.date2 }} ${{matrix.target}}-istore-22.03.5
+        tag_name: ${{ env.date }}_${{matrix.target}}-istore-22.03.5
         body_path: release.txt
 
     - name: 删除工作流

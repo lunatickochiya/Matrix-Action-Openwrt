@@ -9,7 +9,7 @@ include $(INCLUDE_DIR)/package.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=4.0
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -125,7 +125,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_temperature
 	select PACKAGE_lm-sensors-detect
 	select PACKAGE_lm-sensors
 	select PACKAGE_htop
-	select luci-temperature-script
+	select PACKAGE_luci-temperature-script
 	select @HTOP_LMSENSORS
 	depends on PACKAGE_$(PKG_NAME)
 	default y if aarch64||arm||i386||x86_64

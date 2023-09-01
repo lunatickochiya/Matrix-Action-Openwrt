@@ -53,6 +53,14 @@ function patch_package() {
             cd ../..
         done
         }
+function patch_luci() {
+        for lucipatch in $( ls feeds/luci/luci-patch ); do
+            cd feeds/luci/
+            echo Applying luci-patch $lucipatch
+            patch -p1 < luci-patch/$lucipatch
+            cd ../..
+        done
+        }
 function patch_kiddin9() {
         for kiddin9patch in $( ls feeds/kiddin9/kiddin9-revert ); do
             cd feeds/kiddin9/
@@ -270,6 +278,8 @@ CONFIG_OPENVPN_openssl_ENABLE_IPROUTE2=y
 CONFIG_OPENVPN_openssl_ENABLE_SMALL=y
 CONFIG_PACKAGE_uuidgen=y
 CONFIG_PACKAGE_wget-ssl=y
+CONFIG_PACKAGE_luci-app-samba4=y
+CONFIG_PACKAGE_luci-app-vsftpd=y
 EOF
 }
 
@@ -479,6 +489,8 @@ CONFIG_OPENVPN_openssl_ENABLE_IPROUTE2=y
 CONFIG_OPENVPN_openssl_ENABLE_SMALL=y
 CONFIG_PACKAGE_uuidgen=y
 CONFIG_PACKAGE_wget-ssl=y
+CONFIG_PACKAGE_luci-app-samba4=y
+CONFIG_PACKAGE_luci-app-vsftpd=y
 EOF
 }
 
@@ -488,6 +500,7 @@ if [ "$1" == "ws1508-istore" ]; then
 remove_error_package
 patch_openwrt
 patch_package
+patch_luci
 patch_kiddin9
 add_full_istore_luci_for_ws1508
 elif [ "$1" == "ws1508" ]; then
@@ -495,6 +508,7 @@ add_luci_packages_for_ws1508
 remove_error_package
 patch_openwrt
 patch_package
+patch_luci
 patch_kiddin9
 else
 echo "Invalid argument"
