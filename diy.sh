@@ -280,6 +280,7 @@ CONFIG_PACKAGE_uuidgen=y
 CONFIG_PACKAGE_wget-ssl=y
 CONFIG_PACKAGE_luci-app-samba4=y
 CONFIG_PACKAGE_luci-app-vsftpd=y
+CONFIG_PACKAGE_coremark=y
 EOF
 }
 
@@ -491,6 +492,7 @@ CONFIG_PACKAGE_uuidgen=y
 CONFIG_PACKAGE_wget-ssl=y
 CONFIG_PACKAGE_luci-app-samba4=y
 CONFIG_PACKAGE_luci-app-vsftpd=y
+CONFIG_PACKAGE_coremark=y
 EOF
 }
 
