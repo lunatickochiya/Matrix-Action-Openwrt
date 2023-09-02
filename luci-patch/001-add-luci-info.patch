@@ -2,19 +2,14 @@ diff --git a/modules/luci-base/po/zh_Hans/base.po b/modules/luci-base/po/zh_Hans
 index 5db89b4ce8..efa6b4ea3f 100644
 --- a/modules/luci-base/po/zh_Hans/base.po
 +++ b/modules/luci-base/po/zh_Hans/base.po
-@@ -10436,3 +10436,12 @@ msgstr "要用指定域 IP 填充的 IP 集列表。"
+@@ -10436,3 +10436,7 @@ msgstr "要用指定域 IP 填充的 IP 集列表。"
  
  msgid "List of domains to force to an IP address."
  msgstr "此列表将域名强制指向某个 IP 地址。"
 +
 +msgid "Source Code"
-+msgstr "源代码"
++msgstr "源代码(免费使用，禁止商用)"
 +
-+msgid "Project OpenWrt"
-+msgstr "OpenWrt S805 By 2U4U"
-+
-+msgid "OpenWrt Core"
-+msgstr "禁止商用"
 diff --git a/modules/luci-base/root/usr/libexec/rpcd/luci b/modules/luci-base/root/usr/libexec/rpcd/luci
 index f124512f59..fe3131a8af 100755
 --- a/modules/luci-base/root/usr/libexec/rpcd/luci
@@ -134,7 +129,7 @@ index ae7efa3e75..3f66cfc3ee 100644
 +		projectlink.target = '_blank';
 +
 +		var corelink = document.createElement('a');
-+		corelink.append('OpenWrt Core');
++		corelink.append('OpenWrt S805 By 2U4U');
 +		corelink.href = 'https://github.com/lunatickochiya/Lunatic-s805-rockchip-Action';
 +		corelink.target = '_blank';
 +

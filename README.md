@@ -7,9 +7,10 @@
 原生的openwrt管理系统
 
 
-
-LAN默认地址：192.168.11.1
-没有密码
+默认旁路由：
+默认地址：192.168.7.186 网关192.168.7.1
+因此请把上级路由改为192.168.7.1 然后登录修改为你喜欢的地址
+固件默认不带密码~
 
 固件名称不带burn的写入sd卡 然后进入U盘 把boot分区里 boot.scr.universal改为 boot.scr
 使用 USB_Burning_Tool刷入hzyitc的底包启动(在此感谢制作uboot底包并开源) 底包地址:https://github.com/hzyitc/u-boot-onecloud/releases/download/build-20221028-0940/eMMC.burn.img

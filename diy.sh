@@ -74,7 +74,7 @@ function patch_kiddin9() {
 function add_full_istore_luci_for_ws1508() {
 cat <<EOF >>.config
 CONFIG_TARGET_KERNEL_PARTSIZE=16
-CONFIG_TARGET_ROOTFS_PARTSIZE=600
+CONFIG_TARGET_ROOTFS_PARTSIZE=650
 CONFIG_PACKAGE_luci-app-alist=y
 CONFIG_PACKAGE_luci-app-argon-config=y
 CONFIG_PACKAGE_luci-app-aria2=y
@@ -280,13 +280,14 @@ CONFIG_PACKAGE_uuidgen=y
 CONFIG_PACKAGE_wget-ssl=y
 CONFIG_PACKAGE_luci-app-samba4=y
 CONFIG_PACKAGE_luci-app-vsftpd=y
+CONFIG_PACKAGE_coremark=y
 EOF
 }
 
 function add_luci_packages_for_ws1508() {
 cat <<EOF >>.config
 CONFIG_TARGET_KERNEL_PARTSIZE=16
-CONFIG_TARGET_ROOTFS_PARTSIZE=600
+CONFIG_TARGET_ROOTFS_PARTSIZE=650
 CONFIG_PACKAGE_luci-app-alist=y
 CONFIG_PACKAGE_luci-app-argon-config=y
 CONFIG_PACKAGE_luci-app-aria2=y
@@ -491,6 +492,7 @@ CONFIG_PACKAGE_uuidgen=y
 CONFIG_PACKAGE_wget-ssl=y
 CONFIG_PACKAGE_luci-app-samba4=y
 CONFIG_PACKAGE_luci-app-vsftpd=y
+CONFIG_PACKAGE_coremark=y
 EOF
 }
 
