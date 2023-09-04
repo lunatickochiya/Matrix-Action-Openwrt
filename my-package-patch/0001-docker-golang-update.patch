@@ -1,3 +1,27 @@
+From 6ff26121d034737cf23fd840ef21655056d72bd3 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sun, 3 Sep 2023 17:29:22 +0800
+Subject: [PATCH] docker-golang update
+
+---
+ lang/golang/golang-build.sh                   |  6 +++
+ lang/golang/golang-compiler.mk                | 13 +++--
+ lang/golang/golang-host-build.mk              |  2 +-
+ lang/golang/golang-package.mk                 |  2 +-
+ lang/golang/golang-values.mk                  | 15 +++---
+ lang/golang/golang/Makefile                   | 54 +++++++++++++++----
+ lang/golang/golang/files/go-gcc-helper        |  6 +++
+ ...-ARM-ARM64-only-if-gold-is-available.patch |  2 +-
+ lang/golang/golang/test.sh                    |  5 ++
+ utils/containerd/Makefile                     |  4 +-
+ utils/docker-compose/Makefile                 |  4 +-
+ utils/docker/Makefile                         |  7 +--
+ utils/dockerd/Makefile                        | 12 ++---
+ .../patches/001-libdevmapper_name_fix.patch   | 14 ++---
+ utils/runc/Makefile                           |  6 +--
+ 15 files changed, 107 insertions(+), 45 deletions(-)
+ create mode 100644 lang/golang/golang/test.sh
+
 diff --git a/lang/golang/golang-build.sh b/lang/golang/golang-build.sh
 index e0e4ea637..fe8718ee7 100644
 --- a/lang/golang/golang-build.sh
@@ -301,6 +325,17 @@ index 57d108c1b..aecf5309f 100644
   		}
   
   		if ctxt.Arch.InFamily(sys.ARM, sys.ARM64) && buildcfg.GOOS == "linux" {
+diff --git a/lang/golang/golang/test.sh b/lang/golang/golang/test.sh
+new file mode 100644
+index 000000000..114b427ef
+--- /dev/null
++++ b/lang/golang/golang/test.sh
+@@ -0,0 +1,5 @@
++#!/bin/sh
++
++[ "$1" = golang ] || exit 0
++
++go version | grep -F " go$PKG_VERSION "
 diff --git a/utils/containerd/Makefile b/utils/containerd/Makefile
 index da49541cf..903d174e9 100644
 --- a/utils/containerd/Makefile
@@ -472,3 +507,6 @@ index 568f26ef3..37708f67a 100644
  
  PKG_MAINTAINER:=Gerard Ryan <G.M0N3Y.2503@gmail.com>
  
+-- 
+2.34.1
+
