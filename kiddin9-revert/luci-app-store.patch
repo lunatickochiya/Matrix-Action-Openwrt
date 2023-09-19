@@ -1,7 +1,7 @@
 --- a/luci-app-store/Makefile
 +++ b/luci-app-store/Makefile
 @@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
- 
+
  LUCI_TITLE:=LuCI based ipk store
  LUCI_DESCRIPTION:=luci-app-store is a ipk store developed by LinkEase team
 -LUCI_DEPENDS:=+curl +opkg +luci-lib-ipkg +tar +coreutils +coreutils-stat +libuci-lua +mount-utils +luci-lib-taskd
@@ -41,14 +41,3 @@
  </h2>
  <link rel="stylesheet" href="/luci-static/istore/style.css?v=<%=id.version%>">
  <div id="app">
-
---- a/luci-lib-taskd/luasrc/controller/tasks-lib.lua
-+++ b/luci-lib-taskd/luasrc/controller/tasks-lib.lua
-@@ -3,6 +3,7 @@ module("luci.controller.tasks-lib", package.seeall)
- 
- 
- function index()
-+  entry({"admin", "system", "tasks"}, cbi("tasks"))
-   entry({"admin", "system", "tasks", "status"}, call("tasks_status")).dependent=false
-   entry({"admin", "system", "tasks", "log"}, call("tasks_log")).dependent=false
-   entry({"admin", "system", "tasks", "stop"}, post("tasks_stop")).dependent=false

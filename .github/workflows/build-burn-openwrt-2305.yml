@@ -1,4 +1,4 @@
-name: Build OpenWrt Burn
+name: Build 2305 Burn
 
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
@@ -17,7 +17,7 @@ on:
     branches:
       - master
     paths:
-      - 'startcompileall-burn'
+      - 'startcompile2305'
       - 'startcompileall'
 env:
   TZ: Asia/Shanghai
@@ -27,7 +27,7 @@ jobs:
     runs-on: Ubuntu-22.04   
     if: github.event.repository.owner.id == github.event.sender.id
 
-    name: Build ${{matrix.target}} Burn
+    name: Build ${{matrix.target}} Burn OpenWrt-2305
     strategy:
       fail-fast: false
       matrix:
@@ -66,7 +66,7 @@ jobs:
         [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
         echo ${{matrix.target}}
         source "${GITHUB_WORKSPACE}/env/common.txt"
-        source "${GITHUB_WORKSPACE}/env/lunatickochiya-2203-s805.repo"
+        source "${GITHUB_WORKSPACE}/env/openwrt-23.05.repo"
         echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
         echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
         echo "DIY_SH=${DIY_SH}" >> $GITHUB_ENV
@@ -84,8 +84,8 @@ jobs:
         df -hT $PWD
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-        #cd openwrt
-        #sed -i '$a src-git smpackage https://github.com/kenzok8/small-package' feeds.conf.default
+        cd openwrt
+        sed -i '$a src-git kiddin9 https://github.com/kiddin9/openwrt-packages.git' feeds.conf.default
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Free up disk space
@@ -102,13 +102,15 @@ jobs:
       id: files
       run: |
         [ -d mypatch ] && mv -f mypatch openwrt/mypatch
-        [ -d package ] && mv -f package/* openwrt/package
+        [ -d package ] && mv -f package openwrt/package
+        [ -d target ] && mv -f target/linux/meson515 openwrt/target/linux/meson
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 更新 & 安装 feeds
-      working-directory: ./openwrt
+      if: steps.files.outputs.status == 'success'
       id: feeds
       run: |
+        cd openwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
         echo "status=success" >> $GITHUB_OUTPUT
@@ -117,14 +119,13 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        chmod +x diy.sh after_build.sh refineconfig.sh gen-sha256sum.sh
-        [ -d my-package-patch ] && mv -f my-package-patch openwrt/feeds/packages/my-package-patch
+        chmod +x $DIY_SH after_build.sh refineconfig.sh gen-sha256sum.sh
         [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
-        [ -d luci-patch ] && mv -f luci-patch openwrt/feeds/luci/luci-patch
+        [ -d luci-patch-2305 ] && mv -f luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
         [ -e files ] && mv files openwrt/files
         [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
-        $GITHUB_WORKSPACE/diy.sh ws1508
+        $GITHUB_WORKSPACE/$DIY_SH ws1508
         make defconfig
         $GITHUB_WORKSPACE/refineconfig.sh
         echo "status=success" >> $GITHUB_OUTPUT
@@ -270,8 +271,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: "${{ env.FIRMWARE }}/*"
-        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-22.03.5
-        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-22.03.5
+        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-2305
+        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-2305
         body_path: release.txt
 
     - name: 删除工作流
