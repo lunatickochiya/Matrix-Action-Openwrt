@@ -9,7 +9,7 @@
 #=================================================
 
 autosetver() {
-version=22.03
+version=trunk
 sed -i "52i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/package/kochiya/autoset/files/zzz-autoset-meson
 sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/package/kochiya/autoset/files/zzz-autoset-rockchip
 
@@ -56,18 +56,18 @@ function patch_openwrt() {
         done
         }
 function patch_package() {
-        for packagepatch in $( ls feeds/packages/my-package-patch ); do
+        for packagepatch in $( ls feeds/packages/feeds-package-patch-2305 ); do
             cd feeds/packages/
-            echo Applying my-package-patch $packagepatch
-            patch -p1 < my-package-patch/$packagepatch
+            echo Applying feeds-package-patch-2305 $packagepatch
+            patch -p1 < feeds-package-patch-2305/$packagepatch
             cd ../..
         done
         }
 function patch_luci() {
-        for lucipatch in $( ls feeds/luci/luci-patch ); do
+        for lucipatch in $( ls feeds/luci/luci-patch-2305 ); do
             cd feeds/luci/
-            echo Applying luci-patch $lucipatch
-            patch -p1 < luci-patch/$lucipatch
+            echo Applying luci-patch-2305 $lucipatch
+            patch -p1 < luci-patch-2305/$lucipatch
             cd ../..
         done
         }
@@ -84,7 +84,7 @@ function patch_kiddin9() {
 function add_full_istore_luci_for_ws1508() {
 cat <<EOF >>.config
 CONFIG_TARGET_KERNEL_PARTSIZE=16
-CONFIG_TARGET_ROOTFS_PARTSIZE=1000
+CONFIG_TARGET_ROOTFS_PARTSIZE=650
 CONFIG_PACKAGE_luci-app-alist=y
 CONFIG_PACKAGE_luci-app-argon-config=y
 CONFIG_PACKAGE_luci-app-aria2=y

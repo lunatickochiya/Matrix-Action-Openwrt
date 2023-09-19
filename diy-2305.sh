@@ -7,6 +7,16 @@
 # under this directory mypatch should put your patch
 # delete his package confict with yours
 #=================================================
+
+autosetver() {
+version=23.05
+sed -i "52i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/package/kochiya/autoset/files/zzz-autoset-meson
+sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/package/kochiya/autoset/files/zzz-autoset-rockchip
+
+grep DISTRIB_DESCRIPTION package/package/kochiya/autoset/files/zzz-autoset-meson
+grep DISTRIB_DESCRIPTION package/package/kochiya/autoset/files/zzz-autoset-rockchip
+        }
+
 function remove_error_package() {
 
 packages=(
@@ -499,6 +509,7 @@ EOF
 
 
 if [ "$1" == "ws1508-istore" ]; then
+autosetver
 remove_error_package
 patch_openwrt
 patch_package
@@ -506,6 +517,7 @@ patch_luci
 patch_kiddin9
 add_full_istore_luci_for_ws1508
 elif [ "$1" == "ws1508" ]; then
+autosetver
 add_luci_packages_for_ws1508
 remove_error_package
 patch_openwrt

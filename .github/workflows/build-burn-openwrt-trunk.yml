@@ -1,4 +1,4 @@
-name: Build 2305 Burn
+name: Build trunk Burn
 
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
@@ -17,7 +17,7 @@ on:
     branches:
       - master
     paths:
-      - 'startcompile2305'
+      - 'startcompiletrunk'
       - 'startcompileall'
 env:
   TZ: Asia/Shanghai
@@ -27,7 +27,7 @@ jobs:
     runs-on: Ubuntu-22.04   
     if: github.event.repository.owner.id == github.event.sender.id
 
-    name: Build ${{matrix.target}} Burn OpenWrt-2305
+    name: Build ${{matrix.target}} Burn OpenWrt-trunk
     strategy:
       fail-fast: false
       matrix:
@@ -103,7 +103,7 @@ jobs:
       run: |
         [ -d mypatch ] && mv -f mypatch openwrt/mypatch
         [ -d package ] && mv -f package openwrt/package
-        [ -d target ] && mv -f target/linux/meson515 openwrt/target/linux/meson
+        [ -d target ] && mv -f target/linux/meson61 openwrt/target/linux/meson
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 更新 & 安装 feeds
@@ -122,7 +122,6 @@ jobs:
         chmod +x $DIY_SH after_build.sh refineconfig.sh gen-sha256sum.sh
         [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
         [ -d luci-patch-2305 ] && mv -f luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
-        [ -d feeds-package-patch-2305 ] && mv -f feeds-package-patch-2305 openwrt/feeds/packages/feeds-package-patch-2305
         [ -e files ] && mv files openwrt/files
         [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
@@ -272,8 +271,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: "${{ env.FIRMWARE }}/*"
-        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-2305
-        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-2305
+        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-trunk
+        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-trunk
         body_path: release.txt
 
     - name: 删除工作流
