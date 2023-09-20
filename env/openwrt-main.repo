@@ -1,3 +1,5 @@
 REPO_URL="https://github.com/openwrt/openwrt"
 REPO_BRANCH="main"
 DIY_SH="diy-trunk.sh"
+DIY_SH_AFB="after_build.sh"
+DIY_SH_RFC="refineconfig.sh"

@@ -1,12 +1,12 @@
 #!/bin/bash
+#!/bin/bash
 #=================================================
-# Description: DIY script
-# Lisence: MIT
-# Write By lunatickochiya
-# You can replace lean package with yours and patch his source
-# under this directory mypatch should put your patch
-# delete his package confict with yours
+# this script is from https://github.com/lunatickochiya/Lunatic-s805-rockchip-Action
+# Written By lunatickochiya
+# QQ group :286754582  https://jq.qq.com/?_wv=1027&k=5QgVYsC
 #=================================================
+
+
 
 
 sed -i 's/CONFIG_PACKAGE_firewall4=y/# CONFIG_PACKAGE_firewall4 is not set/g' .config

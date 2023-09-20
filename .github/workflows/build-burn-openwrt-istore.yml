@@ -70,6 +70,8 @@ jobs:
         echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
         echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
         echo "DIY_SH=${DIY_SH}" >> $GITHUB_ENV
+        echo "DIY_SH_AFB=${DIY_SH_AFB}" >> $GITHUB_ENV
+        echo "DIY_SH_RFC=${DIY_SH_RFC}" >> $GITHUB_ENV
         echo "UPLOAD_BIN_DIR=${UPLOAD_BIN_DIR}" >> $GITHUB_ENV
         echo "UPLOAD_FIRMWARE=${UPLOAD_FIRMWARE}" >> $GITHUB_ENV
         echo "UPLOAD_COWTRANSFER=${UPLOAD_COWTRANSFER}" >> $GITHUB_ENV
@@ -117,16 +119,16 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        chmod +x diy.sh after_build.sh refineconfig.sh gen-sha256sum.sh
+        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh
         [ -d my-package-patch ] && mv -f my-package-patch openwrt/feeds/packages/my-package-patch
         [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
         [ -d luci-patch ] && mv -f luci-patch openwrt/feeds/luci/luci-patch
         [ -e files ] && mv files openwrt/files
         [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
         cd openwrt
-        $GITHUB_WORKSPACE/diy.sh ws1508-istore
+        $GITHUB_WORKSPACE/$DIY_SH ws1508-istore
         make defconfig
-        $GITHUB_WORKSPACE/refineconfig.sh
+        $GITHUB_WORKSPACE/$DIY_SH_RFC
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Run awk command
@@ -183,7 +185,7 @@ jobs:
       continue-on-error: true
       if: steps.compile.outputs.status == 'success' && !cancelled()
       run: |
-        $GITHUB_WORKSPACE/after_build.sh
+        $GITHUB_WORKSPACE/$DIY_SH_AFB
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 整理文件 make burn

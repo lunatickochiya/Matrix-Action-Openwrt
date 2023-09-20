@@ -1,20 +1,17 @@
 #!/bin/bash
 #=================================================
-# Description: DIY script
-# Lisence: MIT
-# Write By lunatickochiya
-# You can replace lean package with yours and patch his source
-# under this directory mypatch should put your patch
-# delete his package confict with yours
+# this script is from https://github.com/lunatickochiya/Lunatic-s805-rockchip-Action
+# Written By lunatickochiya
+# QQ group :286754582  https://jq.qq.com/?_wv=1027&k=5QgVYsC
 #=================================================
 
 autosetver() {
 version=23.05
-sed -i "52i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/package/kochiya/autoset/files/zzz-autoset-meson
-sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/package/kochiya/autoset/files/zzz-autoset-rockchip
+sed -i "52i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-meson
+sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-rockchip
 
-grep DISTRIB_DESCRIPTION package/package/kochiya/autoset/files/zzz-autoset-meson
-grep DISTRIB_DESCRIPTION package/package/kochiya/autoset/files/zzz-autoset-rockchip
+grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-meson
+grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-rockchip
         }
 
 function remove_error_package() {
@@ -291,6 +288,7 @@ CONFIG_PACKAGE_wget-ssl=y
 CONFIG_PACKAGE_luci-app-samba4=y
 CONFIG_PACKAGE_luci-app-vsftpd=y
 CONFIG_PACKAGE_coremark=y
+CONFIG_PACKAGE_luci-app-openvpn-server=y
 EOF
 }
 
@@ -503,6 +501,7 @@ CONFIG_PACKAGE_wget-ssl=y
 CONFIG_PACKAGE_luci-app-samba4=y
 CONFIG_PACKAGE_luci-app-vsftpd=y
 CONFIG_PACKAGE_coremark=y
+CONFIG_PACKAGE_luci-app-openvpn-server=y
 EOF
 }
 

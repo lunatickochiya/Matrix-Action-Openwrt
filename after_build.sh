@@ -1,9 +1,10 @@
 #!/bin/bash
 #=================================================
-# this script is from https://github.com/HiGarfield  
-# Writed By lunatickochiya
-# QQ group :286754582  https://jq.qq.com/?_wv=1027&k=5QgVYsC   
+# this script is from https://github.com/lunatickochiya/Lunatic-s805-rockchip-Action
+# Written By lunatickochiya
+# QQ group :286754582  https://jq.qq.com/?_wv=1027&k=5QgVYsC
 #=================================================
+
 
 #cd openwrt
 #mkdir bin/out2
