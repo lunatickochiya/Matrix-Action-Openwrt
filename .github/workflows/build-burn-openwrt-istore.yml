@@ -68,6 +68,8 @@ jobs:
         source "${GITHUB_WORKSPACE}/env/common.txt"
         source "${GITHUB_WORKSPACE}/env/lunatickochiya-2203-s805.repo"
         echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
+        echo "BURN_UBOOT_IMG_URL=${BURN_UBOOT_IMG_URL}" >> $GITHUB_ENV
+        echo "AMLIMG_TOOL_URL=${AMLIMG_TOOL_URL}" >> $GITHUB_ENV
         echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
         echo "DIY_SH=${DIY_SH}" >> $GITHUB_ENV
         echo "DIY_SH_AFB=${DIY_SH_AFB}" >> $GITHUB_ENV
@@ -194,9 +196,9 @@ jobs:
       run: |
         sudo apt update
         sudo apt install img2simg
-        curl -L -o ./AmlImg https://github.com/hzyitc/AmlImg/releases/download/v0.3.1/AmlImg_v0.3.1_linux_amd64
+        curl -L -o ./AmlImg $AMLIMG_TOOL_URL
         chmod +x ./AmlImg
-        curl -L -o ./uboot.img https://github.com/hzyitc/u-boot-onecloud/releases/download/build-20221028-0940/eMMC.burn.img
+        curl -L -o ./uboot.img $BURN_UBOOT_IMG_URL
         ./AmlImg unpack ./uboot.img burn/
         echo "::end-uboot-unpack::"
         mkdir openwrt/bin/out
