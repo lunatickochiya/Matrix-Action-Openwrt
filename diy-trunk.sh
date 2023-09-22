@@ -20,6 +20,7 @@ function remove_error_package() {
 packages=(
     "luci-app-dockerman"
     "rtl8821cu"
+    "xray-core"
 )
 
 for package in "${packages[@]}"; do
@@ -31,6 +32,10 @@ done
 directories=(
     "feeds/luci/applications/luci-app-dockerman"
     "feeds/kiddin9/rtl8821cu"
+    "feeds/packages/net/xray-core"
+    "package/kochiya/ntfs3-mount"
+    "package/kochiya/ntfs3-oot"
+    "package/kochiya/ntfsprogs"
 )
 
 for directory in "${directories[@]}"; do
@@ -54,10 +59,10 @@ function patch_openwrt() {
         done
         }
 function patch_package() {
-        for packagepatch in $( ls feeds/packages/feeds-package-patch-2305 ); do
+        for packagepatch in $( ls feeds/packages/feeds-package-patch-trunk ); do
             cd feeds/packages/
-            echo Applying feeds-package-patch-2305 $packagepatch
-            patch -p1 < feeds-package-patch-2305/$packagepatch
+            echo Applying feeds-package-patch-trunk $packagepatch
+            patch -p1 < feeds-package-patch-trunk/$packagepatch
             cd ../..
         done
         }

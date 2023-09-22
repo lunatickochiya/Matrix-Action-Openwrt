@@ -19,6 +19,7 @@ function remove_error_package() {
 packages=(
     "luci-app-dockerman"
     "rtl8821cu"
+    "xray-core"
 )
 
 for package in "${packages[@]}"; do
@@ -30,6 +31,7 @@ done
 directories=(
     "feeds/luci/applications/luci-app-dockerman"
     "feeds/kiddin9/rtl8821cu"
+    "feeds/packages/net/xray-core"
 )
 
 for directory in "${directories[@]}"; do
