@@ -99,16 +99,6 @@ ifeq ($(SUBTARGET),meson8b)
   TARGET_DEVICES += thunder-onecloud
 endif
 
-define Device/thunder-onecloud-2G
-  DEVICE_DTS := meson8b-onecloud-2G
-  DEVICE_TITLE := Thunder OneCloud 2G
-  KERNEL_LOADADDR := 0x00208000
-  IMAGE/sdcard.img := boot-script onecloud | sdcard-common $$(DEVICE_NAME)
-endef
-ifeq ($(SUBTARGET),meson8b)
-  TARGET_DEVICES += thunder-onecloud-2G
-endif
-
 define Device/thunder-ws1508
   DEVICE_DTS := meson8b-ws1508
   DEVICE_TITLE := Thunder WS1508
