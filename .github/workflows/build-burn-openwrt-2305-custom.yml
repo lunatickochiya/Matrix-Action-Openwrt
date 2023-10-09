@@ -33,7 +33,6 @@ jobs:
         include:
           - target: ws1508
           - target: onecloud
-          - target: onecloud-2G
     
     steps:
     - name: 检查
