@@ -1,0 +1,292 @@
+name: Build 2305 Burn CUS
+
+# Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
+permissions:
+  contents: write
+  actions: write
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      ssh:
+        description: 'SSH connection to Actions'
+        required: false
+        default: 'false'
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: Ubuntu-22.04   
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    name: Build ${{matrix.target}} Burn OpenWrt-2305 CUS
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: ws1508
+          - target: onecloud
+    
+    steps:
+    - name: 检查
+      uses: actions/checkout@main
+
+    - name: 初始化环境
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo -E apt-get -qq update
+        sudo -E apt-get -qq install build-essential clang flex g++ gawk gcc-multilib gettext \
+        git libncurses5-dev libssl-dev python3-distutils python3-pyelftools python3-setuptools \
+        libpython3-dev rsync unzip zlib1g-dev swig aria2 jq subversion qemu-utils ccache rename \
+        libelf-dev device-tree-compiler libgnutls28-dev coccinelle libgmp3-dev libmpc-dev libfuse-dev
+        sudo -E apt-get -qq purge azure-cli ghc* zulu* llvm* firefox powershell openjdk* dotnet* google* mysql* php* android*
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
+
+    - name: 设置GITHUB_ENV
+      id: env
+      run: |
+        echo "date=$(date +'%m/%d_%Y_%H/%M')" >> $GITHUB_ENV
+        echo "date2=$(date +'%Y/%m %d')" >> $GITHUB_ENV
+        echo "date3=$(date +'%m.%d')" >> $GITHUB_ENV
+        VERSION="$(echo "${{github.event.action}}" | grep -Eo " [0-9.]+" | sed -e 's/ //')" || true
+        [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
+        echo ${{matrix.target}}
+        source "${GITHUB_WORKSPACE}/env/common.txt"
+        source "${GITHUB_WORKSPACE}/env/openwrt-23.05.repo"
+        echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
+        echo "BURN_UBOOT_IMG_URL=${BURN_UBOOT_IMG_URL}" >> $GITHUB_ENV
+        echo "AMLIMG_TOOL_URL=${AMLIMG_TOOL_URL}" >> $GITHUB_ENV
+        echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
+        echo "DIY_SH=${DIY_SH}" >> $GITHUB_ENV
+        echo "DIY_SH_AFB=${DIY_SH_AFB}" >> $GITHUB_ENV
+        echo "DIY_SH_RFC=${DIY_SH_RFC}" >> $GITHUB_ENV
+        echo "UPLOAD_BIN_DIR=${UPLOAD_BIN_DIR}" >> $GITHUB_ENV
+        echo "UPLOAD_FIRMWARE=${UPLOAD_FIRMWARE}" >> $GITHUB_ENV
+        echo "UPLOAD_COWTRANSFER=${UPLOAD_COWTRANSFER}" >> $GITHUB_ENV
+        echo "UPLOAD_WETRANSFER=${UPLOAD_WETRANSFER}" >> $GITHUB_ENV
+        echo "UPLOAD_RELEASE=${UPLOAD_RELEASE}" >> $GITHUB_ENV
+        echo "USE_Cache=${USE_Cache}" >> $GITHUB_ENV
+
+    - name: 克隆源代码
+      working-directory: /workdir
+      id: clone
+      run: |
+        df -hT $PWD
+        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        cd openwrt
+        git checkout v23.05.0
+        sed -i '$a src-git kiddin9 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Free up disk space
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo mkdir -p -m 777 /mnt/openwrt/dl /mnt/openwrt/bin /mnt/openwrt/staging_dir
+        ln -sf /mnt/openwrt/dl openwrt/dl
+        ln -sf /mnt/openwrt/bin openwrt/bin
+        ln -sf /mnt/openwrt/staging_dir openwrt/staging_dir
+
+    - name: 自定义安装包(优先于feeds)
+      if: steps.clone.outputs.status == 'success'
+      id: files
+      run: |
+        [ -d mypatch ] && mv -f mypatch openwrt/mypatch
+        [ -d package ] && mv -f package/* openwrt/package
+        [ -d target ] && mv -f target/linux/meson515 openwrt/target/linux/meson
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 更新 & 安装 feeds
+      if: steps.files.outputs.status == 'success'
+      id: feeds
+      run: |
+        cd openwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 自定义配置（修复feeds）
+      if: steps.feeds.outputs.status == 'success'
+      id: config
+      run: |
+        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh
+        [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
+        [ -d luci-patch-2305 ] && mv -f luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
+        [ -d feeds-package-patch-2305 ] && mv -f feeds-package-patch-2305 openwrt/feeds/packages/feeds-package-patch-2305
+        [ -e files ] && mv files openwrt/files
+        [ -e package-configs ] && mv package-configs openwrt/package-configs
+        [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_SH ws1508-istore
+        make defconfig
+        $GITHUB_WORKSPACE/$DIY_SH_RFC
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Run awk command
+      if: steps.config.outputs.status == 'success'
+      working-directory: ./openwrt
+      run: |
+        awk '/${{matrix.target}}/ { print }' .config
+        echo "------------------------"
+        awk '/docker/ { print }' .config
+        echo "------------------------"
+        awk '/store/ { print }' .config
+        echo "------------------------"
+        awk '/perl/ { print }' .config
+
+    - name: 下载包文件
+      if: steps.config.outputs.status == 'success'
+      run: |
+        cd openwrt
+        make download -j$(nproc)
+        find dl -size -1024c -exec rm -f {} \;
+
+    - name: 缓存
+      uses: stupidloud/cachewrtbuild@main
+      if: env.USE_Cache == 'true' && !cancelled()
+      with:
+        ccache: 'true'
+        mixkey: ${{ matrix.target }}
+        clean: ${{ contains(github.event.action, 'nocache') }}
+        prefix: ${{ github.workspace }}/openwrt
+
+    - name: 编译固件
+      id: compile
+      working-directory: ./openwrt
+      run: |
+        echo -e "$(($(nproc)+1)) thread compile"
+        make -j$(($(nproc)+1)) || make -j1 V=s
+        echo "status=success" >> $GITHUB_OUTPUT
+     
+    - name: 检查空间使用情况
+      if: (!cancelled())
+      run: df -hT
+
+    - name: 上传bin目录
+      uses: actions/upload-artifact@main
+      continue-on-error: true
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+      with:
+        name: ${{ env.VERSION }}_${{matrix.target}}
+        path: |
+          openwrt/bin/targets/
+
+    - name: 生成ipk和固件的zip
+      id: afb
+      continue-on-error: true
+      if: steps.compile.outputs.status == 'success' && !cancelled()
+      run: |
+        $GITHUB_WORKSPACE/$DIY_SH_AFB
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 整理文件 make burn
+      id: organize
+      if: env.UPLOAD_FIRMWARE == 'true' && steps.afb.outputs.status == 'success' && !cancelled()
+      run: |
+        sudo apt update
+        sudo apt install img2simg
+        curl -L -o ./AmlImg $AMLIMG_TOOL_URL
+        chmod +x ./AmlImg
+        curl -L -o ./uboot.img $BURN_UBOOT_IMG_URL
+        ./AmlImg unpack ./uboot.img burn/
+        echo "::end-uboot-unpack::"
+        mkdir openwrt/bin/out
+        cp -u -f openwrt/bin/targets/*/*/*.gz openwrt/bin/out/
+        gunzip openwrt/bin/out/*.gz
+        diskimg=$(ls openwrt/bin/out/*.img)
+        loop=$(sudo losetup --find --show --partscan $diskimg)
+        sudo img2simg ${loop}p1 burn/boot.simg
+        sudo img2simg ${loop}p2 burn/rootfs.simg
+        sudo losetup -d $loop
+        echo "::end-unpackext4::"
+        cat <<EOF >>burn/commands.txt
+        PARTITION:boot:sparse:boot.simg
+        PARTITION:rootfs:sparse:rootfs.simg
+        EOF
+        prefix=$(ls openwrt/bin/out/*.img | sed 's/\.img$//')
+        burnimg=${prefix}.burn.img
+        ./AmlImg pack $burnimg burn/
+        gzip -9 openwrt/bin/out/*.burn.img
+        mkdir firmware
+        cp -u -f openwrt/bin/out/*.burn.img.gz firmware
+        cp -u -f openwrt/kernelipks.zip firmware
+        cp -u -f openwrt/ipks.zip firmware
+        mv -f openwrt/bin/targets/*/*/{*combined*,*sysupgrade*,*ext4*,*sdk*,*imagebuilder*} ./firmware/ 2>/dev/null || true
+        cp openwrt/.config  ./firmware/${{matrix.target}}.config
+        cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
+        cd firmware
+        echo "v${{ env.date2 }}" > version.txt
+        echo ${{matrix.target}} >> version.txt
+        rm -rf sha256sums
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 上传固件目录
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: ${{ env.date3 }}_${{matrix.target}}
+        path: ${{ env.FIRMWARE }}      
+
+    - name: 上传固件cowtransfer
+      id: cowtransfer
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
+      run: |
+        curl -fsSL git.io/file-transfer | sh
+        ./transfer cow --block 2621440 -s -p 64 --no-progress ${FIRMWARE} 2>&1 | tee cowtransfer.log
+        echo "::warning file=cowtransfer.com::$(cat cowtransfer.log | grep https)"
+        echo "url=$(cat cowtransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_OUTPUT
+
+    - name: 上传固件WeTransfer
+      id: wetransfer
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_WETRANSFER == 'true' && !cancelled()
+      run: |
+        curl -fsSL git.io/file-transfer | sh
+        ./transfer wet -s -p 16 --no-progress ${FIRMWARE} 2>&1 | tee wetransfer.log
+        echo "::warning file=wetransfer.com::$(cat wetransfer.log | grep https)"
+        echo "url=$(cat wetransfer.log | grep https | cut -f3 -d" ")" >> $GITHUB_OUTPUT
+
+    - name: 生成发布标签
+      id: tag
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true' && !cancelled()
+      run: |
+        touch release.txt
+        $GITHUB_WORKSPACE/gen-sha256sum.sh
+        [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
+        [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 上传固件发布
+      uses: softprops/action-gh-release@v1
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        files: "${{ env.FIRMWARE }}/*"
+        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-2305-CUS
+        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-2305-CUS
+        body_path: release.txt
+
+    - name: 删除工作流
+      uses: Mattraks/delete-workflow-runs@main
+      with:
+        retain_days: 2
+        keep_minimum_runs: 3
+
+    - name: 删除旧版本
+      uses: dev-drprasad/delete-older-releases@master
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      with:
+        keep_latest: 24
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
