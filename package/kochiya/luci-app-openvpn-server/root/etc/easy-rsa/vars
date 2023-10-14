@@ -1,19 +1,10 @@
-export EASY_RSA="/etc/easy-rsa"
-export OPENSSL="openssl"
-export PKCS11TOOL="pkcs11-tool"
-export GREP="grep"
-export KEY_CONFIG=`/usr/sbin/whichopensslcnf $EASY_RSA`
-export KEY_DIR="$EASY_RSA/keys"
-echo NOTE: If you run ./clean-all, I will be doing a rm -rf on $KEY_DIR
-export PKCS11_MODULE_PATH="dummy"
-export PKCS11_PIN="dummy"
-export KEY_SIZE=1024
-export CA_EXPIRE=365
-export KEY_EXPIRE=365
-export KEY_COUNTRY="CN"
-export KEY_PROVINCE="SCBJ"
-export KEY_CITY="BJ"
-export KEY_ORG="paradise"
-export KEY_EMAIL="paradise@kochiya.com"
-export KEY_OU="paradise"
-export KEY_NAME="EasyRSA"
+set_var EASYRSA_OPENSSL	"openssl"
+set_var EASYRSA_KEY_SIZE	1024
+set_var EASYRSA_REQ_COUNTRY	"lunatickochiya"
+set_var EASYRSA_REQ_PROVINCE	"github"
+set_var EASYRSA_REQ_CITY	"github"
+set_var EASYRSA_REQ_ORG	"github"
+set_var EASYRSA_REQ_EMAIL	"lunatickochiya@github.com"
+set_var EASYRSA_REQ_OU	"github"
+set_var EASYRSA_CA_EXPIRE	3650
+set_var EASYRSA_CERT_EXPIRE	3650
