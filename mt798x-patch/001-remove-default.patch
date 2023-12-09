@@ -1,0 +1,37 @@
+diff --git a/include/target.mk b/include/target.mk
+index 017ad786b6..9d24365e0d 100644
+--- a/include/target.mk
++++ b/include/target.mk
+@@ -52,7 +52,6 @@ DEFAULT_PACKAGES.router:=\
+ # For easy usage
+ DEFAULT_PACKAGES.tweak:=\
+ 	block-mount \
+-	default-settings-chn \
+ 	kmod-ipt-raw \
+ 	kmod-nf-nathelper \
+ 	kmod-nf-nathelper-extra \
+diff --git a/target/linux/mediatek/Makefile b/target/linux/mediatek/Makefile
+index e0d876683a..63bd0574ca 100644
+--- a/target/linux/mediatek/Makefile
++++ b/target/linux/mediatek/Makefile
+@@ -14,6 +14,6 @@ KERNEL_TESTING_PATCHVER:=5.4
+ include $(INCLUDE_DIR)/target.mk
+ DEFAULT_PACKAGES += \
+ 	kmod-leds-gpio kmod-gpio-button-hotplug \
+-	autocore-arm uboot-envtools
++	uboot-envtools
+ 
+ $(eval $(call BuildTarget))
+diff --git a/target/linux/mediatek/image/mt7981.mk b/target/linux/mediatek/image/mt7981.mk
+index 8b6c4bcfce..528265d930 100644
+--- a/target/linux/mediatek/image/mt7981.mk
++++ b/target/linux/mediatek/image/mt7981.mk
+@@ -443,7 +443,7 @@ define Device/cmcc_rax3000m
+   DEVICE_MODEL := RAX3000M NAND
+   DEVICE_DTS := mt7981-cmcc-rax3000m
+   DEVICE_DTS_DIR := $(DTS_DIR)/mediatek
+-  DEVICE_PACKAGES := $(MT7981_USB_PKGS) luci-app-ksmbd luci-i18n-ksmbd-zh-cn ksmbd-utils
++  DEVICE_PACKAGES := kmod-usb2 kmod-usb3 blkid blockdev fdisk
+   SUPPORTED_DEVICES := cmcc,rax3000m
+   UBINIZE_OPTS := -E 5
+   BLOCKSIZE := 128k
