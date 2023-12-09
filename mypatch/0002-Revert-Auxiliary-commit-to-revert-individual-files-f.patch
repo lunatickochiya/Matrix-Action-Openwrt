@@ -1,0 +1,40 @@
+From b2298ec0ed3eef41f327184b06d2eb8e373a217d Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 9 Dec 2023 22:36:29 +0800
+Subject: [PATCH 2/2] Revert "Auxiliary commit to revert individual files from
+ f4351f5ca49e4fe0151321c7a717d03b44cf3dde"
+
+This reverts commit 93d6f5d89b3848bf3611ae3c4dfea61e72efd075.
+---
+ target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand.dtso | 1 +
+ target/linux/mediatek/dts/mt7981b-cmcc-rax3000m.dts       | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand.dtso b/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand.dtso
+index 4d2b01cb63..ff94a550fd 100644
+--- a/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand.dtso
++++ b/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand.dtso
+@@ -84,6 +84,7 @@
+ 						reg = <0x180000 0x200000>;
+ 						read-only;
+ 
++						compatible = "nvmem-cells";
+ 						nvmem-layout {
+ 							compatible = "fixed-layout";
+ 							#address-cells = <1>;
+diff --git a/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m.dts b/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m.dts
+index 3f330f40fa..e9c850e85b 100644
+--- a/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m.dts
++++ b/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m.dts
+@@ -90,7 +90,7 @@
+ };
+ 
+ &mdio_bus {
+-	switch: switch@1f {
++	switch: switch@0 {
+ 		compatible = "mediatek,mt7531";
+ 		reg = <31>;
+ 		reset-gpios = <&pio 39 GPIO_ACTIVE_HIGH>;
+-- 
+2.34.1
+
