@@ -141,7 +141,6 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script
 	bool "Temperature Show script"
 	select PACKAGE_luci-temperature-script
 	depends on PACKAGE_$(PKG_NAME)
-	default y if aarch64||arm||i386||x86_64
 	default y if TARGET_meson=y||TARGET_rockchip=y||i386||x86_64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_filesystem

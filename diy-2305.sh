@@ -114,12 +114,12 @@ patch_luci
 patch_kiddin9
 elif [ "$1" == "mt798x" ]; then
 autosetver
-add_mt798x_packages
-remove_error_package
 patch_openwrt
+add_mt798x_packages
 patch_package
 patch_luci
 patch_kiddin9
+remove_error_package
 else
 echo "Invalid argument"
 fi
