@@ -17,6 +17,7 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_RESIZEFS \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_FW3_IPTABLE_LEGACY \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_temperature \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_filesystem \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_usb_storage \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci \
@@ -128,12 +129,17 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_FW3_IPTABLE_LEGACY
 	default n
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_temperature
-	bool "Temperature Show"
+	bool "Temperature Show utils"
 	select PACKAGE_lm-sensors-detect
 	select PACKAGE_lm-sensors
 	select PACKAGE_htop
-	select PACKAGE_luci-temperature-script
 	select HTOP_LMSENSORS
+	depends on PACKAGE_$(PKG_NAME)
+	default y if TARGET_meson=y||TARGET_rockchip=y||i386||x86_64
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script
+	bool "Temperature Show script"
+	select PACKAGE_luci-temperature-script
 	depends on PACKAGE_$(PKG_NAME)
 	default y if aarch64||arm||i386||x86_64
 
