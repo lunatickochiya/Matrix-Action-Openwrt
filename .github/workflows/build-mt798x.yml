@@ -138,6 +138,8 @@ jobs:
         echo "------------------------"
         awk '/docker/ { print }' .config
         echo "------------------------"
+        awk '/DOCKER/ { print }' .config
+        echo "------------------------"
         awk '/store/ { print }' .config
         echo "------------------------"
         awk '/perl/ { print }' .config
