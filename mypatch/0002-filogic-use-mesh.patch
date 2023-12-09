@@ -1,3 +1,12 @@
+From b6d466727d1ff7cd4786064ddb4e6409be3623ae Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 9 Dec 2023 22:55:04 +0800
+Subject: [PATCH 2/2] filogic:use mesh
+
+---
+ target/linux/mediatek/filogic/target.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 diff --git a/target/linux/mediatek/filogic/target.mk b/target/linux/mediatek/filogic/target.mk
 index dd4c4c1448..bfbd468e99 100644
 --- a/target/linux/mediatek/filogic/target.mk
@@ -11,3 +20,6 @@ index dd4c4c1448..bfbd468e99 100644
  KERNELNAME:=Image dtbs
  
  define Target/Description
+-- 
+2.34.1
+
