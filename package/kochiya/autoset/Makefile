@@ -6,10 +6,11 @@
 
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/package.mk
+include $(INCLUDE_DIR)/target.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=4.0
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -18,6 +19,7 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_FW3_IPTABLE_LEGACY \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_temperature \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script_mtk \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_filesystem \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_usb_storage \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci \
@@ -98,6 +100,13 @@ define Package/luci-temperature-script
   HIDDEN:=1
 endef
 
+define Package/luci-temperature-script-mtk
+  $(Package/autoset/default)
+  TITLE:=luci temperature script mtk
+  DEPENDS:=autoset
+  HIDDEN:=1
+endef
+
 define Package/$(PKG_NAME)/config
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_RESIZEFS
@@ -142,6 +151,12 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script
 	select PACKAGE_luci-temperature-script
 	depends on PACKAGE_$(PKG_NAME)
 	default y if TARGET_meson=y||TARGET_rockchip=y||i386||x86_64
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script_mtk
+	bool "Temperature Show script for mtk"
+	select PACKAGE_luci-temperature-script-mtk
+	depends on PACKAGE_$(PKG_NAME)
+	default y if TARGET_mediatek_mt7981=y
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
 	bool "Kernel filesystem"
@@ -237,6 +252,17 @@ define Package/luci-temperature-script/install
 	$(INSTALL_BIN) ./files/60-autoset-reload-rpcd $(1)/etc/uci-defaults/
 endef
 
+define Package/luci-temperature-script-mtk/install
+	$(INSTALL_DIR) $(1)/sbin
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_DIR) $(1)/www/luci-static/resources/view/status/include
+	$(INSTALL_BIN) ./files/arm/tempinfo $(1)/sbin/
+	$(INSTALL_BIN) ./files/generic/cpuinfo $(1)/sbin/
+	$(INSTALL_BIN) ./files/generic/ethinfo $(1)/sbin/
+	$(INSTALL_DATA) ./files/generic/21_ethinfo.js $(1)/www/luci-static/resources/view/status/include/
+	$(INSTALL_BIN) ./files/60-autoset-reload-rpcd $(1)/etc/uci-defaults/
+endef
+
 $(eval $(call BuildPackage,autoset))
 $(eval $(call BuildPackage,autoset-uci))
 $(eval $(call BuildPackage,autoset-uci-oneport))
@@ -245,5 +271,6 @@ $(eval $(call BuildPackage,autoset-uci-mediatek))
 $(eval $(call BuildPackage,autoset-uci-meson))
 $(eval $(call BuildPackage,auto-resize-rootfs-script))
 $(eval $(call BuildPackage,luci-temperature-script))
+$(eval $(call BuildPackage,luci-temperature-script-mtk))
 #$(eval $(call BuildPackage,drop-fw4-nftables))
 
