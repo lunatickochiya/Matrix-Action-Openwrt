@@ -1,0 +1,6 @@
+REPO_URL="https://github.com/hanwckf/immortalwrt-mt798x.git"
+REPO_BRANCH="openwrt-21.02"
+DIY_SH="diy-mt798x-mtk.sh"
+DIY_SH_AFB="after_build.sh"
+DIY_SH_RFC="refineconfig.sh"
+

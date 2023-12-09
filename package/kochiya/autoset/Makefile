@@ -9,7 +9,7 @@ include $(INCLUDE_DIR)/package.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=4.0
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -68,6 +68,13 @@ define Package/autoset-uci-rockchip
   HIDDEN:=1
 endef
 
+define Package/autoset-uci-mediatek
+  $(Package/autoset/default)
+  TITLE:=Support Packages for mediatek arm64 router uci
+  DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
+  HIDDEN:=1
+endef
+
 define Package/auto-resize-rootfs-script
   $(Package/autoset/default)
   TITLE:=auto resize rootfs script
@@ -106,9 +113,9 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_RESIZEFS
 	select PACKAGE_mount-utils
 	select PACKAGE_auto-resize-rootfs-script
 	select PACKAGE_kmod-loop
-	select @PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
+	select PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
 	depends on PACKAGE_$(PKG_NAME)
-	default y if aarch64||arm||i386||x86_64
+	default y if TARGET_meson=y||TARGET_rockchip=y||i386||x86_64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_FW3_IPTABLE_LEGACY
 	bool "ADD FW3 IPTABLE LEGACY"
@@ -126,7 +133,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_temperature
 	select PACKAGE_lm-sensors
 	select PACKAGE_htop
 	select PACKAGE_luci-temperature-script
-	select @HTOP_LMSENSORS
+	select HTOP_LMSENSORS
 	depends on PACKAGE_$(PKG_NAME)
 	default y if aarch64||arm||i386||x86_64
 
@@ -146,7 +153,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_usb_storage
 	select PACKAGE_kmod-usb3
 	select PACKAGE_kmod-kmod-usb-storage
 	select PACKAGE_kmod-kmod-usb-storage-extras
-	select @PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
+	select PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
 	depends on PACKAGE_$(PKG_NAME)
 	default n
 
@@ -155,6 +162,7 @@ choice
 	depends on PACKAGE_$(PKG_NAME)
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_meson if TARGET_meson=y
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_rockchip if TARGET_rockchip=y
+	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_mediatek if TARGET_mediatek=y
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci
 	bool "Common UCI"
@@ -171,6 +179,10 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_uci_rockchip
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci_meson
 	bool "Meson"
 	select PACKAGE_autoset-uci-meson
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_uci_mediatek
+	bool "Mediatek"
+	select PACKAGE_autoset-uci-mediatek
 endchoice
 
 endef
@@ -188,6 +200,11 @@ endef
 define Package/autoset-uci-meson/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/zzz-autoset-meson $(1)/etc/uci-defaults/zz99-autoset
+endef
+
+define Package/autoset-uci-mediatek/install
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./files/zzz-autoset-mediatek $(1)/etc/uci-defaults/zz99-autoset
 endef
 
 define Package/autoset-uci/install
@@ -208,16 +225,17 @@ endef
 
 define Package/luci-temperature-script/install
 	$(INSTALL_DIR) $(1)/sbin
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/cpuinfo $(1)/sbin/
-ifneq ($(filter ipq% mediatek%, $(TARGETID)),)
 	$(INSTALL_BIN) ./files/tempinfo $(1)/sbin/
-endif
+	$(INSTALL_BIN) ./files/60-autoset-reload-rpcd $(1)/etc/uci-defaults/
 endef
 
 $(eval $(call BuildPackage,autoset))
 $(eval $(call BuildPackage,autoset-uci))
 $(eval $(call BuildPackage,autoset-uci-oneport))
 $(eval $(call BuildPackage,autoset-uci-rockchip))
+$(eval $(call BuildPackage,autoset-uci-mediatek))
 $(eval $(call BuildPackage,autoset-uci-meson))
 $(eval $(call BuildPackage,auto-resize-rootfs-script))
 $(eval $(call BuildPackage,luci-temperature-script))
