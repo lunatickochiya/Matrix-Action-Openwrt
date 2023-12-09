@@ -19,7 +19,7 @@ index e0d876683a..63bd0574ca 100644
  DEFAULT_PACKAGES += \
  	kmod-leds-gpio kmod-gpio-button-hotplug \
 -	autocore-arm uboot-envtools
-+	autocore-arm uboot-envtools
++	uboot-envtools
  
  $(eval $(call BuildTarget))
 diff --git a/target/linux/mediatek/image/mt7981.mk b/target/linux/mediatek/image/mt7981.mk
