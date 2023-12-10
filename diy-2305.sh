@@ -50,6 +50,46 @@ rm -rf tmp
 ./scripts/feeds install -a -d y
         }
 
+function remove_error_package_not_install() {
+
+packages=(
+    "luci-app-dockerman"
+    "rtl8821cu"
+    "xray-core"
+)
+
+for package in "${packages[@]}"; do
+        echo "卸载软件包 $package ..."
+        ./scripts/feeds uninstall $package
+        echo "软件包 $package 已卸载。"
+done
+
+directories=(
+    "feeds/luci/applications/luci-app-dockerman"
+    "feeds/kiddin9/rtl8821cu"
+    "feeds/packages/net/xray-core"
+)
+
+for directory in "${directories[@]}"; do
+    if [ -d "$directory" ]; then
+        echo "目录 $directory 存在，进行删除操作..."
+        rm -r "$directory"
+        echo "目录 $directory 已删除。"
+    else
+        echo "目录 $directory 不存在。"
+    fi
+done
+
+echo "升级索引"
+./scripts/feeds update -i
+
+for package2 in "${packages[@]}"; do
+        echo "安装软件包 $package2 ..."
+        ./scripts/feeds install $package2
+        echo "软件包 $package2 已经重新安装。"
+done
+        }
+
 function patch_openwrt() {
         for i in $( ls mypatch ); do
             echo Applying mypatch $i
@@ -91,7 +131,8 @@ echo "$(cat package-configs/ws1508-common.config)" >> .config
 }
 
 function add_mt798x_packages() {
-echo "$(cat package-configs/mt798x-common.config)" >> .config
+echo "$(cat package-configs/mt798x-common.config)" >> package-configs/.config
+mv -f package-configs/.config .config
 }
 
 
@@ -115,11 +156,11 @@ patch_kiddin9
 elif [ "$1" == "mt798x" ]; then
 autosetver
 patch_openwrt
-add_mt798x_packages
+remove_error_package_not_install
 patch_package
 patch_luci
 patch_kiddin9
-remove_error_package
+add_mt798x_packages
 else
 echo "Invalid argument"
 fi

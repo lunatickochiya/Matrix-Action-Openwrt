@@ -133,7 +133,7 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH ws1508
         make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC
+        $GITHUB_WORKSPACE/$DIY_SH_RFC meson
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Run awk command

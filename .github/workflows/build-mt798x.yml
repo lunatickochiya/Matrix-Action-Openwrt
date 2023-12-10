@@ -121,11 +121,11 @@ jobs:
         [ -d feeds-package-patch-2305 ] && mv -f feeds-package-patch-2305 openwrt/feeds/packages/feeds-package-patch-2305
         [ -e files ] && mv files openwrt/files
         [ -e package-configs ] && mv package-configs openwrt/package-configs
-        [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
+        [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH mt798x
         make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC
+        $GITHUB_WORKSPACE/$DIY_SH_RFC mt798x
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Run awk command

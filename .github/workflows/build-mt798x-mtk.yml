@@ -142,6 +142,8 @@ jobs:
         awk '/perl/ { print }' .config
         echo "------------------------"
         awk '/temperature/ { print }' .config
+        echo "------------------------"
+        awk '/xray/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
