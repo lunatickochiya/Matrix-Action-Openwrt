@@ -18,10 +18,18 @@
 带burn的固件 解压后 使用 USB_Burning_Tool 刷入使用 不需要刷底包
 进入burn固件后使用bash resize.sh 自动扩容
 
+ 20231210
+ 
+新增支持mt798x  测试支持rax3000m nand ubootmod版本 请使用squashfs-sysupgrade刷入 不要刷factory的版本！
+ubootmod：https://github.com/hanwckf/bl-mt798x/releases/download/20231124/mt798x-uboot-202307-fip.7z
 
-istoreos 无法启动 请勿下载
+带mtk的为碧园无线
+不带的为开源
+固件地址 192.168.10.1
 
-目前只支持meson8b 玩客云 onecloud  流量宝盒 ws1508
+
+
+目前只支持meson8b 玩客云 onecloud  流量宝盒 ws1508 rax3000m nand
 
 源码更新交流学习：点击链接加入群聊 ：https://jq.qq.com/?_wv=1027&k=5QgVYsC  
 群号： 286754582
