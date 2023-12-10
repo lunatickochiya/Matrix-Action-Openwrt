@@ -1,7 +1,7 @@
 From 6e45bb7d4d2fa9971434c43ddb5356377c12ee60 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Sat, 9 Dec 2023 18:27:54 +0800
-Subject: [PATCH 2/2] filogic:mediatek: add CMCC RAX3000M NAND version support
+Subject: [PATCH 2/3] filogic:mediatek: add CMCC RAX3000M NAND version support
  ubootmod Revert "Auxiliary commit to revert individual files from
  f4351f5ca49e4fe0151321c7a717d03b44cf3dde"
 
