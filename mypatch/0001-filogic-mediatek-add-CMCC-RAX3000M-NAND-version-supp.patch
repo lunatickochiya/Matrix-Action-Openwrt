@@ -1,7 +1,7 @@
 From df7e87c4cce172983631c80334d9ab841af3a237 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Mon, 11 Dec 2023 15:38:47 +0800
-Subject: [PATCH] filogic:mediatek: add CMCC RAX3000M NAND version support
+Subject: [PATCH 1/2] filogic:mediatek: add CMCC RAX3000M NAND version support
  ubootmod
 
 mediatek: RAX3000M:switch to new nvmem fixed-layout binding
