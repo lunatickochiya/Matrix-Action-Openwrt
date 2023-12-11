@@ -248,8 +248,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: "${{ env.FIRMWARE }}/*"
-        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-MT798X-2305
-        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-MT798X-2305
+        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-2305
+        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-2305
         body_path: release.txt
 
     - name: 删除工作流

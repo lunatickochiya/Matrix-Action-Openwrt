@@ -1,9 +1,12 @@
-From 6e45bb7d4d2fa9971434c43ddb5356377c12ee60 Mon Sep 17 00:00:00 2001
+From df7e87c4cce172983631c80334d9ab841af3a237 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
-Date: Sat, 9 Dec 2023 18:27:54 +0800
-Subject: [PATCH 2/2] filogic:mediatek: add CMCC RAX3000M NAND version support
- ubootmod Revert "Auxiliary commit to revert individual files from
- f4351f5ca49e4fe0151321c7a717d03b44cf3dde"
+Date: Mon, 11 Dec 2023 15:38:47 +0800
+Subject: [PATCH] filogic:mediatek: add CMCC RAX3000M NAND version support
+ ubootmod
+
+mediatek: RAX3000M:switch to new nvmem fixed-layout binding
+filogic:update rax3000m nand ubootmod dts
+ Revert "Auxiliary commit to revert individual files from f4351f5ca49e4fe0151321c7a717d03b44cf3dde"
 
 This reverts commit 34c3d9c079e20c82e7b3d6a4f340f9477d9aa8c0.
 Revert "Auxiliary commit to revert individual files from f4351f5ca49e4fe0151321c7a717d03b44cf3dde"
@@ -11,31 +14,31 @@ Revert "Auxiliary commit to revert individual files from f4351f5ca49e4fe0151321c
 This reverts commit 93d6f5d89b3848bf3611ae3c4dfea61e72efd075.
 ---
  .../uboot-envtools/files/mediatek_filogic     |   1 +
- .../mt7981b-cmcc-rax3000m-nand-ubootmod.dts   | 246 ++++++++++++++++++
+ .../mt7981b-cmcc-rax3000m-nand-ubootmod.dts   | 253 ++++++++++++++++++
  .../filogic/base-files/etc/board.d/02_network |   1 +
  .../etc/hotplug.d/ieee80211/11_fix_wifi_mac   |   3 +
  target/linux/mediatek/image/filogic.mk        |  23 ++
- 5 files changed, 274 insertions(+)
+ 5 files changed, 281 insertions(+)
  create mode 100644 target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand-ubootmod.dts
 
 diff --git a/package/boot/uboot-envtools/files/mediatek_filogic b/package/boot/uboot-envtools/files/mediatek_filogic
-index 8c7c5a85c0..8c6978852a 100644
+index 8c7c5a85c0..0404959cd5 100644
 --- a/package/boot/uboot-envtools/files/mediatek_filogic
 +++ b/package/boot/uboot-envtools/files/mediatek_filogic
-@@ -66,6 +66,7 @@ mercusys,mr90x-v1)
+@@ -65,6 +65,7 @@ mercusys,mr90x-v1)
+ 	local envdev=/dev/mtd$(find_mtd_index "u-boot-env")
  	ubootenv_add_uci_config "$envdev" "0x0" "0x20000" "0x20000" "1"
  	;;
- cetron,ct3003|\
 +cmcc,rax3000m-nand-ubootmod|\
+ cetron,ct3003|\
  netgear,wax220|\
  zbtlink,zbt-z8102ax)
- 	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x20000" "0x20000"
 diff --git a/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand-ubootmod.dts b/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand-ubootmod.dts
 new file mode 100644
-index 0000000000..681401bd74
+index 0000000000..181a053bf1
 --- /dev/null
 +++ b/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand-ubootmod.dts
-@@ -0,0 +1,246 @@
+@@ -0,0 +1,253 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 +
 +/dts-v1/;
@@ -45,7 +48,7 @@ index 0000000000..681401bd74
 +#include "mt7981.dtsi"
 +
 +/ {
-+	model = "CMCC RAX3000M NAND version (custom U-Boot layout)";
++	model = "CMCC RAX3000M NAND Version (Custom U-Boot Layout)";
 +	compatible = "cmcc,rax3000m-nand-ubootmod", "mediatek,mt7981";
 +
 +	aliases {
@@ -109,7 +112,7 @@ index 0000000000..681401bd74
 +		reg = <0>;
 +		phy-mode = "2500base-x";
 +
-+		nvmem-cells = <&macaddr_factory_2a>;
++		nvmem-cells = <&macaddr_factory_2a 0>;
 +		nvmem-cell-names = "mac-address";
 +
 +		fixed-link {
@@ -125,13 +128,13 @@ index 0000000000..681401bd74
 +		phy-mode = "gmii";
 +		phy-handle = <&int_gbe_phy>;
 +
-+		nvmem-cells = <&macaddr_factory_24>;
++		nvmem-cells = <&macaddr_factory_24 0>;
 +		nvmem-cell-names = "mac-address";
 +	};
 +};
 +
 +&mdio_bus {
-+	switch: switch@0 {
++	switch: switch@1f {
 +		compatible = "mediatek,mt7531";
 +		reg = <31>;
 +		reset-gpios = <&pio 39 GPIO_ACTIVE_HIGH>;
@@ -154,8 +157,8 @@ index 0000000000..681401bd74
 +		reg = <0>;
 +
 +		spi-max-frequency = <52000000>;
-+		spi-tx-buswidth = <4>;
-+		spi-rx-buswidth = <4>;
++		spi-tx-bus-width = <4>;
++		spi-rx-bus-width = <4>;
 +		mediatek,nmbm;
 +		mediatek,bmt-max-ratio = <1>;
 +		mediatek,bmt-max-reserved-blocks = <64>;
@@ -181,15 +184,22 @@ index 0000000000..681401bd74
 +				reg = <0x180000 0x200000>;
 +
 +				compatible = "nvmem-cells";
-+				#address-cells = <1>;
-+				#size-cells = <1>;
++				nvmem-layout {
++					compatible = "fixed-layout";
++					#address-cells = <1>;
++					#size-cells = <1>;
 +
-+				macaddr_factory_24: macaddr@24 {
-+					reg = <0x24 0x6>;
-+				};
++					macaddr_factory_24: macaddr@24 {
++						compatible = "mac-base";
++						reg = <0x24 0x6>;
++						#nvmem-cell-cells = <1>;
++					};
 +
-+				macaddr_factory_2a: macaddr@2a {
-+					reg = <0x2a 0x6>;
++					macaddr_factory_2a: macaddr@2a {
++						compatible = "mac-base";
++						reg = <0x2a 0x6>;
++						#nvmem-cell-cells = <1>;
++					};
 +				};
 +			};
 +
