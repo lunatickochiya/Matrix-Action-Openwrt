@@ -1,12 +1,11 @@
-From 0ae5789c9bfdc1662cfb24e54b91c5412d808b36 Mon Sep 17 00:00:00 2001
+From bff38b8797d3ce0db07262187c84463057c60e77 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Mon, 11 Dec 2023 16:47:59 +0800
 Subject: [PATCH 2/2] mediatek: rax3000m:create shared dtsi
 
 ---
  .../mt7981b-cmcc-rax3000m-nand-ubootmod.dts   | 150 +-----------------
- .../mediatek/dts/mt7981b-cmcc-rax3000m.dts    |   2 +-
- 2 files changed, 9 insertions(+), 143 deletions(-)
+ 1 file changed, 8 insertions(+), 142 deletions(-)
 
 diff --git a/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand-ubootmod.dts b/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand-ubootmod.dts
 index 181a053bf1..5d4f5a77a7 100644
@@ -194,19 +193,6 @@ index 181a053bf1..5d4f5a77a7 100644
 -&xhci {
 -	status = "okay";
 -};
-diff --git a/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m.dts b/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m.dts
-index e9c850e85b..3f330f40fa 100644
---- a/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m.dts
-+++ b/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m.dts
-@@ -90,7 +90,7 @@
- };
- 
- &mdio_bus {
--	switch: switch@0 {
-+	switch: switch@1f {
- 		compatible = "mediatek,mt7531";
- 		reg = <31>;
- 		reset-gpios = <&pio 39 GPIO_ACTIVE_HIGH>;
 -- 
 2.34.1
 

@@ -1,4 +1,4 @@
-From df7e87c4cce172983631c80334d9ab841af3a237 Mon Sep 17 00:00:00 2001
+From ac7c238897ebbf652d8bfee87549479b02f83e9a Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Mon, 11 Dec 2023 15:38:47 +0800
 Subject: [PATCH 1/2] filogic:mediatek: add CMCC RAX3000M NAND version support
@@ -293,19 +293,19 @@ index 0000000000..181a053bf1
 +	status = "okay";
 +};
 diff --git a/target/linux/mediatek/filogic/base-files/etc/board.d/02_network b/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
-index 522e288ef5..65d13ae355 100644
+index 901013aa59..2462a78337 100644
 --- a/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
 +++ b/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
-@@ -34,6 +34,7 @@ mediatek_setup_interfaces()
- 		ucidef_set_interfaces_lan_wan eth1 eth0
+@@ -31,6 +31,7 @@ mediatek_setup_interfaces()
+ 	qihoo,360t7)
+ 		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3" wan
  		;;
- 	cmcc,rax3000m|\
 +	cmcc,rax3000m-nand-ubootmod|\
+ 	cmcc,rax3000m|\
  	h3c,magic-nx30-pro)
  		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3" eth1
- 		;;
 diff --git a/target/linux/mediatek/filogic/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac b/target/linux/mediatek/filogic/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac
-index b33d43c8c0..fa3e991f39 100644
+index b2b4f377a6..72cdfde261 100644
 --- a/target/linux/mediatek/filogic/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac
 +++ b/target/linux/mediatek/filogic/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac
 @@ -47,6 +47,9 @@ case "$board" in
@@ -319,10 +319,10 @@ index b33d43c8c0..fa3e991f39 100644
  		addr=$(mtd_get_mac_binary bdinfo 0xde00)
  		# Originally, phy0 is phy1 mac with LA bit set. However, this would conflict
 diff --git a/target/linux/mediatek/image/filogic.mk b/target/linux/mediatek/image/filogic.mk
-index 300a7da9fb..e71bb80a9f 100644
+index 7249a2e236..c032f5c0d7 100644
 --- a/target/linux/mediatek/image/filogic.mk
 +++ b/target/linux/mediatek/image/filogic.mk
-@@ -255,6 +255,29 @@ define Device/cmcc_rax3000m
+@@ -272,6 +272,29 @@ define Device/cmcc_rax3000m
  endef
  TARGET_DEVICES += cmcc_rax3000m
  
