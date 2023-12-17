@@ -10,13 +10,15 @@ include $(INCLUDE_DIR)/target.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=4.0
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_RESIZEFS \
-	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_FW3_IPTABLE_LEGACY \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_IPTABLE_LEGACY \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_IPTABLE_NFT \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_FW3 \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_temperature \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script_mtk \
@@ -26,6 +28,7 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_oneport \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_rockchip \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_meson \
+	CONFIG_PACKAGE_$(PKG_NAME)_SIDE_ROUTER_rockchip
 
 define Package/autoset/default
   SECTION:=luci
@@ -109,6 +112,12 @@ endef
 
 define Package/$(PKG_NAME)/config
 
+config PACKAGE_$(PKG_NAME)_SIDE_ROUTER_rockchip
+	bool "Rockchip Side router mode"
+	select PACKAGE_$(PKG_NAME)_INCLUDE_uci_rockchip
+	depends on PACKAGE_$(PKG_NAME)
+	default n
+
 config PACKAGE_$(PKG_NAME)_INCLUDE_RESIZEFS
 	bool "Auto resize rootfs"
 	select PACKAGE_resize2fs
@@ -127,12 +136,25 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_RESIZEFS
 	depends on PACKAGE_$(PKG_NAME)
 	default y if TARGET_meson=y||TARGET_rockchip=y||i386||x86_64
 
-config PACKAGE_$(PKG_NAME)_INCLUDE_FW3_IPTABLE_LEGACY
-	bool "ADD FW3 IPTABLE LEGACY"
+config PACKAGE_$(PKG_NAME)_INCLUDE_IPTABLE_LEGACY
+	bool "ADD IPTABLES LEGACY"
 	select PACKAGE_iptables
 	select PACKAGE_iptables-zz-legacy
 	select PACKAGE_ip6tables
 	select PACKAGE_ip6tables-zz-legacy
+	depends on PACKAGE_$(PKG_NAME)
+	default n
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_IPTABLE_NFT
+	bool "ADD IPTABLES NFT"
+	select PACKAGE_ip6tables-nft
+	select PACKAGE_iptables-nft
+
+	depends on PACKAGE_$(PKG_NAME)
+	default n
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_FW3
+	bool "ADD FIREWALL3"
 	select PACKAGE_firewall
 	depends on PACKAGE_$(PKG_NAME)
 	default n
@@ -215,7 +237,10 @@ endef
 
 define Package/autoset-uci-rockchip/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/zzz-autoset-rockchip $(1)/etc/uci-defaults/zz99-autoset
+	$(if $(CONFIG_PACKAGE_autoset_SIDE_ROUTER_rockchip), \
+		$(INSTALL_BIN) ./files/zzz-autoset-rockchip-siderouter $(1)/etc/uci-defaults/zz99-autoset, \
+		$(INSTALL_BIN) ./files/zzz-autoset-rockchip $(1)/etc/uci-defaults/zz99-autoset \
+	)
 endef
 
 define Package/autoset-uci-meson/install
