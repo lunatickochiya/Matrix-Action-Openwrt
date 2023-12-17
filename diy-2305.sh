@@ -123,11 +123,13 @@ function patch_kiddin9() {
 
 # add luci
 function add_full_istore_luci_for_ws1508() {
-echo "$(cat package-configs/ws1508-istore-2305.config)" >> .config
+echo "$(cat package-configs/ws1508-istore-2305.config)" >> package-configs/.config
+mv -f package-configs/.config .config
 }
 
 function add_luci_packages_for_ws1508() {
-echo "$(cat package-configs/ws1508-common.config)" >> .config
+echo "$(cat package-configs/ws1508-common.config)" >> package-configs/.config
+mv -f package-configs/.config .config
 }
 
 function add_mt798x_packages() {
@@ -135,7 +137,10 @@ echo "$(cat package-configs/mt798x-common.config)" >> package-configs/.config
 mv -f package-configs/.config .config
 }
 
-
+function add_mt798x_istore_packages() {
+echo "$(cat package-configs/mt798x-common-istore.config)" >> package-configs/.config
+mv -f package-configs/.config .config
+}
 
 if [ "$1" == "ws1508-istore" ]; then
 autosetver
@@ -161,6 +166,14 @@ patch_package
 patch_luci
 patch_kiddin9
 add_mt798x_packages
+elif [ "$1" == "mt798x-istore" ]; then
+autosetver
+patch_openwrt
+remove_error_package_not_install
+patch_package
+patch_luci
+patch_kiddin9
+add_mt798x_istore_packages
 else
 echo "Invalid argument"
 fi

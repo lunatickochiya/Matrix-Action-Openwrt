@@ -1,4 +1,4 @@
-name: Build mt798x mtk
+name: Build mt798x 23.05 Istore
 
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
@@ -21,7 +21,7 @@ jobs:
     runs-on: Ubuntu-22.04   
     if: github.event.repository.owner.id == github.event.sender.id
 
-    name: Build ${{matrix.target}} mtk openwrt
+    name: Build ${{matrix.target}} openwrt 23.05 Istore
     strategy:
       fail-fast: false
       matrix:
@@ -59,7 +59,7 @@ jobs:
         [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
         echo ${{matrix.target}}
         source "${GITHUB_WORKSPACE}/env/common.txt"
-        source "${GITHUB_WORKSPACE}/env/openwrt-mt798x-mtk.repo"
+        source "${GITHUB_WORKSPACE}/env/openwrt-23.05.repo"
         echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
         echo "BURN_UBOOT_IMG_URL=${BURN_UBOOT_IMG_URL}" >> $GITHUB_ENV
         echo "AMLIMG_TOOL_URL=${AMLIMG_TOOL_URL}" >> $GITHUB_ENV
@@ -82,7 +82,7 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
-        #sed -i '$a src-git kiddin9 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
+        sed -i '$a src-git kiddin9 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 增加磁盘空间
@@ -98,8 +98,8 @@ jobs:
       if: steps.clone.outputs.status == 'success'
       id: files
       run: |
-        [ -d mt798x-patch ] && mv -f mt798x-patch openwrt/mt798x-patch
-        [ -d package ] && mkdir -p -m 777 openwrt/package/kochiya/autoset/ && mv -f package/kochiya/autoset/* openwrt/package/kochiya/autoset/
+        [ -d mypatch ] && mv -f mypatch openwrt/mypatch
+        [ -d package ] && mv -f package/* openwrt/package
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 更新 & 安装 feeds
@@ -116,15 +116,16 @@ jobs:
       id: config
       run: |
         chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh
-        #[ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
-        #[ -d luci-patch-2305 ] && mv -f luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
-        #[ -d feeds-package-patch-2305 ] && mv -f feeds-package-patch-2305 openwrt/feeds/packages/feeds-package-patch-2305
-        #[ -e files ] && mv files openwrt/files
+        [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
+        [ -d luci-patch-2305 ] && mv -f luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
+        [ -d feeds-package-patch-2305 ] && mv -f feeds-package-patch-2305 openwrt/feeds/packages/feeds-package-patch-2305
+        [ -e files ] && mv files openwrt/files
         [ -e package-configs ] && mv package-configs openwrt/package-configs
-        [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}-mtk.config openwrt/.config
+        [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_SH mt798x-mtk
+        $GITHUB_WORKSPACE/$DIY_SH mt798x-istore
         make defconfig
+        $GITHUB_WORKSPACE/$DIY_SH_RFC mt798x
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Run awk command
@@ -137,13 +138,11 @@ jobs:
         echo "------------------------"
         awk '/docker/ { print }' .config
         echo "------------------------"
+        awk '/DOCKER/ { print }' .config
+        echo "------------------------"
         awk '/store/ { print }' .config
         echo "------------------------"
         awk '/perl/ { print }' .config
-        echo "------------------------"
-        awk '/temperature/ { print }' .config
-        echo "------------------------"
-        awk '/xray/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
@@ -242,8 +241,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: "${{ env.FIRMWARE }}/*"
-        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-MT798X-mtk
-        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-MT798X-mtk
+        name: ${{ env.date2 }} ${{matrix.target}}-openwrt-2305-istore
+        tag_name: ${{ env.date }}_${{matrix.target}}-openwrt-2305-istore
         body_path: release.txt
 
     - name: 删除工作流

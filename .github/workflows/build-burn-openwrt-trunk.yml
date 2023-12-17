@@ -86,7 +86,7 @@ jobs:
         sed -i '$a src-git kiddin9 https://github.com/kiddin9/openwrt-packages.git' feeds.conf.default
         echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: Free up disk space
+    - name: 增加磁盘空间
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -228,13 +228,6 @@ jobs:
         rm -rf sha256sums
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
-
-    - name: 上传固件目录
-      uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: ${{ env.date3 }}_${{matrix.target}}
-        path: ${{ env.FIRMWARE }}      
 
     - name: 上传固件cowtransfer
       id: cowtransfer

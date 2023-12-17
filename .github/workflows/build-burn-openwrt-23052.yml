@@ -88,7 +88,7 @@ jobs:
         sed -i 's|src-git packages https://git.openwrt.org/feed/packages.git\^8e3a1824645f5e73ec44c897ac0755c53fb4a1f8|src-git packages https://git.openwrt.org/feed/packages.git;openwrt-23.05|g' feeds.conf.default
         echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: Free up disk space
+    - name: 增加磁盘空间
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -125,7 +125,7 @@ jobs:
         [ -d feeds-package-patch-2305 ] && mv -f feeds-package-patch-2305 openwrt/feeds/packages/feeds-package-patch-2305
         [ -e files ] && mv files openwrt/files
         [ -e package-configs ] && mv package-configs openwrt/package-configs
-        [ -e machine-configs/${{matrix.target}}.config ] && mv machine-configs/${{matrix.target}}.config openwrt/.config
+        [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH ws1508-istore
         make defconfig
@@ -230,13 +230,6 @@ jobs:
         rm -rf sha256sums
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
-
-    - name: 上传固件目录
-      uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: ${{ env.date3 }}_${{matrix.target}}
-        path: ${{ env.FIRMWARE }}      
 
     - name: 上传固件cowtransfer
       id: cowtransfer
