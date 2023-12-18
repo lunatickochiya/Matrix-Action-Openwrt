@@ -37,7 +37,7 @@ uci -q batch <<-EOF >/dev/null
 EOF
 
 sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
-echo "DISTRIB_DESCRIPTION='OpenWrt 23.05 Compiled by 2U4U'" >> /etc/openwrt_release
+
 
 /etc/init.d/qos_gargoyle disable
 /etc/init.d/umdns stop

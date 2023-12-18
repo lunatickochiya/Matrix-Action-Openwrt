@@ -48,7 +48,7 @@ sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/openwrt#g' /etc/opkg/d
 #sed -i '/DISTRIB_REVISION/d' /etc/openwrt_release
 
 sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
-echo "DISTRIB_DESCRIPTION='OpenWrt 23.05 Compiled by 2U4U'" >> /etc/openwrt_release
+
 
 
 #sed -i '/ath9k/d' /etc/modules.d/ath9k

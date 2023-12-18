@@ -10,10 +10,12 @@ version=23.05
 sed -i "52i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-meson
 sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-mediatek
 sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-rockchip
+sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-rockchip-siderouter
 
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-mediatek
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-meson
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-rockchip
+grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-rockchip-siderouter
         }
 
 function remove_error_package() {
@@ -121,6 +123,14 @@ function patch_kiddin9() {
         done
         }
 
+function patch_rockchip() {
+        for rockpatch in $( ls tpm312 ); do
+            echo Applying tpm312 $rockpatch
+            patch -p1 --no-backup-if-mismatch < tpm312/$rockpatch
+        done
+        rm -rf tpm312
+        }
+
 # add luci
 function add_full_istore_luci_for_ws1508() {
 echo "$(cat package-configs/ws1508-istore-2305.config)" >> package-configs/.config
@@ -139,6 +149,11 @@ mv -f package-configs/.config .config
 
 function add_mt798x_istore_packages() {
 echo "$(cat package-configs/mt798x-common-istore.config)" >> package-configs/.config
+mv -f package-configs/.config .config
+}
+
+function add_mpc1917_packages() {
+echo "$(cat package-configs/mpc1917-common.config)" >> package-configs/.config
 mv -f package-configs/.config .config
 }
 
@@ -174,6 +189,16 @@ patch_package
 patch_luci
 patch_kiddin9
 add_mt798x_istore_packages
+elif [ "$1" == "mpc1917" ]; then
+autosetver
+patch_openwrt
+remove_error_package_not_install
+patch_package
+patch_luci
+patch_kiddin9
+add_mpc1917_packages
+elif [ "$1" == "rockpatch" ]; then
+patch_rockchip
 else
 echo "Invalid argument"
 fi

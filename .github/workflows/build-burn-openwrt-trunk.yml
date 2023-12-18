@@ -74,6 +74,7 @@ jobs:
         echo "UPLOAD_WETRANSFER=${UPLOAD_WETRANSFER}" >> $GITHUB_ENV
         echo "UPLOAD_RELEASE=${UPLOAD_RELEASE}" >> $GITHUB_ENV
         echo "USE_Cache=${USE_Cache}" >> $GITHUB_ENV
+        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh
 
     - name: 克隆源代码
       working-directory: /workdir
@@ -117,7 +118,6 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh
         [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
         [ -d luci-patch-2305 ] && mv -f luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
         [ -d feeds-package-patch-trunk ] && mv -f feeds-package-patch-trunk openwrt/feeds/packages/feeds-package-patch-trunk

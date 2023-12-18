@@ -1,4 +1,4 @@
-name: Build mt798x 23.05
+name: Build Rockchip 23.05
 
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
@@ -26,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: mt798x
+          - target: mpc1917
     
     steps:
     - name: 检查
@@ -84,6 +84,8 @@ jobs:
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
         sed -i '$a src-git kiddin9 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
+        git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
+        $GITHUB_WORKSPACE/$DIY_SH rockpatch
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 增加磁盘空间
@@ -123,9 +125,9 @@ jobs:
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_SH mt798x
+        $GITHUB_WORKSPACE/$DIY_SH mpc1917
         make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC mt798x
+        $GITHUB_WORKSPACE/$DIY_SH_RFC mpc1917
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Run awk command
