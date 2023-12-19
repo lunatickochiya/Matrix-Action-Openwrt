@@ -10,10 +10,12 @@ version=23.05
 sed -i "52i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-meson
 sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-mediatek
 sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-rockchip
+sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-rockchip-siderouter
 
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-mediatek
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-meson
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-rockchip
+grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-rockchip-siderouter
         }
 
 function remove_error_package() {
@@ -93,14 +95,14 @@ done
 function patch_openwrt() {
         for i in $( ls mypatch ); do
             echo Applying mypatch $i
-            patch -p1 < mypatch/$i
+            patch -p1 --no-backup-if-mismatch < mypatch/$i
         done
         }
 function patch_package() {
         for packagepatch in $( ls feeds/packages/feeds-package-patch-2305 ); do
             cd feeds/packages/
             echo Applying feeds-package-patch-2305 $packagepatch
-            patch -p1 < feeds-package-patch-2305/$packagepatch
+            patch -p1 --no-backup-if-mismatch < feeds-package-patch-2305/$packagepatch
             cd ../..
         done
         }
@@ -108,7 +110,7 @@ function patch_luci() {
         for lucipatch in $( ls feeds/luci/luci-patch-2305 ); do
             cd feeds/luci/
             echo Applying luci-patch-2305 $lucipatch
-            patch -p1 < luci-patch-2305/$lucipatch
+            patch -p1 --no-backup-if-mismatch < luci-patch-2305/$lucipatch
             cd ../..
         done
         }
@@ -116,9 +118,17 @@ function patch_kiddin9() {
         for kiddin9patch in $( ls feeds/kiddin9/kiddin9-revert ); do
             cd feeds/kiddin9/
             echo Revert kiddin9 $kiddin9patch
-            patch -p1 -R < kiddin9-revert/$kiddin9patch
+            patch -p1 -R --no-backup-if-mismatch < kiddin9-revert/$kiddin9patch
             cd ../..
         done
+        }
+
+function patch_rockchip() {
+        for rockpatch in $( ls tpm312/core ); do
+            echo Applying tpm312 $rockpatch
+            patch -p1 --no-backup-if-mismatch < tpm312/core/$rockpatch
+        done
+        rm -rf tpm312
         }
 
 # add luci
@@ -139,6 +149,11 @@ mv -f package-configs/.config .config
 
 function add_mt798x_istore_packages() {
 echo "$(cat package-configs/mt798x-common-istore.config)" >> package-configs/.config
+mv -f package-configs/.config .config
+}
+
+function add_mpc1917_packages() {
+echo "$(cat package-configs/mpc1917-common.config)" >> package-configs/.config
 mv -f package-configs/.config .config
 }
 
@@ -174,6 +189,16 @@ patch_package
 patch_luci
 patch_kiddin9
 add_mt798x_istore_packages
+elif [ "$1" == "mpc1917" ]; then
+autosetver
+patch_openwrt
+remove_error_package_not_install
+patch_package
+patch_luci
+patch_kiddin9
+add_mpc1917_packages
+elif [ "$1" == "rockpatch" ]; then
+patch_rockchip
 else
 echo "Invalid argument"
 fi

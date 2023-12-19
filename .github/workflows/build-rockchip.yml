@@ -1,4 +1,4 @@
-name: Build mt798x 23.05
+name: Build Rockchip 23.05
 
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
@@ -26,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: mt798x
+          - target: mpc1917
     
     steps:
     - name: 检查
@@ -84,16 +84,21 @@ jobs:
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
         sed -i '$a src-git kiddin9 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
+        git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
+        $GITHUB_WORKSPACE/$DIY_SH rockpatch
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 增加磁盘空间
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo mkdir -p -m 777 /mnt/openwrt/dl /mnt/openwrt/bin /mnt/openwrt/staging_dir
+        sudo mkdir -p -m 777 /mnt/openwrt/dl /mnt/openwrt/bin /mnt/openwrt/staging_dir /mnt/openwrt/build_dir/hostpkg /mnt/openwrt/build_dir/host
+        mkdir -p -m 777 openwrt/build_dir
         ln -sf /mnt/openwrt/dl openwrt/dl
         ln -sf /mnt/openwrt/bin openwrt/bin
         ln -sf /mnt/openwrt/staging_dir openwrt/staging_dir
+        ln -sf /mnt/openwrt/build_dir/hostpkg openwrt/build_dir/hostpkg
+        ln -sf /mnt/openwrt/build_dir/host openwrt/build_dir/host
 
     - name: 自定义安装包(优先于feeds)
       if: steps.clone.outputs.status == 'success'
@@ -123,9 +128,9 @@ jobs:
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_SH mt798x
+        $GITHUB_WORKSPACE/$DIY_SH mpc1917
         make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC mt798x
+        $GITHUB_WORKSPACE/$DIY_SH_RFC mpc1917
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Run awk command
@@ -134,8 +139,6 @@ jobs:
       run: |
         awk '/${{matrix.target}}/ { print }' .config
         echo "------------------------"
-        awk '/mediatek/ { print }' .config
-        echo "------------------------"
         awk '/docker/ { print }' .config
         echo "------------------------"
         awk '/DOCKER/ { print }' .config
@@ -143,6 +146,16 @@ jobs:
         awk '/store/ { print }' .config
         echo "------------------------"
         awk '/perl/ { print }' .config
+        echo "------------------------"
+        awk '/dnsmasq/ { print }' .config
+        echo "------------------------"
+        awk '/passwall/ { print }' .config
+        echo "------------------------"
+        awk '/nft/ { print }' .config
+        echo "------------------------"
+        awk '/firewall/ { print }' .config
+        echo "------------------------"
+        awk '/fullcone/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
