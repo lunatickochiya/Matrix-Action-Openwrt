@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-modechange
-PKG_VERSION=1.0
+PKG_VERSION=2.0
 PKG_RELEASE:=1
 PKG_MAINTAINER:=LunaticUrey <lunaticurey@gmail.com>
 
@@ -39,7 +39,7 @@ endef
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/etc/
-	$(INSTALL_BIN) ./files/ap-mode $(1)/etc/modechange
+	$(INSTALL_BIN) ./files/port-mode-core $(1)/etc/modechange
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DATA) ./files/modechange $(1)/etc/config/modechange
 	$(INSTALL_DIR) $(1)/usr/

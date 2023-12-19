@@ -1,0 +1,63 @@
+#!/bin/bash
+
+#=================================================
+# this script is from https://github.com/lunatickochiya/Lunatic-s805-rockchip-Action
+# Written By lunatickochiya
+# QQ group :286754582  https://jq.qq.com/?_wv=1027&k=5QgVYsC
+#=================================================
+function set_ap_mode() {
+uci -q batch <<-EOF >/dev/null
+	set network.wan=interface
+	set network.wan.proto='dhcp'
+	set network.wan.ifname='eth0'
+	set network.lan._orig_ifname='eth0'
+	set network.lan._orig_bridge='false'
+	delete network.lan.ifname
+	delete network.lan.type
+	commit
+EOF
+
+}
+
+function set_router_mode() {
+uci -q batch <<-EOF >/dev/null
+	delete network.wan
+	delete network.lan._orig_ifname
+	delete network.lan._orig_bridge
+	set network.lan.ifname='eth0'
+	set network.lan.type='bridge'
+	commit
+EOF
+
+}
+
+function set_siderouter_lan() {
+
+# 使用ubus命令获取WAN口的状态信息
+json_output=$(ubus call network.interface.wan status)
+
+# 使用grep和sed来提取IP地址
+wan_address=$(echo "$json_output" | grep -o '"address": "[^"]*' | sed -e 's/"address": "//' | head -n 1)
+
+# 使用grep和sed来提取网关
+gateway=$(echo "$json_output" | grep -o '"nexthop": "[^"]*' | sed -e 's/"nexthop": "//' | head -n 1)
+
+# 输出IP地址和网关
+echo "IP Address: $wan_address"
+echo "Gateway: $gateway"
+
+uci set network.lan.ipaddr="$wan_address"
+uci set network.lan.gateway="$gateway"
+uci commit network
+
+}
+
+if [ "$1" == "ap" ]; then
+set_ap_mode
+elif [ "$1" == "router" ]; then
+set_router_mode
+elif [ "$1" == "siderouter_lan" ]; then
+set_siderouter_lan
+else
+echo "Invalid argument"
+fi

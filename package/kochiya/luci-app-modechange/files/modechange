@@ -1,3 +1,4 @@
 config router
 config ap
+config siderouter_lan
 config networkrestart
