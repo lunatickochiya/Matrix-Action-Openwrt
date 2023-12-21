@@ -1,7 +1,7 @@
-From bff38b8797d3ce0db07262187c84463057c60e77 Mon Sep 17 00:00:00 2001
+From 8d9749f52dc868a753db3d37c9865db960eb054c Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Mon, 11 Dec 2023 16:47:59 +0800
-Subject: [PATCH 2/2] mediatek: rax3000m:create shared dtsi
+Subject: [PATCH 2/3] mediatek: rax3000m:create shared dtsi
 
 ---
  .../mt7981b-cmcc-rax3000m-nand-ubootmod.dts   | 150 +-----------------

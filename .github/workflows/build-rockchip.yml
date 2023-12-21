@@ -58,7 +58,7 @@ jobs:
         VERSION="$(echo "${{github.event.action}}" | grep -Eo " [0-9.]+" | sed -e 's/ //')" || true
         [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
         echo ${{matrix.target}}
-        source "${GITHUB_WORKSPACE}/env/common.txt"
+        source "${GITHUB_WORKSPACE}/env/common-rk3399.txt"
         source "${GITHUB_WORKSPACE}/env/openwrt-23.05.repo"
         echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
         echo "BURN_UBOOT_IMG_URL=${BURN_UBOOT_IMG_URL}" >> $GITHUB_ENV

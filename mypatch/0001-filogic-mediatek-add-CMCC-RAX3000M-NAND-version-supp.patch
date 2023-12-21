@@ -293,10 +293,10 @@ index 0000000000..181a053bf1
 +	status = "okay";
 +};
 diff --git a/target/linux/mediatek/filogic/base-files/etc/board.d/02_network b/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
-index 901013aa59..2462a78337 100644
+index a53b66f7cb..5c1569e397 100644
 --- a/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
 +++ b/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
-@@ -31,6 +31,7 @@ mediatek_setup_interfaces()
+@@ -32,6 +32,7 @@ mediatek_setup_interfaces()
  	qihoo,360t7)
  		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3" wan
  		;;
@@ -319,7 +319,7 @@ index b2b4f377a6..72cdfde261 100644
  		addr=$(mtd_get_mac_binary bdinfo 0xde00)
  		# Originally, phy0 is phy1 mac with LA bit set. However, this would conflict
 diff --git a/target/linux/mediatek/image/filogic.mk b/target/linux/mediatek/image/filogic.mk
-index 7249a2e236..c032f5c0d7 100644
+index 2a9449f3bb..e0e776cac7 100644
 --- a/target/linux/mediatek/image/filogic.mk
 +++ b/target/linux/mediatek/image/filogic.mk
 @@ -272,6 +272,29 @@ define Device/cmcc_rax3000m
@@ -349,9 +349,9 @@ index 7249a2e236..c032f5c0d7 100644
 +endef
 +TARGET_DEVICES += cmcc_rax3000m-nand-ubootmod
 +
- define Device/cudy_wr3000-v1
-   DEVICE_VENDOR := Cudy
-   DEVICE_MODEL := WR3000
+ define Device/confiabits_mt7981
+   DEVICE_VENDOR := Confiabits
+   DEVICE_MODEL := MT7981
 -- 
 2.34.1
 
