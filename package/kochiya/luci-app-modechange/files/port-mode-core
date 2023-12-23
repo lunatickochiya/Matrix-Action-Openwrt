@@ -49,6 +49,8 @@ echo "Gateway: $gateway"
 
 uci set network.lan.ipaddr="$wan_address"
 uci set network.lan.gateway="$gateway"
+uci set network.lan.device='eth0'
+unset_brlan
 uci commit network
 
 uci set netwizard.default.lan_netmask='255.255.255.0'
@@ -63,6 +65,31 @@ uci set netwizard.default.ipv6='0'
 uci set netwizard.default.lan_dns='223.5.5.5'
 uci set netwizard.default.snat_tables='iptables -t nat -I POSTROUTING -o eth0 -j MASQUERADE'
 uci commit netwizard
+}
+
+function unset_brlan() {
+# 你想要删除的设备的名字
+device_name="br-lan"
+
+# 检查设备名字是否为空
+if [ -z "$device_name" ]; then
+    echo "请提供设备名字作为参数"
+    exit 1
+fi
+
+device_section=$(uci show network | grep -w "name='${device_name}'" | cut -d'.' -f2)
+# 检查是否找到设备
+if [ -z "$device_section" ]; then
+    echo "设备 ${device_name} 未找到"
+    exit 1
+fi
+
+# 删除设备
+uci delete network."$device_section"
+
+# 保存更改
+
+echo "设备 ${device_name} 已删除"
 }
 
 if [ "$1" == "ap" ]; then
