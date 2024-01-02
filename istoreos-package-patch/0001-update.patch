@@ -1,3 +1,26 @@
+From d3989ba65cc48987e5771e8c15013c816fa226e0 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Tue, 26 Dec 2023 20:15:56 +0800
+Subject: [PATCH] update
+
+---
+ lang/golang/golang-build.sh                   |  6 ++
+ lang/golang/golang-compiler.mk                | 16 ++++--
+ lang/golang/golang-host-build.mk              |  2 +-
+ lang/golang/golang-package.mk                 |  5 +-
+ lang/golang/golang-values.mk                  | 18 +++---
+ lang/golang/golang/Makefile                   | 57 +++++++++++++++----
+ lang/golang/golang/files/go-gcc-helper        |  6 ++
+ ...-ARM-ARM64-only-if-gold-is-available.patch | 48 ----------------
+ utils/containerd/Makefile                     |  4 +-
+ utils/docker-compose/Makefile                 |  4 +-
+ utils/docker/Makefile                         |  7 ++-
+ utils/dockerd/Makefile                        | 12 ++--
+ .../patches/001-libdevmapper_name_fix.patch   | 14 ++---
+ utils/runc/Makefile                           |  6 +-
+ 14 files changed, 109 insertions(+), 96 deletions(-)
+ delete mode 100644 lang/golang/golang/patches/001-cmd-link-use-gold-on-ARM-ARM64-only-if-gold-is-available.patch
+
 diff --git a/lang/golang/golang-build.sh b/lang/golang/golang-build.sh
 index e0e4ea637..fe8718ee7 100644
 --- a/lang/golang/golang-build.sh
@@ -14,7 +37,7 @@ index e0e4ea637..fe8718ee7 100644
  nl="
  "
 diff --git a/lang/golang/golang-compiler.mk b/lang/golang/golang-compiler.mk
-index c6c836017..144f2a4af 100644
+index c6c836017..50cc44905 100644
 --- a/lang/golang/golang-compiler.mk
 +++ b/lang/golang/golang-compiler.mk
 @@ -1,5 +1,5 @@
@@ -36,7 +59,19 @@ index c6c836017..144f2a4af 100644
  	)
  endef
  
-@@ -73,8 +76,10 @@ define GoCompiler/Default/Install/Bin
+@@ -57,9 +60,10 @@ define GoCompiler/Default/Install/Bin
+ 
+ 	$(call GoCompiler/Default/Install/install-share-data,$(1),$(2),$(3),api)
+ 
++	$(INSTALL_DATA) -p "$(1)/go.env" "$(2)/lib/go-$(3)/"
+ 	$(INSTALL_DATA) -p "$(1)/VERSION" "$(2)/lib/go-$(3)/"
+ 
+-	for file in AUTHORS CONTRIBUTING.md CONTRIBUTORS LICENSE PATENTS README.md SECURITY.md; do \
++	for file in CONTRIBUTING.md LICENSE PATENTS README.md SECURITY.md; do \
+ 		if [ -f "$(1)/$$$$file" ]; then \
+ 			$(INSTALL_DATA) -p "$(1)/$$$$file" "$(2)/share/go-$(3)/" ; \
+ 		fi ; \
+@@ -73,8 +77,10 @@ define GoCompiler/Default/Install/Bin
  	$(INSTALL_BIN) -p "$(1)/bin/$(4)"/* "$(2)/lib/go-$(3)/bin/"
    endif
  
@@ -61,7 +96,7 @@ index 4b9e29873..7c7551fd1 100644
  # This is free software, licensed under the GNU General Public License v2.
  # See /LICENSE for more information.
 diff --git a/lang/golang/golang-package.mk b/lang/golang/golang-package.mk
-index 20a993726..4f164c4c1 100644
+index 20a993726..cc0050536 100644
 --- a/lang/golang/golang-package.mk
 +++ b/lang/golang/golang-package.mk
 @@ -1,5 +1,5 @@
@@ -71,8 +106,18 @@ index 20a993726..4f164c4c1 100644
  #
  # This is free software, licensed under the GNU General Public License v2.
  # See /LICENSE for more information.
+@@ -215,7 +215,8 @@ GO_PKG_BUILD_VARS= \
+ 	GOPATH="$(GO_PKG_BUILD_DIR)" \
+ 	GOCACHE="$(GO_BUILD_CACHE_DIR)" \
+ 	GOMODCACHE="$(GO_MOD_CACHE_DIR)" \
+-	GOENV=off
++	GOENV=off \
++	GOTOOLCHAIN=local
+ 
+ GO_PKG_VARS= \
+ 	$(GO_PKG_TARGET_VARS) \
 diff --git a/lang/golang/golang-values.mk b/lang/golang/golang-values.mk
-index 2cd656dad..469629b7e 100644
+index 2cd656dad..1584d22fc 100644
 --- a/lang/golang/golang-values.mk
 +++ b/lang/golang/golang-values.mk
 @@ -1,5 +1,5 @@
@@ -82,7 +127,15 @@ index 2cd656dad..469629b7e 100644
  #
  # This is free software, licensed under the GNU General Public License v2.
  # See /LICENSE for more information.
-@@ -65,6 +65,10 @@ unexport \
+@@ -29,6 +29,7 @@ unexport \
+   GOOS \
+   GOPATH \
+   GOROOT \
++  GOTOOLCHAIN \
+   GOTMPDIR \
+   GOWORK
+ # Unmodified:
+@@ -65,6 +66,10 @@ unexport \
    GOPPC64 \
    GOWASM
  
@@ -93,7 +146,7 @@ index 2cd656dad..469629b7e 100644
  # Special-purpose environment variables:
  unexport \
    GCCGOTOOLDIR \
-@@ -197,17 +201,16 @@ endif
+@@ -197,17 +202,16 @@ endif
  
  # Target Go
  
@@ -114,8 +167,12 @@ index 2cd656dad..469629b7e 100644
    \
    darwin_amd64 darwin_arm64 \
    ios_amd64    ios_arm64 \
-@@ -219,7 +222,7 @@ GO_PIE_SUPPORTED_OS_ARCH:= \
-   linux_ppc64le linux_riscv64 linux_s390x
+@@ -216,10 +220,10 @@ GO_PIE_SUPPORTED_OS_ARCH:= \
+   \
+   aix_ppc64 \
+   \
+-  linux_ppc64le linux_riscv64 linux_s390x
++  linux_loong64 linux_ppc64le linux_riscv64 linux_s390x
  
  # From https://go.dev/src/cmd/go/internal/work/init.go
 -go_pie_install_suffix=$(if $(filter $(1),aix_ppc64 windows_386 windows_amd64 windows_arm),,shared)
@@ -124,7 +181,7 @@ index 2cd656dad..469629b7e 100644
  ifneq ($(filter $(GO_HOST_OS_ARCH),$(GO_PIE_SUPPORTED_OS_ARCH)),)
    GO_HOST_PIE_SUPPORTED:=1
 diff --git a/lang/golang/golang/Makefile b/lang/golang/golang/Makefile
-index 44539a129..f167b3f7a 100644
+index 44539a129..a79b9823b 100644
 --- a/lang/golang/golang/Makefile
 +++ b/lang/golang/golang/Makefile
 @@ -1,5 +1,5 @@
@@ -140,8 +197,8 @@ index 44539a129..f167b3f7a 100644
  
 -GO_VERSION_MAJOR_MINOR:=1.19
 -GO_VERSION_PATCH:=8
-+GO_VERSION_MAJOR_MINOR:=1.20
-+GO_VERSION_PATCH:=7
++GO_VERSION_MAJOR_MINOR:=1.21
++GO_VERSION_PATCH:=5
  
  PKG_NAME:=golang
  PKG_VERSION:=$(GO_VERSION_MAJOR_MINOR)$(if $(GO_VERSION_PATCH),.$(GO_VERSION_PATCH))
@@ -150,20 +207,21 @@ index 44539a129..f167b3f7a 100644
  PKG_SOURCE:=go$(PKG_VERSION).src.tar.gz
  PKG_SOURCE_URL:=$(GO_SOURCE_URLS)
 -PKG_HASH:=1d7a67929dccafeaf8a29e55985bc2b789e0499cb1a17100039f084e3238da2f
-+PKG_HASH:=2c5ee9c9ec1e733b0dbbc2bdfed3f62306e51d8172bf38f4f4e542b27520f597
++PKG_HASH:=285cbbdf4b6e6e62ed58f370f3f6d8c30825d6e56c5853c66d3c23bcdb09db19
  
  PKG_MAINTAINER:=Jeffery To <jeffery.to@gmail.com>
  PKG_LICENSE:=BSD-3-Clause
-@@ -63,6 +63,8 @@ HOST_GO_VALID_OS_ARCH:= \
+@@ -62,6 +62,9 @@ HOST_GO_VALID_OS_ARCH:= \
+   \
    aix_ppc64 \
    js_wasm \
-   \
-+  freebsd_riscv64 \
++  wasip1_wasm \
 +  \
++  freebsd_riscv64 \
+   \
    linux_ppc64 linux_ppc64le \
    linux_mips linux_mipsle linux_mips64 linux_mips64le \
-   linux_loong64 linux_riscv64 linux_s390x \
-@@ -86,6 +88,12 @@ BOOTSTRAP_GO_VALID_OS_ARCH:= \
+@@ -86,6 +89,12 @@ BOOTSTRAP_GO_VALID_OS_ARCH:= \
                   solaris_amd64 \
    windows_386    windows_amd64
  
@@ -176,7 +234,7 @@ index 44539a129..f167b3f7a 100644
  include $(INCLUDE_DIR)/host-build.mk
  include $(INCLUDE_DIR)/package.mk
  include ../golang-compiler.mk
-@@ -94,6 +102,7 @@ include ../golang-package.mk
+@@ -94,6 +103,7 @@ include ../golang-package.mk
  PKG_UNPACK:=$(HOST_TAR) -C "$(PKG_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(PKG_SOURCE)"
  HOST_UNPACK:=$(HOST_TAR) -C "$(HOST_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(PKG_SOURCE)"
  BOOTSTRAP_UNPACK:=$(HOST_TAR) -C "$(BOOTSTRAP_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(BOOTSTRAP_SOURCE)"
@@ -184,7 +242,7 @@ index 44539a129..f167b3f7a 100644
  
  # don't strip ELF executables in test data
  RSTRIP:=:
-@@ -181,8 +190,7 @@ ifeq ($(BOOTSTRAP_ROOT_DIR),)
+@@ -181,8 +191,7 @@ ifeq ($(BOOTSTRAP_ROOT_DIR),)
    $(eval $(call Download,golang-bootstrap))
  
    define Bootstrap/Prepare
@@ -194,7 +252,7 @@ index 44539a129..f167b3f7a 100644
    endef
    Hooks/HostPrepare/Post+=Bootstrap/Prepare
  
-@@ -190,6 +198,23 @@ ifeq ($(BOOTSTRAP_ROOT_DIR),)
+@@ -190,6 +199,23 @@ ifeq ($(BOOTSTRAP_ROOT_DIR),)
  endif
  
  
@@ -218,7 +276,7 @@ index 44539a129..f167b3f7a 100644
  # Host
  
  ifeq ($(GO_HOST_PIE_SUPPORTED),1)
-@@ -202,23 +227,31 @@ endif
+@@ -202,23 +228,31 @@ endif
  $(eval $(call GoCompiler/AddProfile,Host,$(HOST_BUILD_DIR),$(HOST_GO_PREFIX),$(HOST_GO_VERSION_ID),$(GO_HOST_OS_ARCH),$(HOST_GO_INSTALL_SUFFIX)))
  
  HOST_GO_VARS= \
@@ -252,7 +310,16 @@ index 44539a129..f167b3f7a 100644
  		$(if $(HOST_GO_ENABLE_PIE),GO_LDFLAGS="-buildmode pie") \
  		$(HOST_GO_VARS) \
  	)
-@@ -271,6 +304,7 @@ PKG_GO_ZBOOTSTRAP_MODS:= \
+@@ -263,7 +297,7 @@ $(eval $(call GoCompiler/AddProfile,Package,$(PKG_BUILD_DIR),$(PKG_GO_PREFIX),$(
+ PKG_GO_ZBOOTSTRAP_MODS:= \
+ 	s/defaultGO386 = `[^`]*`/defaultGO386 = `$(or $(GO_386),sse2)`/; \
+ 	s/defaultGOAMD64 = `[^`]*`/defaultGOAMD64 = `$(or $(GO_AMD64),v1)`/; \
+-	s/defaultGOARM = `[^`]*`/defaultGOARM = `$(or $(GO_ARM),5)`/; \
++	s/defaultGOARM = `[^`]*`/defaultGOARM = `$(or $(GO_ARM),7)`/; \
+ 	s/defaultGOMIPS = `[^`]*`/defaultGOMIPS = `$(or $(GO_MIPS),hardfloat)`/; \
+ 	s/defaultGOMIPS64 = `[^`]*`/defaultGOMIPS64 = `$(or $(GO_MIPS64),hardfloat)`/; \
+ 	s/defaultGOPPC64 = `[^`]*`/defaultGOPPC64 = `$(or $(GO_PPC64),power8)`/;
+@@ -271,6 +305,7 @@ PKG_GO_ZBOOTSTRAP_MODS:= \
  PKG_GO_ZBOOTSTRAP_PATH:=$(PKG_BUILD_DIR)/src/internal/buildcfg/zbootstrap.go
  
  PKG_GO_VARS= \
@@ -260,7 +327,7 @@ index 44539a129..f167b3f7a 100644
  	GOCACHE="$(GO_BUILD_CACHE_DIR)" \
  	GOENV=off \
  	GO_GCC_HELPER_PATH="$$$$PATH" \
-@@ -299,9 +333,11 @@ PKG_GO_INSTALL_ARGS= \
+@@ -299,9 +334,11 @@ PKG_GO_INSTALL_ARGS= \
  	$(if $(PKG_GO_ASMFLAGS),-asmflags "all=$(PKG_GO_ASMFLAGS)") \
  	$(if $(filter $(GO_PKG_ENABLE_PIE),1),-buildmode pie)
  
@@ -289,18 +356,59 @@ index b396e302c..b21457b55 100644
  me=go-gcc-helper
  name="${0##*/}"
 diff --git a/lang/golang/golang/patches/001-cmd-link-use-gold-on-ARM-ARM64-only-if-gold-is-available.patch b/lang/golang/golang/patches/001-cmd-link-use-gold-on-ARM-ARM64-only-if-gold-is-available.patch
-index 57d108c1b..aecf5309f 100644
+deleted file mode 100644
+index 57d108c1b..000000000
 --- a/lang/golang/golang/patches/001-cmd-link-use-gold-on-ARM-ARM64-only-if-gold-is-available.patch
-+++ b/lang/golang/golang/patches/001-cmd-link-use-gold-on-ARM-ARM64-only-if-gold-is-available.patch
-@@ -13,7 +13,7 @@ Fixes #22040.
- 
- --- a/src/cmd/link/internal/ld/lib.go
- +++ b/src/cmd/link/internal/ld/lib.go
++++ /dev/null
+@@ -1,48 +0,0 @@
+-From 5ccf9f47bf4f5ba53e0ab7338a7fd4626714cfb2 Mon Sep 17 00:00:00 2001
+-From: Jeffery To <jeffery.to@gmail.com>
+-Date: Tue, 23 Nov 2021 15:05:37 +0800
+-Subject: [PATCH] cmd/link: use gold on ARM/ARM64 only if gold is available
+-
+-COPY relocation handling on ARM/ARM64 has been fixed in recent versions
+-of the GNU linker. This switches to gold only if gold is available.
+-
+-Fixes #22040.
+----
+- src/cmd/link/internal/ld/lib.go | 19 +++++++------------
+- 1 file changed, 7 insertions(+), 12 deletions(-)
+-
+---- a/src/cmd/link/internal/ld/lib.go
+-+++ b/src/cmd/link/internal/ld/lib.go
 -@@ -1515,25 +1515,20 @@ func (ctxt *Link) hostlink() {
-+@@ -1548,25 +1548,20 @@ func (ctxt *Link) hostlink() {
-  		}
-  
-  		if ctxt.Arch.InFamily(sys.ARM, sys.ARM64) && buildcfg.GOOS == "linux" {
+- 		}
+- 
+- 		if ctxt.Arch.InFamily(sys.ARM, sys.ARM64) && buildcfg.GOOS == "linux" {
+--			// On ARM, the GNU linker will generate COPY relocations
+--			// even with -znocopyreloc set.
+-+			// On ARM, older versions of the GNU linker will generate
+-+			// COPY relocations even with -znocopyreloc set.
+- 			// https://sourceware.org/bugzilla/show_bug.cgi?id=19962
+- 			//
+--			// On ARM64, the GNU linker will fail instead of
+--			// generating COPY relocations.
+-+			// On ARM64, older versions of the GNU linker will fail
+-+			// instead of generating COPY relocations.
+- 			//
+--			// In both cases, switch to gold.
+--			altLinker = "gold"
+--
+--			// If gold is not installed, gcc will silently switch
+--			// back to ld.bfd. So we parse the version information
+--			// and provide a useful error if gold is missing.
+-+			// In both cases, switch to gold if gold is available.
+- 			name, args := flagExtld[0], flagExtld[1:]
+- 			args = append(args, "-fuse-ld=gold", "-Wl,--version")
+- 			cmd := exec.Command(name, args...)
+- 			if out, err := cmd.CombinedOutput(); err == nil {
+--				if !bytes.Contains(out, []byte("GNU gold")) {
+--					log.Fatalf("ARM external linker must be gold (issue #15696), but is not: %s", out)
+-+				if bytes.Contains(out, []byte("GNU gold")) {
+-+					altLinker = "gold"
+- 				}
+- 			}
+- 		}
 diff --git a/utils/containerd/Makefile b/utils/containerd/Makefile
 index da49541cf..903d174e9 100644
 --- a/utils/containerd/Makefile
@@ -376,7 +484,7 @@ index b21b65081..5196b4d41 100644
  define Build/Prepare
  	$(Build/Prepare/Default)
 diff --git a/utils/dockerd/Makefile b/utils/dockerd/Makefile
-index ba3f30143..96821219c 100644
+index 566486d12..5c245dec3 100644
 --- a/utils/dockerd/Makefile
 +++ b/utils/dockerd/Makefile
 @@ -1,7 +1,7 @@
@@ -385,7 +493,7 @@ index ba3f30143..96821219c 100644
  PKG_NAME:=dockerd
 -PKG_VERSION:=20.10.22
 +PKG_VERSION:=24.0.5
- PKG_RELEASE:=2
+ PKG_RELEASE:=4
  PKG_LICENSE:=Apache-2.0
  PKG_LICENSE_FILES:=LICENSE
 @@ -10,8 +10,8 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
@@ -399,7 +507,7 @@ index ba3f30143..96821219c 100644
  
  PKG_MAINTAINER:=Gerard Ryan <G.M0N3Y.2503@gmail.com>
  
-@@ -45,9 +45,9 @@ define Package/dockerd
+@@ -46,9 +46,9 @@ define Package/dockerd
      +kmod-ipt-physdev \
      +kmod-nf-ipvs \
      +kmod-veth \
@@ -411,7 +519,7 @@ index ba3f30143..96821219c 100644
    USERID:=docker:docker
    MENU:=1
  endef
-@@ -96,7 +96,6 @@ define Build/Prepare
+@@ -97,7 +97,6 @@ define Build/Prepare
  
  	# Verify dependencies are the vendored version
  	$(call EnsureVendoredVersion,../containerd/Makefile,containerd.installer)
@@ -419,7 +527,7 @@ index ba3f30143..96821219c 100644
  	$(call EnsureVendoredVersion,../runc/Makefile,runc.installer)
  	$(call EnsureVendoredVersion,../tini/Makefile,tini.installer)
  
-@@ -142,6 +141,7 @@ endef
+@@ -143,6 +142,7 @@ endef
  define Package/dockerd/install
  	$(INSTALL_DIR) $(1)/usr/bin/
  	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bundles/binary-daemon/dockerd $(1)/usr/bin/
@@ -472,3 +580,6 @@ index 568f26ef3..37708f67a 100644
  
  PKG_MAINTAINER:=Gerard Ryan <G.M0N3Y.2503@gmail.com>
  
+-- 
+2.34.1
+

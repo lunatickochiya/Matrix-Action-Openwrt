@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/target.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=4.0
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -130,6 +130,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_RESIZEFS
 	select PACKAGE_cfdisk
 	select PACKAGE_mkf2fs
 	select PACKAGE_mount-utils
+	select PACKAGE_parted
 	select PACKAGE_auto-resize-rootfs-script
 	select PACKAGE_kmod-loop
 	select PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
@@ -185,9 +186,24 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
 	select PACKAGE_kmod-fs-ext4
 	select PACKAGE_kmod-fs-btrfs
 	select PACKAGE_kmod-fs-exfat
-	select PACKAGE_kmod-fs-ntfs
 	depends on PACKAGE_$(PKG_NAME)
 	default n
+
+choice
+	prompt "Select ntfs filesystem"
+	depends on PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_ntfs
+	bool "NTFS KERNEL"
+	select PACKAGE_kmod-fs-ntfs
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_ntfs_oot
+	bool "NTFS OOT"
+	select PACKAGE_kmod-fs-ntfs3-oot
+	select PACKAGE_ntfs3-mount
+	select PACKAGE_ntfsprogs
+
+endchoice
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_usb_storage
 	bool "Kernel usb2 usb3 storage"
@@ -196,6 +212,8 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_usb_storage
 	select PACKAGE_kmod-usb3
 	select PACKAGE_kmod-kmod-usb-storage
 	select PACKAGE_kmod-kmod-usb-storage-extras
+	select PACKAGE_kmod-ata-ahci
+	select PACKAGE_kmod-nvme
 	select PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
 	depends on PACKAGE_$(PKG_NAME)
 	default n

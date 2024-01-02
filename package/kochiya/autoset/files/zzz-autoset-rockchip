@@ -49,7 +49,11 @@ sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/openwrt#g' /etc/opkg/d
 
 sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
 
-
+cat <<EOF >> /etc/sysupgrade.conf
+/root/docker/
+/usr/bin/cloudreve.db
+/etc/xiaoya/
+EOF
 
 #sed -i '/ath9k/d' /etc/modules.d/ath9k
 #echo "ath9k debug=0x00000200" >> /etc/modules.d/ath9k

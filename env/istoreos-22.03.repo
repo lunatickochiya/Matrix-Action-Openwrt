@@ -1,0 +1,5 @@
+REPO_URL="https://github.com/istoreos/istoreos"
+REPO_BRANCH="istoreos-22.03"
+DIY_SH="diy-istoreos.sh"
+DIY_SH_AFB="after_build.sh"
+DIY_SH_RFC="refineconfig.sh"
