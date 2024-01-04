@@ -24,6 +24,11 @@ packages=(
     "luci-app-argon-config"
     "luci-theme-argon"
     "luci-app-vlmcsd"
+    "xray-core"
+    "v2ray-core"
+    "v2ray-geodata"
+    "v2ray-plugin"
+    "v2raya"
 )
 
 for package in "${packages[@]}"; do
@@ -33,13 +38,15 @@ for package in "${packages[@]}"; do
 done
 
 directories=(
-    "package/package/kochiya/ntfs3-mount"
-    "package/package/kochiya/ntfs3-oot"
-    "package/package/kochiya/ntfsprogs"
-    "feeds/kenzo/luci-app-dockerman"
+    "feeds/luci/applications/luci-app-dockerman"
     "feeds/kenzo/luci-app-argon-config"
-    "feeds/kenzo/luci-app-argon"
+    "feeds/kenzo/luci-theme-argon"
     "feeds/kenzo/luci-app-vlmcsd"
+    "feeds/packages/net/xray-core"
+    "feeds/packages/net/v2ray-core"
+    "feeds/packages/net/v2ray-geodata"
+    "feeds/packages/net/v2ray-plugin"
+    "feeds/packages/net/v2raya"
 )
 
 for directory in "${directories[@]}"; do
@@ -52,8 +59,14 @@ for directory in "${directories[@]}"; do
     fi
 done
 
+echo "升级索引"
 ./scripts/feeds update -i
-./scripts/feeds install -a -d y
+
+for package2 in "${packages[@]}"; do
+        echo "安装软件包 $package2 ..."
+        ./scripts/feeds install $package2
+        echo "软件包 $package2 已经重新安装。"
+done
         }
 
 function remove_error_package_not_install() {
@@ -155,7 +168,6 @@ patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
-patch_kiddin9
 add_mt798x_packages
 elif [ "$1" == "mpc1917" ]; then
 autosetver
@@ -163,15 +175,13 @@ patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
-patch_kiddin9
 add_mpc1917_packages
 elif [ "$1" == "mpc1917-istoreos" ]; then
 autosetver
 patch_openwrt
-remove_error_package_not_install
+remove_error_package
 patch_package
 patch_luci
-patch_kiddin9
 add_mpc1917_packages_istoreos
 elif [ "$1" == "rockpatch" ]; then
 patch_rockchip

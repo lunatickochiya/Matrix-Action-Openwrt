@@ -50,7 +50,6 @@ echo "Gateway: $gateway"
 uci set network.lan.ipaddr="$wan_address"
 uci set network.lan.gateway="$gateway"
 uci set network.lan.device='eth0'
-unset_brlan
 uci commit network
 
 uci set netwizard.default.lan_netmask='255.255.255.0'
