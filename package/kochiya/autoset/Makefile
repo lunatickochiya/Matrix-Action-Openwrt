@@ -210,8 +210,8 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_usb_storage
 	select PACKAGE_kmod-usb2
 	select PACKAGE_block-mount
 	select PACKAGE_kmod-usb3
-	select PACKAGE_kmod-kmod-usb-storage
-	select PACKAGE_kmod-kmod-usb-storage-extras
+	select PACKAGE_kmod-usb-storage
+	select PACKAGE_kmod-usb-storage-extras
 	select PACKAGE_kmod-ata-ahci
 	select PACKAGE_kmod-nvme
 	select PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
