@@ -131,6 +131,24 @@ function patch_rockchip() {
         rm -rf tpm312
         }
 
+function remove_firewall() {
+
+directories1=(
+    "package/network/config/firewall"
+    "package/network/config/firewall4"
+)
+
+for directory1 in "${directories1[@]}"; do
+    if [ -d "$directory1" ]; then
+        echo "目录 $directory1 存在，进行删除操作..."
+        rm -r "$directory1"
+        echo "目录 $directory1 已删除。"
+    else
+        echo "目录 $directory1 不存在。"
+    fi
+done
+        }
+
 # add luci
 function add_full_istore_luci_for_ws1508() {
 echo "$(cat package-configs/ws1508-istore-2305.config)" >> package-configs/.config
@@ -144,6 +162,11 @@ mv -f package-configs/.config .config
 
 function add_mt798x_packages() {
 echo "$(cat package-configs/mt798x-common.config)" >> package-configs/.config
+mv -f package-configs/.config .config
+}
+
+function add_mt798x_iptables_packages() {
+echo "$(cat package-configs/mt798x-common-iptables.config)" >> package-configs/.config
 mv -f package-configs/.config .config
 }
 
@@ -180,7 +203,7 @@ remove_error_package_not_install
 patch_package
 patch_luci
 patch_kiddin9
-add_mt798x_packages
+add_mt798x_iptables_packages
 elif [ "$1" == "mt798x-istore" ]; then
 autosetver
 patch_openwrt
@@ -199,6 +222,8 @@ patch_kiddin9
 add_mpc1917_packages
 elif [ "$1" == "rockpatch" ]; then
 patch_rockchip
+elif [ "$1" == "firewallremove" ]; then
+remove_firewall
 else
 echo "Invalid argument"
 fi

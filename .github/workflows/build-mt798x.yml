@@ -84,6 +84,7 @@ jobs:
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
         sed -i '$a src-git kiddin9 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
+        $GITHUB_WORKSPACE/$DIY_SH firewallremove
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 增加磁盘空间
@@ -101,6 +102,7 @@ jobs:
       run: |
         [ -d mypatch ] && mv -f mypatch openwrt/mypatch
         [ -d package ] && mv -f package/* openwrt/package
+        [ -d package-for-mt798x ] && mv -f package-for-mt798x/* openwrt/package
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 更新 & 安装 feeds
