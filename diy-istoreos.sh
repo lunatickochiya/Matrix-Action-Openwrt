@@ -164,21 +164,18 @@ mv -f package-configs/.config .config
 
 if [ "$1" == "mt798x" ]; then
 autosetver
-patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
 add_mt798x_packages
 elif [ "$1" == "mpc1917" ]; then
 autosetver
-patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
 add_mpc1917_packages
 elif [ "$1" == "mpc1917-istoreos" ]; then
 autosetver
-patch_openwrt
 remove_error_package
 patch_package
 patch_luci
