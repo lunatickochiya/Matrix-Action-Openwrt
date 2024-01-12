@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=LuCI app for FileBrowser
 LUCI_PKGARCH:=all
-LUCI_DEPENDS:=+filebrowser
+LUCI_DEPENDS:=
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
