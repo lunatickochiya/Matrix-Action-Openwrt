@@ -12,19 +12,21 @@ You may obtain a copy of the License at
 $Id$
 ]]--
 
-m = Map("vsftpd", translate("FTP Server - Virtual User Settings"))
+m = Map("vsftpd")
+m.title = translate("FTP Server - Virtual User Settings")
 
 sv = m:section(NamedSection, "vuser", "vuser", translate("Settings"))
 
 o = sv:option(Flag, "enabled", translate("Enabled"))
 o.default = false
 
-o = sv:option(Value, "username", translate("Username"), translate("An actual local user to handle virtual users"))
+o = sv:option(Value, "username", translate("Username"))
+o.description = translate("An actual local user to handle virtual users")
 o.default = "ftp"
 
 s = m:section(TypedSection, "user", translate("User lists"))
 s.template = "cbi/tblsection"
-s.extedit  = luci.dispatcher.build_url("admin/services/vsftpd/item/%s")
+s.extedit  = luci.dispatcher.build_url("admin/nas/vsftpd/item/%s")
 s.addremove = true
 s.anonymous = true
 
