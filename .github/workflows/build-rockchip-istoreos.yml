@@ -158,6 +158,8 @@ jobs:
         awk '/firewall/ { print }' .config
         echo "------------------------"
         awk '/fullcone/ { print }' .config
+        echo "------------------------"
+        awk '/syncthing/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
@@ -211,7 +213,6 @@ jobs:
         mkdir firmware
         cp -u -f openwrt/kernelipks.zip firmware
         cp -u -f openwrt/ipks.zip firmware
-        mv -f openwrt/bin/targets/*/*/{*combined*,*sysupgrade*,*ext4*,*sdk*,*imagebuilder*,*initramfs*,*factory*} ./firmware/ 2>/dev/null || true
         cp openwrt/.config  ./firmware/${{matrix.target}}.config
         cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
         cd firmware
@@ -220,6 +221,15 @@ jobs:
         rm -rf sha256sums
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 上传firmware目录
+      uses: actions/upload-artifact@main
+      continue-on-error: true
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
+      with:
+        name: ${{ env.VERSION }}_${{matrix.target}}_firmware
+        path: |
+          firmware
 
     - name: 上传固件cowtransfer
       id: cowtransfer

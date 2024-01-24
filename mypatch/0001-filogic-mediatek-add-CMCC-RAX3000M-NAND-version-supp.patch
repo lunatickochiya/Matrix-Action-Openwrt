@@ -1,4 +1,4 @@
-From ac7c238897ebbf652d8bfee87549479b02f83e9a Mon Sep 17 00:00:00 2001
+From 38c20fd397707c620d02bf003394f0784c51da97 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Mon, 11 Dec 2023 15:38:47 +0800
 Subject: [PATCH 1/2] filogic:mediatek: add CMCC RAX3000M NAND version support
@@ -22,10 +22,10 @@ This reverts commit 93d6f5d89b3848bf3611ae3c4dfea61e72efd075.
  create mode 100644 target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-nand-ubootmod.dts
 
 diff --git a/package/boot/uboot-envtools/files/mediatek_filogic b/package/boot/uboot-envtools/files/mediatek_filogic
-index 8c7c5a85c0..0404959cd5 100644
+index 65872b60f5..2ce7c2a2e5 100644
 --- a/package/boot/uboot-envtools/files/mediatek_filogic
 +++ b/package/boot/uboot-envtools/files/mediatek_filogic
-@@ -65,6 +65,7 @@ mercusys,mr90x-v1)
+@@ -69,6 +69,7 @@ routerich,ax3000)
  	local envdev=/dev/mtd$(find_mtd_index "u-boot-env")
  	ubootenv_add_uci_config "$envdev" "0x0" "0x20000" "0x20000" "1"
  	;;
@@ -293,22 +293,22 @@ index 0000000000..181a053bf1
 +	status = "okay";
 +};
 diff --git a/target/linux/mediatek/filogic/base-files/etc/board.d/02_network b/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
-index a53b66f7cb..5c1569e397 100644
+index 2e978be680..c51d265e6f 100644
 --- a/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
 +++ b/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
-@@ -32,6 +32,7 @@ mediatek_setup_interfaces()
- 	qihoo,360t7)
- 		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3" wan
+@@ -34,6 +34,7 @@ mediatek_setup_interfaces()
+ 	bananapi,bpi-r3)
+ 		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4 sfp2" "eth1 wan"
  		;;
 +	cmcc,rax3000m-nand-ubootmod|\
  	cmcc,rax3000m|\
  	h3c,magic-nx30-pro)
  		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3" eth1
 diff --git a/target/linux/mediatek/filogic/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac b/target/linux/mediatek/filogic/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac
-index b2b4f377a6..72cdfde261 100644
+index f8ebc1da42..ab5bd1e374 100644
 --- a/target/linux/mediatek/filogic/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac
 +++ b/target/linux/mediatek/filogic/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac
-@@ -47,6 +47,9 @@ case "$board" in
+@@ -57,6 +57,9 @@ case "$board" in
  		esac
  		[ "$PHYNBR" = "1" ] && echo "$addr" > /sys${DEVPATH}/macaddress
  		;;
@@ -319,10 +319,10 @@ index b2b4f377a6..72cdfde261 100644
  		addr=$(mtd_get_mac_binary bdinfo 0xde00)
  		# Originally, phy0 is phy1 mac with LA bit set. However, this would conflict
 diff --git a/target/linux/mediatek/image/filogic.mk b/target/linux/mediatek/image/filogic.mk
-index 2a9449f3bb..e0e776cac7 100644
+index 194319a228..0f0bb18b36 100644
 --- a/target/linux/mediatek/image/filogic.mk
 +++ b/target/linux/mediatek/image/filogic.mk
-@@ -272,6 +272,29 @@ define Device/cmcc_rax3000m
+@@ -282,6 +282,29 @@ define Device/cmcc_rax3000m
  endef
  TARGET_DEVICES += cmcc_rax3000m
  
