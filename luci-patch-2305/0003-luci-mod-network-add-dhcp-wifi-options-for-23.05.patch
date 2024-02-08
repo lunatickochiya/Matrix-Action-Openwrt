@@ -1,4 +1,4 @@
-From ad1a402c264753353a2ee8b968bf1640582a1d44 Mon Sep 17 00:00:00 2001
+From 3c6a3fbd4d5cf302c4761d61e31ebb2375368d87 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Tue, 19 Dec 2023 14:50:37 +0800
 Subject: [PATCH 3/3] luci-mod-network:add dhcp wifi options for 23.05
@@ -9,10 +9,10 @@ Subject: [PATCH 3/3] luci-mod-network:add dhcp wifi options for 23.05
  2 files changed, 17 insertions(+)
 
 diff --git a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js
-index e7a5bc1..e1d1e4d 100644
+index 43d27e2..0aa1f2f 100644
 --- a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js
 +++ b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js
-@@ -312,6 +312,10 @@ return view.extend({
+@@ -347,6 +347,10 @@ return view.extend({
  			_('Authoritative'),
  			_('This is the only DHCP server in the local network.'));
  
@@ -23,9 +23,9 @@ index e7a5bc1..e1d1e4d 100644
  		o = s.taboption('general', form.Value, 'local',
  			_('Resolve these locally'),
  			_('Never forward these matching domains or subdomains; resolve from DHCP or hosts files only.'));
-@@ -633,6 +637,13 @@ return view.extend({
- 		o.datatype = 'range(0,10000)';
- 		o.placeholder = 1000;
+@@ -730,6 +734,13 @@ return view.extend({
+ 		o.optional = true;
+ 		o.placeholder = 3600;
  
 +		o = s.taboption('advanced', form.Value, 'mini_ttl',
 +			_('Minimum TTL to send to clients'),
@@ -38,7 +38,7 @@ index e7a5bc1..e1d1e4d 100644
  			_('Enable TFTP server'),
  			_('Enable the built-in single-instance TFTP server.'));
 diff --git a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
-index 04263c5..3bd2b07 100644
+index ad633b4..cff69a6 100644
 --- a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
 +++ b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
 @@ -950,6 +950,9 @@ return view.extend({

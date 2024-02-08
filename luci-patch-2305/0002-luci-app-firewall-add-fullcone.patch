@@ -1,4 +1,4 @@
-From e5013f1718c53047c71b107cb43d7a6a5436c23b Mon Sep 17 00:00:00 2001
+From 4461ece1a3d8426d3b2e2235caaf7db56ff651c7 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Thu, 13 Jul 2023 21:02:21 +0800
 Subject: [PATCH 2/3] luci-app-firewall:add fullcone
@@ -25,7 +25,7 @@ index 1de98c2..290b7a3 100644
  			s.option(form.ListValue, 'input', _('Input')),
  			s.option(form.ListValue, 'output', _('Output')),
 diff --git a/applications/luci-app-firewall/po/zh_Hans/firewall.po b/applications/luci-app-firewall/po/zh_Hans/firewall.po
-index e3f0668..0886a5a 100644
+index ee02bcf..3f74121 100644
 --- a/applications/luci-app-firewall/po/zh_Hans/firewall.po
 +++ b/applications/luci-app-firewall/po/zh_Hans/firewall.po
 @@ -1520,3 +1520,21 @@ msgstr "最多 65536 个条目。"
