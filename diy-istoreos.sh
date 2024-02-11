@@ -75,6 +75,7 @@ packages=(
     "luci-app-dockerman"
     "rtl8821cu"
     "xray-core"
+    "rust"
 )
 
 for package in "${packages[@]}"; do

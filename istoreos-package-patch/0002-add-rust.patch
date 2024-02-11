@@ -1,0 +1,600 @@
+From 215f85dbc8d9d175bd33193f2aae2289966ba23d Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sun, 11 Feb 2024 09:57:31 +0800
+Subject: [PATCH] add rust
+
+---
+ lang/rust/Config.in                           |  15 +++
+ lang/rust/Makefile                            | 110 ++++++++++++++++++
+ .../0001-Update-xz2-and-use-it-static.patch   |  48 ++++++++
+ .../patches/0002-rustc-bootstrap-cache.patch  |  52 +++++++++
+ .../0003-bump-libc-deps-to-0.2.146.patch      | 100 ++++++++++++++++
+ lang/rust/rust-host-build.mk                  |  51 ++++++++
+ lang/rust/rust-package.mk                     |  45 +++++++
+ lang/rust/rust-values.mk                      | 104 +++++++++++++++++
+ 8 files changed, 525 insertions(+)
+ create mode 100644 lang/rust/Config.in
+ create mode 100644 lang/rust/Makefile
+ create mode 100644 lang/rust/patches/0001-Update-xz2-and-use-it-static.patch
+ create mode 100644 lang/rust/patches/0002-rustc-bootstrap-cache.patch
+ create mode 100644 lang/rust/patches/0003-bump-libc-deps-to-0.2.146.patch
+ create mode 100644 lang/rust/rust-host-build.mk
+ create mode 100644 lang/rust/rust-package.mk
+ create mode 100644 lang/rust/rust-values.mk
+
+diff --git a/lang/rust/Config.in b/lang/rust/Config.in
+new file mode 100644
+index 000000000..62051af13
+--- /dev/null
++++ b/lang/rust/Config.in
+@@ -0,0 +1,15 @@
++menu "Configuration options (for developers)"
++
++config RUST_SCCACHE
++	bool "Use sccache"
++	help
++	  Shared compilation cache; see https://github.com/mozilla/sccache
++
++config RUST_SCCACHE_DIR
++	string "Set sccache directory" if RUST_SCCACHE
++	default ""
++	help
++	  Store sccache in this directory.
++	  If not set, uses './.sccache'
++
++endmenu
+diff --git a/lang/rust/Makefile b/lang/rust/Makefile
+new file mode 100644
+index 000000000..46ee84e9d
+--- /dev/null
++++ b/lang/rust/Makefile
+@@ -0,0 +1,110 @@
++# SPDX-License-Identifier: GPL-2.0-only
++#
++# Copyright (C) 2023 Luca Barbato and Donald Hoskins
++
++include $(TOPDIR)/rules.mk
++
++PKG_NAME:=rust
++PKG_VERSION:=1.75.0
++PKG_RELEASE:=1
++
++PKG_SOURCE:=rustc-$(PKG_VERSION)-src.tar.gz
++PKG_SOURCE_URL:=https://static.rust-lang.org/dist/
++PKG_HASH:=5b739f45bc9d341e2d1c570d65d2375591e22c2d23ef5b8a37711a0386abc088
++HOST_BUILD_DIR:=$(BUILD_DIR)/host/rustc-$(PKG_VERSION)-src
++
++PKG_MAINTAINER:=Luca Barbato <lu_zero@luminem.org>
++PKG_LICENSE:=Apache-2.0 MIT
++PKG_LICENSE_FILES:=LICENSE-APACHE LICENSE-MIT
++
++PKG_HOST_ONLY:=1
++PKG_BUILD_FLAGS:=no-mips16
++
++include $(INCLUDE_DIR)/host-build.mk
++include $(INCLUDE_DIR)/package.mk
++include ./rust-values.mk
++
++define Package/rust
++  SECTION:=lang
++  CATEGORY:=Languages
++  SUBMENU:=Rust
++  TITLE:=Rust Programming Language Compiler
++  URL:=https://www.rust-lang.org/
++  DEPENDS:=$(RUST_ARCH_DEPENDS)
++endef
++
++define Package/rust/description
++  Rust is a multi-paradigm, general-purpose programming language designed for performance
++  and safety, especially safe concurrency. Rust is syntactically similar to C++, but can
++  guarantee memory safety by using a borrow checker to validate references.
++endef
++
++define Package/rust/config
++  source "$(SOURCE)/Config.in"
++endef
++
++# Rust-lang has an uninstall script
++RUST_UNINSTALL:=$(STAGING_DIR)/host/lib/rustlib/uninstall.sh
++
++# Target Flags
++TARGET_CONFIGURE_ARGS = \
++	--set=target.$(RUSTC_TARGET_ARCH).ar=$(TARGET_AR) \
++	--set=target.$(RUSTC_TARGET_ARCH).cc=$(TARGET_CC_NOCACHE) \
++	--set=target.$(RUSTC_TARGET_ARCH).cxx=$(TARGET_CXX_NOCACHE) \
++	--set=target.$(RUSTC_TARGET_ARCH).linker=$(TARGET_CC_NOCACHE) \
++	--set=target.$(RUSTC_TARGET_ARCH).ranlib=$(TARGET_RANLIB) \
++	--set=target.$(RUSTC_TARGET_ARCH).crt-static=false \
++	$(if $(CONFIG_USE_MUSL),--set=target.$(RUSTC_TARGET_ARCH).musl-root=$(TOOLCHAIN_DIR))
++
++# CARGO_HOME is an environmental
++HOST_CONFIGURE_VARS += CARGO_HOME="$(CARGO_HOME)"
++
++# Rust Configuration Arguments
++HOST_CONFIGURE_ARGS = \
++	--build=$(RUSTC_HOST_ARCH) \
++	--target=$(RUSTC_TARGET_ARCH),$(RUSTC_HOST_ARCH) \
++	--host=$(RUSTC_HOST_ARCH) \
++	--prefix=$(STAGING_DIR)/host \
++	--bindir=$(STAGING_DIR)/host/bin \
++	--libdir=$(STAGING_DIR)/host/lib \
++	--sysconfdir=$(STAGING_DIR)/host/etc \
++	--datadir=$(STAGING_DIR)/host/share \
++	--mandir=$(STAGING_DIR)/host/man \
++	--dist-compression-formats=gz \
++	--enable-missing-tools \
++	--disable-sanitizers \
++	--release-channel=stable \
++	--enable-cargo-native-static \
++	--set=llvm.download-ci-llvm=true \
++	$(TARGET_CONFIGURE_ARGS)
++
++define Host/Uninstall
++	# Call the Uninstall script
++	[ -f $(RUST_UNINSTALL) ] && \
++		$(BASH) $(RUST_UNINSTALL) || echo No Uninstall
++endef
++
++define Host/Compile
++	$(RUST_SCCACHE_VARS) \
++	CARGO_HOME=$(CARGO_HOME) \
++	TARGET_CFLAGS="$(TARGET_CFLAGS)" \
++	OPENWRT_RUSTC_BOOTSTRAP_CACHE=$(DL_DIR)/rustc \
++	$(PYTHON) $(HOST_BUILD_DIR)/x.py \
++		--build-dir $(HOST_BUILD_DIR)/build \
++		--config $(HOST_BUILD_DIR)/config.toml \
++		dist build-manifest cargo llvm-tools rustc rust-std rust-src
++endef
++
++define Host/Install
++	( \
++		cd $(HOST_BUILD_DIR)/build/dist ; \
++		for targz in *.tar.gz; do \
++			$(STAGING_DIR_HOST)/bin/libdeflate-gzip -dc "$$$$targz" | tar -xf - ; \
++		done ; \
++		find . -mindepth 2 -maxdepth 2 -type f -name install.sh \
++			-execdir bash '{}' --prefix=$(STAGING_DIR)/host --disable-ldconfig \; ; \
++	)
++endef
++
++$(eval $(call HostBuild))
++$(eval $(call BuildPackage,rust))
+diff --git a/lang/rust/patches/0001-Update-xz2-and-use-it-static.patch b/lang/rust/patches/0001-Update-xz2-and-use-it-static.patch
+new file mode 100644
+index 000000000..2360136a7
+--- /dev/null
++++ b/lang/rust/patches/0001-Update-xz2-and-use-it-static.patch
+@@ -0,0 +1,48 @@
++From d3000458501d339ea2043006924d431ead18769e Mon Sep 17 00:00:00 2001
++From: Luca Barbato <lu_zero@gentoo.org>
++Date: Sun, 4 Jun 2023 19:32:28 +0000
++Subject: [PATCH] Update xz2 and use it static
++
++---
++ Cargo.lock               | 8 ++++----
++ src/bootstrap/Cargo.lock | 8 ++++----
++ src/bootstrap/Cargo.toml | 2 +-
++ 3 files changed, 9 insertions(+), 9 deletions(-)
++
++--- a/src/bootstrap/Cargo.lock
+++++ b/src/bootstrap/Cargo.lock
++@@ -391,9 +391,9 @@ dependencies = [
++ 
++ [[package]]
++ name = "lzma-sys"
++-version = "0.1.17"
+++version = "0.1.20"
++ source = "registry+https://github.com/rust-lang/crates.io-index"
++-checksum = "bdb4b7c3eddad11d3af9e86c487607d2d2442d185d848575365c4856ba96d619"
+++checksum = "5fda04ab3764e6cde78b9974eec4f779acaba7c4e84b36eca3cf77c581b85d27"
++ dependencies = [
++  "cc",
++  "libc",
++@@ -834,9 +834,9 @@ dependencies = [
++ 
++ [[package]]
++ name = "xz2"
++-version = "0.1.6"
+++version = "0.1.7"
++ source = "registry+https://github.com/rust-lang/crates.io-index"
++-checksum = "c179869f34fc7c01830d3ce7ea2086bc3a07e0d35289b667d0a8bf910258926c"
+++checksum = "388c44dc09d76f1536602ead6d325eb532f5c122f17782bd57fb47baeeb767e2"
++ dependencies = [
++  "lzma-sys",
++ ]
++--- a/src/bootstrap/Cargo.toml
+++++ b/src/bootstrap/Cargo.toml
++@@ -57,7 +57,7 @@ tar = "0.4"
++ termcolor = "1.2.0"
++ toml = "0.5"
++ walkdir = "2"
++-xz2 = "0.1"
+++xz2 = { version = "0.1", features = ["static"] }
++ 
++ # Dependencies needed by the build-metrics feature
++ sysinfo = { version = "0.26.0", optional = true }
+diff --git a/lang/rust/patches/0002-rustc-bootstrap-cache.patch b/lang/rust/patches/0002-rustc-bootstrap-cache.patch
+new file mode 100644
+index 000000000..959e23487
+--- /dev/null
++++ b/lang/rust/patches/0002-rustc-bootstrap-cache.patch
+@@ -0,0 +1,52 @@
++--- a/src/bootstrap/bootstrap.py
+++++ b/src/bootstrap/bootstrap.py
++@@ -557,7 +557,7 @@ class RustBuild(object):
++                 shutil.rmtree(bin_root)
++ 
++             key = self.stage0_compiler.date
++-            cache_dst = os.path.join(self.build_dir, "cache")
+++            cache_dst = os.getenv('OPENWRT_RUSTC_BOOTSTRAP_CACHE', os.path.join(self.build_dir, "cache"))
++             rustc_cache = os.path.join(cache_dst, key)
++             if not os.path.exists(rustc_cache):
++                 os.makedirs(rustc_cache)
++--- a/src/bootstrap/src/core/download.rs
+++++ b/src/bootstrap/src/core/download.rs
++@@ -208,7 +208,13 @@ impl Config {
++             Some(other) => panic!("unsupported protocol {other} in {url}"),
++             None => panic!("no protocol in {url}"),
++         }
++-        t!(std::fs::rename(&tempfile, dest_path));
+++        match std::fs::rename(&tempfile, dest_path) {
+++            Ok(v) => v,
+++            Err(_) => {
+++                t!(std::fs::copy(&tempfile, dest_path));
+++                t!(std::fs::remove_file(&tempfile));
+++            }
+++        }
++     }
++ 
++     fn download_http_with_retries(&self, tempfile: &Path, url: &str, help_on_error: &str) {
++@@ -544,7 +550,10 @@ impl Config {
++         key: &str,
++         destination: &str,
++     ) {
++-        let cache_dst = self.out.join("cache");
+++        let cache_dst = match env::var_os("OPENWRT_RUSTC_BOOTSTRAP_CACHE") {
+++            Some(v) => PathBuf::from(v),
+++            None => self.out.join("cache"),
+++        };
++         let cache_dir = cache_dst.join(key);
++         if !cache_dir.exists() {
++             t!(fs::create_dir_all(&cache_dir));
++@@ -671,7 +680,10 @@ download-rustc = false
++         let llvm_assertions = self.llvm_assertions;
++ 
++         let cache_prefix = format!("llvm-{llvm_sha}-{llvm_assertions}");
++-        let cache_dst = self.out.join("cache");
+++        let cache_dst = match env::var_os("OPENWRT_RUSTC_BOOTSTRAP_CACHE") {
+++            Some(v) => PathBuf::from(v),
+++            None => self.out.join("cache"),
+++        };
++         let rustc_cache = cache_dst.join(cache_prefix);
++         if !rustc_cache.exists() {
++             t!(fs::create_dir_all(&rustc_cache));
+diff --git a/lang/rust/patches/0003-bump-libc-deps-to-0.2.146.patch b/lang/rust/patches/0003-bump-libc-deps-to-0.2.146.patch
+new file mode 100644
+index 000000000..bb131d23f
+--- /dev/null
++++ b/lang/rust/patches/0003-bump-libc-deps-to-0.2.146.patch
+@@ -0,0 +1,100 @@
++This patch bumps all libc dependencies and checksums to 0.2.147, which includes the fix for musl 1.2.4.
++
++--- a/vendor/addr2line-0.19.0/Cargo.lock
+++++ b/vendor/addr2line-0.19.0/Cargo.lock
++@@ -235,9 +235,9 @@ checksum = "e2abad23fbc42b3700f2f279844d
++ 
++ [[package]]
++ name = "libc"
++-version = "0.2.126"
+++version = "0.2.147"
++ source = "registry+https://github.com/rust-lang/crates.io-index"
++-checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
+++checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
++ 
++ [[package]]
++ name = "memchr"
++--- a/vendor/backtrace-0.3.67/Cargo.lock
+++++ b/vendor/backtrace-0.3.67/Cargo.lock
++@@ -64,9 +64,9 @@ checksum = "dec7af912d60cdbd3677c1af9352
++ 
++ [[package]]
++ name = "libc"
++-version = "0.2.138"
+++version = "0.2.147"
++ source = "registry+https://github.com/rust-lang/crates.io-index"
++-checksum = "db6d7e329c562c5dfab7a46a2afabc8b987ab9a4834c9d1ca04dc54c1546cef8"
+++checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
++ 
++ [[package]]
++ name = "libloading"
++--- a/vendor/crossbeam-channel/Cargo.lock
+++++ b/vendor/crossbeam-channel/Cargo.lock
++@@ -50,9 +50,9 @@ dependencies = [
++ 
++ [[package]]
++ name = "libc"
++-version = "0.2.141"
+++version = "0.2.147"
++ source = "registry+https://github.com/rust-lang/crates.io-index"
++-checksum = "3304a64d199bb964be99741b7a14d26972741915b3649639149b2479bb46f4b5"
+++checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
++ 
++ [[package]]
++ name = "num_cpus"
++--- a/vendor/elasticlunr-rs/Cargo.lock
+++++ b/vendor/elasticlunr-rs/Cargo.lock
++@@ -555,9 +555,9 @@ checksum = "e2abad23fbc42b3700f2f279844d
++ 
++ [[package]]
++ name = "libc"
++-version = "0.2.140"
+++version = "0.2.147"
++ source = "registry+https://github.com/rust-lang/crates.io-index"
++-checksum = "99227334921fae1a979cf0bfdfcc6b3e5ce376ef57e16fb6fb3ea2ed6095f80c"
+++checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
++ 
++ [[package]]
++ name = "lindera"
++--- a/vendor/handlebars/Cargo.lock
+++++ b/vendor/handlebars/Cargo.lock
++@@ -550,9 +550,9 @@ checksum = "e2abad23fbc42b3700f2f279844d
++ 
++ [[package]]
++ name = "libc"
++-version = "0.2.140"
+++version = "0.2.147"
++ source = "registry+https://github.com/rust-lang/crates.io-index"
++-checksum = "99227334921fae1a979cf0bfdfcc6b3e5ce376ef57e16fb6fb3ea2ed6095f80c"
+++checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
++ 
++ [[package]]
++ name = "lock_api"
++--- a/vendor/libffi/Cargo.lock
+++++ b/vendor/libffi/Cargo.lock
++@@ -10,9 +10,9 @@ checksum = "50d30906286121d95be3d479533b
++ 
++ [[package]]
++ name = "libc"
++-version = "0.2.140"
+++version = "0.2.147"
++ source = "registry+https://github.com/rust-lang/crates.io-index"
++-checksum = "99227334921fae1a979cf0bfdfcc6b3e5ce376ef57e16fb6fb3ea2ed6095f80c"
+++checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
++ 
++ [[package]]
++ name = "libffi"
++--- a/vendor/tracing-tree/Cargo.lock
+++++ b/vendor/tracing-tree/Cargo.lock
++@@ -296,9 +296,9 @@ checksum = "e2abad23fbc42b3700f2f279844d
++ 
++ [[package]]
++ name = "libc"
++-version = "0.2.141"
+++version = "0.2.147"
++ source = "registry+https://github.com/rust-lang/crates.io-index"
++-checksum = "3304a64d199bb964be99741b7a14d26972741915b3649639149b2479bb46f4b5"
+++checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
++ 
++ [[package]]
++ name = "linux-raw-sys"
+diff --git a/lang/rust/rust-host-build.mk b/lang/rust/rust-host-build.mk
+new file mode 100644
+index 000000000..e56292937
+--- /dev/null
++++ b/lang/rust/rust-host-build.mk
+@@ -0,0 +1,51 @@
++# SPDX-License-Identifier: GPL-2.0-only
++#
++# Copyright (C) 2023 Luca Barbato and Donald Hoskins
++
++# Variables (all optional) to be set in package Makefiles:
++#
++# RUST_HOST_FEATURES - list of options, default empty
++#
++#   Space or comma separated list of features to activate
++#
++#   e.g. RUST_HOST_FEATURES:=enable-foo,with-bar
++
++ifeq ($(origin RUST_INCLUDE_DIR),undefined)
++  RUST_INCLUDE_DIR:=$(dir $(lastword $(MAKEFILE_LIST)))
++endif
++include $(RUST_INCLUDE_DIR)/rust-values.mk
++
++CARGO_HOST_VARS= \
++	$(CARGO_HOST_CONFIG_VARS) \
++	CC=$(HOSTCC_NOCACHE) \
++	MAKEFLAGS="$(HOST_JOBS)"
++
++# $(1) path to the package (optional)
++# $(2) additional arguments to cargo (optional)
++define Host/Compile/Cargo
++	+$(CARGO_HOST_VARS) \
++	cargo install -v \
++		--profile $(CARGO_HOST_PROFILE) \
++		$(if $(RUST_HOST_FEATURES),--features "$(RUST_HOST_FEATURES)") \
++		--root $(HOST_INSTALL_DIR) \
++		--path "$(HOST_BUILD_DIR)/$(if $(strip $(1)),$(strip $(1)))" \
++		$(if $(filter --jobserver%,$(HOST_JOBS)),,-j1) \
++		$(2)
++endef
++
++define Host/Uninstall/Cargo
++	+$(CARGO_HOST_VARS) \
++	cargo uninstall -v \
++		--root $(HOST_INSTALL_DIR) \
++		|| true
++endef
++
++define RustBinHostBuild
++  define Host/Install
++	$(INSTALL_DIR) $(STAGING_DIR_HOSTPKG)/bin
++	$(INSTALL_BIN) $(HOST_INSTALL_DIR)/bin/* $(STAGING_DIR_HOSTPKG)/bin/
++  endef
++endef
++
++Host/Compile=$(call Host/Compile/Cargo)
++Host/Uninstall=$(call Host/Uninstall/Cargo)
+diff --git a/lang/rust/rust-package.mk b/lang/rust/rust-package.mk
+new file mode 100644
+index 000000000..24341d706
+--- /dev/null
++++ b/lang/rust/rust-package.mk
+@@ -0,0 +1,45 @@
++# SPDX-License-Identifier: GPL-2.0-only
++#
++# Copyright (C) 2023 Luca Barbato and Donald Hoskins
++
++# Variables (all optional) to be set in package Makefiles:
++#
++# RUST_PKG_FEATURES - list of options, default empty
++#
++#   Space or comma separated list of features to activate
++#
++#   e.g. RUST_PKG_FEATURES:=enable-foo,with-bar
++
++ifeq ($(origin RUST_INCLUDE_DIR),undefined)
++  RUST_INCLUDE_DIR:=$(dir $(lastword $(MAKEFILE_LIST)))
++endif
++include $(RUST_INCLUDE_DIR)/rust-values.mk
++
++CARGO_PKG_VARS= \
++	$(CARGO_PKG_CONFIG_VARS) \
++	CC=$(HOSTCC_NOCACHE) \
++	MAKEFLAGS="$(PKG_JOBS)"
++
++# $(1) path to the package (optional)
++# $(2) additional arguments to cargo (optional)
++define Build/Compile/Cargo
++	+$(CARGO_PKG_VARS) \
++	cargo install -v \
++		--profile $(CARGO_PKG_PROFILE) \
++		$(if $(strip $(RUST_PKG_FEATURES)),--features "$(strip $(RUST_PKG_FEATURES))") \
++		--root $(PKG_INSTALL_DIR) \
++		--path "$(PKG_BUILD_DIR)/$(if $(strip $(1)),$(strip $(1)))" \
++		$(if $(filter --jobserver%,$(PKG_JOBS)),,-j1) \
++		$(2)
++endef
++
++define RustBinPackage
++  ifndef Package/$(1)/install
++    define Package/$(1)/install
++	$$(INSTALL_DIR) $$(1)/usr/bin/
++	$$(INSTALL_BIN) $$(PKG_INSTALL_DIR)/bin/* $$(1)/usr/bin/
++    endef
++  endif
++endef
++
++Build/Compile=$(call Build/Compile/Cargo)
+diff --git a/lang/rust/rust-values.mk b/lang/rust/rust-values.mk
+new file mode 100644
+index 000000000..534aaa02a
+--- /dev/null
++++ b/lang/rust/rust-values.mk
+@@ -0,0 +1,104 @@
++# SPDX-License-Identifier: GPL-2.0-only
++#
++# Copyright (C) 2023 Luca Barbato and Donald Hoskins
++
++# Clear environment variables which should be handled internally,
++# as users might configure their own env on the host
++
++# CCache
++unexport RUSTC_WRAPPER
++
++# Rust Environmental Vars
++RUSTC_HOST_SUFFIX:=$(word 4, $(subst -, ,$(GNU_HOST_NAME)))
++RUSTC_HOST_ARCH:=$(HOST_ARCH)-unknown-linux-$(RUSTC_HOST_SUFFIX)
++CARGO_HOME:=$(DL_DIR)/cargo
++
++ifeq ($(CONFIG_USE_MUSL),y)
++  # Force linking of the SSP library for musl
++  ifdef CONFIG_PKG_CC_STACKPROTECTOR_REGULAR
++    ifeq ($(strip $(PKG_SSP)),1)
++      RUSTC_LDFLAGS+=-lssp_nonshared
++    endif
++  endif
++  ifdef CONFIG_PKG_CC_STACKPROTECTOR_STRONG
++    ifeq ($(strip $(PKG_SSP)),1)
++      RUSTC_LDFLAGS+=-lssp_nonshared
++    endif
++  endif
++endif
++
++CARGO_RUSTFLAGS+=-Ctarget-feature=-crt-static $(RUSTC_LDFLAGS)
++
++ifeq ($(HOST_OS),Darwin)
++  ifeq ($(HOST_ARCH),arm64)
++    RUSTC_HOST_ARCH:=aarch64-apple-darwin
++  endif
++endif
++
++# mips64 openwrt has a specific targed in rustc
++ifeq ($(ARCH),mips64)
++  RUSTC_TARGET_ARCH:=$(REAL_GNU_TARGET_NAME)
++else
++  RUSTC_TARGET_ARCH:=$(subst openwrt,unknown,$(REAL_GNU_TARGET_NAME))
++endif
++
++RUSTC_TARGET_ARCH:=$(subst muslgnueabi,musleabi,$(RUSTC_TARGET_ARCH))
++
++ifeq ($(ARCH),i386)
++  RUSTC_TARGET_ARCH:=$(subst i486,i586,$(RUSTC_TARGET_ARCH))
++else ifeq ($(ARCH),riscv64)
++  RUSTC_TARGET_ARCH:=$(subst riscv64,riscv64gc,$(RUSTC_TARGET_ARCH))
++endif
++
++# ARM Logic
++ifeq ($(ARCH),arm)
++  ifeq ($(CONFIG_arm_v7),y)
++    RUSTC_TARGET_ARCH:=$(subst arm,armv7,$(RUSTC_TARGET_ARCH))
++  endif
++
++  ifeq ($(CONFIG_HAS_FPU),y)
++    RUSTC_TARGET_ARCH:=$(subst musleabi,musleabihf,$(RUSTC_TARGET_ARCH))
++    RUSTC_TARGET_ARCH:=$(subst gnueabi,gnueabihf,$(RUSTC_TARGET_ARCH))
++  endif
++endif
++
++ifeq ($(ARCH),aarch64)
++    RUSTC_CFLAGS:=-mno-outline-atomics
++endif
++
++# Support only a subset for now.
++RUST_ARCH_DEPENDS:=@(aarch64||arm||i386||i686||mips||mipsel||mips64||mips64el||mipsel||powerpc64||riscv64||x86_64)
++
++ifneq ($(CONFIG_RUST_SCCACHE),)
++  RUST_SCCACHE_DIR:=$(if $(call qstrip,$(CONFIG_RUST_SCCACHE_DIR)),$(call qstrip,$(CONFIG_RUST_SCCACHE_DIR)),$(TOPDIR)/.sccache)
++
++  RUST_SCCACHE_VARS:= \
++	CARGO_INCREMENTAL=0 \
++	RUSTC_WRAPPER=sccache \
++	SCCACHE_DIR=$(RUST_SCCACHE_DIR)
++endif
++
++CARGO_HOST_CONFIG_VARS= \
++	$(RUST_SCCACHE_VARS) \
++	CARGO_HOME=$(CARGO_HOME)
++
++CARGO_HOST_PROFILE:=release
++
++CARGO_PKG_CONFIG_VARS= \
++	$(RUST_SCCACHE_VARS) \
++	CARGO_BUILD_TARGET=$(RUSTC_TARGET_ARCH) \
++	CARGO_HOME=$(CARGO_HOME) \
++	CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1 \
++	CARGO_PROFILE_RELEASE_DEBUG=false \
++	CARGO_PROFILE_RELEASE_DEBUG_ASSERTIONS=false \
++	CARGO_PROFILE_RELEASE_LTO=true \
++	CARGO_PROFILE_RELEASE_OPT_LEVEL=z \
++	CARGO_PROFILE_RELEASE_OVERFLOW_CHECKS=true \
++	CARGO_PROFILE_RELEASE_PANIC=unwind \
++	CARGO_PROFILE_RELEASE_RPATH=false \
++	CARGO_TARGET_$(subst -,_,$(call toupper,$(RUSTC_TARGET_ARCH)))_LINKER=$(TARGET_CC_NOCACHE) \
++	RUSTFLAGS="$(CARGO_RUSTFLAGS)" \
++	TARGET_CC=$(TARGET_CC_NOCACHE) \
++	TARGET_CFLAGS="$(TARGET_CFLAGS) $(RUSTC_CFLAGS)"
++
++CARGO_PKG_PROFILE:=$(if $(CONFIG_DEBUG),dev,release)
+-- 
+2.34.1
+
