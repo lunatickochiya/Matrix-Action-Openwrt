@@ -29,6 +29,7 @@ packages=(
     "v2ray-geodata"
     "v2ray-plugin"
     "v2raya"
+    "rust"
 )
 
 for package in "${packages[@]}"; do
@@ -171,15 +172,15 @@ patch_luci
 add_mt798x_packages
 elif [ "$1" == "mpc1917" ]; then
 autosetver
-remove_error_package_not_install
 patch_package
 patch_luci
+remove_error_package_not_install
 add_mpc1917_packages
 elif [ "$1" == "mpc1917-istoreos" ]; then
 autosetver
-remove_error_package
 patch_package
 patch_luci
+remove_error_package
 add_mpc1917_packages_istoreos
 elif [ "$1" == "rockpatch" ]; then
 patch_rockchip
