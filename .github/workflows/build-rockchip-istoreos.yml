@@ -193,7 +193,6 @@ jobs:
       run: |
        df -hT
        ls /mnt/openwrt
-       ls /openwrt
 
     - name: 上传bin目录
       uses: actions/upload-artifact@main
