@@ -1,0 +1,73 @@
+From ad79b92719498afa93567cccdfbffeb49a57388d Mon Sep 17 00:00:00 2001
+From: Stijn Tintel <stijn@linux-ipv6.be>
+Date: Mon, 28 Mar 2022 18:40:30 +0300
+Subject: [PATCH] elfutils: move host build to tools
+
+The upcoming dwarves host package requires elfutils. As dependencies for
+tools must exist in tools, we need to move elfutils host build there.
+
+As there is at least one package that depends on this, and there is no
+proper way to create such dependency in the build system, build it
+unconditionally when not building on macOS.
+
+Signed-off-by: Stijn Tintel <stijn@linux-ipv6.be>
+---
+ package/libs/elfutils/Makefile |  4 ----
+ tools/Makefile                 |  3 +++
+ tools/elfutils/Makefile        | 32 ++++++++++++++++++++++++++++++++
+ 3 files changed, 35 insertions(+), 4 deletions(-)
+ create mode 100644 tools/elfutils/Makefile
+
+diff --git a/tools/Makefile b/tools/Makefile
+index ec382b4122524..416039cf38f7c 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -83,6 +83,9 @@ ifneq ($(HOST_OS),Linux)
+ endif
+ ifeq ($(HOST_OS),Darwin)
+   tools-y += bash
++else
++  $(curdir)/elfutils/compile := $(curdir)/zlib/compile
++  tools-y += elfutils
+ endif
+ 
+ ifneq ($(CONFIG_CCACHE)$(CONFIG_SDK),)
+diff --git a/tools/elfutils/Makefile b/tools/elfutils/Makefile
+new file mode 100644
+index 0000000000000..98694beb0effc
+--- /dev/null
++++ b/tools/elfutils/Makefile
+@@ -0,0 +1,33 @@
++# SPDX-License-Identifier: GPL-2.0-only
++
++include $(TOPDIR)/rules.mk
++
++PKG_NAME:=elfutils
++PKG_VERSION:=0.189
++PKG_RELEASE:=1
++
++PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
++PKG_SOURCE_URL:=https://sourceware.org/$(PKG_NAME)/ftp/$(PKG_VERSION)
++PKG_HASH:=39bd8f1a338e2b7cd4abc3ff11a0eddc6e690f69578a57478d8179b4148708c8
++
++PKG_LICENSE:=GPL-3.0-or-later
++PKG_LICENSE_FILES:=COPYING COPYING-GPLV2 COPYING-LGPLV3
++PKG_CPE_ID:=cpe:/a:elfutils_project:elfutils
++
++PKG_FIXUP:=autoreconf
++PKG_INSTALL:=1
++
++include $(INCLUDE_DIR)/host-build.mk
++
++HOST_CONFIGURE_ARGS += \
++	--disable-debuginfod \
++	--disable-libdebuginfod \
++	--disable-nls \
++	--disable-shared \
++	--without-lzma \
++	--without-zstd
++
++HOST_MAKE_FLAGS += \
++	SUBDIRS="lib libelf libcpu backends libebl libdwelf libdwfl libdw"
++
++$(eval $(call HostBuild))

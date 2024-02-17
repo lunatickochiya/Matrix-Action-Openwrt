@@ -107,6 +107,7 @@ jobs:
       id: files
       run: |
         [ -d mypatch ] && mv -f mypatch openwrt/mypatch
+        [ -d patch-istoreos ] && mv -f patch-istoreos openwrt/patch-istoreos
         [ -d package ] && mv -f package/* openwrt/package
         [ -d package-for-istoreos ] && mv -f package-for-istoreos/* openwrt/package
         echo "status=success" >> $GITHUB_OUTPUT
@@ -162,6 +163,8 @@ jobs:
         awk '/syncthing/ { print }' .config
         echo "------------------------"
         awk '/shadowsocks-rust/ { print }' .config
+        echo "------------------------"
+        awk '/GCC_VERSION/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'

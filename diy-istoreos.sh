@@ -48,6 +48,7 @@ directories=(
     "feeds/packages/net/v2ray-geodata"
     "feeds/packages/net/v2ray-plugin"
     "feeds/packages/net/v2raya"
+    "package/libs/elfutils"
 )
 
 for directory in "${directories[@]}"; do
@@ -117,6 +118,12 @@ function patch_openwrt() {
             patch -p1 --no-backup-if-mismatch < mypatch/$i
         done
         }
+function patch_istoreos() {
+        for is in $( ls patch-istoreos ); do
+            echo Applying patch-istoreos $is
+            patch -p1 --no-backup-if-mismatch < patch-istoreos/$is
+        done
+        }
 function patch_package() {
         for packagepatch in $( ls feeds/packages/istoreos-package-patch ); do
             cd feeds/packages/
@@ -180,6 +187,7 @@ elif [ "$1" == "mpc1917-istoreos" ]; then
 autosetver
 patch_package
 patch_luci
+patch_istoreos
 remove_error_package
 add_mpc1917_packages_istoreos
 elif [ "$1" == "rockpatch" ]; then
