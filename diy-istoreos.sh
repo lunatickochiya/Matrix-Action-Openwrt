@@ -49,6 +49,8 @@ directories=(
     "feeds/packages/net/v2ray-plugin"
     "feeds/packages/net/v2raya"
     "package/libs/elfutils"
+    "feeds/third/luci-app-baidupcs-web"
+    "package/diy/ntfs3-mount"
 )
 
 for directory in "${directories[@]}"; do

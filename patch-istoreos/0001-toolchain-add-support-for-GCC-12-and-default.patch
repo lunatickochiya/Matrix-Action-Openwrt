@@ -1,65 +1,61 @@
-From c4bd303086012afe2aebd213c892363512138bb7 Mon Sep 17 00:00:00 2001
-From: Rui Salvaterra <rsalvaterra@gmail.com>
-Date: Fri, 6 May 2022 15:42:06 +0100
-Subject: [PATCH] toolchain: add support for GCC 12
+From 4941222a7a215d43a3c6ddbfbe009c7766a58258 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sun, 18 Feb 2024 14:43:27 +0800
+Subject: [PATCH] toolchain: add support for GCC 12 and default
 
-GCC 12.1 is out. Add support for it.
-
-Deleted (upstreamed):
-011-v12-configure-define-TARGET_LIBC_GNUSTACK-on-musl.patch
-931-libffi-fix-MIPS-softfloat-build-issue.patch
-
-Deleted (unneeded?)
-970-macos_arm64-building-fix.patch
-
-Other patches manually rebased due to C++ conversion and consequent file name
-changing (.c to .cc).
-
-Signed-off-by: Rui Salvaterra <rsalvaterra@gmail.com>
 ---
- toolchain/gcc/Config.in                       |   3 +
- toolchain/gcc/Config.version                  |   5 +
+ toolchain/gcc/Config.in                       |   5 +-
+ toolchain/gcc/Config.version                  |   7 +-
  toolchain/gcc/common.mk                       |  14 +-
- .../patches/12.1.0/002-case_insensitive.patch |  24 +++
- .../patches/12.1.0/010-documentation.patch    |  35 +++++
- .../12.1.0/110-Fix-MIPS-PR-84790.patch        |  20 +++
- .../gcc/patches/12.1.0/230-musl_libssp.patch  |  13 ++
+ .../patches/12.2.0/002-case_insensitive.patch |  24 +++
+ .../patches/12.2.0/010-documentation.patch    |  35 +++++
+ .../12.2.0/110-Fix-MIPS-PR-84790.patch        |  20 +++
+ .../gcc/patches/12.2.0/230-musl_libssp.patch  |  13 ++
  .../300-mips_Os_cpu_rtx_cost_model.patch      |  21 +++
- .../12.1.0/810-arm-softfloat-libgcc.patch     |  33 ++++
- .../gcc/patches/12.1.0/820-libgcc_pic.patch   |  44 ++++++
+ .../12.2.0/810-arm-softfloat-libgcc.patch     |  33 ++++
+ .../gcc/patches/12.2.0/820-libgcc_pic.patch   |  44 ++++++
  .../840-armv4_pass_fix-v4bx_to_ld.patch       |  28 ++++
- .../12.1.0/850-use_shared_libgcc.patch        |  54 +++++++
- .../patches/12.1.0/851-libgcc_no_compat.patch |  22 +++
- .../patches/12.1.0/870-ppc_no_crtsavres.patch |  11 ++
- .../patches/12.1.0/881-no_tm_section.patch    |  11 ++
- .../patches/12.1.0/900-bad-mips16-crt.patch   |   9 ++
- .../gcc/patches/12.1.0/910-mbsd_multi.patch   | 146 ++++++++++++++++++
- .../12.1.0/920-specs_nonfatal_getenv.patch    |  22 +++
+ .../12.2.0/850-use_shared_libgcc.patch        |  54 +++++++
+ .../patches/12.2.0/851-libgcc_no_compat.patch |  22 +++
+ .../patches/12.2.0/870-ppc_no_crtsavres.patch |  11 ++
+ .../patches/12.2.0/881-no_tm_section.patch    |  11 ++
+ .../patches/12.2.0/900-bad-mips16-crt.patch   |   9 ++
+ .../gcc/patches/12.2.0/910-mbsd_multi.patch   | 146 ++++++++++++++++++
+ .../12.2.0/920-specs_nonfatal_getenv.patch    |  22 +++
  ...mpilation-when-making-cross-compiler.patch |  67 ++++++++
- .../12.1.0/970-macos_arm64-building-fix.patch |  45 ++++++
- 20 files changed, 625 insertions(+), 2 deletions(-)
- create mode 100644 toolchain/gcc/patches/12.1.0/002-case_insensitive.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/010-documentation.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/110-Fix-MIPS-PR-84790.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/230-musl_libssp.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/300-mips_Os_cpu_rtx_cost_model.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/810-arm-softfloat-libgcc.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/820-libgcc_pic.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/840-armv4_pass_fix-v4bx_to_ld.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/850-use_shared_libgcc.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/851-libgcc_no_compat.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/870-ppc_no_crtsavres.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/881-no_tm_section.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/900-bad-mips16-crt.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/910-mbsd_multi.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/920-specs_nonfatal_getenv.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/960-gotools-fix-compilation-when-making-cross-compiler.patch
- create mode 100644 toolchain/gcc/patches/12.1.0/970-macos_arm64-building-fix.patch
+ .../12.2.0/970-macos_arm64-building-fix.patch |  45 ++++++
+ 20 files changed, 627 insertions(+), 4 deletions(-)
+ create mode 100644 toolchain/gcc/patches/12.2.0/002-case_insensitive.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/010-documentation.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/110-Fix-MIPS-PR-84790.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/230-musl_libssp.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/300-mips_Os_cpu_rtx_cost_model.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/810-arm-softfloat-libgcc.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/820-libgcc_pic.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/840-armv4_pass_fix-v4bx_to_ld.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/850-use_shared_libgcc.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/851-libgcc_no_compat.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/870-ppc_no_crtsavres.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/881-no_tm_section.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/900-bad-mips16-crt.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/910-mbsd_multi.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/920-specs_nonfatal_getenv.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/960-gotools-fix-compilation-when-making-cross-compiler.patch
+ create mode 100644 toolchain/gcc/patches/12.2.0/970-macos_arm64-building-fix.patch
 
 diff --git a/toolchain/gcc/Config.in b/toolchain/gcc/Config.in
-index 357589e1724ed..f725ad57859a9 100644
+index 357589e172..2c3d1d6b6a 100644
 --- a/toolchain/gcc/Config.in
 +++ b/toolchain/gcc/Config.in
+@@ -2,7 +2,7 @@
+ 
+ choice
+ 	prompt "GCC compiler Version" if TOOLCHAINOPTS
+-	default GCC_USE_VERSION_11
++	default GCC_USE_VERSION_12
+ 	help
+ 	  Select the version of gcc you wish to use.
+ 
 @@ -14,6 +14,9 @@ choice
  
  	config GCC_USE_VERSION_11
@@ -71,39 +67,40 @@ index 357589e1724ed..f725ad57859a9 100644
  
  config GCC_USE_GRAPHITE
 diff --git a/toolchain/gcc/Config.version b/toolchain/gcc/Config.version
-index d1907c24a5e2f..1caa51a2916a9 100644
+index 61506b670b..91f710bda6 100644
 --- a/toolchain/gcc/Config.version
 +++ b/toolchain/gcc/Config.version
 @@ -6,8 +6,13 @@ config GCC_VERSION_10
  	default y if GCC_USE_VERSION_10
  	bool
  
-+config GCC_VERSION_12
-+	default y if GCC_USE_VERSION_12
++config GCC_VERSION_11
++	default y if GCC_USE_VERSION_11
 +	bool
 +
  config GCC_VERSION
  	string
  	default "8.4.0"		if GCC_VERSION_8
  	default "10.3.0"	if GCC_VERSION_10
-+	default "12.1.0"	if GCC_VERSION_12
- 	default "11.2.0"
+-	default "11.2.0"
++	default "12.2.0"
++	default "11.2.0"	if GCC_VERSION_11
 diff --git a/toolchain/gcc/common.mk b/toolchain/gcc/common.mk
-index c1aff7dc4001b..8fa9459f50564 100644
+index e7b8a176b3..ac1fdbf26d 100644
 --- a/toolchain/gcc/common.mk
 +++ b/toolchain/gcc/common.mk
-@@ -40,6 +40,10 @@ ifeq ($(PKG_VERSION),11.3.0)
-   PKG_HASH:=b47cf2818691f5b1e21df2bb38c795fac2cfbd640ede2d0a5e1c89e338a3ac39
+@@ -41,6 +41,10 @@ ifeq ($(PKG_VERSION),11.2.0)
+   PKG_HASH:=d08edc536b54c372a1010ff6619dd274c0f1603aa49212ba20f7aa2cda36fa8b
  endif
  
-+ifeq ($(PKG_VERSION),12.1.0)
-+  PKG_HASH:=62fd634889f31c02b64af2c468f064b47ad1ca78411c45abe6ac4b5f8dd19c7b
++ifeq ($(PKG_VERSION),12.2.0)
++  PKG_HASH:=e549cf9cf3594a00e27b6589d4322d70e0720cdd213f39beb4181e06926230ff
 +endif
 +
  PATCH_DIR=../patches/$(GCC_VERSION)
  
  BUGURL=http://bugs.openwrt.org/
-@@ -180,6 +184,13 @@ define Host/SetToolchainInfo
+@@ -181,6 +185,13 @@ define Host/SetToolchainInfo
  	$(SED) 's,GCC_VERSION=.*,GCC_VERSION=$(GCC_VERSION),' $(TOOLCHAIN_DIR)/info.mk
  endef
  
@@ -117,7 +114,7 @@ index c1aff7dc4001b..8fa9459f50564 100644
  ifneq ($(GCC_PREPARE),)
    define Host/Prepare
  	$(call Host/SetToolchainInfo)
-@@ -188,8 +199,7 @@ ifneq ($(GCC_PREPARE),)
+@@ -189,8 +200,7 @@ ifneq ($(GCC_PREPARE),)
  	$(CP) $(SCRIPT_DIR)/config.{guess,sub} $(HOST_SOURCE_DIR)/
  	$(SED) 's,^MULTILIB_OSDIRNAMES,# MULTILIB_OSDIRNAMES,' $(HOST_SOURCE_DIR)/gcc/config/*/t-*
  	$(SED) 'd' $(HOST_SOURCE_DIR)/gcc/DEV-PHASE
@@ -127,11 +124,11 @@ index c1aff7dc4001b..8fa9459f50564 100644
  	$(SED) 's,gcc_no_link=yes,gcc_no_link=no,' $(HOST_SOURCE_DIR)/libstdc++-v3/configure
  	mkdir -p $(GCC_BUILD_DIR)
    endef
-diff --git a/toolchain/gcc/patches/12.1.0/002-case_insensitive.patch b/toolchain/gcc/patches/12.1.0/002-case_insensitive.patch
+diff --git a/toolchain/gcc/patches/12.2.0/002-case_insensitive.patch b/toolchain/gcc/patches/12.2.0/002-case_insensitive.patch
 new file mode 100644
-index 0000000000000..409497e5a3d86
+index 0000000000..409497e5a3
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/002-case_insensitive.patch
++++ b/toolchain/gcc/patches/12.2.0/002-case_insensitive.patch
 @@ -0,0 +1,24 @@
 +commit 81cc26c706b2bc8c8c1eb1a322e5c5157900836e
 +Author: Felix Fietkau <nbd@openwrt.org>
@@ -157,11 +154,11 @@ index 0000000000000..409497e5a3d86
 + #  define HAS_DRIVE_SPEC(f) (0)
 + #  define IS_DIR_SEPARATOR(c) IS_UNIX_DIR_SEPARATOR (c)
 + #  define IS_ABSOLUTE_PATH(f) IS_UNIX_ABSOLUTE_PATH (f)
-diff --git a/toolchain/gcc/patches/12.1.0/010-documentation.patch b/toolchain/gcc/patches/12.1.0/010-documentation.patch
+diff --git a/toolchain/gcc/patches/12.2.0/010-documentation.patch b/toolchain/gcc/patches/12.2.0/010-documentation.patch
 new file mode 100644
-index 0000000000000..39ee48ed67cad
+index 0000000000..39ee48ed67
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/010-documentation.patch
++++ b/toolchain/gcc/patches/12.2.0/010-documentation.patch
 @@ -0,0 +1,35 @@
 +commit 098bd91f5eae625c7d2ee621e10930fc4434e5e2
 +Author: Luka Perkov <luka@openwrt.org>
@@ -198,11 +195,11 @@ index 0000000000000..39ee48ed67cad
 + 
 + doc/cpp.dvi: $(TEXI_CPP_FILES)
 + doc/gcc.dvi: $(TEXI_GCC_FILES)
-diff --git a/toolchain/gcc/patches/12.1.0/110-Fix-MIPS-PR-84790.patch b/toolchain/gcc/patches/12.1.0/110-Fix-MIPS-PR-84790.patch
+diff --git a/toolchain/gcc/patches/12.2.0/110-Fix-MIPS-PR-84790.patch b/toolchain/gcc/patches/12.2.0/110-Fix-MIPS-PR-84790.patch
 new file mode 100644
-index 0000000000000..856fd6a46cef1
+index 0000000000..856fd6a46c
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/110-Fix-MIPS-PR-84790.patch
++++ b/toolchain/gcc/patches/12.2.0/110-Fix-MIPS-PR-84790.patch
 @@ -0,0 +1,20 @@
 +Fix https://gcc.gnu.org/bugzilla/show_bug.cgi?id=84790.
 +MIPS16 functions have a static assembler prologue which clobbers
@@ -224,11 +221,11 @@ index 0000000000000..856fd6a46cef1
 +   if (TARGET_MIPS16
 +       && TARGET_EXPLICIT_RELOCS
 +       && TARGET_CALL_CLOBBERED_GP)
-diff --git a/toolchain/gcc/patches/12.1.0/230-musl_libssp.patch b/toolchain/gcc/patches/12.1.0/230-musl_libssp.patch
+diff --git a/toolchain/gcc/patches/12.2.0/230-musl_libssp.patch b/toolchain/gcc/patches/12.2.0/230-musl_libssp.patch
 new file mode 100644
-index 0000000000000..3ce5e49587f2c
+index 0000000000..3ce5e49587
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/230-musl_libssp.patch
++++ b/toolchain/gcc/patches/12.2.0/230-musl_libssp.patch
 @@ -0,0 +1,13 @@
 +--- a/gcc/gcc.cc
 ++++ b/gcc/gcc.cc
@@ -243,11 +240,11 @@ index 0000000000000..3ce5e49587f2c
 + #define LINK_SSP_SPEC "%{fstack-protector|fstack-protector-all" \
 + 		       "|fstack-protector-strong|fstack-protector-explicit:}"
 + #else
-diff --git a/toolchain/gcc/patches/12.1.0/300-mips_Os_cpu_rtx_cost_model.patch b/toolchain/gcc/patches/12.1.0/300-mips_Os_cpu_rtx_cost_model.patch
+diff --git a/toolchain/gcc/patches/12.2.0/300-mips_Os_cpu_rtx_cost_model.patch b/toolchain/gcc/patches/12.2.0/300-mips_Os_cpu_rtx_cost_model.patch
 new file mode 100644
-index 0000000000000..1d223f2a0f648
+index 0000000000..1d223f2a0f
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/300-mips_Os_cpu_rtx_cost_model.patch
++++ b/toolchain/gcc/patches/12.2.0/300-mips_Os_cpu_rtx_cost_model.patch
 @@ -0,0 +1,21 @@
 +commit ecf7671b769fe96f7b5134be442089f8bdba55d2
 +Author: Felix Fietkau <nbd@nbd.name>
@@ -270,11 +267,11 @@ index 0000000000000..1d223f2a0f648
 +     mips_cost = &mips_rtx_cost_optimize_size;
 +   else
 +     mips_cost = &mips_rtx_cost_data[mips_tune];
-diff --git a/toolchain/gcc/patches/12.1.0/810-arm-softfloat-libgcc.patch b/toolchain/gcc/patches/12.1.0/810-arm-softfloat-libgcc.patch
+diff --git a/toolchain/gcc/patches/12.2.0/810-arm-softfloat-libgcc.patch b/toolchain/gcc/patches/12.2.0/810-arm-softfloat-libgcc.patch
 new file mode 100644
-index 0000000000000..5c9d86aead732
+index 0000000000..5c9d86aead
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/810-arm-softfloat-libgcc.patch
++++ b/toolchain/gcc/patches/12.2.0/810-arm-softfloat-libgcc.patch
 @@ -0,0 +1,33 @@
 +commit 8570c4be394cff7282f332f97da2ff569a927ddb
 +Author: Imre Kaloz <kaloz@openwrt.org>
@@ -309,11 +306,11 @@ index 0000000000000..5c9d86aead732
 + #define GLIBC_DYNAMIC_LINKER "/lib/ld-linux.so.2"
 + 
 + #define LINUX_TARGET_LINK_SPEC  "%{h*} \
-diff --git a/toolchain/gcc/patches/12.1.0/820-libgcc_pic.patch b/toolchain/gcc/patches/12.1.0/820-libgcc_pic.patch
+diff --git a/toolchain/gcc/patches/12.2.0/820-libgcc_pic.patch b/toolchain/gcc/patches/12.2.0/820-libgcc_pic.patch
 new file mode 100644
-index 0000000000000..525a95b565704
+index 0000000000..525a95b565
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/820-libgcc_pic.patch
++++ b/toolchain/gcc/patches/12.2.0/820-libgcc_pic.patch
 @@ -0,0 +1,44 @@
 +commit c96312958c0621e72c9b32da5bc224ffe2161384
 +Author: Felix Fietkau <nbd@openwrt.org>
@@ -359,11 +356,11 @@ index 0000000000000..525a95b565704
 + 	$(subst @multilib_dir@,$(MULTIDIR),$(subst \
 + 		@shlib_base_name@,libgcc_s,$(subst \
 + 		@shlib_slibdir_qual@,$(MULTIOSSUBDIR),$(SHLIB_INSTALL))))
-diff --git a/toolchain/gcc/patches/12.1.0/840-armv4_pass_fix-v4bx_to_ld.patch b/toolchain/gcc/patches/12.1.0/840-armv4_pass_fix-v4bx_to_ld.patch
+diff --git a/toolchain/gcc/patches/12.2.0/840-armv4_pass_fix-v4bx_to_ld.patch b/toolchain/gcc/patches/12.2.0/840-armv4_pass_fix-v4bx_to_ld.patch
 new file mode 100644
-index 0000000000000..e3cb616c4e428
+index 0000000000..e3cb616c4e
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/840-armv4_pass_fix-v4bx_to_ld.patch
++++ b/toolchain/gcc/patches/12.2.0/840-armv4_pass_fix-v4bx_to_ld.patch
 @@ -0,0 +1,28 @@
 +commit 7edc8ca5456d9743dd0075eb3cc5b04f4f24c8cc
 +Author: Imre Kaloz <kaloz@openwrt.org>
@@ -393,11 +390,11 @@ index 0000000000000..e3cb616c4e428
 +   LINUX_OR_ANDROID_LD (LINUX_TARGET_LINK_SPEC,				\
 + 		       LINUX_TARGET_LINK_SPEC " " ANDROID_LINK_SPEC)
 + 
-diff --git a/toolchain/gcc/patches/12.1.0/850-use_shared_libgcc.patch b/toolchain/gcc/patches/12.1.0/850-use_shared_libgcc.patch
+diff --git a/toolchain/gcc/patches/12.2.0/850-use_shared_libgcc.patch b/toolchain/gcc/patches/12.2.0/850-use_shared_libgcc.patch
 new file mode 100644
-index 0000000000000..7be30f328311b
+index 0000000000..7be30f3283
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/850-use_shared_libgcc.patch
++++ b/toolchain/gcc/patches/12.2.0/850-use_shared_libgcc.patch
 @@ -0,0 +1,54 @@
 +commit dcfc40358b5a3cae7320c17f8d1cebd5ad5540cd
 +Author: Felix Fietkau <nbd@openwrt.org>
@@ -453,11 +450,11 @@ index 0000000000000..7be30f328311b
 + #undef  LINK_SHLIB_SPEC
 + #define LINK_SHLIB_SPEC "%{shared:-shared} %{!shared: %{static:-static}} \
 +   %{static-pie:-static -pie --no-dynamic-linker -z text}"
-diff --git a/toolchain/gcc/patches/12.1.0/851-libgcc_no_compat.patch b/toolchain/gcc/patches/12.1.0/851-libgcc_no_compat.patch
+diff --git a/toolchain/gcc/patches/12.2.0/851-libgcc_no_compat.patch b/toolchain/gcc/patches/12.2.0/851-libgcc_no_compat.patch
 new file mode 100644
-index 0000000000000..d710e40717471
+index 0000000000..d710e40717
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/851-libgcc_no_compat.patch
++++ b/toolchain/gcc/patches/12.2.0/851-libgcc_no_compat.patch
 @@ -0,0 +1,22 @@
 +commit 64661de100da1ec1061ef3e5e400285dce115e6b
 +Author: Felix Fietkau <nbd@openwrt.org>
@@ -481,11 +478,11 @@ index 0000000000000..d710e40717471
 + LIB2ADDEHSTATIC = $(srcdir)/unwind-sjlj.c $(srcdir)/unwind-c.c
 + 
 + # Override the default value from t-slibgcc-elf-ver and mention -lunwind
-diff --git a/toolchain/gcc/patches/12.1.0/870-ppc_no_crtsavres.patch b/toolchain/gcc/patches/12.1.0/870-ppc_no_crtsavres.patch
+diff --git a/toolchain/gcc/patches/12.2.0/870-ppc_no_crtsavres.patch b/toolchain/gcc/patches/12.2.0/870-ppc_no_crtsavres.patch
 new file mode 100644
-index 0000000000000..e51079dc13c4f
+index 0000000000..e51079dc13
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/870-ppc_no_crtsavres.patch
++++ b/toolchain/gcc/patches/12.2.0/870-ppc_no_crtsavres.patch
 @@ -0,0 +1,11 @@
 +--- a/gcc/config/rs6000/rs6000-logue.cc
 ++++ b/gcc/config/rs6000/rs6000-logue.cc
@@ -498,11 +495,11 @@ index 0000000000000..e51079dc13c4f
 + 	{
 + 	  strategy |= SAVE_INLINE_FPRS | REST_INLINE_FPRS;
 + 	  strategy |= SAVE_INLINE_GPRS | REST_INLINE_GPRS;
-diff --git a/toolchain/gcc/patches/12.1.0/881-no_tm_section.patch b/toolchain/gcc/patches/12.1.0/881-no_tm_section.patch
+diff --git a/toolchain/gcc/patches/12.2.0/881-no_tm_section.patch b/toolchain/gcc/patches/12.2.0/881-no_tm_section.patch
 new file mode 100644
-index 0000000000000..2029910fd0792
+index 0000000000..2029910fd0
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/881-no_tm_section.patch
++++ b/toolchain/gcc/patches/12.2.0/881-no_tm_section.patch
 @@ -0,0 +1,11 @@
 +--- a/libgcc/crtstuff.c
 ++++ b/libgcc/crtstuff.c
@@ -515,11 +512,11 @@ index 0000000000000..2029910fd0792
 + #elif !defined(USE_TM_CLONE_REGISTRY)
 + # define USE_TM_CLONE_REGISTRY 0
 + #endif
-diff --git a/toolchain/gcc/patches/12.1.0/900-bad-mips16-crt.patch b/toolchain/gcc/patches/12.1.0/900-bad-mips16-crt.patch
+diff --git a/toolchain/gcc/patches/12.2.0/900-bad-mips16-crt.patch b/toolchain/gcc/patches/12.2.0/900-bad-mips16-crt.patch
 new file mode 100644
-index 0000000000000..dd6e9dc889ad0
+index 0000000000..dd6e9dc889
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/900-bad-mips16-crt.patch
++++ b/toolchain/gcc/patches/12.2.0/900-bad-mips16-crt.patch
 @@ -0,0 +1,9 @@
 +--- a/libgcc/config/mips/t-mips16
 ++++ b/libgcc/config/mips/t-mips16
@@ -530,11 +527,11 @@ index 0000000000000..dd6e9dc889ad0
 ++
 ++CRTSTUFF_T_CFLAGS += -mno-mips16
 ++CRTSTUFF_T_CFLAGS_S += -mno-mips16
-diff --git a/toolchain/gcc/patches/12.1.0/910-mbsd_multi.patch b/toolchain/gcc/patches/12.1.0/910-mbsd_multi.patch
+diff --git a/toolchain/gcc/patches/12.2.0/910-mbsd_multi.patch b/toolchain/gcc/patches/12.2.0/910-mbsd_multi.patch
 new file mode 100644
-index 0000000000000..37aba93b94725
+index 0000000000..4033c5b23b
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/910-mbsd_multi.patch
++++ b/toolchain/gcc/patches/12.2.0/910-mbsd_multi.patch
 @@ -0,0 +1,146 @@
 +commit 99368862e44740ff4fd33760893f04e14f9dbdf1
 +Author: Felix Fietkau <nbd@openwrt.org>
@@ -672,7 +669,7 @@ index 0000000000000..37aba93b94725
 + @opindex Wno-stack-protector
 +--- a/gcc/opts.cc
 ++++ b/gcc/opts.cc
-+@@ -2658,6 +2658,9 @@ common_handle_option (struct gcc_options
++@@ -2692,6 +2692,9 @@ common_handle_option (struct gcc_options
 +       add_comma_separated_to_vector (&opts->x_flag_ignored_attributes, arg);
 +       break;
 + 
@@ -682,11 +679,11 @@ index 0000000000000..37aba93b94725
 +     case OPT_Werror:
 +       dc->warning_as_error_requested = value;
 +       break;
-diff --git a/toolchain/gcc/patches/12.1.0/920-specs_nonfatal_getenv.patch b/toolchain/gcc/patches/12.1.0/920-specs_nonfatal_getenv.patch
+diff --git a/toolchain/gcc/patches/12.2.0/920-specs_nonfatal_getenv.patch b/toolchain/gcc/patches/12.2.0/920-specs_nonfatal_getenv.patch
 new file mode 100644
-index 0000000000000..0f7d40b244dc7
+index 0000000000..0f7d40b244
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/920-specs_nonfatal_getenv.patch
++++ b/toolchain/gcc/patches/12.2.0/920-specs_nonfatal_getenv.patch
 @@ -0,0 +1,22 @@
 +Author: Jo-Philipp Wich <jow@openwrt.org>
 +Date:   Sat Apr 21 03:02:39 2012 +0000
@@ -710,11 +707,11 @@ index 0000000000000..0f7d40b244dc7
 + 
 +   /* We have to escape every character of the environment variable so
 +      they are not interpreted as active spec characters.  A
-diff --git a/toolchain/gcc/patches/12.1.0/960-gotools-fix-compilation-when-making-cross-compiler.patch b/toolchain/gcc/patches/12.1.0/960-gotools-fix-compilation-when-making-cross-compiler.patch
+diff --git a/toolchain/gcc/patches/12.2.0/960-gotools-fix-compilation-when-making-cross-compiler.patch b/toolchain/gcc/patches/12.2.0/960-gotools-fix-compilation-when-making-cross-compiler.patch
 new file mode 100644
-index 0000000000000..b1d7576328f51
+index 0000000000..b1d7576328
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/960-gotools-fix-compilation-when-making-cross-compiler.patch
++++ b/toolchain/gcc/patches/12.2.0/960-gotools-fix-compilation-when-making-cross-compiler.patch
 @@ -0,0 +1,67 @@
 +From dda6b050cd74a352670787a294596a9c56c21327 Mon Sep 17 00:00:00 2001
 +From: Yousong Zhou <yszhou4tech@gmail.com>
@@ -783,11 +780,11 @@ index 0000000000000..b1d7576328f51
 + GOLINK = $(GOCOMPILER) $(GOCFLAGS) $(AM_GOCFLAGS) $(LDFLAGS) $(AM_LDFLAGS) -o $@
 + libgosrcdir = $(srcdir)/../libgo/go
 + cmdsrcdir = $(libgosrcdir)/cmd
-diff --git a/toolchain/gcc/patches/12.1.0/970-macos_arm64-building-fix.patch b/toolchain/gcc/patches/12.1.0/970-macos_arm64-building-fix.patch
+diff --git a/toolchain/gcc/patches/12.2.0/970-macos_arm64-building-fix.patch b/toolchain/gcc/patches/12.2.0/970-macos_arm64-building-fix.patch
 new file mode 100644
-index 0000000000000..d164d70e8819b
+index 0000000000..86fa68e1b1
 --- /dev/null
-+++ b/toolchain/gcc/patches/12.1.0/970-macos_arm64-building-fix.patch
++++ b/toolchain/gcc/patches/12.2.0/970-macos_arm64-building-fix.patch
 @@ -0,0 +1,45 @@
 +commit 9c6e71079b46ad5433165feaa2001450f2017b56
 +Author: Przemysław Buczkowski <prem@prem.moe>
@@ -808,7 +805,7 @@ index 0000000000000..d164d70e8819b
 +
 +--- a/gcc/config/aarch64/aarch64.h
 ++++ b/gcc/config/aarch64/aarch64.h
-+@@ -1236,7 +1236,7 @@ extern const char *aarch64_rewrite_mcpu
++@@ -1290,7 +1290,7 @@ extern const char *aarch64_rewrite_mcpu
 + #define MCPU_TO_MARCH_SPEC_FUNCTIONS \
 +   { "rewrite_mcpu", aarch64_rewrite_mcpu },
 + 
@@ -819,8 +816,8 @@ index 0000000000000..d164d70e8819b
 + # define EXTRA_SPEC_FUNCTIONS						\
 +--- a/gcc/config/host-darwin.cc
 ++++ b/gcc/config/host-darwin.cc
-+@@ -22,6 +22,8 @@
-+ #include "coretypes.h"
++@@ -23,6 +23,8 @@
++ #include "options.h"
 + #include "diagnostic-core.h"
 + #include "config/host-darwin.h"
 ++#include "hosthooks.h"
@@ -828,9 +825,12 @@ index 0000000000000..d164d70e8819b
 + #include <errno.h>
 + 
 + /* For Darwin (macOS only) platforms, without ASLR (PIE) enabled on the
-+@@ -79,3 +81,5 @@ darwin_gt_pch_use_address (void *addr, s
++@@ -181,3 +183,5 @@ darwin_gt_pch_use_address (void *&addr,
 + 
-+   return ret;
++   return 1;
 + }
 ++
 ++const struct host_hooks host_hooks = HOST_HOOKS_INITIALIZER;
+-- 
+2.34.1
+

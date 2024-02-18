@@ -1,0 +1,30 @@
+diff --git a/toolchain/gcc/common.mk b/toolchain/gcc/common.mk
+index ac1fdbf26d..1a777d0b2e 100644
+--- a/toolchain/gcc/common.mk
++++ b/toolchain/gcc/common.mk
+@@ -23,6 +23,7 @@ include $(TOPDIR)/rules.mk
+ PKG_NAME:=gcc
+ GCC_VERSION:=$(call qstrip,$(CONFIG_GCC_VERSION))
+ PKG_VERSION:=$(firstword $(subst +, ,$(GCC_VERSION)))
++GCC_MAJOR_VERSION:=$(word 1,$(subst ., ,$(PKG_VERSION)))
+ GCC_DIR:=$(PKG_NAME)-$(PKG_VERSION)
+ 
+ PKG_SOURCE_URL:=@GNU/gcc/gcc-$(PKG_VERSION)
+@@ -120,7 +121,7 @@ GCC_CONFIGURE:= \
+ 		--disable-decimal-float \
+ 		--with-diagnostics-color=auto-if-env \
+ 		--enable-__cxa_atexit \
+-		--disable-libstdcxx-dual-abi \
++		--enable-libstdcxx-dual-abi \
+ 		--with-default-libstdcxx-abi=new
+ ifneq ($(CONFIG_mips)$(CONFIG_mipsel),)
+   GCC_CONFIGURE += --with-mips-plt
+@@ -186,7 +187,7 @@ define Host/SetToolchainInfo
+ endef
+ 
+ 
+-ifdef CONFIG_GCC_USE_VERSION_12
++ifeq ($(GCC_MAJOR_VERSION),12)
+ 	GCC_VERSION_FILE:=gcc/genversion.cc
+ else
+ 	GCC_VERSION_FILE:=gcc/version.c

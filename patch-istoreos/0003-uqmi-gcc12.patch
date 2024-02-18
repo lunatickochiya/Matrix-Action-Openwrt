@@ -1,0 +1,57 @@
+From dc12c76dc52028b24cddba6a32141f9dbff64d0f Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Mon, 19 Dec 2022 01:19:32 +0100
+Subject: [PATCH] uqmi: Ignore wrong maybe-uninitialized and dangling-pointer
+ error
+
+GCC 12.2.0 shows this false positive error message:
+````
+uqmi-2022-05-04-56cb2d40/dev.c: In function 'qmi_request_wait':
+uqmi-2022-05-04-56cb2d40/dev.c:217:23: error: storing the address of local variable 'complete' in '*req.complete' [-Werror=dangling-pointer=]
+  217 |         req->complete = &complete;
+      |         ~~~~~~~~~~~~~~^~~~~~~~~~~
+uqmi-2022-05-04-56cb2d40/dev.c:208:14: note: 'complete' declared here
+  208 |         bool complete = false;
+      |              ^~~~~~~~
+uqmi-2022-05-04-56cb2d40/dev.c:208:14: note: 'req' declared here
+cc1: all warnings being treated as errors
+````
+
+and this one:
+````
+In file included from uqmi-2022-05-04-56cb2d40/commands.c:28:
+In function 'blobmsg_close_table',
+    inlined from 'cmd_nas_get_cell_location_info_cb' at /home/haukeuqmi-2022-05-04-56cb2d40/commands-nas.c:897:4:
+/usr/include/libubox/blobmsg.h:256:9: error: 'c' may be used uninitialized [-Werror=maybe-uninitialized]
+  256 |         blob_nest_end(buf, cookie);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from uqmi-2022-05-04-56cb2d40/commands.c:169:
+uqmi-2022-05-04-56cb2d40/commands-nas.c: In function 'cmd_nas_get_cell_location_info_cb':
+uqmi-2022-05-04-56cb2d40/commands-nas.c:713:15: note: 'c' was declared here
+  713 |         void *c, *t, *cell, *freq;
+      |               ^
+cc1: all warnings being treated as errors
+````
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ package/network/utils/uqmi/Makefile | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/package/network/utils/uqmi/Makefile b/package/network/utils/uqmi/Makefile
+index c4ca98012a0fb..02265d400c1db 100644
+--- a/package/network/utils/uqmi/Makefile
++++ b/package/network/utils/uqmi/Makefile
+@@ -32,7 +32,11 @@ define Package/uqmi/description
+ endef
+ 
+ TARGET_CFLAGS += \
+-	-I$(STAGING_DIR)/usr/include -ffunction-sections -fdata-sections
++	-I$(STAGING_DIR)/usr/include \
++	-ffunction-sections \
++	-fdata-sections \
++	-Wno-error=dangling-pointer \
++	-Wno-error=maybe-uninitialized
+ 
+ TARGET_LDFLAGS += -Wl,--gc-sections
+ 
