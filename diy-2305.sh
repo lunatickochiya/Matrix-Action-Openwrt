@@ -180,6 +180,11 @@ echo "$(cat package-configs/mpc1917-common.config)" >> package-configs/.config
 mv -f package-configs/.config .config
 }
 
+function add_mpc1917_nft_packages() {
+echo "$(cat package-configs/mpc1917-nft-common.config)" >> package-configs/.config
+mv -f package-configs/.config .config
+}
+
 if [ "$1" == "ws1508-istore" ]; then
 autosetver
 remove_error_package
@@ -220,6 +225,14 @@ patch_package
 patch_luci
 patch_kiddin9
 add_mpc1917_packages
+elif [ "$1" == "mpc1917-nft" ]; then
+autosetver
+patch_openwrt
+remove_error_package_not_install
+patch_package
+patch_luci
+patch_kiddin9
+add_mpc1917_nft_packages
 elif [ "$1" == "rockpatch" ]; then
 patch_rockchip
 elif [ "$1" == "firewallremove" ]; then
