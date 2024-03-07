@@ -27,9 +27,15 @@ ubootmod：https://github.com/hanwckf/bl-mt798x/releases/download/20231124/mt798
 不带的为开源
 固件地址 192.168.10.1
 
+20240307
+移除mt798x-mtk
+当前版本支持情况
+rockchip mpc1917 （不可定制）
+ws1508 （可定制）
+onecloud（可定制）
+rax3000m nand（可定制）
 
 
-目前只支持meson8b 玩客云 onecloud  流量宝盒 ws1508 rax3000m nand
 
 源码更新交流学习：点击链接加入群聊 ：https://jq.qq.com/?_wv=1027&k=5QgVYsC  
 群号： 286754582

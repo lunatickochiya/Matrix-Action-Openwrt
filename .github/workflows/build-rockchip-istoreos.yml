@@ -107,9 +107,9 @@ jobs:
       id: files
       run: |
         [ -d mypatch ] && mv -f mypatch openwrt/mypatch
-        [ -d patch-istoreos ] && mv -f patch-istoreos openwrt/patch-istoreos
+        [ -d openwrt-2203/patch-istoreos ] && mv -f openwrt-2203/patch-istoreos openwrt/patch-istoreos
         [ -d package ] && mv -f package/* openwrt/package
-        [ -d package-for-istoreos ] && mv -f package-for-istoreos/* openwrt/package
+        [ -d openwrt-2203/package-for-istoreos ] && mv -f openwrt-2203/package-for-istoreos/* openwrt/package
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 更新 & 安装 feeds
@@ -125,8 +125,8 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        [ -d istoreos-luci-patch ] && mv -f istoreos-luci-patch openwrt/feeds/luci/istoreos-luci-patch
-        [ -d istoreos-package-patch ] && mv -f istoreos-package-patch openwrt/feeds/packages/istoreos-package-patch
+        [ -d openwrt-2203/istoreos-luci-patch ] && mv -f openwrt-2203/istoreos-luci-patch openwrt/feeds/luci/istoreos-luci-patch
+        [ -d openwrt-2203/istoreos-package-patch ] && mv -f openwrt-2203/istoreos-package-patch openwrt/feeds/packages/istoreos-package-patch
         [ -e files ] && mv files openwrt/files
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config

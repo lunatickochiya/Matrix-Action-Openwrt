@@ -26,7 +26,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: mt798x
+          - target: mt798x-iptables
+          - target: mt798x-nftables
     
     steps:
     - name: 检查
@@ -100,9 +101,9 @@ jobs:
       if: steps.clone.outputs.status == 'success'
       id: files
       run: |
-        [ -d mypatch ] && mv -f mypatch openwrt/mypatch
+        [ -d openwrt-2305/mypatch-2305 ] && mv -f openwrt-2305/mypatch-2305 openwrt/mypatch
         [ -d package ] && mv -f package/* openwrt/package
-        [ -d package-for-mt798x ] && mv -f package-for-mt798x/* openwrt/package
+        [ -d openwrt-2305/package-for-mt798x ] && mv -f openwrt-2305/package-for-mt798x/* openwrt/package
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 更新 & 安装 feeds
@@ -118,16 +119,16 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
-        [ -d luci-patch-2305 ] && mv -f luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
-        [ -d feeds-package-patch-2305 ] && mv -f feeds-package-patch-2305 openwrt/feeds/packages/feeds-package-patch-2305
+        [ -d openwrt-2305/kiddin9-revert ] && mv -f openwrt-2305/kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
+        [ -d openwrt-2305/luci-patch-2305 ] && mv -f openwrt-2305/luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
+        [ -d openwrt-2305/feeds-package-patch-2305 ] && mv -f openwrt-2305/feeds-package-patch-2305 openwrt/feeds/packages/feeds-package-patch-2305
         [ -e files ] && mv files openwrt/files
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_SH mt798x
+        $GITHUB_WORKSPACE/$DIY_SH ${{matrix.target}}
         make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC mt798x
+        $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Run awk command
