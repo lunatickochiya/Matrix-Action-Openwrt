@@ -40,6 +40,7 @@ uci -q batch <<-EOF >/dev/null
 	set wireless.@wifi-iface[0].ssid=Lunatic_2.4G_$(cat /sys/class/ieee80211/phy0/macaddress | sed 's/.[0-9A-Fa-f]:.[0-9A-Fa-f]:.[0-9A-Fa-f]:\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\)/\1\2\3/g' | tr :[a-z] :[A-Z])
 	add_list system.ntp.server='ntp.tencent.com'
 	add_list system.ntp.server='ntp1.aliyun.com'
+	set luci.main.mediaurlbase='/luci-static/argon'
 	commit
 EOF
 
@@ -48,6 +49,8 @@ sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/openwrt#g' /etc/opkg/d
 #sed -i '/DISTRIB_REVISION/d' /etc/openwrt_release
 
 sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
+
+
 
 cat <<EOF >> /etc/sysupgrade.conf
 /root/docker/
