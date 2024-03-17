@@ -336,13 +336,13 @@ index 45f7b4a..589990d 100644
  
 +// TODO: This is ugly
 +		var projectlink = document.createElement('a');
-+		projectlink.append('OpenWrt');
-+		projectlink.href = 'https://github.com/openwrt';
++		projectlink.append('Project OpenWrt');
++		projectlink.href = 'https://github.com/lunatickochiya';
 +		projectlink.target = '_blank';
 +
 +		var corelink = document.createElement('a');
-+		corelink.append('Core');
-+		corelink.href = 'https://github.com/openwrt/openwrt';
++		corelink.append('Powered By 2U4U');
++		corelink.href = 'https://github.com/lunatickochiya/Lunatic-s805-rockchip-Action';
 +		corelink.target = '_blank';
 +
 +		var sourcelink = document.createElement('placeholder');

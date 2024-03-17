@@ -140,7 +140,7 @@ index ae7efa3e75..80375898d5 100644
 +		projectlink.target = '_blank';
 +
 +		var corelink = document.createElement('a');
-+		corelink.append('OpenWrt By 2U4U');
++		corelink.append('Powered By 2U4U');
 +		corelink.href = 'https://github.com/lunatickochiya/Lunatic-s805-rockchip-Action';
 +		corelink.target = '_blank';
 +

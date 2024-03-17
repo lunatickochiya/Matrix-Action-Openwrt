@@ -195,7 +195,7 @@ choice
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_ntfs
 	bool "NTFS KERNEL"
-	select PACKAGE_kmod-fs-ntfs
+	select PACKAGE_kmod-fs-ntfs3
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_ntfs_oot
 	bool "NTFS OOT"

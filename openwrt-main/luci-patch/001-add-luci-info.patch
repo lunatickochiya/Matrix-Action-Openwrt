@@ -1,77 +1,198 @@
 diff --git a/modules/luci-base/po/zh_Hans/base.po b/modules/luci-base/po/zh_Hans/base.po
-index 5db89b4ce8..efa6b4ea3f 100644
+index 87436e05c6..dd54ced8fa 100644
 --- a/modules/luci-base/po/zh_Hans/base.po
 +++ b/modules/luci-base/po/zh_Hans/base.po
-@@ -10436,3 +10436,7 @@ msgstr "要用指定域 IP 填充的 IP 集列表。"
- 
- msgid "List of domains to force to an IP address."
- msgstr "此列表将域名强制指向某个 IP 地址。"
-+
+@@ -11807,6 +11807,9 @@ msgstr "{example_nx} 返回 {nxdomain}。"
+ msgid "« Back"
+ msgstr "« 后退"
+
 +msgid "Source Code"
 +msgstr "源代码(免费使用，禁止商用)"
 +
-diff --git a/modules/luci-base/root/usr/libexec/rpcd/luci b/modules/luci-base/root/usr/libexec/rpcd/luci
-index f124512f59..fe3131a8af 100755
---- a/modules/luci-base/root/usr/libexec/rpcd/luci
-+++ b/modules/luci-base/root/usr/libexec/rpcd/luci
-@@ -617,6 +617,49 @@ local methods = {
- 			end
- 			return { result = res }
- 		end
+ #~ msgid "Run a filesystem check before mounting the device"
+ #~ msgstr "挂载设备前运行文件系统检查"
+
+diff --git a/modules/luci-base/root/usr/share/rpcd/ucode/luci b/modules/luci-base/root/usr/share/rpcd/ucode/luci
+index 3c4fea4691..6a7e5fe16b 100644
+--- a/modules/luci-base/root/usr/share/rpcd/ucode/luci
++++ b/modules/luci-base/root/usr/share/rpcd/ucode/luci
+@@ -4,6 +4,7 @@
+ 'use strict';
+
+ import { stdin, access, dirname, basename, open, popen, glob, lsdir, readfile, readlink, error } from 'fs';
++import { connect } from 'ubus';
+ import { cursor } from 'uci';
+
+ import { init_list, init_index, init_enabled, init_action, conntrack_list, process_list } from 'luci.sys';
+@@ -48,6 +49,7 @@ const methods = {
+ 		call: function(request) {
+ 			switch (request.args.action) {
+ 			case 'enable':
++			case 'enabled':
+ 			case 'disable':
+ 			case 'start':
+ 			case 'stop':
+@@ -197,6 +199,7 @@ const methods = {
+ 				firewall4:  access('/sbin/fw4') == true,
+ 				opkg:       access('/bin/opkg') == true,
+ 				offloading: access('/sys/module/xt_FLOWOFFLOAD/refcnt') == true || access('/sys/module/nft_flow_offload/refcnt') == true,
++				fullcone:   access('/sys/module/xt_FULLCONENAT/refcnt') == true || access('/sys/module/nft_fullcone/refcnt') == true,
+ 				br2684ctl:  access('/usr/sbin/br2684ctl') == true,
+ 				swconfig:   access('/sbin/swconfig') == true,
+ 				odhcpd:     access('/usr/sbin/odhcpd') == true,
+@@ -542,44 +545,119 @@ const methods = {
+
+ 	getBuiltinEthernetPorts: {
+ 		call: function() {
+-			let fd = open('/etc/board.json', 'r');
+-			let board = fd ? json(fd) : {};
++			const ubus = connect();
++			const sysboard = ubus.call('system', 'board');
+ 			let ports = [];
+
+-			for (let k in [ 'lan', 'wan' ]) {
+-				if (!board?.network?.[k])
+-					continue;
++			if (
++				(type(sysboard) !== 'object') ||
++				match(sysboard.release.target, /^(armsr|bcm27xx|mvebu|rockchip|sifiveu|sunxi|x86)/)
++			) {
++				const stat = ubus.call('network.device', 'status') || {};
++				map(keys(stat), (ifname) => {
++					if (
++						ifname &&
++						stat[ifname]?.devtype in ['ethernet', 'dsa'] &&
++						length(stat[ifname]['link-advertising'])
++					)
++						push(ports, { role: 'unknown', device: ifname });
++				});
++			} else {
++				const fd = open('/etc/board.json', 'r');
++				const board = fd ? json(fd) : {};
++				for (let k in [ 'lan', 'wan' ]) {
++					if (!board?.network?.[k])
++						continue;
+
+-				if (type(board.network[k].ports) == 'array') {
+-					for (let ifname in board.network[k].ports) {
+-						push(ports, { role: k, device: ifname });
++					if (type(board.network[k].ports) == 'array') {
++						for (let ifname in board.network[k].ports)
++							push(ports, { role: k, device: ifname });
++					} else if (type(board.network[k].device) == 'string') {
++						push(ports, { role: k, device: board.network[k].device });
+ 					}
+ 				}
+-				else if (type(board.network[k].device) == 'string') {
+-					push(ports, { role: k, device: board.network[k].device });
+-				}
+ 			}
+
+-			/* Workaround for targets that do not enumerate  all netdevs in board.json */
+-			if (uname().machine in [ 'x86_64' ] &&
+-			    match(ports[0]?.device, /^eth\d+$/)) {
+-				let bus = readlink(`/sys/class/net/${ports[0].device}/device/subsystem`);
++			return { result: ports };
++		}
++	},
+
+-				for (let netdev in lsdir('/sys/class/net')) {
+-					if (!match(netdev, /^eth\d+$/))
+-						continue;
++	getCPUBench: {
++		call: function() {
++			return { cpubench: readfile('/etc/bench.log') || '' };
++		}
++	},
+
+-					if (length(filter(ports, port => port.device == netdev)))
+-						continue;
++	getCPUInfo: {
++		call: function() {
++			if (!access('/sbin/cpuinfo'))
++				return {};
+
+-					if (readlink(`/sys/class/net/${netdev}/device/subsystem`) != bus)
+-						continue;
++			const fd = popen('/sbin/cpuinfo');
++			if (fd) {
++				let cpuinfo = fd.read('all');
++				if (!cpuinfo)
++					cpuinfo = '?';
++				fd.close();
+
+-					push(ports, { role: 'unknown', device: netdev });
+-				}
++				return { cpuinfo: cpuinfo };
++			} else {
++				return { cpuinfo: error() };
+ 			}
++		}
++	},
+
+-			return { result: ports };
++	getCPUUsage: {
++		call: function() {
++			const fd = popen('top -n1 | awk \'/^CPU/ {printf("%d%", 100 - $8)}\'');
++			if (fd) {
++				let cpuusage = fd.read('all');
++				if (!cpuusage)
++					cpuusage = '?';
++				fd.close();
++
++				return { cpuusage: cpuusage };
++			} else {
++				return { cpuusage: error() };
++			}
++		}
 +	},
 +
-+	getCPUBench = {
-+		call = function()
-+			local cpubench = readfile("/etc/bench.log") or ""
-+			return { cpubench = cpubench }
-+		end
++	getTempInfo: {
++		call: function() {
++			if (!access('/sbin/tempinfo'))
++				return {};
++
++			const fd = popen('/sbin/tempinfo');
++			if (fd) {
++				let tempinfo = fd.read('all');
++				if (!tempinfo)
++					tempinfo = '?';
++				fd.close();
++
++				return { tempinfo: tempinfo };
++			} else {
++				return { tempinfo: error() };
++			}
++		}
 +	},
 +
-+	getCPUInfo = {
-+		call = function()
-+			if not fs.access("/sbin/cpuinfo") then
-+				return {}
-+			end
++	getOnlineUsers: {
++		call: function() {
++			const fd = open('/proc/net/arp', 'r');
++			if (fd) {
++				let onlineusers = 0;
 +
-+			local sys = require "luci.sys"
-+			local cpuinfo = sys.exec("/sbin/cpuinfo")
-+			if (cpuinfo == nil) or (cpuinfo == "") then
-+				cpuinfo = "?"
-+			end
++				for (let line = fd.read('line'); length(line); line = fd.read('line'))
++					if (match(trim(line), /^.*(0x2).*(br-lan)$/))
++						onlineusers++;
 +
-+			return { cpuinfo = cpuinfo }
-+		end
-+	},
++				fd.close();
 +
-+	getCPUUsage = {
-+		call = function()
-+			local sys = require "luci.sys"
-+			local cpuusage = sys.exec("top -n1 | awk '/^CPU/ {printf(\"%d%%\", 100 - $8)}'") or "?"
-+			return { cpuusage = cpuusage }
-+		end
-+	},
-+
-+	getTempInfo = {
-+		call = function()
-+			if not fs.access("/sbin/tempinfo") then
-+				return {}
-+			end
-+
-+			local sys = require "luci.sys"
-+			local tempinfo = sys.exec("/sbin/tempinfo")
-+			return { tempinfo = tempinfo }
-+		end
++				return { onlineusers: onlineusers };
++			} else {
++				return { onlineusers: error() };
++			}
+ 		}
  	}
- }
- 
+ };
 diff --git a/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js b/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js
-index ae7efa3e75..3f66cfc3ee 100644
+index 45f7b4acae..08fbde85c5 100644
 --- a/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js
 +++ b/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js
-@@ -13,6 +13,26 @@ var callSystemInfo = rpc.declare({
+@@ -18,6 +18,26 @@ var callSystemInfo = rpc.declare({
  	method: 'info'
  });
- 
+
 +var callCPUBench = rpc.declare({
 +	object: 'luci',
 +	method: 'getCPUBench'
@@ -94,8 +215,8 @@ index ae7efa3e75..3f66cfc3ee 100644
 +
  return baseclass.extend({
  	title: _('System'),
- 
-@@ -20,6 +40,10 @@ return baseclass.extend({
+
+@@ -25,6 +45,10 @@ return baseclass.extend({
  		return Promise.all([
  			L.resolveDefault(callSystemBoard(), {}),
  			L.resolveDefault(callSystemInfo(), {}),
@@ -103,10 +224,10 @@ index ae7efa3e75..3f66cfc3ee 100644
 +			L.resolveDefault(callCPUInfo(), {}),
 +			L.resolveDefault(callCPUUsage(), {}),
 +			L.resolveDefault(callTempInfo(), {}),
- 			fs.lines('/usr/lib/lua/luci/version.lua')
+ 			L.resolveDefault(callLuciVersion(), { revision: _('unknown version'), branch: 'LuCI' })
  		]);
  	},
-@@ -27,7 +51,11 @@ return baseclass.extend({
+@@ -32,7 +56,11 @@ return baseclass.extend({
  	render: function(data) {
  		var boardinfo   = data[0],
  		    systeminfo  = data[1],
@@ -116,20 +237,20 @@ index ae7efa3e75..3f66cfc3ee 100644
 +		    cpuusage    = data[4],
 +		    tempinfo    = data[5],
 +		    luciversion = data[6];
- 
- 		luciversion = luciversion.filter(function(l) {
- 			return l.match(/^\s*(luciname|luciversion)\s*=/);
-@@ -50,10 +78,25 @@ return baseclass.extend({
+
+ 		luciversion = luciversion.branch + ' ' + luciversion.revision;
+
+@@ -51,10 +79,25 @@ return baseclass.extend({
  			);
  		}
- 
+
 +		var projectlink = document.createElement('a');
 +		projectlink.append('Project OpenWrt');
 +		projectlink.href = 'https://github.com/lunatickochiya';
 +		projectlink.target = '_blank';
 +
 +		var corelink = document.createElement('a');
-+		corelink.append('OpenWrt By 2U4U');
++		corelink.append('Powered By 2U4U');
 +		corelink.href = 'https://github.com/lunatickochiya/Lunatic-s805-rockchip-Action';
 +		corelink.target = '_blank';
 +
@@ -147,24 +268,94 @@ index ae7efa3e75..3f66cfc3ee 100644
  			_('Target Platform'),  (L.isObject(boardinfo.release) ? boardinfo.release.target : ''),
  			_('Firmware Version'), (L.isObject(boardinfo.release) ? boardinfo.release.description + ' / ' : '') + (luciversion || ''),
  			_('Kernel Version'),   boardinfo.kernel,
-@@ -63,9 +106,16 @@ return baseclass.extend({
+@@ -64,9 +107,16 @@ return baseclass.extend({
  				systeminfo.load[0] / 65535.0,
  				systeminfo.load[1] / 65535.0,
  				systeminfo.load[2] / 65535.0
 -			) : null
 +			) : null,
-+			_('CPU usage (%)'),    cpuusage.cpuusage,
++			_('CPU usage (%)'),    cpuusage.cpuusage
 +			_('Source Code'),      sourcelink
  		];
- 
-+
+
 +		if (tempinfo.tempinfo) {
 +			fields.splice(6, 0, _('Temperature'));
 +			fields.splice(7, 0, tempinfo.tempinfo);
 +		}
++
  		var table = E('table', { 'class': 'table' });
- 
+
  		for (var i = 0; i < fields.length; i += 2) {
+diff --git a/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/30_network.js b/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/30_network.js
+index 1a0f7037f9..f9c01bcaa4 100644
+--- a/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/30_network.js
++++ b/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/30_network.js
+@@ -1,8 +1,14 @@
+ 'use strict';
+ 'require baseclass';
+ 'require fs';
++'require rpc';
+ 'require network';
+
++var callOnlineUsers = rpc.declare({
++        object: 'luci',
++        method: 'getOnlineUsers'
++});
++
+ function progressbar(value, max, byte) {
+ 	var vn = parseInt(value) || 0,
+ 	    mn = parseInt(max) || 100,
+@@ -67,7 +73,8 @@ return baseclass.extend({
+ 			fs.trimmed('/proc/sys/net/netfilter/nf_conntrack_count'),
+ 			fs.trimmed('/proc/sys/net/netfilter/nf_conntrack_max'),
+ 			network.getWANNetworks(),
+-			network.getWAN6Networks()
++			network.getWAN6Networks(),
++			L.resolveDefault(callOnlineUsers(), {})
+ 		]);
+ 	},
+
+@@ -75,21 +82,32 @@ return baseclass.extend({
+ 		var ct_count  = +data[0],
+ 		    ct_max    = +data[1],
+ 		    wan_nets  = data[2],
+-		    wan6_nets = data[3];
++		    wan6_nets = data[3],
++		    onlineusers = data[4];
+
+ 		var fields = [
+-			_('Active Connections'), ct_max ? ct_count : null
++			_('Active Connections'), ct_max ? ct_count : null,
++			_('Online Users'), onlineusers ? onlineusers.onlineusers : null
+ 		];
+
+ 		var ctstatus = E('table', { 'class': 'table' });
+
+ 		for (var i = 0; i < fields.length; i += 2) {
+-			ctstatus.appendChild(E('tr', { 'class': 'tr' }, [
+-				E('td', { 'class': 'td left', 'width': '33%' }, [ fields[i] ]),
+-				E('td', { 'class': 'td left' }, [
+-					(fields[i + 1] != null) ? progressbar(fields[i + 1], ct_max) : '?'
+-				])
+-			]));
++			if (fields[i] == _('Online Users')) {
++				ctstatus.appendChild(E('tr', { 'class': 'tr' }, [
++					E('td', { 'class': 'td left', 'width': '33%' }, [ fields[i] ]),
++					E('td', { 'class': 'td left' }, [
++						(fields[i + 1] != null) ? fields[i + 1] : '?'
++					])
++				]));
++			} else {
++				ctstatus.appendChild(E('tr', { 'class': 'tr' }, [
++					E('td', { 'class': 'td left', 'width': '33%' }, [ fields[i] ]),
++					E('td', { 'class': 'td left' }, [
++						(fields[i + 1] != null) ? progressbar(fields[i + 1], ct_max) : '?'
++					])
++				]));
++			}
+ 		}
+
+ 		var netstatus = E('div', { 'class': 'network-status-table' });
 diff --git a/modules/luci-mod-status/root/usr/share/rpcd/acl.d/luci-mod-status.json b/modules/luci-mod-status/root/usr/share/rpcd/acl.d/luci-mod-status.json
 index 18d267e801..ad9e37e029 100644
 --- a/modules/luci-mod-status/root/usr/share/rpcd/acl.d/luci-mod-status.json
