@@ -130,13 +130,13 @@ jobs:
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH ${{matrix.target}}
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
+        make defconfig
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
+        make defconfig
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
+        make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
-        make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
-        make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
-        make defconfig
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Run awk command
