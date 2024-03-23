@@ -58,6 +58,8 @@ packages=(
     "luci-app-dockerman"
     "rtl8821cu"
     "xray-core"
+    "alist"
+    "luci-app-alist"
 )
 
 for package in "${packages[@]}"; do
@@ -69,6 +71,8 @@ done
 directories=(
     "feeds/luci/applications/luci-app-dockerman"
     "feeds/kiddin9/rtl8821cu"
+    "feeds/kiddin9/alist"
+    "feeds/kiddin9/luci-app-alist"
     "feeds/packages/net/xray-core"
 )
 
