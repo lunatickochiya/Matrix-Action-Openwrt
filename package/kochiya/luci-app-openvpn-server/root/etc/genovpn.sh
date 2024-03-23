@@ -13,15 +13,15 @@ resolv-retry infinite
 nobind
 persist-key
 persist-tun
-verb 3"
+verb 3
 EOF
 echo '<ca>' >> /tmp/my.ovpn
-cat /etc/openvpn/ca.crt >> /tmp/my.ovpn
+cat /etc/openvpn/pki/ca.crt >> /tmp/my.ovpn
 echo '</ca>' >> /tmp/my.ovpn
 echo '<cert>' >> /tmp/my.ovpn
-cat /etc/openvpn/client1.crt >> /tmp/my.ovpn
+cat /etc/openvpn/pki/client1.crt >> /tmp/my.ovpn
 echo '</cert>' >> /tmp/my.ovpn
 echo '<key>' >> /tmp/my.ovpn
-cat /etc/openvpn/client1.key >> /tmp/my.ovpn
+cat /etc/openvpn/pki/client1.key >> /tmp/my.ovpn
 echo '</key>' >> /tmp/my.ovpn
 [ -f /etc/ovpnadd.conf ] && cat /etc/ovpnadd.conf >> /tmp/my.ovpn
