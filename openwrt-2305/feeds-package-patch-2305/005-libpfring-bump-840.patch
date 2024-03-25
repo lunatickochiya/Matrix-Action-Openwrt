@@ -1,0 +1,196 @@
+From 534bd518f3fff6c31656a1edcd7e10922f3e06e5 Mon Sep 17 00:00:00 2001
+From: John Thomson <git@johnthomson.fastmail.com.au>
+Date: Fri, 21 Oct 2022 14:01:24 +1000
+Subject: [PATCH] libpfring: update to 8.4.0
+
+Release notes:
+https://github.com/ntop/PF_RING/releases/tag/8.4.0
+
+Signed-off-by: John Thomson <git@johnthomson.fastmail.com.au>
+---
+ libs/libpfring/Makefile                       |  4 +-
+ .../patches/0001-fix-cross-compiling.patch    |  6 +-
+ ...002-implement-probabilistic-sampling.patch | 89 +++++++++++++++++++
+ .../patches/100-fix-compilation-warning.patch | 21 +----
+ 4 files changed, 95 insertions(+), 25 deletions(-)
+ create mode 100644 libs/libpfring/patches/002-implement-probabilistic-sampling.patch
+
+diff --git a/libs/libpfring/Makefile b/libs/libpfring/Makefile
+index f02e3ed4897de..0ef774b79b9d4 100644
+--- a/libs/libpfring/Makefile
++++ b/libs/libpfring/Makefile
+@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
+ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=libpfring
+-PKG_VERSION:=8.0.0
++PKG_VERSION:=8.4.0
+ PKG_RELEASE:=1
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://codeload.github.com/ntop/PF_RING/tar.gz/$(PKG_VERSION)?
+-PKG_HASH:=8e733899b736fe2536ef785b2b7d719abe652297fe7fe3a03fc495a87a9b6e82
++PKG_HASH:=2756a45ab250da11850160beb62aa879075aedfb49bf8f323b404f02b0c36670
+ PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/PF_RING-$(PKG_VERSION)
+ 
+ PKG_MAINTAINER:=Banglang Huang <banglang.huang@foxmail.com>
+diff --git a/libs/libpfring/patches/0001-fix-cross-compiling.patch b/libs/libpfring/patches/0001-fix-cross-compiling.patch
+index 9b52fbe9f4f82..021162bbbfa4e 100644
+--- a/libs/libpfring/patches/0001-fix-cross-compiling.patch
++++ b/libs/libpfring/patches/0001-fix-cross-compiling.patch
+@@ -1,6 +1,6 @@
+ --- a/userland/configure
+ +++ b/userland/configure
+-@@ -3875,12 +3875,6 @@ $as_echo "no" >&6; }
++@@ -3868,12 +3868,6 @@ $as_echo "no" >&6; }
+          if test "$IS_FREEBSD" != "1" && test "$cross_compiling" != "yes" ; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking if r/w locks are supported" >&5
+  $as_echo_n "checking if r/w locks are supported... " >&6; }
+@@ -13,7 +13,7 @@
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+  /* end confdefs.h.  */
+  
+-@@ -3893,7 +3887,7 @@ else
++@@ -3886,7 +3880,7 @@ else
+  
+  
+  _ACEOF
+@@ -22,7 +22,7 @@
+     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+  $as_echo "yes" >&6; }
+  cat >>confdefs.h <<_ACEOF
+-@@ -3907,7 +3901,6 @@ $as_echo "no" >&6; }
++@@ -3900,7 +3894,6 @@ $as_echo "no" >&6; }
+  fi
+  rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+    conftest.$ac_objext conftest.beam conftest.$ac_ext
+diff --git a/libs/libpfring/patches/002-implement-probabilistic-sampling.patch b/libs/libpfring/patches/002-implement-probabilistic-sampling.patch
+new file mode 100644
+index 0000000000000..d7b3e833997e9
+--- /dev/null
++++ b/libs/libpfring/patches/002-implement-probabilistic-sampling.patch
+@@ -0,0 +1,89 @@
++From 405caa1424358032574230ec5479e64834869298 Mon Sep 17 00:00:00 2001
++From: Alfredo Cardigliano <cardigliano@ntop.org>
++Date: Thu, 13 Apr 2023 13:03:28 +0200
++Subject: [PATCH] Implement probabilistic sampling
++
++---
++ kernel/linux/pf_ring.h |  4 +++-
++ kernel/pf_ring.c       | 34 ++++++++++++++++++++++++----------
++ 2 files changed, 27 insertions(+), 11 deletions(-)
++
++--- a/kernel/linux/pf_ring.h
+++++ b/kernel/linux/pf_ring.h
++@@ -1310,7 +1310,9 @@ struct pf_ring_socket {
++   u_char *ring_slots;       /* Points to ring_memory+sizeof(FlowSlotInfo) */
++ 
++   /* Packet Sampling */
++-  u_int32_t pktToSample, sample_rate;
+++  u_int32_t sample_rate;
+++  u_int32_t pkts_to_sample;
+++  u_int32_t sample_rnd_shift;
++ 
++   /* Virtual Filtering Device */
++   virtual_filtering_device_element *v_filtering_dev;
++--- a/kernel/pf_ring.c
+++++ b/kernel/pf_ring.c
++@@ -3695,6 +3695,26 @@ int bpf_filter_skb(struct sk_buff *skb,
++ 
++ /* ********************************** */
++ 
+++int sample_packet(struct pf_ring_socket *pfr) {
+++  if(pfr->pkts_to_sample <= 1) {
+++    u_int32_t rnd = 0;
+++
+++    get_random_bytes(&rnd, sizeof(u_int32_t));
+++    rnd = rnd % pfr->sample_rate;
+++
+++    pfr->pkts_to_sample = pfr->sample_rate - pfr->sample_rnd_shift + rnd;
+++
+++    pfr->sample_rnd_shift = rnd;
+++
+++    return 1; /* Pass packet */
+++  } else {
+++    pfr->pkts_to_sample--;
+++    return 0; /* Discard packet */
+++  }
+++}
+++
+++/* ********************************** */
+++
++ u_int32_t default_rehash_rss_func(struct sk_buff *skb, struct pfring_pkthdr *hdr)
++ {
++   return hash_pkt_header(hdr, 0);
++@@ -3805,12 +3825,9 @@ static int add_skb_to_ring(struct sk_buf
++     if(pfr->sample_rate > 1) {
++       spin_lock_bh(&pfr->ring_index_lock);
++ 
++-      if(pfr->pktToSample <= 1) {
++-	pfr->pktToSample = pfr->sample_rate;
++-      } else {
+++      if(!sample_packet(pfr)) {
+++        /* Discard packet */
++         pfr->slots_info->tot_pkts++;
++-	pfr->pktToSample--;
++-
++ 	spin_unlock_bh(&pfr->ring_index_lock);
++ 	atomic_dec(&pfr->num_ring_users);
++ 	return(-1);
++@@ -4161,11 +4178,8 @@ int pf_ring_skb_ring_handler(struct sk_b
++ 
++         if(pfr->sample_rate > 1) {
++           spin_lock_bh(&pfr->ring_index_lock);
++-          if(pfr->pktToSample <= 1) {
++-            pfr->pktToSample = pfr->sample_rate;
++-          } else {
+++          if (!sample_packet(pfr)) {
++             pfr->slots_info->tot_pkts++;
++-            pfr->pktToSample--;
++             rc = 0;
++           }
++           spin_unlock_bh(&pfr->ring_index_lock);
++@@ -7957,7 +7971,7 @@ static int ring_getsockopt(struct socket
++ 	if(copy_to_user(optval, lowest_if_mac, ETH_ALEN))
++ 	  return(-EFAULT);
++       } else {
++-        char *dev_addr = pfr->ring_dev->dev->dev_addr;
+++        const char *dev_addr = pfr->ring_dev->dev->dev_addr;
++ 
++         if (dev_addr == NULL) /* e.g. 'any' device */
++           dev_addr = empty_mac;
+diff --git a/libs/libpfring/patches/100-fix-compilation-warning.patch b/libs/libpfring/patches/100-fix-compilation-warning.patch
+index 18c72e734dd86..97115b1761a77 100644
+--- a/libs/libpfring/patches/100-fix-compilation-warning.patch
++++ b/libs/libpfring/patches/100-fix-compilation-warning.patch
+@@ -1,6 +1,6 @@
+ --- a/kernel/pf_ring.c
+ +++ b/kernel/pf_ring.c
+-@@ -3940,7 +3940,7 @@ static int hash_pkt_cluster(ring_cluster_element *cluster_ptr,
++@@ -3902,7 +3902,7 @@ static int hash_pkt_cluster(ring_cluster
+        break;
+      }
+      /* else, fall through, because it's like 2-tuple for non-TCP packets */
+@@ -9,22 +9,3 @@
+    case cluster_per_flow_2_tuple:
+    case cluster_per_inner_flow_2_tuple:
+      flags |= mask_2_tuple;
+-@@ -5485,8 +5485,7 @@ static int ring_release(struct socket *sock)
+-     remove_cluster_referee(pfr);
+- 
+-   if((pfr->zc_device_entry != NULL)
+--     && pfr->zc_device_entry->zc_dev.dev
+--     && pfr->zc_device_entry->zc_dev.dev->name) {
+-+     && pfr->zc_device_entry->zc_dev.dev) {
+-     pfring_release_zc_dev(pfr);
+-   }
+- 
+-@@ -5617,8 +5616,6 @@ static int ring_bind(struct socket *sock, struct sockaddr *sa, int addr_len)
+-     return(-EINVAL);
+-   if(sa->sa_family != PF_RING)
+-     return(-EINVAL);
+--  if(sa->sa_data == NULL)
+--    return(-EINVAL);
+- 
+-   memcpy(name, sa->sa_data, sizeof(sa->sa_data));
+- 

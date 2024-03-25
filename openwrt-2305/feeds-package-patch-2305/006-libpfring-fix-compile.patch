@@ -18,6 +18,20 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
  ...l-pf_ring-better-define-sa_data-size.patch | 72 +++++++++++++++++++
  2 files changed, 73 insertions(+), 1 deletion(-)
  create mode 100644 libs/libpfring/patches/101-kernel-pf_ring-better-define-sa_data-size.patch
+
+diff --git a/libs/libpfring/Makefile b/libs/libpfring/Makefile
+index 0ef774b79b9d4..1083d6ec78bb6 100644
+--- a/libs/libpfring/Makefile
++++ b/libs/libpfring/Makefile
+@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=libpfring
+ PKG_VERSION:=8.4.0
+-PKG_RELEASE:=1
++PKG_RELEASE:=2
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://codeload.github.com/ntop/PF_RING/tar.gz/$(PKG_VERSION)?
 diff --git a/libs/libpfring/patches/101-kernel-pf_ring-better-define-sa_data-size.patch b/libs/libpfring/patches/101-kernel-pf_ring-better-define-sa_data-size.patch
 new file mode 100644
 index 0000000000000..7c27515f4c0a7
