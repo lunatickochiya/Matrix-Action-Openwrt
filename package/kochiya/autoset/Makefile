@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/target.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=4.0
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -28,6 +28,7 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_oneport \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_rockchip \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_meson \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ramips \
 	CONFIG_PACKAGE_$(PKG_NAME)_SIDE_ROUTER_rockchip
 
 define Package/autoset/default
@@ -77,6 +78,13 @@ endef
 define Package/autoset-uci-mediatek
   $(Package/autoset/default)
   TITLE:=Support Packages for mediatek arm64 router uci
+  DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
+  HIDDEN:=1
+endef
+
+define Package/autoset-uci-ramips
+  $(Package/autoset/default)
+  TITLE:=Support Packages for mediatek ramips router uci
   DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
   HIDDEN:=1
 endef
@@ -192,6 +200,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
 choice
 	prompt "Select ntfs filesystem"
 	depends on PACKAGE_$(PKG_NAME)_INCLUDE_filesystem
+	default PACKAGE_$(PKG_NAME)_INCLUDE_ntfs
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_ntfs
 	bool "NTFS KERNEL"
@@ -225,6 +234,7 @@ choice
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_meson if TARGET_meson=y
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_rockchip if TARGET_rockchip=y
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_mediatek if TARGET_mediatek=y
+	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ramips if TARGET_ramips=y
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci
 	bool "Common UCI"
@@ -245,6 +255,10 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_uci_meson
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci_mediatek
 	bool "Mediatek"
 	select PACKAGE_autoset-uci-mediatek
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_uci_ramips
+	bool "Mediatek Ramips"
+	select PACKAGE_autoset-uci-ramips
 endchoice
 
 endef
@@ -270,6 +284,11 @@ endef
 define Package/autoset-uci-mediatek/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/zzz-autoset-mediatek $(1)/etc/uci-defaults/zz99-autoset
+endef
+
+define Package/autoset-uci-ramips/install
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./files/zzz-autoset-ramips $(1)/etc/uci-defaults/zz99-autoset
 endef
 
 define Package/autoset-uci/install
@@ -312,6 +331,7 @@ $(eval $(call BuildPackage,autoset-uci))
 $(eval $(call BuildPackage,autoset-uci-oneport))
 $(eval $(call BuildPackage,autoset-uci-rockchip))
 $(eval $(call BuildPackage,autoset-uci-mediatek))
+$(eval $(call BuildPackage,autoset-uci-ramips))
 $(eval $(call BuildPackage,autoset-uci-meson))
 $(eval $(call BuildPackage,auto-resize-rootfs-script))
 $(eval $(call BuildPackage,luci-temperature-script))
