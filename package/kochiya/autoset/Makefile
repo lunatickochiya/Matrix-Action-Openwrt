@@ -50,62 +50,49 @@ endef
 define Package/autoset-uci
   $(Package/autoset/default)
   TITLE:=Support Packages for router uci
-  DEPENDS:=+luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
-  VARIANT:=uci
-  PROVIDES:=autoset
+  DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
   HIDDEN:=1
 endef
 
 define Package/autoset-uci-oneport
   $(Package/autoset/default)
   TITLE:=Support Packages for oneport router uci
-  DEPENDS:=+luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
-  VARIANT:=uci-oneport
-  PROVIDES:=autoset
+  DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
   HIDDEN:=1
 endef
 
 define Package/autoset-uci-meson
   $(Package/autoset/default)
   TITLE:=Support Packages for meson router uci
-  DEPENDS:=+luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
-  VARIANT:=uci-meson
-  PROVIDES:=autoset
+  DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
   HIDDEN:=1
 endef
 
 define Package/autoset-uci-rockchip
   $(Package/autoset/default)
   TITLE:=Support Packages for rockchip router uci
-  DEPENDS:=+luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
-  VARIANT:=uci-rockchip
-  PROVIDES:=autoset
+  DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
   HIDDEN:=1
 endef
 
 define Package/autoset-uci-mediatek
   $(Package/autoset/default)
   TITLE:=Support Packages for mediatek arm64 router uci
-  DEPENDS:=+luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
-  VARIANT:=uci-mediatek
-  PROVIDES:=autoset
+  DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
   HIDDEN:=1
 endef
 
 define Package/autoset-uci-ramips
   $(Package/autoset/default)
   TITLE:=Support Packages for mediatek ramips router uci
-  DEPENDS:=+luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
-  VARIANT:=uci-ramips
-  PROVIDES:=autoset
+  DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
   HIDDEN:=1
 endef
 
 define Package/autoset-resize-rootfs-script
   $(Package/autoset/default)
   TITLE:=auto resize rootfs script
-  VARIANT:=resize-rootfs-script
-  PROVIDES:=autoset
+  DEPENDS:=autoset
   HIDDEN:=1
 endef
 
@@ -120,12 +107,14 @@ endef
 define Package/luci-temperature-script
   $(Package/autoset/default)
   TITLE:=luci temperature script
+  DEPENDS:=autoset
   HIDDEN:=1
 endef
 
 define Package/luci-temperature-script-mtk
   $(Package/autoset/default)
   TITLE:=luci temperature script mtk
+  DEPENDS:=autoset
   HIDDEN:=1
 endef
 
