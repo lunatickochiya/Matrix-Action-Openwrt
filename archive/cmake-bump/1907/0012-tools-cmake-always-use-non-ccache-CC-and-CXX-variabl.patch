@@ -1,0 +1,52 @@
+From a693c815b74981d57addeda2b41d00f323acf0e6 Mon Sep 17 00:00:00 2001
+From: Sven Wegener <sven.wegener@stealer.net>
+Date: Fri, 1 Jan 2021 12:27:33 +0100
+Subject: [PATCH 12/14] tools/cmake: always use non-ccache CC and CXX variables
+
+cmake is a dependency of ccache, which means it is build before ccache
+is available and hence must be build with non-ccache CC and CXX. It
+currently works, because the cmake build system splits the compiler
+variable and treats them as multiple compilers to check.
+
+For "ccache gcc" it first tests for "ccache", which always fails,
+because ccache is not a compiler by itself, even if it is available, and
+then ends up calling "gcc" alone, effectively never using ccache.
+
+Let's make this explicit by forcing the use of non-ccache CC and CXX.
+
+Signed-off-by: Sven Wegener <sven.wegener@stealer.net>
+---
+ tools/cmake/Makefile | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index 64164fdd1d..006934466a 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -21,21 +21,9 @@ HOST_CONFIGURE_PARALLEL:=1
+ 
+ include $(INCLUDE_DIR)/host-build.mk
+ 
+-# Workaround for GCC versions below 6.X and ccache
+-# Reference: https://github.com/openwrt/openwrt/pull/1929
+-GCC_DMPVER_GREPCMD := grep -E '^(4\.[8-9]|[5]\.?)'
+-GCC_DMPVER_STRING := $(shell $(HOSTCC_NOCACHE) -dumpversion | $(GCC_DMPVER_GREPCMD))
+-ifneq ($(GCC_DMPVER_STRING),)
+-  ifeq ($(CONFIG_CCACHE),y)
+-    $(info GCC version less than 6.0 detected, disabling CCACHE)
+-    HOST_CONFIGURE_VARS:=$(filter-out CC=% gcc%",$(HOST_CONFIGURE_VARS)) CC="$(HOSTCC_NOCACHE)"
+-    HOST_CONFIGURE_VARS:=$(filter-out CXX=% g++%",$(HOST_CONFIGURE_VARS)) CXX="$(HOSTCXX_NOCACHE)"
+-      else
+-    $(info GCC version greater or equal to 6.0 detected, no workaround set for CCACHE)
+-  endif
+-endif
+-
+ HOST_CONFIGURE_VARS += \
++	CC="$(HOSTCC_NOCACHE)" \
++	CXX="$(HOSTCXX_NOCACHE)" \
+ 	MAKEFLAGS="$(HOST_JOBS)" \
+ 	CXXFLAGS="$(HOST_CFLAGS)"
+ 
+-- 
+2.34.1
+

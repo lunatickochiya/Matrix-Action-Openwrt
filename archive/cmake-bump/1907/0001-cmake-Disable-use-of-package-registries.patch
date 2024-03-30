@@ -1,0 +1,56 @@
+From 37cdf2fae07744cf4b5ec4362874eb2e0e994497 Mon Sep 17 00:00:00 2001
+From: Jeffery To <jeffery.to@gmail.com>
+Date: Tue, 18 Aug 2020 02:10:25 +0800
+Subject: [PATCH 01/14] cmake: Disable use of package registries
+
+CMake provides a user package registry (stored in ~/.cmake/packages) and
+a system package registry (not available on non-Windows platforms).
+
+The "export(PACKAGE)" command may store information in the user package
+registry, and the "find_package()" command may search both user and
+system package registries for information.
+
+This sets various variables to disable the use of these package
+registries (both saving and retrieval of package information).
+
+This also sets deprecated variables that perform similar functions, in
+case external toolchains include older versions of CMake.
+
+Signed-off-by: Jeffery To <jeffery.to@gmail.com>
+---
+ include/cmake.mk | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/include/cmake.mk b/include/cmake.mk
+index 8989b4744f..1481546d41 100644
+--- a/include/cmake.mk
++++ b/include/cmake.mk
+@@ -81,6 +81,12 @@ define Build/Configure/Default
+ 			-DDL_LIBRARY=$(STAGING_DIR) \
+ 			-DCMAKE_PREFIX_PATH=$(STAGING_DIR) \
+ 			-DCMAKE_SKIP_RPATH=TRUE  \
++			-DCMAKE_EXPORT_PACKAGE_REGISTRY=FALSE \
++			-DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=TRUE \
++			-DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE \
++			-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=TRUE \
++			-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=FALSE \
++			-DCMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY=TRUE \
+ 			$(CMAKE_OPTIONS) \
+ 		$(CMAKE_SOURCE_DIR) \
+ 	)
+@@ -120,6 +126,12 @@ define Host/Configure/Default
+ 			-DCMAKE_PREFIX_PATH=$(HOST_BUILD_PREFIX) \
+ 			-DCMAKE_SKIP_RPATH=TRUE  \
+ 			-DCMAKE_INSTALL_LIBDIR=lib \
++			-DCMAKE_EXPORT_PACKAGE_REGISTRY=FALSE \
++			-DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=TRUE \
++			-DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE \
++			-DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=TRUE \
++			-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=FALSE \
++			-DCMAKE_FIND_PACKAGE_NO_SYSTEM_PACKAGE_REGISTRY=TRUE \
+ 			$(CMAKE_HOST_OPTIONS) \
+ 		$(HOST_CMAKE_SOURCE_DIR) \
+ 	)
+-- 
+2.34.1
+

@@ -1,0 +1,66 @@
+From a76bfe91cddb77d1da17c922d975136bf2b71f79 Mon Sep 17 00:00:00 2001
+From: Hannu Nyman <hannu.nyman@iki.fi>
+Date: Mon, 14 Dec 2020 22:00:21 +0200
+Subject: [PATCH 11/14] tools/cmake: update to 3.19.1
+
+Update cmake to version 3.19.1
+
+Release notes: https://cmake.org/cmake/help/v3.19/release/3.19.html
+
+Signed-off-by: Hannu Nyman <hannu.nyman@iki.fi>
+---
+ tools/cmake/Makefile                                       | 6 +++---
+ tools/cmake/patches/120-curl-fix-libressl-linking.patch    | 2 +-
+ tools/cmake/patches/130-bootstrap_parallel_make_flag.patch | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index 05615fe740..64164fdd1d 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -7,14 +7,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=cmake
+-PKG_VERSION:=3.18.5
++PKG_VERSION:=3.19.1
+ PKG_RELEASE:=1
+ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://github.com/Kitware/CMake/releases/download/v$(PKG_VERSION)/ \
+-		https://cmake.org/files/v3.18/
+-PKG_HASH:=080bf24b0f73f4bf3ec368d2be1aa59369b9bb1cd693deeb6f18fe553ca74ab4
++		https://cmake.org/files/v3.19/
++PKG_HASH:=1d266ea3a76ef650cdcf16c782a317cb4a7aa461617ee941e389cb48738a3aba
+ 
+ HOST_BUILD_PARALLEL:=1
+ HOST_CONFIGURE_PARALLEL:=1
+diff --git a/tools/cmake/patches/120-curl-fix-libressl-linking.patch b/tools/cmake/patches/120-curl-fix-libressl-linking.patch
+index 4fb541f3e4..1095a4f8ac 100644
+--- a/tools/cmake/patches/120-curl-fix-libressl-linking.patch
++++ b/tools/cmake/patches/120-curl-fix-libressl-linking.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Jo-Philipp Wich <jo@mein.io>
+ ---
+ --- a/Utilities/cmcurl/CMakeLists.txt
+ +++ b/Utilities/cmcurl/CMakeLists.txt
+-@@ -488,6 +488,14 @@ if(CMAKE_USE_OPENSSL)
++@@ -508,6 +508,14 @@ if(CMAKE_USE_OPENSSL)
+    endif()
+    set(SSL_ENABLED ON)
+    set(USE_OPENSSL ON)
+diff --git a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+index c05ca4554e..512765c5af 100644
+--- a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
++++ b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+@@ -1,6 +1,6 @@
+ --- a/bootstrap
+ +++ b/bootstrap
+-@@ -1297,7 +1297,10 @@ int main(){ printf("1%c", (char)0x0a); r
++@@ -1397,7 +1397,10 @@ int main(){ printf("1%c", (char)0x0a); r
+  ' > "test.c"
+  cmake_original_make_flags="${cmake_make_flags}"
+  if test "x${cmake_parallel_make}" != "x"; then
+-- 
+2.34.1
+

@@ -1,0 +1,73 @@
+From facfa35450111e33df2d09ffa6898acbae27173e Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Sun, 6 Jun 2021 14:24:43 -0700
+Subject: [PATCH 03/19] package: fix cmake packages build with ninja
+
++= is needed for CMAKE_OPTIONS.
+
+mt76 needs Ninja disabled as the kernel stuff uses normal make.
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+(cherry picked from commit 09de28090cfb3fb605e6f4b452503a4ec2c6c43f)
+---
+ package/libs/libubox/Makefile            | 2 +-
+ package/network/services/uhttpd/Makefile | 2 +-
+ package/system/ubus/Makefile             | 2 +-
+ package/system/uci/Makefile              | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/package/libs/libubox/Makefile b/package/libs/libubox/Makefile
+index d2c07783e1..42a3f4ac3c 100644
+--- a/package/libs/libubox/Makefile
++++ b/package/libs/libubox/Makefile
+@@ -67,7 +67,7 @@ define Package/libubox-lua
+ endef
+ 
+ TARGET_CFLAGS += -I$(STAGING_DIR)/usr/include
+-CMAKE_OPTIONS = \
++CMAKE_OPTIONS += \
+ 	-DLUAPATH=/usr/lib/lua \
+ 	-DABIVERSION="$(PKG_ABI_VERSION)"
+ 
+diff --git a/package/network/services/uhttpd/Makefile b/package/network/services/uhttpd/Makefile
+index de666a480d..781512bd99 100644
+--- a/package/network/services/uhttpd/Makefile
++++ b/package/network/services/uhttpd/Makefile
+@@ -85,7 +85,7 @@ endif
+ 
+ TARGET_LDFLAGS += -lcrypt
+ 
+-CMAKE_OPTIONS = -DTLS_SUPPORT=on
++CMAKE_OPTIONS += -DTLS_SUPPORT=on
+ 
+ define Package/uhttpd/install
+ 	$(INSTALL_DIR) $(1)/etc/init.d
+diff --git a/package/system/ubus/Makefile b/package/system/ubus/Makefile
+index 8a3fd1de7b..e39de3c5dc 100644
+--- a/package/system/ubus/Makefile
++++ b/package/system/ubus/Makefile
+@@ -53,7 +53,7 @@ endef
+ TARGET_CFLAGS += -I$(STAGING_DIR)/usr/include -flto
+ TARGET_LDFLAGS += -flto
+ 
+-CMAKE_OPTIONS = \
++CMAKE_OPTIONS += \
+ 	-DLUAPATH=/usr/lib/lua \
+ 	-DABIVERSION="$(PKG_ABI_VERSION)"
+ 
+diff --git a/package/system/uci/Makefile b/package/system/uci/Makefile
+index 46694e619d..0b12298480 100644
+--- a/package/system/uci/Makefile
++++ b/package/system/uci/Makefile
+@@ -54,7 +54,7 @@ endef
+ TARGET_CFLAGS += -I$(STAGING_DIR)/usr/include
+ TARGET_LDFLAGS += -L$(STAGING_DIR)/usr/lib
+ 
+-CMAKE_OPTIONS = \
++CMAKE_OPTIONS += \
+ 	-DLUAPATH=/usr/lib/lua \
+ 	$(if $(DEBUG),-DUCI_DEBUG=ON)
+ 
+-- 
+2.34.1
+

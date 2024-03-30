@@ -1,0 +1,33 @@
+From 65e02eddd8244b766000dfb7ea515fb421378c03 Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Wed, 9 Feb 2022 17:15:14 -0800
+Subject: [PATCH 12/19] tools/cmake: add MAKE config variable
+
+Makes sure that Ninja from staging_dir is used and nowhere else.
+
+Reported by reproducible builds project. Builds have been failing ever
+since tools/cmake started using Ninja.
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+(cherry picked from commit 0d25db7f17efbf5ab539508dd0a5d1eb739a1c43)
+---
+ tools/cmake/Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index 49dc61ee34..b749a8eb3d 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -25,7 +25,8 @@ HOST_CONFIGURE_VARS += \
+ 	CC="$(HOSTCC_NOCACHE)" \
+ 	CXX="$(HOSTCXX_NOCACHE)" \
+ 	MAKEFLAGS="$(HOST_JOBS)" \
+-	CXXFLAGS="$(HOST_CFLAGS)"
++	CXXFLAGS="$(HOST_CFLAGS)" \
++	MAKE="$(STAGING_DIR_HOST)/bin/ninja"
+ 
+ HOST_CONFIGURE_ARGS := \
+ 	$(if $(MAKE_JOBSERVER),--parallel="$(MAKE_JOBSERVER)") \
+-- 
+2.34.1
+

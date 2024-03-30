@@ -1,0 +1,37 @@
+From e81d26714e67d0d11f7651e1b4c5f200366be26a Mon Sep 17 00:00:00 2001
+From: Michael Pratt <mcpratt@pm.me>
+Date: Wed, 29 Jun 2022 23:48:47 -0400
+Subject: [PATCH 17/19] tools/cmake: fix download url with make variables
+
+Use a make variable pattern for the url
+so that only one version number needs to be changed
+when version is bumped.
+
+Signed-off-by: Michael Pratt <mcpratt@pm.me>
+(cherry picked from commit 1e726ba015ce729cfe84e68e7924ed2258901cab)
+---
+ tools/cmake/Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index 1af9ab5d04..7430e5957f 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -8,12 +8,13 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=cmake
+ PKG_VERSION:=3.21.6
++PKG_VERSION_MAJOR:=$(word 1,$(subst ., ,$(PKG_VERSION))).$(word 2,$(subst ., ,$(PKG_VERSION)))
+ PKG_RELEASE:=1
+ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://github.com/Kitware/CMake/releases/download/v$(PKG_VERSION)/ \
+-		https://cmake.org/files/v3.21/
++		https://cmake.org/files/v$(PKG_VERSION_MAJOR)/
+ PKG_HASH:=b7c3ac35ca7ed3cce8c192c9c873e6061aaecc8b2bc564290e629b10bff59f3c
+ 
+ HOST_BUILD_PARALLEL:=1
+-- 
+2.34.1
+

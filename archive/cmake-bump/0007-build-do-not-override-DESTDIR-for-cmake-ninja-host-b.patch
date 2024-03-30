@@ -1,0 +1,35 @@
+From 097f28dc54c98373bda0eb4f22aa8da67ba5fdc8 Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Sat, 12 Jun 2021 14:32:41 +0200
+Subject: [PATCH 07/19] build: do not override DESTDIR for cmake ninja host
+ builds
+
+The full prefix is already passed to cmake
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+(cherry picked from commit 18430a34e6a287aaf6f13a110a3202dcac3b3d1a)
+---
+ include/cmake.mk | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/cmake.mk b/include/cmake.mk
+index 7ccd872365..b38d440039 100644
+--- a/include/cmake.mk
++++ b/include/cmake.mk
+@@ -60,11 +60,11 @@ ifeq ($(HOST_USE_NINJA),1)
+   endef
+ 
+   define Host/Install/Default
+-	+DESTDIR="$(HOST_INSTALL_DIR)" $(NINJA) -C $(HOST_BUILD_DIR) install
++	+$(NINJA) -C $(HOST_BUILD_DIR) install
+   endef
+ 
+   define Host/Uninstall/Default
+-	+DESTDIR="$(HOST_INSTALL_DIR)" $(NINJA) -C $(HOST_BUILD_DIR) uninstall
++	+$(NINJA) -C $(HOST_BUILD_DIR) uninstall
+   endef
+ endif
+ 
+-- 
+2.34.1
+

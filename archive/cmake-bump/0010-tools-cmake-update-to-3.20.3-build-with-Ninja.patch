@@ -1,0 +1,72 @@
+From 84e49f78ee586e9cf00fe9e158cfb6f310a46ace Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Thu, 17 Jun 2021 23:08:50 -0700
+Subject: [PATCH 10/19] tools/cmake: update to 3.20.3 + build with Ninja
+
+Compile with Ninja. Ninja compiles faster and is more stable with
+parallel builds. Routines copied from cmake.mk.
+
+Speed improves from:
+
+Executed in	127.47 secs	fish		external
+usr time	17.02 mins	446.00 micros	17.02 mins
+sys time	1.18 mins	40.00 micros	1.18 mins
+
+to:
+
+Executed in	118.91 secs	fish		external
+usr time	17.28 mins	499.00 micros	17.28 mins
+sys time	1.13 mins	45.00 micros	1.13 mins
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+(cherry picked from commit 5cff6c1abbcb134395bbe032cb5ea9d1c74ec891)
+---
+ tools/cmake/Makefile | 19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index 54ac6891a7..fc7926fda5 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -7,14 +7,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=cmake
+-PKG_VERSION:=3.19.8
++PKG_VERSION:=3.20.3
+ PKG_RELEASE:=1
+ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://github.com/Kitware/CMake/releases/download/v$(PKG_VERSION)/ \
+ 		https://cmake.org/files/v3.19/
+-PKG_HASH:=09b4fa4837aae55c75fb170f6a6e2b44818deba48335d1969deddfbb34e30369
++PKG_HASH:=4d008ac3461e271fcfac26a05936f77fc7ab64402156fb371d41284851a651b8
+ 
+ HOST_BUILD_PARALLEL:=1
+ HOST_CONFIGURE_PARALLEL:=1
+@@ -29,7 +29,20 @@ HOST_CONFIGURE_VARS += \
+ 
+ HOST_CONFIGURE_ARGS := \
+ 	$(if $(MAKE_JOBSERVER),--parallel="$(MAKE_JOBSERVER)") \
+-	--prefix=$(STAGING_DIR_HOST)
++	--prefix="$(STAGING_DIR_HOST)" \
++	--generator=Ninja
++
++define Host/Compile/Default
++	+$(NINJA) -C $(HOST_BUILD_DIR) $(1)
++endef
++
++define Host/Install/Default
++	+$(NINJA) -C $(HOST_BUILD_DIR) install
++endef
++
++define Host/Uninstall/Default
++	+$(NINJA) -C $(HOST_BUILD_DIR) uninstall
++endef
+ 
+ ifneq ($(findstring c,$(OPENWRT_VERBOSE)),)
+   HOST_MAKE_FLAGS += VERBOSE=1
+-- 
+2.34.1
+

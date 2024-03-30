@@ -1,0 +1,74 @@
+From 3c99d3046fcc4f9c95f06e77135b2be53d46a1d4 Mon Sep 17 00:00:00 2001
+From: Daniel Golle <daniel@makrotopia.org>
+Date: Sun, 28 Feb 2021 19:26:07 +0000
+Subject: [PATCH 01/19] tools: add xxd (from vim)
+
+U-Boot requires xxd to create the default environment from an external
+file as done in uboot-mediatek.
+Build xxd (only, not the rest of vim) as part of tools to make sure it
+is present on the buildhost.
+
+Reported-by: David Bauer <mail@david-bauer.net>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+(cherry picked from commit c4dd2441e7875c9550820f8380b3e41ca619ef27)
+---
+ tools/Makefile     |  2 +-
+ tools/xxd/Makefile | 33 +++++++++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 1 deletion(-)
+ create mode 100644 tools/xxd/Makefile
+
+diff --git a/tools/Makefile b/tools/Makefile
+index a2665dbc9a..577ea799c5 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -25,7 +25,7 @@ tools-y += autoconf autoconf-archive automake bc bison cmake dosfstools
+ tools-y += e2fsprogs fakeroot findutils firmware-utils flex gengetopt
+ tools-y += libressl libtool lzma m4 make-ext4fs missing-macros mkimage
+ tools-y += mklibs mm-macros mtd-utils mtools padjffs2 patch-image
+-tools-y += patchelf pkgconf quilt squashfskit4 sstrip zip zlib zstd
++tools-y += patchelf pkgconf quilt squashfskit4 sstrip xxd zip zlib zstd
+ tools-$(BUILD_B43_TOOLS) += b43-tools
+ tools-$(BUILD_ISL) += isl
+ tools-$(BUILD_TOOLCHAIN) += expat gmp libelf mpc mpfr
+diff --git a/tools/xxd/Makefile b/tools/xxd/Makefile
+new file mode 100644
+index 0000000000..7c225baa00
+--- /dev/null
++++ b/tools/xxd/Makefile
+@@ -0,0 +1,33 @@
++# SPDX-License-Identifier: GPL-2.0-or-later
++
++include $(TOPDIR)/rules.mk
++
++PKG_NAME:=xxd
++PKG_SOURCE_NAME:=vim
++PKG_VERSION:=8.2
++PKG_RELEASE:=2
++VIMVER:=82
++
++PKG_SOURCE:=$(PKG_SOURCE_NAME)-$(PKG_VERSION).tar.bz2
++PKG_SOURCE_URL:=http://ftp.vim.org/pub/vim/unix
++PKG_HASH:=f087f821831b4fece16a0461d574ccd55a8279f64d635510a1e10225966ced3b
++PKG_CPE_ID:=cpe:/a:vim:vim
++
++HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/$(PKG_SOURCE_NAME)$(VIMVER)
++HOST_BUILD_PARALLEL:=1
++
++include $(INCLUDE_DIR)/host-build.mk
++
++define Host/Configure
++endef
++
++define Host/Compile
++	$(HOST_MAKE_VARS) $(MAKE) -C $(HOST_BUILD_DIR)/src/xxd
++endef
++
++define Host/Install
++	$(INSTALL_DIR) $(STAGING_DIR_HOST)/bin/
++	$(INSTALL_BIN) $(HOST_BUILD_DIR)/src/xxd/xxd $(STAGING_DIR_HOST)/bin/
++endef
++
++$(eval $(call HostBuild))
+-- 
+2.34.1
+

@@ -1,0 +1,49 @@
+From 418a7ca579a4746ab1fac5f342822314bf50c48e Mon Sep 17 00:00:00 2001
+From: Tianling Shen <cnsztl@immortalwrt.org>
+Date: Tue, 31 May 2022 18:13:58 +0800
+Subject: [PATCH 15/19] tools/cmake: update to 3.21.6
+
+Refreshed patches.
+
+Signed-off-by: Tianling Shen <cnsztl@immortalwrt.org>
+---
+ tools/cmake/Makefile                                       | 4 ++--
+ tools/cmake/patches/130-bootstrap_parallel_make_flag.patch | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index bca8c0d420..1af9ab5d04 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -7,14 +7,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=cmake
+-PKG_VERSION:=3.21.3
++PKG_VERSION:=3.21.6
+ PKG_RELEASE:=1
+ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://github.com/Kitware/CMake/releases/download/v$(PKG_VERSION)/ \
+ 		https://cmake.org/files/v3.21/
+-PKG_HASH:=d14d06df4265134ee42c4d50f5a60cb8b471b7b6a47da8e5d914d49dd783794f
++PKG_HASH:=b7c3ac35ca7ed3cce8c192c9c873e6061aaecc8b2bc564290e629b10bff59f3c
+ 
+ HOST_BUILD_PARALLEL:=1
+ HOST_CONFIGURE_PARALLEL:=1
+diff --git a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+index 3822cba166..fb047747de 100644
+--- a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
++++ b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+@@ -1,6 +1,6 @@
+ --- a/bootstrap
+ +++ b/bootstrap
+-@@ -1420,7 +1420,10 @@ int main(){ printf("1%c", (char)0x0a); r
++@@ -1421,7 +1421,10 @@ int main(){ printf("1%c", (char)0x0a); r
+  ' > "test.c"
+  cmake_original_make_flags="${cmake_make_flags}"
+  if test "x${cmake_parallel_make}" != "x"; then
+-- 
+2.34.1
+

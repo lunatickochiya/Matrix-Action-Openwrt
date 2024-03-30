@@ -1,0 +1,44 @@
+From 1ec9d8ccee324a8883a20f23111251ee6ae7224f Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 10 Jun 2021 14:01:04 +0200
+Subject: [PATCH 04/19] build: use ninja for cmake packages by default
+
+Speed goes from:
+
+Executed in     178.08 secs     fish            external
+usr time        20.16 mins      509.00 micros   20.16 mins
+sys time        2.88 mins       39.00 micros    2.88 mins
+
+To:
+
+Executed in     175.90 secs     fish            external
+usr time        20.19 mins      0.00 micros     20.19 mins
+sys time        2.85 mins       497.00 micros   2.85 mins
+
+Tested with "time make -j 12" on AMD Ryzen 3600
+
+When building individual packages, the build time difference is often
+significantly bigger than that.
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+(cherry picked from commit 0c7c24d40aedcee25d5243e25a87d38246be128b)
+---
+ include/cmake.mk | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/include/cmake.mk b/include/cmake.mk
+index 8a1c4fc4d5..7ccd872365 100644
+--- a/include/cmake.mk
++++ b/include/cmake.mk
+@@ -1,5 +1,7 @@
+ cmake_bool = $(patsubst %,-D%:BOOL=$(if $($(1)),ON,OFF),$(2))
+ 
++PKG_USE_NINJA ?= 1
++HOST_USE_NINJA ?= 1
+ ifeq ($(PKG_USE_NINJA),1)
+   PKG_BUILD_PARALLEL ?= 1
+ endif
+-- 
+2.34.1
+

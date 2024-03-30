@@ -1,0 +1,48 @@
+From 88109fae07b845c98f122082d60b52b72b8935e8 Mon Sep 17 00:00:00 2001
+From: Piotr Stefaniak <pstef@freebsd.org>
+Date: Sun, 9 Aug 2020 00:38:21 +0200
+Subject: [PATCH 08/14] tools/cmake: fix typo in parallel make patch
+
+The variable in the case argument was mistyped, so the case always
+checked against an empty string and never matched.
+
+Fix the variable name. Add a PKG_RELEASE to Makefile so we can bump it.
+
+Fixes: d6de31310cc1 ("cmake: restore parallel build support for bootstrap")
+
+Signed-off-by: Piotr Stefaniak <pstef@freebsd.org>
+[add commit message, add PKG_RELEASE, fix commit title, add Fixes:]
+Signed-off-by: Adrian Schmutzler <freifunk@adrianschmutzler.de>
+---
+ tools/cmake/Makefile                                       | 1 +
+ tools/cmake/patches/130-bootstrap_parallel_make_flag.patch | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index ab3d225aa6..fd066da326 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -8,6 +8,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=cmake
+ PKG_VERSION:=3.17.0
++PKG_RELEASE:=2
+ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+diff --git a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+index 7b6198b14b..45ad885953 100644
+--- a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
++++ b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+@@ -5,7 +5,7 @@
+  cmake_original_make_flags="${cmake_make_flags}"
+  if [ "x${cmake_parallel_make}" != "x" ]; then
+ -  cmake_make_flags="${cmake_make_flags} -j ${cmake_parallel_make}"
+-+  case "$cmake_paralle_make" in
+++  case "$cmake_parallel_make" in
+ +    [0-9]*) cmake_parallel_make="-j ${cmake_parallel_make}";;
+ +  esac
+ +  cmake_make_flags="${cmake_make_flags} ${cmake_parallel_make}"
+-- 
+2.34.1
+

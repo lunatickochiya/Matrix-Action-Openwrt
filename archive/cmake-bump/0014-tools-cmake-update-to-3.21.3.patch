@@ -1,0 +1,35 @@
+From 8d55564288c76813ef5add6e2031a63409ed9eb0 Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Mon, 4 Oct 2021 18:30:33 -0700
+Subject: [PATCH 14/19] tools/cmake: update to 3.21.3
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+(cherry picked from commit 297cb8c147fe66503c3772fdf46caa01ee2fb161)
+---
+ tools/cmake/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index 1cd622063f..bca8c0d420 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -7,14 +7,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=cmake
+-PKG_VERSION:=3.21.2
++PKG_VERSION:=3.21.3
+ PKG_RELEASE:=1
+ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://github.com/Kitware/CMake/releases/download/v$(PKG_VERSION)/ \
+ 		https://cmake.org/files/v3.21/
+-PKG_HASH:=94275e0b61c84bb42710f5320a23c6dcb2c6ee032ae7d2a616f53f68b3d21659
++PKG_HASH:=d14d06df4265134ee42c4d50f5a60cb8b471b7b6a47da8e5d914d49dd783794f
+ 
+ HOST_BUILD_PARALLEL:=1
+ HOST_CONFIGURE_PARALLEL:=1
+-- 
+2.34.1
+

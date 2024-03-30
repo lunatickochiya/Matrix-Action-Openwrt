@@ -1,0 +1,39 @@
+From b348d6f0dde3070d0e401cad44cd99416066f90d Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 30 Mar 2024 20:07:16 +0800
+Subject: [PATCH 04/14] Revert "tools/cmake: fix typo in parallel make patch"
+
+This reverts commit 4af78734127d6325ec72f243741a24aa2447f5c4.
+---
+ tools/cmake/Makefile                                       | 1 -
+ tools/cmake/patches/130-bootstrap_parallel_make_flag.patch | 2 +-
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index 66819c687d..33d6d4944f 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -8,7 +8,6 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=cmake
+ PKG_VERSION:=3.15.1
+-PKG_RELEASE:=2
+ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+diff --git a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+index cb00f1fc97..124cf6d9d4 100644
+--- a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
++++ b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+@@ -5,7 +5,7 @@
+  cmake_original_make_flags="${cmake_make_flags}"
+  if [ "x${cmake_parallel_make}" != "x" ]; then
+ -  cmake_make_flags="${cmake_make_flags} -j ${cmake_parallel_make}"
+-+  case "$cmake_parallel_make" in
+++  case "$cmake_paralle_make" in
+ +    [0-9]*) cmake_parallel_make="-j ${cmake_parallel_make}";;
+ +  esac
+ +  cmake_make_flags="${cmake_make_flags} ${cmake_parallel_make}"
+-- 
+2.34.1
+

@@ -1,0 +1,40 @@
+From 8fa3ef1252437953163beee8890c2ae40bd4df77 Mon Sep 17 00:00:00 2001
+From: Adam Konrad <git@adamkonrad.com>
+Date: Sat, 26 Nov 2022 22:23:20 -0600
+Subject: [PATCH 13/14] cmake: update to version 3.19.8
+
+Updating CMake to latest patched version 3.19.8 which is fixing issue with ccache.
+
+Related issue: https://github.com/openwrt/openwrt/issues/8555
+
+Compile-tested: arm64
+
+Signed-off-by: Adam Konrad <git@adamkonrad.com>
+---
+ tools/cmake/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index 006934466a..54ac6891a7 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -7,14 +7,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=cmake
+-PKG_VERSION:=3.19.1
++PKG_VERSION:=3.19.8
+ PKG_RELEASE:=1
+ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://github.com/Kitware/CMake/releases/download/v$(PKG_VERSION)/ \
+ 		https://cmake.org/files/v3.19/
+-PKG_HASH:=1d266ea3a76ef650cdcf16c782a317cb4a7aa461617ee941e389cb48738a3aba
++PKG_HASH:=09b4fa4837aae55c75fb170f6a6e2b44818deba48335d1969deddfbb34e30369
+ 
+ HOST_BUILD_PARALLEL:=1
+ HOST_CONFIGURE_PARALLEL:=1
+-- 
+2.34.1
+

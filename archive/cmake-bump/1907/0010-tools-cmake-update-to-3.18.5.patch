@@ -1,0 +1,49 @@
+From 3034b35af58d35323f72910b9d5d7b93a0d1528b Mon Sep 17 00:00:00 2001
+From: Hannu Nyman <hannu.nyman@iki.fi>
+Date: Sat, 21 Nov 2020 13:39:01 +0200
+Subject: [PATCH 10/14] tools/cmake: update to 3.18.5
+
+Update cmake to 3.18.5
+
+Signed-off-by: Hannu Nyman <hannu.nyman@iki.fi>
+---
+ tools/cmake/Makefile                                       | 4 ++--
+ tools/cmake/patches/130-bootstrap_parallel_make_flag.patch | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index 7839d7b00a..05615fe740 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -7,14 +7,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=cmake
+-PKG_VERSION:=3.18.2
++PKG_VERSION:=3.18.5
+ PKG_RELEASE:=1
+ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://github.com/Kitware/CMake/releases/download/v$(PKG_VERSION)/ \
+ 		https://cmake.org/files/v3.18/
+-PKG_HASH:=5d4e40fc775d3d828c72e5c45906b4d9b59003c9433ff1b36a1cb552bbd51d7e
++PKG_HASH:=080bf24b0f73f4bf3ec368d2be1aa59369b9bb1cd693deeb6f18fe553ca74ab4
+ 
+ HOST_BUILD_PARALLEL:=1
+ HOST_CONFIGURE_PARALLEL:=1
+diff --git a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+index 4d5ed266c4..c05ca4554e 100644
+--- a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
++++ b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+@@ -1,6 +1,6 @@
+ --- a/bootstrap
+ +++ b/bootstrap
+-@@ -1296,7 +1296,10 @@ int main(){ printf("1%c", (char)0x0a); r
++@@ -1297,7 +1297,10 @@ int main(){ printf("1%c", (char)0x0a); r
+  ' > "test.c"
+  cmake_original_make_flags="${cmake_make_flags}"
+  if test "x${cmake_parallel_make}" != "x"; then
+-- 
+2.34.1
+

@@ -1,0 +1,58 @@
+From a25eef58c2655143327ca03b24604d03952f37b3 Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Sun, 17 Oct 2021 17:01:23 +0200
+Subject: [PATCH 08/19] include/cmake.mk: fix host builds with
+ CMAKE_BINARY_SUBDIR
+
+Use it in the same way as for target builds
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+(cherry picked from commit 1c07eab9f81f1ee99cc2ae36596bda81c12d5dbc)
+---
+ include/cmake.mk | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/include/cmake.mk b/include/cmake.mk
+index b38d440039..3318468c90 100644
+--- a/include/cmake.mk
++++ b/include/cmake.mk
+@@ -18,6 +18,7 @@ endif
+ CMAKE_BINARY_DIR = $(PKG_BUILD_DIR)$(if $(CMAKE_BINARY_SUBDIR),/$(CMAKE_BINARY_SUBDIR))
+ CMAKE_SOURCE_DIR = $(PKG_BUILD_DIR)$(if $(CMAKE_SOURCE_SUBDIR),/$(CMAKE_SOURCE_SUBDIR))
+ HOST_CMAKE_SOURCE_DIR = $(HOST_BUILD_DIR)$(if $(CMAKE_SOURCE_SUBDIR),/$(CMAKE_SOURCE_SUBDIR))
++HOST_CMAKE_BINARY_DIR = $(HOST_BUILD_DIR)$(if $(CMAKE_BINARY_SUBDIR),/$(CMAKE_BINARY_SUBDIR))
+ MAKE_PATH = $(firstword $(CMAKE_BINARY_SUBDIR) .)
+ 
+ ifeq ($(CONFIG_EXTERNAL_TOOLCHAIN),)
+@@ -56,15 +57,15 @@ ifeq ($(HOST_USE_NINJA),1)
+   CMAKE_HOST_OPTIONS += -DCMAKE_GENERATOR="Ninja"
+ 
+   define Host/Compile/Default
+-	+$(NINJA) -C $(HOST_BUILD_DIR) $(1)
++	+$(NINJA) -C $(HOST_CMAKE_BINARY_DIR) $(1)
+   endef
+ 
+   define Host/Install/Default
+-	+$(NINJA) -C $(HOST_BUILD_DIR) install
++	+$(NINJA) -C $(HOST_CMAKE_BINARY_DIR) install
+   endef
+ 
+   define Host/Uninstall/Default
+-	+$(NINJA) -C $(HOST_BUILD_DIR) uninstall
++	+$(NINJA) -C $(HOST_CMAKE_BINARY_DIR) uninstall
+   endef
+ endif
+ 
+@@ -133,7 +134,8 @@ endef
+ Build/InstallDev = $(if $(CMAKE_INSTALL),$(Build/InstallDev/cmake))
+ 
+ define Host/Configure/Default
+-	(cd $(HOST_BUILD_DIR); \
++	mkdir -p "$(HOST_CMAKE_BINARY_DIR)"
++	(cd $(HOST_CMAKE_BINARY_DIR); \
+ 		CFLAGS="$(HOST_CFLAGS)" \
+ 		CXXFLAGS="$(HOST_CFLAGS)" \
+ 		LDFLAGS="$(HOST_LDFLAGS)" \
+-- 
+2.34.1
+

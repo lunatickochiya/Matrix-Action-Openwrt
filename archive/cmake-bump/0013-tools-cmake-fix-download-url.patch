@@ -1,0 +1,29 @@
+From 916de7d7f7f1ab437aeaf1eb27b98ef2a39e34f1 Mon Sep 17 00:00:00 2001
+From: leo chung <gewalalb@gmail.com>
+Date: Thu, 31 Mar 2022 10:58:29 +0800
+Subject: [PATCH 13/19] tools/cmake: fix download url
+
+fix the cmake.org download url
+
+Signed-off-by: leo chung <gewalalb@gmail.com>
+(cherry picked from commit 56f091d4677feb693d37959a3fa4af845dcce82e)
+---
+ tools/cmake/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index b749a8eb3d..1cd622063f 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -13,7 +13,7 @@ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://github.com/Kitware/CMake/releases/download/v$(PKG_VERSION)/ \
+-		https://cmake.org/files/v3.19/
++		https://cmake.org/files/v3.21/
+ PKG_HASH:=94275e0b61c84bb42710f5320a23c6dcb2c6ee032ae7d2a616f53f68b3d21659
+ 
+ HOST_BUILD_PARALLEL:=1
+-- 
+2.34.1
+

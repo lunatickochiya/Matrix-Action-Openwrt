@@ -1,0 +1,25 @@
+From 38993c9fd5ce968a9d4d7f0e7df25c32cce68e39 Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Sat, 14 Nov 2020 14:34:30 +0100
+Subject: [PATCH 02/14] build: support cmake verbose for host builds
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ include/cmake.mk | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/include/cmake.mk b/include/cmake.mk
+index 1481546d41..0a20530a16 100644
+--- a/include/cmake.mk
++++ b/include/cmake.mk
+@@ -4,6 +4,7 @@ PKG_INSTALL:=1
+ 
+ ifneq ($(findstring c,$(OPENWRT_VERBOSE)),)
+   MAKE_FLAGS+=VERBOSE=1
++  HOST_MAKE_FLAGS+=VERBOSE=1
+ endif
+ 
+ CMAKE_BINARY_DIR = $(PKG_BUILD_DIR)$(if $(CMAKE_BINARY_SUBDIR),/$(CMAKE_BINARY_SUBDIR))
+-- 
+2.34.1
+

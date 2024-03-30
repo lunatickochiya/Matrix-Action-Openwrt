@@ -1,0 +1,29 @@
+From 968835c378fc3918bc9d110dcbdc6b0c79aecebe Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Sat, 12 Jun 2021 12:40:02 +0200
+Subject: [PATCH 05/19] tools: fix dependencies of cmake packages
+
+Make cmake depend on ninja, so that other cmake based tools also depend on it
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+(cherry picked from commit d45baa860ffc79ae1cf68fceb94990e39bb06bab)
+---
+ tools/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/Makefile b/tools/Makefile
+index 9f9b1d0176..360eac9c2e 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -43,7 +43,7 @@ $(curdir)/b43-tools/compile := $(curdir)/bison/compile
+ $(curdir)/bc/compile := $(curdir)/bison/compile $(curdir)/libtool/compile
+ $(curdir)/bison/compile := $(curdir)/flex/compile
+ $(curdir)/cbootimage/compile += $(curdir)/automake/compile
+-$(curdir)/cmake/compile += $(curdir)/libressl/compile
++$(curdir)/cmake/compile += $(curdir)/libressl/compile $(curdir)/ninja/compile
+ $(curdir)/dosfstools/compile := $(curdir)/autoconf/compile $(curdir)/automake/compile
+ $(curdir)/e2fsprogs/compile := $(curdir)/libtool/compile
+ $(curdir)/fakeroot/compile := $(curdir)/libtool/compile
+-- 
+2.34.1
+

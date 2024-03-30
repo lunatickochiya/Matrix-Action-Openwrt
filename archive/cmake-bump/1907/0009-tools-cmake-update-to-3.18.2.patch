@@ -1,0 +1,120 @@
+From ea8ee7aca36338f591c6b1eeda03d13576926ef1 Mon Sep 17 00:00:00 2001
+From: Hannu Nyman <hannu.nyman@iki.fi>
+Date: Sun, 23 Aug 2020 17:11:11 +0300
+Subject: [PATCH 09/14] tools/cmake: update to 3.18.2
+
+Update cmake to version 3.18.2.
+Refresh patches.
+
+Signed-off-by: Hannu Nyman <hannu.nyman@iki.fi>
+---
+ tools/cmake/Makefile                                 |  8 ++++----
+ tools/cmake/patches/100-no-testing.patch             | 12 ++++++------
+ .../patches/120-curl-fix-libressl-linking.patch      |  6 +++---
+ .../patches/130-bootstrap_parallel_make_flag.patch   |  6 +++---
+ 4 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/tools/cmake/Makefile b/tools/cmake/Makefile
+index fd066da326..7839d7b00a 100644
+--- a/tools/cmake/Makefile
++++ b/tools/cmake/Makefile
+@@ -7,14 +7,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=cmake
+-PKG_VERSION:=3.17.0
+-PKG_RELEASE:=2
++PKG_VERSION:=3.18.2
++PKG_RELEASE:=1
+ PKG_CPE_ID:=cpe:/a:kitware:cmake
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://github.com/Kitware/CMake/releases/download/v$(PKG_VERSION)/ \
+-		https://cmake.org/files/v3.17/
+-PKG_HASH:=b74c05b55115eacc4fa2b77a814981dbda05cdc95a53e279fe16b7b272f00847
++		https://cmake.org/files/v3.18/
++PKG_HASH:=5d4e40fc775d3d828c72e5c45906b4d9b59003c9433ff1b36a1cb552bbd51d7e
+ 
+ HOST_BUILD_PARALLEL:=1
+ HOST_CONFIGURE_PARALLEL:=1
+diff --git a/tools/cmake/patches/100-no-testing.patch b/tools/cmake/patches/100-no-testing.patch
+index 501302b835..44452ce39e 100644
+--- a/tools/cmake/patches/100-no-testing.patch
++++ b/tools/cmake/patches/100-no-testing.patch
+@@ -1,6 +1,6 @@
+ --- a/Modules/CTest.cmake
+ +++ b/Modules/CTest.cmake
+-@@ -47,7 +47,7 @@ the :variable:`CTEST_USE_LAUNCHERS` variable::
++@@ -47,7 +47,7 @@ the :variable:`CTEST_USE_LAUNCHERS` vari
+  in the ``CTestConfig.cmake`` file.
+  #]=======================================================================]
+  
+@@ -11,7 +11,7 @@
+  # like vs9 or vs10
+ --- a/Modules/Dart.cmake
+ +++ b/Modules/Dart.cmake
+-@@ -33,7 +33,7 @@ whether testing support should be enabled.  The default is ON.
++@@ -33,7 +33,7 @@ whether testing support should be enable
+  #
+  #
+  
+@@ -22,12 +22,12 @@
+    find_package(Dart QUIET)
+ --- a/Tests/Contracts/VTK/Dashboard.cmake.in
+ +++ b/Tests/Contracts/VTK/Dashboard.cmake.in
+-@@ -25,7 +25,7 @@ ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
++@@ -25,7 +25,7 @@ ctest_empty_binary_directory(${CTEST_BIN
+  
+  file(WRITE "${CTEST_BINARY_DIRECTORY}/CMakeCache.txt" "
+-   BUILD_EXAMPLES:BOOL=ON
+--  BUILD_TESTING:BOOL=ON
+-+  BUILD_TESTING:BOOL=OFF
++   VTK_BUILD_EXAMPLES:BOOL=ON
++-  VTK_BUILD_TESTING:STRING=WANT
+++  VTK_BUILD_TESTING:STRING=OFF
+    VTK_WRAP_PYTHON:BOOL=ON
+    ExternalData_OBJECT_STORES:FILEPATH=@base_dir@/ExternalData
+  ")
+diff --git a/tools/cmake/patches/120-curl-fix-libressl-linking.patch b/tools/cmake/patches/120-curl-fix-libressl-linking.patch
+index 66e3f81c6f..4fb541f3e4 100644
+--- a/tools/cmake/patches/120-curl-fix-libressl-linking.patch
++++ b/tools/cmake/patches/120-curl-fix-libressl-linking.patch
+@@ -20,10 +20,10 @@ Signed-off-by: Jo-Philipp Wich <jo@mein.io>
+ ---
+ --- a/Utilities/cmcurl/CMakeLists.txt
+ +++ b/Utilities/cmcurl/CMakeLists.txt
+-@@ -459,6 +459,14 @@ if(CMAKE_USE_OPENSSL)
++@@ -488,6 +488,14 @@ if(CMAKE_USE_OPENSSL)
++   endif()
++   set(SSL_ENABLED ON)
+    set(USE_OPENSSL ON)
+-   set(HAVE_LIBCRYPTO ON)
+-   set(HAVE_LIBSSL ON)
+ +  check_library_exists("rt" clock_gettime "" HAVE_LIBRT)
+ +  if(HAVE_LIBRT)
+ +    list(APPEND OPENSSL_LIBRARIES rt)
+diff --git a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+index 45ad885953..4d5ed266c4 100644
+--- a/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
++++ b/tools/cmake/patches/130-bootstrap_parallel_make_flag.patch
+@@ -1,9 +1,9 @@
+ --- a/bootstrap
+ +++ b/bootstrap
+-@@ -1283,7 +1283,10 @@ int main(){ printf("1%c", (char)0x0a); r
++@@ -1296,7 +1296,10 @@ int main(){ printf("1%c", (char)0x0a); r
+  ' > "test.c"
+  cmake_original_make_flags="${cmake_make_flags}"
+- if [ "x${cmake_parallel_make}" != "x" ]; then
++ if test "x${cmake_parallel_make}" != "x"; then
+ -  cmake_make_flags="${cmake_make_flags} -j ${cmake_parallel_make}"
+ +  case "$cmake_parallel_make" in
+ +    [0-9]*) cmake_parallel_make="-j ${cmake_parallel_make}";;
+@@ -11,4 +11,4 @@
+ +  cmake_make_flags="${cmake_make_flags} ${cmake_parallel_make}"
+  fi
+  for a in ${cmake_make_processors}; do
+-   if [ -z "${cmake_make_processor}" ] && cmake_try_make "${a}" "${cmake_make_flags}" >> ../cmake_bootstrap.log 2>&1; then
++   if test -z "${cmake_make_processor}" && cmake_try_make "${a}" "${cmake_make_flags}" >> ../cmake_bootstrap.log 2>&1; then
+-- 
+2.34.1
+
