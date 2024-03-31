@@ -87,7 +87,7 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
-        sed -i '$a src-git kiddin9 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
+        sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
         $GITHUB_WORKSPACE/$DIY_SH rockpatch
         echo "status=success" >> $GITHUB_OUTPUT
@@ -125,7 +125,7 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        [ -d openwrt-main/kiddin9-revert ] && mv -f openwrt-main/kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
+        [ -d openwrt-main/lunatic7-revert ] && mv -f openwrt-main/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-main/luci-patch ] && mv -f openwrt-main/luci-patch openwrt/feeds/luci/luci-patch
         [ -d openwrt-main/feeds-package-patch ] && mv -f openwrt-main/feeds-package-patch openwrt/feeds/packages/feeds-package-patch
         [ -e files ] && mv files openwrt/files

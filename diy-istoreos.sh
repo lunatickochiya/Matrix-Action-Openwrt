@@ -90,7 +90,7 @@ done
 
 directories=(
     "feeds/luci/applications/luci-app-dockerman"
-    "feeds/kiddin9/rtl8821cu"
+    "feeds/lunatic7/rtl8821cu"
     "feeds/packages/net/xray-core"
 )
 

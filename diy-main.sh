@@ -34,7 +34,7 @@ done
 
 directories=(
     "feeds/luci/applications/luci-app-dockerman"
-    "feeds/kiddin9/rtl8821cu"
+    "feeds/lunatic7/rtl8821cu"
     "feeds/packages/net/xray-core"
 )
 
@@ -70,9 +70,9 @@ done
 
 directories=(
     "feeds/luci/applications/luci-app-dockerman"
-    "feeds/kiddin9/rtl8821cu"
-    "feeds/kiddin9/alist"
-    "feeds/kiddin9/luci-app-alist"
+    "feeds/lunatic7/rtl8821cu"
+    "feeds/lunatic7/alist"
+    "feeds/lunatic7/luci-app-alist"
     "feeds/packages/net/xray-core"
 )
 
@@ -118,11 +118,11 @@ function patch_luci() {
             cd ../..
         done
         }
-function patch_kiddin9() {
-        for kiddin9patch in $( ls feeds/kiddin9/kiddin9-revert ); do
-            cd feeds/kiddin9/
-            echo Revert kiddin9 $kiddin9patch
-            patch -p1 -R --no-backup-if-mismatch < kiddin9-revert/$kiddin9patch
+function patch_lunatic7() {
+        for lunatic7patch in $( ls feeds/lunatic7/lunatic7-revert ); do
+            cd feeds/lunatic7/
+            echo Revert lunatic7 $lunatic7patch
+            patch -p1 -R --no-backup-if-mismatch < lunatic7-revert/$lunatic7patch
             cd ../..
         done
         }
@@ -200,7 +200,7 @@ remove_error_package
 patch_openwrt
 patch_package
 patch_luci
-patch_kiddin9
+patch_lunatic7
 add_full_istore_luci_for_ws1508
 elif [ "$1" == "ws1508" ]; then
 autosetver
@@ -209,14 +209,14 @@ remove_error_package
 patch_openwrt
 patch_package
 patch_luci
-patch_kiddin9
+patch_lunatic7
 elif [ "$1" == "mt798x-iptables" ]; then
 autosetver
 patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
-patch_kiddin9
+patch_lunatic7
 add_mt798x_iptables_packages
 elif [ "$1" == "mt798x-nftables" ]; then
 autosetver
@@ -224,7 +224,7 @@ patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
-patch_kiddin9
+patch_lunatic7
 add_mt798x_nftables_packages
 elif [ "$1" == "mt798x-istore" ]; then
 autosetver
@@ -232,7 +232,7 @@ patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
-patch_kiddin9
+patch_lunatic7
 add_mt798x_istore_packages
 elif [ "$1" == "mpc1917" ]; then
 autosetver
@@ -240,7 +240,7 @@ patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
-patch_kiddin9
+patch_lunatic7
 add_mpc1917_packages
 elif [ "$1" == "mpc1917-nft" ]; then
 autosetver
@@ -248,7 +248,7 @@ patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
-patch_kiddin9
+patch_lunatic7
 add_mpc1917_nft_packages
 elif [ "$1" == "rockpatch" ]; then
 patch_rockchip
