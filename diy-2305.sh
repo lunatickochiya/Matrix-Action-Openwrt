@@ -154,59 +154,55 @@ done
         }
 
 # add luci
-function add_full_istore_luci_for_ws1508() {
-echo "$(cat package-configs/ws1508-istore-2305.config)" >> package-configs/.config
+function add_meson_ipt_packages() {
+echo "$(cat package-configs/meson-ipt-2305.config)" >> package-configs/.config
 mv -f package-configs/.config .config
 }
 
-function add_luci_packages_for_ws1508() {
-echo "$(cat package-configs/ws1508-common.config)" >> package-configs/.config
+function add_meson_nft_packages() {
+echo "$(cat package-configs/meson-nft-2305.config)" >> package-configs/.config
 mv -f package-configs/.config .config
 }
 
 
-function add_mpc1917_packages() {
-echo "$(cat package-configs/mpc1917-common.config)" >> package-configs/.config
+function add_rockchip_ipt_packages() {
+echo "$(cat package-configs/rockchip-ipt-2305.config)" >> package-configs/.config
 mv -f package-configs/.config .config
 }
 
-function add_mpc1917_nft_packages() {
-echo "$(cat package-configs/mpc1917-nft-common.config)" >> package-configs/.config
+function add_rockchip_nft_packages() {
+echo "$(cat package-configs/rockchip-nft-2305.config)" >> package-configs/.config
 mv -f package-configs/.config .config
 }
 
-if [ "$1" == "ws1508-istore" ]; then
+if [ "$1" == "meson-ipt" ]; then
 autosetver
-remove_error_package
-patch_openwrt
-patch_package
-patch_luci
-patch_lunatic7
-add_full_istore_luci_for_ws1508
-elif [ "$1" == "ws1508" ]; then
-autosetver
-add_luci_packages_for_ws1508
-remove_error_package
-patch_openwrt
-patch_package
-patch_luci
-patch_lunatic7
-elif [ "$1" == "mpc1917" ]; then
-autosetver
-patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
 patch_lunatic7
-add_mpc1917_packages
-elif [ "$1" == "mpc1917-nft" ]; then
+add_meson_ipt_packages
+elif [ "$1" == "meson-nft" ]; then
 autosetver
-patch_openwrt
 remove_error_package_not_install
 patch_package
 patch_luci
 patch_lunatic7
-add_mpc1917_nft_packages
+add_meson_nft_packages
+elif [ "$1" == "rockchip-ipt" ]; then
+autosetver
+remove_error_package_not_install
+patch_package
+patch_luci
+patch_lunatic7
+add_rockchip_ipt_packages
+elif [ "$1" == "rockchip-nft" ]; then
+autosetver
+remove_error_package_not_install
+patch_package
+patch_luci
+patch_lunatic7
+add_rockchip_nft_packages
 elif [ "$1" == "patch-openwrt" ]; then
 patch_openwrt
 elif [ "$1" == "rockpatch" ]; then

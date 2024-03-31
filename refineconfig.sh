@@ -8,7 +8,7 @@
 
 
 
-function refine_meson_config() {
+function refine_meson_ipt_config() {
 sed -i 's/CONFIG_PACKAGE_firewall4=y/# CONFIG_PACKAGE_firewall4 is not set/g' .config
 sed -i 's/CONFIG_PACKAGE_dnsmasq=y/# CONFIG_PACKAGE_dnsmasq is not set/g' .config
 sed -i 's/CONFIG_PACKAGE_nftables-json=y/# CONFIG_PACKAGE_nftables-json is not set/g' .config
@@ -22,7 +22,24 @@ sed -i 's/CONFIG_PACKAGE_perl-test-harness=y/# CONFIG_PACKAGE_perl-test-harness 
 sed -i 's/CONFIG_PACKAGE_dnsmasq_full_nftset=y/# CONFIG_PACKAGE_dnsmasq_full_nftset is not set/g' .config
 }
 
-function refine_mpc1917_config() {
+function refine_meson_nft_config() {
+sed -i 's/# CONFIG_PACKAGE_luci-app-passwall_Nftables_Transparent_Proxy is not set/CONFIG_PACKAGE_luci-app-passwall_Nftables_Transparent_Proxy=y/g' .config
+sed -i 's/CONFIG_PACKAGE_luci-app-passwall_Iptables_Transparent_Proxy=y/# CONFIG_PACKAGE_luci-app-passwall_Iptables_Transparent_Proxy is not set/g' .config
+sed -i 's/CONFIG_PACKAGE_perl-test-harness=y/# CONFIG_PACKAGE_perl-test-harness is not set/g' .config
+sed -i 's/CONFIG_PACKAGE_dnsmasq=y/# CONFIG_PACKAGE_dnsmasq is not set/g' .config
+sed -i 's/CONFIG_PACKAGE_libnetwork=y/# CONFIG_PACKAGE_libnetwork is not set/g' .config
+sed -i 's/CONFIG_PACKAGE_qBittorrent-static=y/# CONFIG_PACKAGE_qBittorrent-static is not set/g' .config
+sed -i 's/CONFIG_PACKAGE_odhcpd-ipv6only=y/# CONFIG_PACKAGE_odhcpd-ipv6only is not set/g' .config
+sed -i 's/CONFIG_PACKAGE_odhcpd=y/# CONFIG_PACKAGE_odhcpd is not set/g' .config
+sed -i 's/CONFIG_PACKAGE_odhcp6c=y/# CONFIG_PACKAGE_odhcp6c is not set/g' .config
+#sed -i 's/CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Shadowsocks_Rust_Client=y/# CONFIG_PACKAGE_luci-app-passwall_INCLUDE_Shadowsocks_Rust_Client is not set/g' .config
+#sed -i 's/CONFIG_PACKAGE_luci-app-passwall-smartdns-dev_INCLUDE_Shadowsocks_Rust_Client=y/# CONFIG_PACKAGE_luci-app-passwall-smartdns-dev_INCLUDE_Shadowsocks_Rust_Client is not set/g' .config
+#sed -i 's/CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Shadowsocks_Rust_Client=y/# CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Shadowsocks_Rust_Client is not set/g' .config
+#sed -i 's/CONFIG_PACKAGE_shadowsocks-rust-sslocal=y/# CONFIG_PACKAGE_shadowsocks-rust-sslocal is not set/g' .config
+#sed -i 's/CONFIG_PACKAGE_shadowsocks-rust-ssserver=y/# CONFIG_PACKAGE_shadowsocks-rust-ssserver is not set/g' .config
+}
+
+function refine_rockchip_ipt_config() {
 sed -i 's/CONFIG_PACKAGE_firewall4=y/# CONFIG_PACKAGE_firewall4 is not set/g' .config
 sed -i 's/CONFIG_PACKAGE_dnsmasq=y/# CONFIG_PACKAGE_dnsmasq is not set/g' .config
 sed -i 's/CONFIG_PACKAGE_nftables-json=y/# CONFIG_PACKAGE_nftables-json is not set/g' .config
@@ -43,7 +60,7 @@ sed -i 's/CONFIG_PACKAGE_odhcp6c=y/# CONFIG_PACKAGE_odhcp6c is not set/g' .confi
 #sed -i 's/CONFIG_PACKAGE_shadowsocks-rust-ssserver=y/# CONFIG_PACKAGE_shadowsocks-rust-ssserver is not set/g' .config
 }
 
-function refine_mpc1917_nft_config() {
+function refine_rockchip_nft_config() {
 sed -i 's/# CONFIG_PACKAGE_luci-app-passwall_Nftables_Transparent_Proxy is not set/CONFIG_PACKAGE_luci-app-passwall_Nftables_Transparent_Proxy=y/g' .config
 sed -i 's/CONFIG_PACKAGE_luci-app-passwall_Iptables_Transparent_Proxy=y/# CONFIG_PACKAGE_luci-app-passwall_Iptables_Transparent_Proxy is not set/g' .config
 sed -i 's/CONFIG_PACKAGE_perl-test-harness=y/# CONFIG_PACKAGE_perl-test-harness is not set/g' .config
@@ -82,8 +99,10 @@ sed -n  '/^# CONFIG_PACKAGE_kmod/p' .config | sed '/# CONFIG_PACKAGE_kmod is not
 # sed -i -n '/CONFIG_PACKAGE_kmod/p' .config
 }
 
-if [ "$1" == "meson" ]; then
-refine_meson_config
+if [ "$1" == "meson-ipt" ]; then
+refine_meson_ipt_config
+elif [ "$1" == "meson-nft" ]; then
+refine_meson_nft_config
 elif [ "$1" == "kmod" ]; then
 refine_kmod_config
 elif [ "$1" == "kmod-istoreos" ]; then
@@ -92,10 +111,10 @@ elif [ "$1" == "mt798x-iptables" ]; then
 refine_mt798x_iptables_config
 elif [ "$1" == "mt798x-nftables" ]; then
 refine_mt798x_nftables_config
-elif [ "$1" == "mpc1917" ]; then
-refine_mpc1917_config
-elif [ "$1" == "mpc1917-nft" ]; then
-refine_mpc1917_nft_config
+elif [ "$1" == "rockchip-ipt" ]; then
+refine_rockchip_ipt_config
+elif [ "$1" == "rockchip-nft" ]; then
+refine_rockchip_nft_config
 else
 echo "Invalid argument"
 fi

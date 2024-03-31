@@ -185,15 +185,23 @@ patch_package
 patch_luci
 remove_error_package_not_install
 add_mpc1917_packages
-elif [ "$1" == "mpc1917-istoreos" ]; then
+elif [ "$1" == "rockchip-ipt" ]; then
 autosetver
 patch_package
 patch_luci
-patch_istoreos
 remove_error_package
 add_mpc1917_packages_istoreos
+elif [ "$1" == "rockchip-nft" ]; then
+autosetver
+remove_error_package_not_install
+patch_package
+patch_luci
+patch_lunatic7
+add_rockchip_nft_packages
 elif [ "$1" == "rockpatch" ]; then
 patch_rockchip
+elif [ "$1" == "patch-openwrt" ]; then
+patch_istoreos
 else
 echo "Invalid argument"
 fi

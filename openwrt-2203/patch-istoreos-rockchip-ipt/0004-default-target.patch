@@ -1,0 +1,27 @@
+diff --git a/include/target.mk b/include/target.mk
+index f8dae3a273..905bbd17ee 100644
+--- a/include/target.mk
++++ b/include/target.mk
+@@ -17,7 +17,7 @@ DEFAULT_PACKAGES:=\
+ 	fstools \
+ 	libc \
+ 	libgcc \
+-	libustream-wolfssl \
++	libustream-openssl \
+ 	logd \
+ 	mtd \
+ 	netifd \
+@@ -54,10 +54,10 @@ DEFAULT_PACKAGES.nas:=\
+ 	mdadm
+ # For router targets
+ DEFAULT_PACKAGES.router:=\
+-	dnsmasq \
++	dnsmasq-full \
+ 	firewall \
+-	ip6tables \
+-	iptables \
++	iptables-zz-legacy \
++	ip6tables-zz-legacy \
+ 	odhcp6c \
+ 	odhcpd-ipv6only \
+ 	ppp \

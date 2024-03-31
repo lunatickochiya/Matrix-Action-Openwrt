@@ -26,8 +26,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: ws1508
-          - target: onecloud
+          - target: meson-ipt
+          - target: meson-nft
     
     steps:
     - name: 检查
@@ -77,7 +77,7 @@ jobs:
         echo "UPLOAD_ALLKMOD=${UPLOAD_ALLKMOD}" >> $GITHUB_ENV
         echo "UPLOAD_SYSUPGRADE=${UPLOAD_SYSUPGRADE}" >> $GITHUB_ENV
         echo "USE_Cache=${USE_Cache}" >> $GITHUB_ENV
-        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh
+        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh burn-make.sh
 
     - name: 克隆源代码
       working-directory: /workdir
@@ -108,9 +108,12 @@ jobs:
       if: steps.clone.outputs.status == 'success'
       id: files
       run: |
-        [ -d openwrt-2305/mypatch-2305 ] && mv -f openwrt-2305/mypatch-2305 openwrt/mypatch
         [ -d package ] && mv -f package/* openwrt/package
         [ -d openwrt-2305/target ] && mv -f openwrt-2305/target/linux/meson515 openwrt/target/linux/meson
+        [ -d openwrt-2305/mypatch-2305-${{matrix.target}} ] && mv -f openwrt-2305/mypatch-2305-${{matrix.target}} openwrt/mypatch
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
+        cd ../
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 更新 & 安装 feeds
@@ -133,9 +136,9 @@ jobs:
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_SH ws1508-istore
+        $GITHUB_WORKSPACE/$DIY_SH ${{matrix.target}}
         make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC meson
+        $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 添加kmod
@@ -157,6 +160,7 @@ jobs:
       working-directory: ./openwrt
       run: |
         awk '/${{matrix.target}}/ { print }' .config
+        awk '/meson/ { print }' .config
         echo "------------------------"
         awk '/docker/ { print }' .config
         echo "------------------------"
@@ -228,27 +232,10 @@ jobs:
         curl -L -o ./AmlImg $AMLIMG_TOOL_URL
         chmod +x ./AmlImg
         curl -L -o ./uboot.img $BURN_UBOOT_IMG_URL
-        ./AmlImg unpack ./uboot.img burn/
+        ./AmlImg unpack ./uboot.img burn-onecloud/
+        ./AmlImg unpack ./uboot.img burn-ws1508/
         echo "::end-uboot-unpack::"
-        mkdir openwrt/bin/out
-        cp -u -f openwrt/bin/targets/*/*/*.gz openwrt/bin/out/
-        gunzip openwrt/bin/out/*.gz
-        diskimg=$(ls openwrt/bin/out/*.img)
-        loop=$(sudo losetup --find --show --partscan $diskimg)
-        sudo img2simg ${loop}p1 burn/boot.simg
-        sudo img2simg ${loop}p2 burn/rootfs.simg
-        sudo losetup -d $loop
-        echo "::end-unpackext4::"
-        cat <<EOF >>burn/commands.txt
-        PARTITION:boot:sparse:boot.simg
-        PARTITION:rootfs:sparse:rootfs.simg
-        EOF
-        prefix=$(ls openwrt/bin/out/*.img | sed 's/\.img$//')
-        burnimg=${prefix}.burn.img
-        ./AmlImg pack $burnimg burn/
-        gzip -9 openwrt/bin/out/*.burn.img
-        mkdir firmware ipks
-        cp -u -f openwrt/bin/out/*.burn.img.gz firmware
+        $GITHUB_WORKSPACE/burn-make.sh
         [ $UPLOAD_RELEASE = true ] && cp -u -f openwrt/kernelipks.zip firmware
         [ $UPLOAD_RELEASE = true ] && cp -u -f openwrt/ipks.zip firmware
         cp -u -f openwrt/kernelipks.zip ipks

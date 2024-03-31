@@ -26,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: mpc1917
+          - target: rockchip-ipt
     
     steps:
     - name: 检查
@@ -110,9 +110,12 @@ jobs:
       id: files
       run: |
         [ -d mypatch ] && mv -f mypatch openwrt/mypatch
-        [ -d openwrt-2203/patch-istoreos ] && mv -f openwrt-2203/patch-istoreos openwrt/patch-istoreos
+        [ -d openwrt-2203/patch-istoreos-${{matrix.target}} ] && mv -f openwrt-2203/patch-istoreos-${{matrix.target}} openwrt/patch-istoreos
         [ -d package ] && mv -f package/* openwrt/package
         [ -d openwrt-2203/package-for-istoreos ] && mv -f openwrt-2203/package-for-istoreos/* openwrt/package
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
+        cd ../
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 更新 & 安装 feeds
@@ -134,7 +137,7 @@ jobs:
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_SH mpc1917-istoreos
+        $GITHUB_WORKSPACE/$DIY_SH ${{matrix.target}}
         make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
         echo "status=success" >> $GITHUB_OUTPUT
@@ -158,6 +161,7 @@ jobs:
       working-directory: ./openwrt
       run: |
         awk '/${{matrix.target}}/ { print }' .config
+        awk '/mpc1917/ { print }' .config
         echo "------------------------"
         awk '/docker/ { print }' .config
         echo "------------------------"
