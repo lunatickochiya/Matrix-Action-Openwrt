@@ -129,7 +129,7 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        [ -d lunatic7-revert ] && mv -f lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
+        [ -d lunatic7-revert ] && mv -f openwrt-2305/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-2305/luci-patch-2305 ] && mv -f openwrt-2305/luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
         [ -d openwrt-2305/feeds-package-patch-23053 ] && mv -f openwrt-2305/feeds-package-patch-23053 openwrt/feeds/packages/feeds-package-patch-2305
         [ -e files ] && mv files openwrt/files
