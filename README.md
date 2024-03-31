@@ -8,6 +8,7 @@
 - 给源码打入patch 加入自己的东西
 - 单独上传ipk文件包
 - 原生的openwrt管理系统
+- 可编译99%的kmod 可用于直接安装内核模块
 - Actions页面选择 Repo Dispatcher 点击 Run workflow
 
 ## 目录结构
@@ -38,24 +39,17 @@
 带burn的固件 解压后 使用 USB_Burning_Tool 刷入使用 不需要刷底包
 进入burn固件后使用bash resize.sh 自动扩容
 
-## 关于mt798x
- 20231210
- 
-新增支持mt798x  测试支持rax3000m nand ubootmod版本 请使用squashfs-sysupgrade刷入 不要刷factory的版本！
-ubootmod：https://github.com/hanwckf/bl-mt798x/releases/download/20231124/mt798x-uboot-202307-fip.7z
-
-带mtk的为碧园无线
-不带的为开源
-固件地址 192.168.10.1
 
 
-移除mt798x-mtk
+
+
+
 当前版本支持情况：
 20240307
 - rockchip mpc1917 （不可定制）
 - ws1508 （可定制）
 - onecloud（可定制）
-- rax3000m nand（可定制）
+
 
 
 
