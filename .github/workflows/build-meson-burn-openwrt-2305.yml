@@ -128,7 +128,7 @@ jobs:
       run: |
         [ -d kiddin9-revert ] && mv -f kiddin9-revert openwrt/feeds/kiddin9/kiddin9-revert
         [ -d openwrt-2305/luci-patch-2305 ] && mv -f openwrt-2305/luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
-        [ -d openwrt-2305/feeds-package-patch-2305 ] && mv -f openwrt-2305/feeds-package-patch-2305 openwrt/feeds/packages/feeds-package-patch-2305
+        [ -d openwrt-2305/feeds-package-patch-23053 ] && mv -f openwrt-2305/feeds-package-patch-23053 openwrt/feeds/packages/feeds-package-patch-2305
         [ -e files ] && mv files openwrt/files
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
