@@ -18,8 +18,8 @@ ls
 gunzip firmware-onecloud/*.gz
 diskimg1=$(ls firmware-onecloud/*.img)
 loop1=$(sudo losetup --find --show --partscan $diskimg1)
-sudo img2simg ${loop1}p1 burn/boot.simg
-sudo img2simg ${loop1}p2 burn/rootfs.simg
+sudo img2simg ${loop1}p1 burn-onecloud/boot.simg
+sudo img2simg ${loop1}p2 burn-onecloud/rootfs.simg
 sudo losetup -d $loop1
 echo "::end-onecloud-unpackext4::"
 cat <<EOF >>burn-onecloud/commands.txt
@@ -40,8 +40,8 @@ function burn_ws1508() {
 gunzip firmware-ws1508/*.gz
 diskimg2=$(ls firmware-onecloud/*.img)
 loop2=$(sudo losetup --find --show --partscan $diskimg2)
-sudo img2simg ${loop2}p1 burn/boot.simg
-sudo img2simg ${loop2}p2 burn/rootfs.simg
+sudo img2simg ${loop2}p1 burn-ws1508/boot.simg
+sudo img2simg ${loop2}p2 burn-ws1508/rootfs.simg
 sudo losetup -d $loop2
 echo "::end-ws1508-unpackext4::"
 cat <<EOF >>burn-ws1508/commands.txt
