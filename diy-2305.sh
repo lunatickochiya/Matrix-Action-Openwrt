@@ -8,15 +8,17 @@
 autosetver() {
 version=23.05
 sed -i "52i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-meson
-sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-mediatek
+sed -i "58i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-mediatek
 sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-ramips
+sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-ath79
 sed -i "52i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-rockchip
 sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-rockchip-siderouter
 
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-mediatek
-grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-ramips
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-meson
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-rockchip
+grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-ramips
+grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-ath79
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-rockchip-siderouter
         }
 

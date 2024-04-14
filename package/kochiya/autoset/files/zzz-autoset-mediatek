@@ -2,7 +2,7 @@
 
 uci -q batch <<-EOF >/dev/null
 	set luci.main.lang=zh_cn
-	set system.@system[0].hostname=Lunatic_Mediatek
+	set system.@system[0].hostname=Mediatek_AP
 	set system.@system[0].timezone=CST-8
 	set system.@system[0].zonename=Asia/Shanghai
 	set fstab.@global[0].anon_mount=1
@@ -33,6 +33,8 @@ uci -q batch <<-EOF >/dev/null
 	add_list system.ntp.server='ntp1.aliyun.com'
 	del_list uhttpd.main.listen_https='0.0.0.0:443'
 	del_list uhttpd.main.listen_https='[::]:443'
+	set luci.main.mediaurlbase='/luci-static/argon'
+	set firewall.@zone[1].input='ACCEPT'
 	commit
 EOF
 
@@ -40,12 +42,21 @@ sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
 
 
 /etc/init.d/qos_gargoyle disable
-/etc/init.d/umdns stop
-/etc/init.d/umdns disable
-/etc/init.d/dawn stop
-/etc/init.d/dawn disable
+# /etc/init.d/umdns stop
+# /etc/init.d/umdns disable
+# /etc/init.d/dawn stop
+# /etc/init.d/dawn disable
 /etc/init.d/https-dns-proxy stop
 /etc/init.d/https-dns-proxy disable
+sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/openwrt#g' /etc/opkg/distfeeds.conf
+
+
+
+
+
+
+
+
 
 
 exit 0
