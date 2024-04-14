@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/target.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=4.0
-PKG_RELEASE:=9
+PKG_RELEASE:=10
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -314,6 +314,7 @@ endef
 define Package/autoset-resize-rootfs-script/install
 	$(INSTALL_DIR) $(1)/root
 	$(INSTALL_BIN) ./files/resize.sh $(1)/root/resize.sh
+	$(INSTALL_BIN) ./files/fix-emmc.sh $(1)/root/fix-emmc.sh
 endef
 
 define Package/luci-temperature-script/install

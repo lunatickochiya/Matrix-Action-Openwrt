@@ -44,26 +44,26 @@ done
 # 提取最大分区的分区号
 partition_number=$(echo $max_partition | grep -o '[0-9]*$')
 
-# 检查 /dev/loop0 是否已经被占用
-if losetup /dev/loop0 &>/dev/null; then
-    echo "/dev/loop0 已被占用。尝试寻找另一个未被占用的 loop 设备。"
+# 检查 /dev/loop1 是否已经被占用
+if losetup /dev/loop1 &>/dev/null; then
+    echo "/dev/loop1 已被占用。尝试寻找另一个未被占用的 loop 设备。"
     exit 1
 fi
 
 # 打印最大的分区和其大小
 if [[ ! -z $max_partition ]]; then
     echo "最大的分区是 $max_partition，大小为：$(human_readable $max_size)"
-    echo "调整 $max_partition 的大小到整个磁盘的最大可用空间"
-    read -p "再次确认一下最大分区，正确的话按任意键继续！"
-    parted $root_device resizepart $partition_number 100%
+    echo "修复 $max_partition "
 
     # 设置 loop 设备
     echo "将 $max_partition 设置为 loop 设备"
-    losetup /dev/loop0 $max_partition
+    read -p "再次确认一下最大分区，正确的话按任意键继续！"
+    losetup /dev/loop1 $max_partition
 
-    # 调整文件系统大小
-    echo "调整文件系统大小"
-    resize2fs -f /dev/loop0
+    echo "修复文件系统"
+
+    e2fsck -y /dev/loop1
 else
     echo "没有找到分区"
 fi
+
