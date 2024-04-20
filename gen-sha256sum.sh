@@ -72,7 +72,18 @@ function git_log() {
     fi
 }
 
-
+function mt798x_status() {
+eeprom_status=""
+if [ -e openwrt/target/linux/mediatek/filogic/base-files/lib/firmware/mediatek/nx30pro_eeprom.bin ] ; then
+  echo "- eeprom 使用 H3C NX30 Pro 提取版本" >> release.txt
+  eeprom_status="nx30pro_eeprom"
+else
+echo "- eeprom 未修改" >> release.txt
+  eeprom_status="default_eeprom"
+fi
+max_frequency=$(($(grep -oP "max-frequency = <\K[0-9]*" openwrt/target/linux/mediatek/dts/mt7981b-cmcc-rax3000m-emmc-ubootmod.dts) / 1000000))
+echo "- 使用闪存频率: ${max_frequency}MHz" >> release.txt
+}
 
 git_log
 kernel_ver
