@@ -363,7 +363,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}
         path: |
           firmware
 
@@ -372,7 +372,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_IPK_DIR == 'true' && steps.afb.outputs.status == 'success'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}
         path: |
           ipks
 
