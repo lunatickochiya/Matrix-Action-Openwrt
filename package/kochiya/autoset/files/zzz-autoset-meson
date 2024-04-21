@@ -31,10 +31,7 @@ uci -q batch <<-EOF >/dev/null
 	set system.@system[0].log_size='128'
 	set firewall.@zone[1].input='ACCEPT'
 	set ttyd.@ttyd[0].interface='eth0'
-	set network.lan.ipaddr=192.168.7.186
-	set network.lan.gateway=192.168.7.1
-	set network.lan.netmask=255.255.255.0
-	set network.lan.dns=223.5.5.5
+	set network.lan.ipaddr=192.168.66.1
 	del_list uhttpd.main.listen_https='0.0.0.0:443'
 	del_list uhttpd.main.listen_https='[::]:443'
 	add_list system.ntp.server='ntp.tencent.com'

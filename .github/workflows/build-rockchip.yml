@@ -1,4 +1,4 @@
-name: Build 23.05.3 Single Burn
+name: Build Rockchip
 
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
@@ -28,11 +28,19 @@ on:
       MACH:
         description: 'Choose machine'
         required: true
-        default: 'ws1508'
+        default: 'mpc1917'
         type: choice
         options:
-        - 'ws1508'
-        - 'onecloud'
+        - 'tpm312'
+        - 'mpc1917'
+      REPO:
+        description: 'Choose repo'
+        required: true
+        default: 'openwrt-23.05'
+        type: choice
+        options:
+        - 'openwrt-23.05'
+        - 'main'
       SETIP:
         description: 'Set ip address'
         default: '192.168.66.1'
@@ -60,8 +68,8 @@ jobs:
     strategy:
       matrix:
         include:
-        - meson: ws1508
-        - meson: onecloud
+        - rockchip: mpc1917
+        - rockchip: tpm312
 
     steps:
       - name: 检查
@@ -70,8 +78,10 @@ jobs:
       - name: 生成矩阵配置
         id: set-matrix
         run: |
-          if [ "${{ github.event.inputs.MACH }}" == "${{ matrix.meson }}" ]; then
-            matrix={\"include\":[{\"target\":\"meson-ipt\"},{\"target\":\"meson-nft\"}]}
+          if [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "openwrt-23.05" ]; then
+            matrix={\"include\":[{\"target\":\"rockchip-ipt\",\"repo\":\"openwrt-23.05\"},{\"target\":\"rockchip-nft\",\"repo\":\"openwrt-23.05\"}]}
+          elif [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "main" ]; then
+            matrix={\"include\":[{\"target\":\"rockchip-ipt\",\"repo\":\"main\"},{\"target\":\"rockchip-nft\",\"repo\":\"main\"}]}
           fi
           echo "Generated matrix: "$matrix""
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
@@ -81,7 +91,7 @@ jobs:
     needs: prepare
     strategy:
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
-    name: Build ${{github.event.inputs.MACH}} openwrt 23.05
+    name: Build ${{github.event.inputs.MACH}} openwrt ${{ github.event.inputs.REPO }}
     
     steps:
     - name: 检查
@@ -113,12 +123,16 @@ jobs:
         VERSION="$(echo "${{github.event.action}}" | grep -Eo " [0-9.]+" | sed -e 's/ //')" || true
         [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
         echo ${{matrix.target}}
-        source "${GITHUB_WORKSPACE}/env/common.txt"
+        source "${GITHUB_WORKSPACE}/env/common-rk3399.txt"
+        if [ "${{ matrix.repo }}" == "openwrt-23.05" ]; then
         source "${GITHUB_WORKSPACE}/env/openwrt-23.05.repo"
+        elif [ "${{ matrix.repo }}" == "main" ]; then
+        source "${GITHUB_WORKSPACE}/env/openwrt-main.repo"
+        fi
         echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
         echo "BURN_UBOOT_IMG_URL=${BURN_UBOOT_IMG_URL}" >> $GITHUB_ENV
         echo "AMLIMG_TOOL_URL=${AMLIMG_TOOL_URL}" >> $GITHUB_ENV
-        echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
+        echo "REPO_BRANCH=${{ matrix.repo }}" >> $GITHUB_ENV
         echo "DIY_SH=${DIY_SH}" >> $GITHUB_ENV
         echo "DIY_SH_AFB=${DIY_SH_AFB}" >> $GITHUB_ENV
         echo "DIY_SH_RFC=${DIY_SH_RFC}" >> $GITHUB_ENV
@@ -135,18 +149,18 @@ jobs:
 
     - name: 导入机器及安装包config
       run: |
-        if [ ${{matrix.target}} == 'meson-ipt' ]; then
+        if [ ${{matrix.target}} == 'rockchip-ipt' ]; then
                 mv -f machine-configs/single/${{github.event.inputs.MACH}}-ipt.config machine-configs/${{matrix.target}}.config
                 echo "----${{matrix.target}}-----IPT-Machine--------"
-        elif [ ${{matrix.target}} == 'meson-nft' ]; then
+        elif [ ${{matrix.target}} == 'rockchip-nft' ]; then
                 mv -f machine-configs/single/${{github.event.inputs.MACH}}-nft.config machine-configs/${{matrix.target}}.config
                 echo "----${{matrix.target}}-----NFT-Machine--------"
         fi
-        if [ ${{matrix.target}} == 'meson-ipt' ]; then
-                mv -f package-configs/single/${{github.event.inputs.MACH}}-ipt.config package-configs/meson-ipt-2305.config
+        if [ ${{matrix.target}} == 'rockchip-ipt' ]; then
+                mv -f package-configs/single/${{github.event.inputs.MACH}}-ipt.config package-configs/rockchip-ipt-2305.config
                 echo "----${{matrix.target}}-----IPT-Package-Config----"
-        elif [ ${{matrix.target}} == 'meson-nft' ]; then
-                mv -f package-configs/single/${{github.event.inputs.MACH}}-nft.config package-configs/meson-nft-2305.config
+        elif [ ${{matrix.target}} == 'rockchip-nft' ]; then
+                mv -f package-configs/single/${{github.event.inputs.MACH}}-nft.config package-configs/rockchip-nft-2305.config
                 echo "----${{matrix.target}}-----NFT-Package-Config----"
         fi
 
@@ -158,9 +172,9 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
-        git checkout v23.05.3
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
-        sed -i 's|src-git packages https://git.openwrt.org/feed/packages.git\^8e3a1824645f5e73ec44c897ac0755c53fb4a1f8|src-git packages https://git.openwrt.org/feed/packages.git;openwrt-23.05|g' feeds.conf.default
+        git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
+        $GITHUB_WORKSPACE/$DIY_SH rockpatch
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 增加磁盘空间
@@ -180,8 +194,11 @@ jobs:
       id: files
       run: |
         [ -d package ] && mv -f package/* openwrt/package
-        [ -d openwrt-2305/target ] && mv -f openwrt-2305/target/linux/meson515 openwrt/target/linux/meson
+        if [ "${{ matrix.repo }}" == "openwrt-23.05" ]; then
         [ -d openwrt-2305/mypatch-2305-${{matrix.target}} ] && mv -f openwrt-2305/mypatch-2305-${{matrix.target}} openwrt/mypatch
+        elif [ "${{ matrix.repo }}" == "main" ]; then
+        [ -d openwrt-main/mypatch-main-${{matrix.target}} ] && mv -f openwrt-main/mypatch-main-${{matrix.target}} openwrt/mypatch
+        fi
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
         cd ../
@@ -211,9 +228,15 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        [ -d lunatic7-revert ] && mv -f openwrt-2305/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
+        if [ "${{ matrix.repo }}" == "openwrt-23.05" ]; then
+        [ -d openwrt-2305/lunatic7-revert ] && mv -f openwrt-2305/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-2305/luci-patch-2305 ] && mv -f openwrt-2305/luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
-        [ -d openwrt-2305/feeds-package-patch-23053 ] && mv -f openwrt-2305/feeds-package-patch-23053 openwrt/feeds/packages/feeds-package-patch-2305
+        [ -d openwrt-2305/feeds-package-patch-2305 ] && mv -f openwrt-2305/feeds-package-patch-2305 openwrt/feeds/packages/feeds-package-patch-2305
+        elif [ "${{ matrix.repo }}" == "main" ]; then
+        [ -d openwrt-main/lunatic7-revert ] && mv -f openwrt-main/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
+        [ -d openwrt-main/luci-patch ] && mv -f openwrt-main/luci-patch openwrt/feeds/luci/luci-patch
+        [ -d openwrt-main/feeds-package-patch ] && mv -f openwrt-main/feeds-package-patch openwrt/feeds/packages/feeds-package-patch
+        fi
         [ -e files ] && mv files openwrt/files
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
@@ -242,11 +265,11 @@ jobs:
       working-directory: ./openwrt
       run: |
         awk '/${{matrix.target}}/ { print }' .config
-        echo "------------------------"
         awk '/${{github.event.inputs.MACH}}/ { print }' .config
-        awk '/meson/ { print }' .config
         echo "------------------------"
         awk '/docker/ { print }' .config
+        echo "------------------------"
+        awk '/DOCKER/ { print }' .config
         echo "------------------------"
         awk '/store/ { print }' .config
         echo "------------------------"
@@ -259,6 +282,14 @@ jobs:
         awk '/nft/ { print }' .config
         echo "------------------------"
         awk '/firewall/ { print }' .config
+        echo "------------------------"
+        awk '/fullcone/ { print }' .config
+        echo "------------------------"
+        awk '/syncthing/ { print }' .config
+        echo "------------------------"
+        awk '/shadowsocks-rust/ { print }' .config
+        echo "------------------------"
+        awk '/GCC_VERSION/ { print }' .config
         echo "------------------------"
         awk '/CONFIG_PACKAGE_kmod/ { print }' .config
 
@@ -295,11 +326,11 @@ jobs:
       continue-on-error: true
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}
+        name: ${{ env.VERSION }}_${{matrix.target}}_${{ matrix.repo }}
         path: |
           openwrt/bin/
 
-    - name:  打包ipk成zip文件
+    - name: 打包ipk成zip文件
       id: afb
       continue-on-error: true
       if: steps.compile.outputs.status == 'success' && !cancelled()
@@ -307,44 +338,19 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_SH_AFB
         echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: 整理文件 make burn
+    - name: 整理文件
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && steps.afb.outputs.status == 'success' && !cancelled()
       run: |
-        sudo apt update
-        sudo apt install img2simg
-        curl -L -o ./AmlImg $AMLIMG_TOOL_URL
-        chmod +x ./AmlImg
-        curl -L -o ./uboot.img $BURN_UBOOT_IMG_URL
-        ./AmlImg unpack ./uboot.img burn/
-        echo "::end-uboot-unpack::"
-        mkdir openwrt/bin/out
-        cp -u -f openwrt/bin/targets/*/*/*.gz openwrt/bin/out/
-        gunzip openwrt/bin/out/*.gz
-        diskimg=$(ls openwrt/bin/out/*.img)
-        loop=$(sudo losetup --find --show --partscan $diskimg)
-        sudo img2simg ${loop}p1 burn/boot.simg
-        sudo img2simg ${loop}p2 burn/rootfs.simg
-        sudo losetup -d $loop
-        echo "::end-unpackext4::"
-        cat <<EOF >>burn/commands.txt
-        PARTITION:boot:sparse:boot.simg
-        PARTITION:rootfs:sparse:rootfs.simg
-        EOF
-        prefix=$(ls openwrt/bin/out/*.img | sed 's/\.img$//')
-        burnimg=${prefix}.burn.img
-        ./AmlImg pack $burnimg burn/
-        gzip -9 openwrt/bin/out/*.burn.img
         mkdir firmware ipks
-        cp -u -f openwrt/bin/out/*.burn.img.gz firmware
-        [ ${{github.event.inputs.UPLOAD_RELEASE}} = true ] && cp -u -f openwrt/kernelipks.zip firmware
-        [ ${{github.event.inputs.UPLOAD_RELEASE}} = true ] && cp -u -f openwrt/ipks.zip firmware
         cp -u -f openwrt/kernelipks.zip ipks
         cp -u -f openwrt/ipks.zip ipks
-        mv -f openwrt/bin/targets/*/*/{*combined*,*ext4*,*sdk*,*imagebuilder*,*buildinfo*,*manifest*,*json*,*sha256sums*} ./firmware/ 2>/dev/null || true
-        [ $UPLOAD_SYSUPGRADE = true ] && mv -f openwrt/bin/targets/*/*/{*sysupgrade*} ./firmware/ 2>/dev/null || true
+        [ ${{github.event.inputs.UPLOAD_RELEASE}} = true ] && cp -u -f openwrt/kernelipks.zip firmware
+        [ ${{github.event.inputs.UPLOAD_RELEASE}} = true ] && cp -u -f openwrt/ipks.zip firmware
         cp openwrt/.config  ./firmware/${{matrix.target}}.config
         cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
+        mv -f openwrt/bin/targets/*/*/{*combined*,*ext4*,*sdk*,*imagebuilder*,*buildinfo*,*manifest*,*json*,*sha256sums*} ./firmware/ 2>/dev/null || true
+        [ $UPLOAD_SYSUPGRADE = true ] && mv -f openwrt/bin/targets/*/*/{*sysupgrade*} ./firmware/ 2>/dev/null || true
         cd firmware
         echo "v${{ env.date2 }}" > version.txt
         echo ${{matrix.target}} >> version.txt
@@ -357,7 +363,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_23.05
+        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}
         path: |
           firmware
 
@@ -366,7 +372,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_IPK_DIR == 'true' && steps.afb.outputs.status == 'success'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_23.05
+        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}
         path: |
           ipks
 
@@ -405,8 +411,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: "${{ env.FIRMWARE }}/*"
-        name: ${{ env.date }} ${{matrix.target}}-${{github.event.inputs.MACH}}-openwrt-2305
-        tag_name: ${{ env.date }}_${{matrix.target}}-${{github.event.inputs.MACH}}-openwrt-2305
+        name: ${{ env.date }} ${{matrix.target}}-${{github.event.inputs.MACH}}-${{ matrix.repo }}
+        tag_name: ${{ env.date }}_${{matrix.target}}-${{github.event.inputs.MACH}}-${{ matrix.repo }}
         body_path: release.txt
 
     - name: 删除工作流
@@ -419,7 +425,7 @@ jobs:
     - name: 删除旧版本
       uses: dev-drprasad/delete-older-releases@master
       continue-on-error: true
-      if: github.event.inputs.UPLOAD_RELEASE == 'true' && !cancelled()
+      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
         keep_latest: 24
         delete_tags: true

@@ -15,7 +15,7 @@ uci -q batch <<-EOF >/dev/null
 	set dropbear.@dropbear[0].Interface='lan'
 	set wireless.@wifi-iface[1].ssid=Lunatic_2.4G_$(cat /sys/class/ieee80211/phy0/macaddress | sed 's/.[0-9A-Fa-f]:.[0-9A-Fa-f]:.[0-9A-Fa-f]:\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\)/\1\2\3/g' | tr :[a-z] :[A-Z])
 	set wireless.@wifi-iface[0].ssid=Lunatic_5G_$(cat /sys/class/ieee80211/phy1/macaddress | sed 's/.[0-9A-Fa-f]:.[0-9A-Fa-f]:.[0-9A-Fa-f]:\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\)/\1\2\3/g' | tr :[a-z] :[A-Z])
-	set network.lan.ipaddr=192.168.18.1
+	set network.lan.ipaddr=192.168.10.1
 	set wireless.radio0.legacy_rates='0'
 	set wireless.radio1.legacy_rates='0'
 	set wireless.@wifi-iface[0].disassoc_low_ack='1'
