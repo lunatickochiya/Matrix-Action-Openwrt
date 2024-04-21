@@ -357,7 +357,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_23.05-${{github.event.inputs.MACH}}
+        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_23.05-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}
         path: |
           firmware
 
@@ -394,6 +394,7 @@ jobs:
       run: |
         touch release.txt
         $GITHUB_WORKSPACE/gen-sha256sum.sh
+        echo "# 当前固件IP地址："${{ github.event.inputs.SETIP }}" " >> release.txt
         [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
         [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
