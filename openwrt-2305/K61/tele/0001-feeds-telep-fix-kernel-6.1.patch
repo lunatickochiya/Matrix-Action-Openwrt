@@ -1,0 +1,1101 @@
+From 89ad5f8ce6c5e023b1edbdb9e354032d4154221d Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Tue, 23 Apr 2024 20:47:51 +0800
+Subject: [PATCH] adhdi-linux:fix kernel 6.1
+
+---
+ libs/dahdi-linux/Makefile                     |  11 +-
+ .../patches/003-fix-oslec-build.patch         |   2 +-
+ .../100-add-support-for-hfc-s-pci.patch       |   6 +-
+ libs/dahdi-linux/patches/120-pci-header.patch |  13 -
+ .../130-DAHLIN-371-pld-linux-math64.patch     |   4 +-
+ .../140-Use-proc_ops-on-kernels-5.6.patch     | 478 ------------------
+ ...or-32-bit-userspace-with-64-bit-kern.patch |  89 ----
+ ...r-HAVE_UNLOCKED_IOCTL-for-kernel-5.9.patch | 148 ------
+ ...0-dahdi-use-fallthrough-where-needed.patch |  36 +-
+ ...-fix-always-true-compilation-warning.patch |   4 +-
+ ...x-missing-break-in-t13x_set_linemode.patch |  23 -
+ ...204-dahdi-skip-checking-on-releasing.patch |   4 +-
+ ...an_mg2-rename-ABS-define-to-PARA_ABS.patch |  42 ++
+ 13 files changed, 78 insertions(+), 782 deletions(-)
+ delete mode 100644 libs/dahdi-linux/patches/120-pci-header.patch
+ delete mode 100644 libs/dahdi-linux/patches/140-Use-proc_ops-on-kernels-5.6.patch
+ delete mode 100644 libs/dahdi-linux/patches/141-Remove-support-for-32-bit-userspace-with-64-bit-kern.patch
+ delete mode 100644 libs/dahdi-linux/patches/142-Remove-checks-for-HAVE_UNLOCKED_IOCTL-for-kernel-5.9.patch
+ delete mode 100644 libs/dahdi-linux/patches/203-wcte13xp-fix-missing-break-in-t13x_set_linemode.patch
+ create mode 100644 libs/dahdi-linux/patches/206-dahdi_echocan_mg2-rename-ABS-define-to-PARA_ABS.patch
+
+diff --git a/libs/dahdi-linux/Makefile b/libs/dahdi-linux/Makefile
+index d8956da..9609c1b 100644
+--- a/libs/dahdi-linux/Makefile
++++ b/libs/dahdi-linux/Makefile
+@@ -9,12 +9,13 @@ include $(TOPDIR)/rules.mk
+ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=dahdi-linux
+-PKG_VERSION:=3.1.0
+-PKG_RELEASE:=5
++PKG_RELEASE:=2
+ 
+-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+-PKG_SOURCE_URL:=https://downloads.asterisk.org/pub/telephony/dahdi-linux/releases
+-PKG_HASH:=db5b758437d066a7edad34b54313f08a4ccdde28373492986b72c798e8561b4d
++PKG_SOURCE_PROTO:=git
++PKG_SOURCE_URL:=https://github.com/asterisk/dahdi-linux.git
++PKG_SOURCE_DATE=2023-09-21
++PKG_SOURCE_VERSION:=1bb9088f2baff8c4e3fec536044cc48072cf9905
++PKG_MIRROR_HASH:=b32eb405d64c981f64922840f616cf362636ccc93506986c0b92bd4dcca5ab30
+ 
+ PKG_LICENSE:=GPL-2.0
+ PKG_LICENSE_FILES:=LICENSE
+diff --git a/libs/dahdi-linux/patches/003-fix-oslec-build.patch b/libs/dahdi-linux/patches/003-fix-oslec-build.patch
+index 49f0769..4b2b2a0 100644
+--- a/libs/dahdi-linux/patches/003-fix-oslec-build.patch
++++ b/libs/dahdi-linux/patches/003-fix-oslec-build.patch
+@@ -1,6 +1,6 @@
+ --- a/drivers/dahdi/Kbuild
+ +++ b/drivers/dahdi/Kbuild
+-@@ -54,9 +54,8 @@ obj-m += $(DAHDI_MODULES_EXTRA)
++@@ -64,9 +64,8 @@ obj-m += $(DAHDI_MODULES_EXTRA)
+  # If you want to build OSLEC, include the code in the standard location:
+  # drivers/staging/echo . The DAHDI OSLEC echo canceller will be built as
+  # well:
+diff --git a/libs/dahdi-linux/patches/100-add-support-for-hfc-s-pci.patch b/libs/dahdi-linux/patches/100-add-support-for-hfc-s-pci.patch
+index 4e40f94..7a8d945 100644
+--- a/libs/dahdi-linux/patches/100-add-support-for-hfc-s-pci.patch
++++ b/libs/dahdi-linux/patches/100-add-support-for-hfc-s-pci.patch
+@@ -6,11 +6,11 @@
+  obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_WCTE13XP)		+= wcte13xp.o
+ +obj-$(DAHDI_BUILD_ALL)$(CONFIG_DAHDI_HFCS)		+= hfcs/
+  
+- wcte13xp-objs := wcte13xp-base.o wcxb_spi.o wcxb.o wcxb_flash.o
+- CFLAGS_wcte13xp-base.o += -I$(src)/oct612x -I$(src)/oct612x/include -I$(src)/oct612x/octdeviceapi -I$(src)/oct612x/octdeviceapi/oct6100api
++ ifndef HOTPLUG_FIRMWARE
++ ifneq (,$(filter y m,$(CONFIG_FW_LOADER)))
+ --- a/drivers/dahdi/Kconfig
+ +++ b/drivers/dahdi/Kconfig
+-@@ -223,4 +223,14 @@ config DAHDI_DYNAMIC_LOC
++@@ -235,4 +235,14 @@ config DAHDI_DYNAMIC_LOC
+  	  If unsure, say Y.
+  
+  
+diff --git a/libs/dahdi-linux/patches/120-pci-header.patch b/libs/dahdi-linux/patches/120-pci-header.patch
+deleted file mode 100644
+index 9e2245c..0000000
+--- a/libs/dahdi-linux/patches/120-pci-header.patch
++++ /dev/null
+@@ -1,13 +0,0 @@
+---- a/include/dahdi/kernel.h
+-+++ b/include/dahdi/kernel.h
+-@@ -59,8 +59,10 @@
+- #include <linux/poll.h>
+- 
+- #ifdef CONFIG_PCI
+-+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,4,0)
+- #include <linux/pci-aspm.h>
+- #endif
+-+#endif
+- 
+- #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+- #define HAVE_NET_DEVICE_OPS
+diff --git a/libs/dahdi-linux/patches/130-DAHLIN-371-pld-linux-math64.patch b/libs/dahdi-linux/patches/130-DAHLIN-371-pld-linux-math64.patch
+index 1d4f5b1..87351c5 100644
+--- a/libs/dahdi-linux/patches/130-DAHLIN-371-pld-linux-math64.patch
++++ b/libs/dahdi-linux/patches/130-DAHLIN-371-pld-linux-math64.patch
+@@ -8,7 +8,7 @@
+  #include <linux/proc_fs.h>
+  #include <linux/seq_file.h>
+  #include <linux/slab.h>
+-@@ -1754,11 +1755,13 @@ out:
++@@ -1768,11 +1769,13 @@ out:
+  
+  static void xbus_fill_proc_queue(struct seq_file *sfile, struct xframe_queue *q)
+  {
+@@ -127,7 +127,7 @@
+  #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+  #include <asm/uaccess.h>
+  #else
+-@@ -886,7 +887,7 @@ static void xpp_send_callback(struct urb
++@@ -891,7 +892,7 @@ static void xpp_send_callback(struct urb
+  		usec = 0; /* System clock jumped */
+  	if (usec > xusb->max_tx_delay)
+  		xusb->max_tx_delay = usec;
+diff --git a/libs/dahdi-linux/patches/140-Use-proc_ops-on-kernels-5.6.patch b/libs/dahdi-linux/patches/140-Use-proc_ops-on-kernels-5.6.patch
+deleted file mode 100644
+index 33a35cf..0000000
+--- a/libs/dahdi-linux/patches/140-Use-proc_ops-on-kernels-5.6.patch
++++ /dev/null
+@@ -1,478 +0,0 @@
+-From 34b9c77c9ab2794d4e912461e4c1080c4b1f6184 Mon Sep 17 00:00:00 2001
+-From: Shaun Ruffell <sruffell@sruffell.net>
+-Date: Sun, 23 Feb 2020 19:39:24 -0600
+-Subject: [PATCH 05/12] Use proc_ops on kernels >= 5.6
+-
+-In commit (d56c0d45f0e27 "proc: decouple proc from VFS with "struct proc_ops"")
+-[1], proc_create_data no longer takes a file_operations structure, but instead
+-takes a struct proc_ops in order to conserve memory in the kernel.
+-
+-This change is necessary for DAHDI to work with kernels >= 5.6
+-
+-[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d56c0d45f0e27f814e87a1676b6bd
+-
+-Signed-off-by: Shaun Ruffell <sruffell@sruffell.net>
+----
+- drivers/dahdi/dahdi-base.c          |  9 +++++
+- drivers/dahdi/dahdi_dynamic_ethmf.c | 18 +++++++--
+- drivers/dahdi/xpp/card_bri.c        | 23 ++++++++---
+- drivers/dahdi/xpp/card_fxo.c        | 25 +++++++++---
+- drivers/dahdi/xpp/card_fxs.c        | 35 +++++++++++++---
+- drivers/dahdi/xpp/xbus-core.c       | 62 ++++++++++++++++++++++++-----
+- drivers/dahdi/xpp/xpp_dahdi.c       | 23 ++++++++---
+- drivers/dahdi/xpp/xpp_usb.c         | 26 +++++++++---
+- include/dahdi/kernel.h              | 11 +++--
+- 9 files changed, 187 insertions(+), 45 deletions(-)
+-
+---- a/drivers/dahdi/dahdi-base.c
+-+++ b/drivers/dahdi/dahdi-base.c
+-@@ -1015,6 +1015,14 @@ static int dahdi_proc_open(struct inode
+- 	return single_open(file, dahdi_seq_show, PDE_DATA(inode));
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops dahdi_proc_ops = {
+-+	.proc_open		= dahdi_proc_open,
+-+	.proc_read		= seq_read,
+-+	.proc_lseek		= seq_lseek,
+-+	.proc_release		= single_release,
+-+};
+-+#else
+- static const struct file_operations dahdi_proc_ops = {
+- 	.owner		= THIS_MODULE,
+- 	.open		= dahdi_proc_open,
+-@@ -1022,6 +1030,7 @@ static const struct file_operations dahd
+- 	.llseek		= seq_lseek,
+- 	.release	= single_release,
+- };
+-+#endif /* DAHDI_HAVE_PROC_OPS */
+- 
+- #endif
+- 
+---- a/drivers/dahdi/dahdi_dynamic_ethmf.c
+-+++ b/drivers/dahdi/dahdi_dynamic_ethmf.c
+-@@ -733,12 +733,22 @@ static int ztdethmf_proc_open(struct ino
+- 	return single_open(file, ztdethmf_proc_show, NULL);
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops ztdethmf_proc_fops = {
+-+	.proc_open	= ztdethmf_proc_open,
+-+	.proc_read	= seq_read,
+-+	.proc_lseek	= seq_lseek,
+-+	.proc_release	= seq_release,
+-+};
+-+#else
+- static const struct file_operations ztdethmf_proc_fops = {
+--	.open           = ztdethmf_proc_open,
+--	.read           = seq_read,
+--	.llseek         = seq_lseek,
+--	.release        = seq_release,
+-+	.owner		= THIS_MODULE,
+-+	.open		= ztdethmf_proc_open,
+-+	.read		= seq_read,
+-+	.llseek		= seq_lseek,
+-+	.release	= seq_release,
+- };
+-+#endif /* DAHDI_HAVE_PROC_OPS */
+- #endif
+- 
+- static int __init ztdethmf_init(void)
+---- a/drivers/dahdi/xpp/card_bri.c
+-+++ b/drivers/dahdi/xpp/card_bri.c
+-@@ -153,8 +153,12 @@ static int write_state_register(xpd_t *x
+- static bool bri_packet_is_valid(xpacket_t *pack);
+- static void bri_packet_dump(const char *msg, xpacket_t *pack);
+- #ifdef	CONFIG_PROC_FS
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops proc_bri_info_ops;
+-+#else
+- static const struct file_operations proc_bri_info_ops;
+- #endif
+-+#endif
+- static int bri_spanconfig(struct file *file, struct dahdi_span *span,
+- 			  struct dahdi_lineconfig *lc);
+- static int bri_chanconfig(struct file *file, struct dahdi_chan *chan,
+-@@ -1740,13 +1744,22 @@ static int proc_bri_info_open(struct ino
+- 	return single_open(file, proc_bri_info_show, PDE_DATA(inode));
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops proc_bri_info_ops = {
+-+	.proc_open		= proc_bri_info_open,
+-+	.proc_read		= seq_read,
+-+	.proc_lseek		= seq_lseek,
+-+	.proc_release		= single_release,
+-+};
+-+#else
+- static const struct file_operations proc_bri_info_ops = {
+--	.owner		= THIS_MODULE,
+--	.open		= proc_bri_info_open,
+--	.read		= seq_read,
+--	.llseek		= seq_lseek,
+--	.release	= single_release,
+-+	.owner			= THIS_MODULE,
+-+	.open			= proc_bri_info_open,
+-+	.read			= seq_read,
+-+	.llseek			= seq_lseek,
+-+	.release		= single_release,
+- };
+-+#endif /* DAHDI_HAVE_PROC_OPS */
+- #endif
+- 
+- static int bri_xpd_probe(struct device *dev)
+---- a/drivers/dahdi/xpp/card_fxo.c
+-+++ b/drivers/dahdi/xpp/card_fxo.c
+-@@ -107,9 +107,13 @@ enum fxo_leds {
+- static bool fxo_packet_is_valid(xpacket_t *pack);
+- static void fxo_packet_dump(const char *msg, xpacket_t *pack);
+- #ifdef CONFIG_PROC_FS
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops proc_fxo_info_ops;
+-+#else
+- static const struct file_operations proc_fxo_info_ops;
+-+#endif
+- #ifdef	WITH_METERING
+--static const struct file_operations proc_xpd_metering_ops;
+-+static const struct proc_ops proc_xpd_metering_ops;
+- #endif
+- #endif
+- static void dahdi_report_battery(xpd_t *xpd, lineno_t chan);
+-@@ -1484,13 +1488,22 @@ static int proc_fxo_info_open(struct ino
+- 	return single_open(file, proc_fxo_info_show, PDE_DATA(inode));
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops proc_fxo_info_ops = {
+-+	.proc_open		= proc_fxo_info_open,
+-+	.proc_read		= seq_read,
+-+	.proc_lseek		= seq_lseek,
+-+	.proc_release		= single_release,
+-+};
+-+#else
+- static const struct file_operations proc_fxo_info_ops = {
+--	.owner		= THIS_MODULE,
+--	.open		= proc_fxo_info_open,
+--	.read		= seq_read,
+--	.llseek		= seq_lseek,
+--	.release	= single_release,
+-+	.owner			= THIS_MODULE,
+-+	.open			= proc_fxo_info_open,
+-+	.read			= seq_read,
+-+	.llseek			= seq_lseek,
+-+	.release		= single_release,
+- };
+-+#endif
+- 
+- #ifdef	WITH_METERING
+- static int proc_xpd_metering_show(struct seq_file *sfile, void *not_used)
+---- a/drivers/dahdi/xpp/card_fxs.c
+-+++ b/drivers/dahdi/xpp/card_fxs.c
+-@@ -160,11 +160,19 @@ enum neon_state {
+- static bool fxs_packet_is_valid(xpacket_t *pack);
+- static void fxs_packet_dump(const char *msg, xpacket_t *pack);
+- #ifdef CONFIG_PROC_FS
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops proc_fxs_info_ops;
+-+#else
+- static const struct file_operations proc_fxs_info_ops;
+-+#endif
+- #ifdef	WITH_METERING
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops proc_xpd_metering_ops;
+-+#else
+- static const struct file_operations proc_xpd_metering_ops;
+- #endif
+- #endif
+-+#endif
+- static void start_stop_vm_led(xbus_t *xbus, xpd_t *xpd, lineno_t pos);
+- 
+- #define	PROC_FXS_INFO_FNAME	"fxs_info"
+-@@ -2115,13 +2123,22 @@ static int proc_fxs_info_open(struct ino
+- 	return single_open(file, proc_fxs_info_show, PDE_DATA(inode));
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops proc_fxs_info_ops = {
+-+	.proc_open		= proc_fxs_info_open,
+-+	.proc_read		= seq_read,
+-+	.proc_lseek		= seq_lseek,
+-+	.proc_release		= single_release,
+-+};
+-+#else
+- static const struct file_operations proc_fxs_info_ops = {
+--	.owner		= THIS_MODULE,
+--	.open		= proc_fxs_info_open,
+--	.read		= seq_read,
+--	.llseek		= seq_lseek,
+--	.release	= single_release,
+-+	.owner			= THIS_MODULE,
+-+	.open			= proc_fxs_info_open,
+-+	.read			= seq_read,
+-+	.llseek			= seq_lseek,
+-+	.release		= single_release,
+- };
+-+#endif
+- 
+- #ifdef	WITH_METERING
+- static ssize_t proc_xpd_metering_write(struct file *file,
+-@@ -2165,12 +2182,20 @@ static int proc_xpd_metering_open(struct
+- 	file->private_data = PDE_DATA(inode);
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops proc_xpd_metering_ops = {
+-+	.proc_open	= proc_xpd_metering_open,
+-+	.proc_write	= proc_xpd_metering_write,
+-+	.proc_release	= single_release,
+-+};
+-+#else
+- static const struct file_operations proc_xpd_metering_ops = {
+- 	.owner		= THIS_MODULE,
+- 	.open		= proc_xpd_metering_open,
+- 	.write		= proc_xpd_metering_write,
+- 	.release	= single_release,
+- };
+-+#endif /* DAHDI_HAVE_PROC_OPS */
+- #endif
+- #endif
+- 
+---- a/drivers/dahdi/xpp/xbus-core.c
+-+++ b/drivers/dahdi/xpp/xbus-core.c
+-@@ -51,8 +51,15 @@ static const char rcsid[] = "$Id$";
+- #ifdef	PROTOCOL_DEBUG
+- #ifdef	CONFIG_PROC_FS
+- #define	PROC_XBUS_COMMAND	"command"
+-+
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops proc_xbus_command_ops;
+-+#else
+- static const struct file_operations proc_xbus_command_ops;
+-+#endif /* DAHDI_HAVE_PROC_OPS */
+-+
+- #endif
+-+
+- #endif
+- 
+- /* Command line parameters */
+-@@ -66,8 +73,15 @@ static DEF_PARM_BOOL(dahdi_autoreg, 0, 0
+- 		     "Register devices automatically (1) or not (0). UNUSED.");
+- 
+- #ifdef	CONFIG_PROC_FS
+-+
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops xbus_read_proc_ops;
+-+#else
+- static const struct file_operations xbus_read_proc_ops;
+--#endif
+-+#endif /* DAHDI_HAVE_PROC_OPS */
+-+
+-+#endif /* CONFIG_PROC_FS */
+-+
+- static void transport_init(xbus_t *xbus, struct xbus_ops *ops,
+- 			   ushort max_send_size,
+- 			   struct device *transport_device, void *priv);
+-@@ -1831,13 +1845,22 @@ static int xbus_read_proc_open(struct in
+- 	return single_open(file, xbus_proc_show, PDE_DATA(inode));
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops xbus_read_proc_ops = {
+-+	.proc_open		= xbus_read_proc_open,
+-+	.proc_read		= seq_read,
+-+	.proc_lseek		= seq_lseek,
+-+	.proc_release		= single_release,
+-+};
+-+#else
+- static const struct file_operations xbus_read_proc_ops = {
+--	.owner		= THIS_MODULE,
+--	.open		= xbus_read_proc_open,
+--	.read		= seq_read,
+--	.llseek		= seq_lseek,
+--	.release	= single_release,
+-+	.owner			= THIS_MODULE,
+-+	.open			= xbus_read_proc_open,
+-+	.read			= seq_read,
+-+	.llseek			= seq_lseek,
+-+	.release		= single_release,
+- };
+-+#endif /* DAHDI_HAVE_PROC_OPS */
+- 
+- #ifdef	PROTOCOL_DEBUG
+- static ssize_t proc_xbus_command_write(struct file *file,
+-@@ -1930,11 +1953,19 @@ static int proc_xbus_command_open(struct
+- 	return 0;
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops proc_xbus_command_ops = {
+-+	.proc_open		= proc_xbus_command_open,
+-+	.proc_write		= proc_xbus_command_write,
+-+};
+-+#else
+- static const struct file_operations proc_xbus_command_ops = {
+- 	.owner		= THIS_MODULE,
+- 	.open		= proc_xbus_command_open,
+- 	.write		= proc_xbus_command_write,
+- };
+-+#endif /* DAHDI_HAVE_PROC_OPS */
+-+
+- #endif
+- 
+- static int xpp_proc_read_show(struct seq_file *sfile, void *data)
+-@@ -1964,13 +1995,22 @@ static int xpp_proc_read_open(struct ino
+- 	return single_open(file, xpp_proc_read_show, PDE_DATA(inode));
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops xpp_proc_read_ops = {
+-+	.proc_open		= xpp_proc_read_open,
+-+	.proc_read		= seq_read,
+-+	.proc_lseek		= seq_lseek,
+-+	.proc_release		= single_release,
+-+};
+-+#else
+- static const struct file_operations xpp_proc_read_ops = {
+--	.owner		= THIS_MODULE,
+--	.open		= xpp_proc_read_open,
+--	.read		= seq_read,
+--	.llseek		= seq_lseek,
+--	.release	= single_release,
+-+	.owner			= THIS_MODULE,
+-+	.open			= xpp_proc_read_open,
+-+	.read			= seq_read,
+-+	.llseek			= seq_lseek,
+-+	.release		= single_release,
+- };
+-+#endif /* DAHDI_HAVE_PROC_OPS */
+- 
+- #endif
+- 
+---- a/drivers/dahdi/xpp/xpp_dahdi.c
+-+++ b/drivers/dahdi/xpp/xpp_dahdi.c
+-@@ -103,8 +103,12 @@ int total_registered_spans(void)
+- }
+- 
+- #ifdef	CONFIG_PROC_FS
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops xpd_read_proc_ops;
+-+#else
+- static const struct file_operations xpd_read_proc_ops;
+- #endif
+-+#endif
+- 
+- /*------------------------- XPD Management -------------------------*/
+- 
+-@@ -392,13 +396,22 @@ static int xpd_read_proc_open(struct ino
+- 	return single_open(file, xpd_read_proc_show, PDE_DATA(inode));
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops xpd_read_proc_ops = {
+-+	.proc_open		= xpd_read_proc_open,
+-+	.proc_read		= seq_read,
+-+	.proc_lseek		= seq_lseek,
+-+	.proc_release		= single_release,
+-+};
+-+#else
+- static const struct file_operations xpd_read_proc_ops = {
+--	.owner		= THIS_MODULE,
+--	.open		= xpd_read_proc_open,
+--	.read		= seq_read,
+--	.llseek		= seq_lseek,
+--	.release	= single_release,
+-+	.owner			= THIS_MODULE,
+-+	.open			= xpd_read_proc_open,
+-+	.read			= seq_read,
+-+	.llseek			= seq_lseek,
+-+	.release		= single_release,
+- };
+-+#endif
+- 
+- #endif
+- 
+---- a/drivers/dahdi/xpp/xpp_usb.c
+-+++ b/drivers/dahdi/xpp/xpp_usb.c
+-@@ -232,9 +232,14 @@ static void xpp_receive_callback(struct
+- static int xusb_probe(struct usb_interface *interface,
+- 		      const struct usb_device_id *id);
+- static void xusb_disconnect(struct usb_interface *interface);
+--#ifdef	CONFIG_PROC_FS
+-+
+-+#ifdef CONFIG_PROC_FS
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops xusb_read_proc_ops;
+-+#else
+- static const struct file_operations xusb_read_proc_ops;
+- #endif
+-+#endif
+- 
+- /*------------------------------------------------------------------*/
+- 
+-@@ -1113,13 +1118,22 @@ static int xusb_read_proc_open(struct in
+- 	return single_open(file, xusb_read_proc_show, PDE_DATA(inode));
+- }
+- 
+-+#ifdef DAHDI_HAVE_PROC_OPS
+-+static const struct proc_ops xusb_read_proc_ops = {
+-+	.proc_open		= xusb_read_proc_open,
+-+	.proc_read		= seq_read,
+-+	.proc_lseek		= seq_lseek,
+-+	.proc_release		= single_release,
+-+};
+-+#else
+- static const struct file_operations xusb_read_proc_ops = {
+--	.owner		= THIS_MODULE,
+--	.open		= xusb_read_proc_open,
+--	.read		= seq_read,
+--	.llseek		= seq_lseek,
+--	.release	= single_release,
+-+	.owner			= THIS_MODULE,
+-+	.open			= xusb_read_proc_open,
+-+	.read			= seq_read,
+-+	.llseek			= seq_lseek,
+-+	.release		= single_release,
+- };
+-+#endif
+- 
+- 
+- #endif
+---- a/include/dahdi/kernel.h
+-+++ b/include/dahdi/kernel.h
+-@@ -68,6 +68,8 @@
+- #define HAVE_NET_DEVICE_OPS
+- #endif
+- 
+-+#define DAHDI_HAVE_PROC_OPS
+-+
+- /* __dev* were removed in 3.8. They still have effect in 2.6.18. */
+- #ifndef __devinit
+- #  define __devinit
+-@@ -1375,6 +1377,10 @@ static inline short dahdi_txtone_nextsam
+- /*! Maximum audio mask */
+- #define DAHDI_FORMAT_AUDIO_MASK	((1 << 16) - 1)
+- 
+-+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 6, 0)
+-+
+-+#undef DAHDI_HAVE_PROC_OPS
+-+
+- #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
+- 
+- #ifndef TIMER_DATA_TYPE
+-@@ -1485,14 +1491,13 @@ static inline void *PDE_DATA(const struc
+- #endif /* 4.10.0 */
+- #endif /* 4.11.0 */
+- #endif /* 4.13.0 */
+--#else /* >= 4.15.0 */
+-+#endif /* 4.15.0 */
+-+#endif /* 5.6 */
+- 
+- #ifndef TIMER_DATA_TYPE
+- #define TIMER_DATA_TYPE struct timer_list *
+- #endif
+- 
+--#endif /* 4.15.0 */
+--
+- #ifndef dahdi_ktime_equal
+- static inline int dahdi_ktime_equal(const ktime_t cmp1, const ktime_t cmp2)
+- {
+diff --git a/libs/dahdi-linux/patches/141-Remove-support-for-32-bit-userspace-with-64-bit-kern.patch b/libs/dahdi-linux/patches/141-Remove-support-for-32-bit-userspace-with-64-bit-kern.patch
+deleted file mode 100644
+index 21dbd24..0000000
+--- a/libs/dahdi-linux/patches/141-Remove-support-for-32-bit-userspace-with-64-bit-kern.patch
++++ /dev/null
+@@ -1,89 +0,0 @@
+-From 4df746fe3ffd6678f36b16c9b0750fa552da92e4 Mon Sep 17 00:00:00 2001
+-From: Shaun Ruffell <sruffell@sruffell.net>
+-Date: Mon, 16 Nov 2020 22:01:21 -0600
+-Subject: [PATCH 09/12] Remove support for 32-bit userspace with 64-bit kernel
+-
+-I am not aware of anyone who tests in this configuration, and I'm not
+-sure if it currently works. I'll remove any support for the time being
+-and can add it back in if someone comes forward needing support for it.
+-
+-Signed-off-by: Shaun Ruffell <sruffell@sruffell.net>
+----
+- drivers/dahdi/dahdi-base.c | 34 ----------------------------------
+- 1 file changed, 34 deletions(-)
+-
+---- a/drivers/dahdi/dahdi-base.c
+-+++ b/drivers/dahdi/dahdi-base.c
+-@@ -7019,17 +7019,6 @@ static int dahdi_ioctl(struct inode *ino
+- }
+- #endif
+- 
+--#ifdef HAVE_COMPAT_IOCTL
+--static long dahdi_ioctl_compat(struct file *file, unsigned int cmd,
+--		unsigned long data)
+--{
+--	if (cmd == DAHDI_SFCONFIG)
+--		return -ENOTTY; /* Not supported yet */
+--
+--	return dahdi_unlocked_ioctl(file, cmd, data);
+--}
+--#endif
+--
+- /**
+-  * _get_next_channo - Return the next taken channel number from the span list.
+-  * @span:	The span with which to start the search.
+-@@ -10285,9 +10274,6 @@ static const struct file_operations dahd
+- 	.release = dahdi_release,
+- #ifdef HAVE_UNLOCKED_IOCTL
+- 	.unlocked_ioctl  = dahdi_unlocked_ioctl,
+--#ifdef HAVE_COMPAT_IOCTL
+--	.compat_ioctl = dahdi_ioctl_compat,
+--#endif
+- #else
+- 	.ioctl   = dahdi_ioctl,
+- #endif
+-@@ -10301,9 +10287,6 @@ static const struct file_operations dahd
+- 	.release = dahdi_timer_release,
+- #ifdef HAVE_UNLOCKED_IOCTL
+- 	.unlocked_ioctl  = dahdi_timer_unlocked_ioctl,
+--#ifdef HAVE_COMPAT_IOCTL
+--	.compat_ioctl = dahdi_timer_unlocked_ioctl,
+--#endif
+- #else
+- 	.ioctl   = dahdi_timer_ioctl,
+- #endif
+-@@ -10377,24 +10360,10 @@ static int nodev_ioctl(struct inode *ino
+- }
+- #endif
+- 
+--#ifdef HAVE_COMPAT_IOCTL
+--static long nodev_ioctl_compat(struct file *file, unsigned int cmd,
+--		unsigned long data)
+--{
+--	if (cmd == DAHDI_SFCONFIG)
+--		return -ENOTTY; /* Not supported yet */
+--
+--	return nodev_unlocked_ioctl(file, cmd, data);
+--}
+--#endif
+--
+- static const struct file_operations nodev_fops = {
+- 	.owner   = THIS_MODULE,
+- #ifdef HAVE_UNLOCKED_IOCTL
+- 	.unlocked_ioctl  = nodev_unlocked_ioctl,
+--#ifdef HAVE_COMPAT_IOCTL
+--	.compat_ioctl = nodev_ioctl_compat,
+--#endif
+- #else
+- 	.ioctl   = nodev_ioctl,
+- #endif
+-@@ -10409,9 +10378,6 @@ static const struct file_operations dahd
+- 	.release = dahdi_release,
+- #ifdef HAVE_UNLOCKED_IOCTL
+- 	.unlocked_ioctl  = dahdi_unlocked_ioctl,
+--#ifdef HAVE_COMPAT_IOCTL
+--	.compat_ioctl = dahdi_ioctl_compat,
+--#endif
+- #else
+- 	.ioctl   = dahdi_ioctl,
+- #endif
+diff --git a/libs/dahdi-linux/patches/142-Remove-checks-for-HAVE_UNLOCKED_IOCTL-for-kernel-5.9.patch b/libs/dahdi-linux/patches/142-Remove-checks-for-HAVE_UNLOCKED_IOCTL-for-kernel-5.9.patch
+deleted file mode 100644
+index c5d66d6..0000000
+--- a/libs/dahdi-linux/patches/142-Remove-checks-for-HAVE_UNLOCKED_IOCTL-for-kernel-5.9.patch
++++ /dev/null
+@@ -1,148 +0,0 @@
+-From 6d4c748e0470efac90e7dc4538ff3c5da51f0169 Mon Sep 17 00:00:00 2001
+-From: Shaun Ruffell <sruffell@sruffell.net>
+-Date: Mon, 16 Nov 2020 22:01:22 -0600
+-Subject: [PATCH 10/12] Remove checks for HAVE_UNLOCKED_IOCTL for kernel >= 5.9
+-
+-In upstream commit (4e24566a134ea1674 "fs: remove the HAVE_UNLOCKED_IOCTL and
+-HAVE_COMPAT_IOCTL defines") [1] the kernel removed these defines.
+-
+-All supported kernels include support for the unlocked_ioctl now, so
+-DAHDI can also remove these checks.
+-
+-[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4e24566a134ea167441a1ffa3d439a27c
+-
+-Signed-off-by: Shaun Ruffell <sruffell@sruffell.net>
+----
+- drivers/dahdi/dahdi-base.c      | 44 ---------------------------------
+- drivers/dahdi/dahdi_transcode.c | 11 ---------
+- 2 files changed, 55 deletions(-)
+-
+---- a/drivers/dahdi/dahdi-base.c
+-+++ b/drivers/dahdi/dahdi-base.c
+-@@ -53,10 +53,6 @@
+- #include <linux/ktime.h>
+- #include <linux/slab.h>
+- 
+--#if defined(HAVE_UNLOCKED_IOCTL) && defined(CONFIG_BKL)
+--#include <linux/smp_lock.h>
+--#endif
+--
+- #include <linux/ppp_defs.h>
+- 
+- #include <asm/atomic.h>
+-@@ -4069,14 +4065,6 @@ dahdi_timer_unlocked_ioctl(struct file *
+- 	return 0;
+- }
+- 
+--#ifndef HAVE_UNLOCKED_IOCTL
+--static int dahdi_timer_ioctl(struct inode *inode, struct file *file,
+--		unsigned int cmd, unsigned long data)
+--{
+--	return dahdi_timer_unlocked_ioctl(file, cmd, data);
+--}
+--#endif
+--
+- static int dahdi_ioctl_getgains(struct file *file, unsigned long data)
+- {
+- 	int res = 0;
+-@@ -7011,14 +6999,6 @@ exit:
+- 	return ret;
+- }
+- 
+--#ifndef HAVE_UNLOCKED_IOCTL
+--static int dahdi_ioctl(struct inode *inode, struct file *file,
+--		unsigned int cmd, unsigned long data)
+--{
+--	return dahdi_unlocked_ioctl(file, cmd, data);
+--}
+--#endif
+--
+- /**
+-  * _get_next_channo - Return the next taken channel number from the span list.
+-  * @span:	The span with which to start the search.
+-@@ -10272,11 +10252,7 @@ static const struct file_operations dahd
+- 	.owner   = THIS_MODULE,
+- 	.open    = dahdi_open,
+- 	.release = dahdi_release,
+--#ifdef HAVE_UNLOCKED_IOCTL
+- 	.unlocked_ioctl  = dahdi_unlocked_ioctl,
+--#else
+--	.ioctl   = dahdi_ioctl,
+--#endif
+- 	.poll    = dahdi_poll,
+- 	.read    = dahdi_no_read,
+- 	.write   = dahdi_no_write,
+-@@ -10285,11 +10261,7 @@ static const struct file_operations dahd
+- static const struct file_operations dahdi_timer_fops = {
+- 	.owner   = THIS_MODULE,
+- 	.release = dahdi_timer_release,
+--#ifdef HAVE_UNLOCKED_IOCTL
+- 	.unlocked_ioctl  = dahdi_timer_unlocked_ioctl,
+--#else
+--	.ioctl   = dahdi_timer_ioctl,
+--#endif
+- 	.poll    = dahdi_timer_poll,
+- 	.read    = dahdi_no_read,
+- 	.write   = dahdi_no_write,
+-@@ -10352,21 +10324,9 @@ nodev_unlocked_ioctl(struct file *file,
+- 	return nodev_common("ioctl");
+- }
+- 
+--#ifndef HAVE_UNLOCKED_IOCTL
+--static int nodev_ioctl(struct inode *inode, struct file *file,
+--		unsigned int cmd, unsigned long data)
+--{
+--	return nodev_unlocked_ioctl(file, cmd, data);
+--}
+--#endif
+--
+- static const struct file_operations nodev_fops = {
+- 	.owner   = THIS_MODULE,
+--#ifdef HAVE_UNLOCKED_IOCTL
+- 	.unlocked_ioctl  = nodev_unlocked_ioctl,
+--#else
+--	.ioctl   = nodev_ioctl,
+--#endif
+- 	.read    = nodev_chan_read,
+- 	.write   = nodev_chan_write,
+- 	.poll    = nodev_chan_poll,
+-@@ -10376,11 +10336,7 @@ static const struct file_operations dahd
+- 	.owner   = THIS_MODULE,
+- 	.open    = dahdi_open,
+- 	.release = dahdi_release,
+--#ifdef HAVE_UNLOCKED_IOCTL
+- 	.unlocked_ioctl  = dahdi_unlocked_ioctl,
+--#else
+--	.ioctl   = dahdi_ioctl,
+--#endif
+- 	.read    = dahdi_chan_read,
+- 	.write   = dahdi_chan_write,
+- 	.poll    = dahdi_chan_poll,
+---- a/drivers/dahdi/dahdi_transcode.c
+-+++ b/drivers/dahdi/dahdi_transcode.c
+-@@ -397,13 +397,6 @@ static long dahdi_tc_unlocked_ioctl(stru
+- 	};
+- }
+- 
+--#ifndef HAVE_UNLOCKED_IOCTL
+--static int dahdi_tc_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long data)
+--{
+--	return (int)dahdi_tc_unlocked_ioctl(file, cmd, data);
+--}
+--#endif
+--
+- static unsigned int dahdi_tc_poll(struct file *file, struct poll_table_struct *wait_table)
+- {
+- 	int ret;
+-@@ -427,11 +420,7 @@ static struct file_operations __dahdi_tr
+- 	.owner =   THIS_MODULE,
+- 	.open =    dahdi_tc_open,
+- 	.release = dahdi_tc_release,
+--#ifdef HAVE_UNLOCKED_IOCTL
+- 	.unlocked_ioctl  = dahdi_tc_unlocked_ioctl,
+--#else
+--	.ioctl   = dahdi_tc_ioctl,
+--#endif
+- 	.read =    dahdi_tc_read,
+- 	.write =   dahdi_tc_write,
+- 	.poll =    dahdi_tc_poll,
+diff --git a/libs/dahdi-linux/patches/200-dahdi-use-fallthrough-where-needed.patch b/libs/dahdi-linux/patches/200-dahdi-use-fallthrough-where-needed.patch
+index f254659..5e613b7 100644
+--- a/libs/dahdi-linux/patches/200-dahdi-use-fallthrough-where-needed.patch
++++ b/libs/dahdi-linux/patches/200-dahdi-use-fallthrough-where-needed.patch
+@@ -15,16 +15,16 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ 
+ --- a/drivers/dahdi/dahdi-base.c
+ +++ b/drivers/dahdi/dahdi-base.c
+-@@ -7921,7 +7921,7 @@ static inline void __dahdi_process_getau
++@@ -7930,7 +7930,7 @@ static inline void __dahdi_process_getau
+  			memset(getlin, 0, DAHDI_CHUNKSIZE * sizeof(short));
+  			txb[0] = DAHDI_LIN2X(0, ms);
+  			memset(txb + 1, txb[0], DAHDI_CHUNKSIZE - 1);
+--			/* fall through to normal conf mode */
++-			/* fallthrough */
+ +			fallthrough;
+  		case DAHDI_CONF_CONF:	/* Normal conference mode */
+  			if (is_pseudo_chan(ms)) /* if pseudo-channel */
+  			   {
+-@@ -7945,7 +7945,7 @@ static inline void __dahdi_process_getau
++@@ -7954,7 +7954,7 @@ static inline void __dahdi_process_getau
+  				memset(txb + 1, txb[0], DAHDI_CHUNKSIZE - 1);
+  				break;
+  		 	   }
+@@ -33,25 +33,25 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  		case DAHDI_CONF_CONFMON:	/* Conference monitor mode */
+  			if (ms->confmode & DAHDI_CONF_LISTENER) {
+  				/* Subtract out last sample written to conf */
+-@@ -8484,7 +8484,7 @@ static void __dahdi_hooksig_pvt(struct d
++@@ -8493,7 +8493,7 @@ static void __dahdi_hooksig_pvt(struct d
+  			break;
+  		}
+  #endif
+--		/* fall through intentionally */
++-		/* fallthrough */
+ +		fallthrough;
+  	   case DAHDI_SIG_FXSGS:  /* FXS Groundstart */
+  		if (rxsig == DAHDI_RXSIG_ONHOOK) {
+  			chan->ringdebtimer = RING_DEBOUNCE_TIME;
+-@@ -8503,7 +8503,7 @@ static void __dahdi_hooksig_pvt(struct d
++@@ -8512,7 +8512,7 @@ static void __dahdi_hooksig_pvt(struct d
+  				chan->gotgs = 1;
+  			}
+  		}
+--		/* fall through intentionally */
++-		/* fallthrough */
+ +		fallthrough;
+  	   case DAHDI_SIG_FXOLS: /* FXO Loopstart */
+  	   case DAHDI_SIG_FXOKS: /* FXO Kewlstart */
+  		switch(rxsig) {
+-@@ -8603,7 +8603,7 @@ void dahdi_rbsbits(struct dahdi_chan *ch
++@@ -8612,7 +8612,7 @@ void dahdi_rbsbits(struct dahdi_chan *ch
+  			__dahdi_hooksig_pvt(chan, DAHDI_RXSIG_START);
+  			break;
+  		}
+@@ -60,7 +60,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	    case DAHDI_SIG_EM_E1:
+  	    case DAHDI_SIG_FXOLS: /* FXO Loopstart */
+  	    case DAHDI_SIG_FXOKS: /* FXO Kewlstart */
+-@@ -8621,7 +8621,7 @@ void dahdi_rbsbits(struct dahdi_chan *ch
++@@ -8630,7 +8630,7 @@ void dahdi_rbsbits(struct dahdi_chan *ch
+  		break;
+  	   case DAHDI_SIG_FXSKS:  /* FXS Kewlstart */
+  	   case DAHDI_SIG_FXSGS:  /* FXS Groundstart */
+@@ -69,7 +69,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	   case DAHDI_SIG_FXSLS:
+  		if (!(cursig & DAHDI_BBIT)) {
+  			/* Check for ringing first */
+-@@ -9050,7 +9050,7 @@ static inline void __dahdi_process_putau
++@@ -9059,7 +9059,7 @@ static inline void __dahdi_process_putau
+  				memcpy(ss->putlin, putlin, DAHDI_CHUNKSIZE * sizeof(short));
+  				break;
+  			   }
+@@ -80,38 +80,42 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  				/* Store temp value */
+ --- a/drivers/dahdi/wcaxx-base.c
+ +++ b/drivers/dahdi/wcaxx-base.c
+-@@ -1446,6 +1446,7 @@ wcaxx_check_battery_lost(struct wcaxx *w
++@@ -1456,7 +1456,7 @@ wcaxx_check_battery_lost(struct wcaxx *w
+  		break;
+  	case BATTERY_UNKNOWN:
+  		mod_hooksig(wc, mod, DAHDI_RXSIG_ONHOOK);
++-		/* fallthrough */
+ +		fallthrough;
+  	case BATTERY_PRESENT:
+  		fxo->battery_state = BATTERY_DEBOUNCING_LOST;
+  		fxo->battdebounce_timer = wc->framecount + battdebounce;
+-@@ -1554,6 +1555,7 @@ wcaxx_check_battery_present(struct wcaxx
++@@ -1567,7 +1567,7 @@ wcaxx_check_battery_present(struct wcaxx
+  		break;
+  	case BATTERY_UNKNOWN:
+  		mod_hooksig(wc, mod, DAHDI_RXSIG_OFFHOOK);
++-		/* fallthrough */
+ +		fallthrough;
+- 	case BATTERY_LOST: /* intentional drop through */
++ 	case BATTERY_LOST:
+  		fxo->battery_state = BATTERY_DEBOUNCING_PRESENT;
+  		fxo->battdebounce_timer = wc->framecount + battdebounce;
+ --- a/drivers/dahdi/wctdm24xxp/base.c
+ +++ b/drivers/dahdi/wctdm24xxp/base.c
+-@@ -1955,6 +1955,7 @@ wctdm_check_battery_lost(struct wctdm *w
++@@ -1964,7 +1964,7 @@ wctdm_check_battery_lost(struct wctdm *w
+  		break;
+  	case BATTERY_UNKNOWN:
+  		mod_hooksig(wc, mod, DAHDI_RXSIG_ONHOOK);
++-		/* fallthrough */
+ +		fallthrough;
+  	case BATTERY_PRESENT:
+  		fxo->battery_state = BATTERY_DEBOUNCING_LOST;
+  		fxo->battdebounce_timer = wc->framecount + battdebounce;
+-@@ -2063,6 +2064,7 @@ wctdm_check_battery_present(struct wctdm
++@@ -2074,7 +2074,7 @@ wctdm_check_battery_present(struct wctdm
+  		break;
+  	case BATTERY_UNKNOWN:
+  		mod_hooksig(wc, mod, DAHDI_RXSIG_OFFHOOK);
++-		/* fallthrough */
+ +		fallthrough;
+- 	case BATTERY_LOST: /* intentional drop through */
++ 	case BATTERY_LOST:
+  		fxo->battery_state = BATTERY_DEBOUNCING_PRESENT;
+  		fxo->battdebounce_timer = wc->framecount + battdebounce;
+ --- a/drivers/dahdi/xpp/card_global.c
+diff --git a/libs/dahdi-linux/patches/201-dahdi-fix-always-true-compilation-warning.patch b/libs/dahdi-linux/patches/201-dahdi-fix-always-true-compilation-warning.patch
+index f437f33..353e9c2 100644
+--- a/libs/dahdi-linux/patches/201-dahdi-fix-always-true-compilation-warning.patch
++++ b/libs/dahdi-linux/patches/201-dahdi-fix-always-true-compilation-warning.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ 
+ --- a/drivers/dahdi/dahdi-base.c
+ +++ b/drivers/dahdi/dahdi-base.c
+-@@ -923,9 +923,9 @@ static int dahdi_seq_show(struct seq_fil
++@@ -928,9 +928,9 @@ static int dahdi_seq_show(struct seq_fil
+  	if (!s)
+  		return -ENODEV;
+  
+@@ -27,7 +27,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  		seq_printf(sfile, "\"%s\"", s->desc);
+  	else
+  		seq_printf(sfile, "\"\"");
+-@@ -964,7 +964,7 @@ static int dahdi_seq_show(struct seq_fil
++@@ -969,7 +969,7 @@ static int dahdi_seq_show(struct seq_fil
+  	for (x = 0; x < s->channels; x++) {
+  		struct dahdi_chan *chan = s->chans[x];
+  
+diff --git a/libs/dahdi-linux/patches/203-wcte13xp-fix-missing-break-in-t13x_set_linemode.patch b/libs/dahdi-linux/patches/203-wcte13xp-fix-missing-break-in-t13x_set_linemode.patch
+deleted file mode 100644
+index 4ab211b..0000000
+--- a/libs/dahdi-linux/patches/203-wcte13xp-fix-missing-break-in-t13x_set_linemode.patch
++++ /dev/null
+@@ -1,23 +0,0 @@
+-From be9cab7860ef0872e9fa0a0bc42f1a391d7ac8da Mon Sep 17 00:00:00 2001
+-From: Christian Marangi <ansuelsmth@gmail.com>
+-Date: Fri, 12 May 2023 20:20:42 +0200
+-Subject: [PATCH 4/6] wcte13xp: fix missing break in t13x_set_linemode
+-
+-Fix missing break in t13x_set_linemode as currently it does uncorrectly
+-fallthrough.
+-
+-Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+----
+- drivers/dahdi/wcte13xp-base.c | 1 +
+- 1 file changed, 1 insertion(+)
+-
+---- a/drivers/dahdi/wcte13xp-base.c
+-+++ b/drivers/dahdi/wcte13xp-base.c
+-@@ -1875,6 +1875,7 @@ static int t13x_set_linemode(struct dahd
+- 			 "Changing from %s to E1 line mode.\n",
+- 			 dahdi_spantype2str(wc->span.spantype));
+- 		res = t13x_software_init(wc, J1);
+-+		break;
+- 	default:
+- 		dev_err(&wc->xb.pdev->dev,
+- 			"Got invalid linemode '%s' from dahdi\n",
+diff --git a/libs/dahdi-linux/patches/204-dahdi-skip-checking-on-releasing.patch b/libs/dahdi-linux/patches/204-dahdi-skip-checking-on-releasing.patch
+index b549f64..24bbf81 100644
+--- a/libs/dahdi-linux/patches/204-dahdi-skip-checking-on-releasing.patch
++++ b/libs/dahdi-linux/patches/204-dahdi-skip-checking-on-releasing.patch
+@@ -14,7 +14,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ 
+ --- a/drivers/dahdi/wcte13xp-base.c
+ +++ b/drivers/dahdi/wcte13xp-base.c
+-@@ -2702,8 +2702,7 @@ static int __devinit te13xp_init_one(str
++@@ -2707,8 +2707,7 @@ static int __devinit te13xp_init_one(str
+  	return 0;
+  
+  fail_exit:
+@@ -26,7 +26,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	return res;
+ --- a/drivers/dahdi/wcte43x-base.c
+ +++ b/drivers/dahdi/wcte43x-base.c
+-@@ -3515,8 +3515,7 @@ static int __devinit t43x_init_one(struc
++@@ -3521,8 +3521,7 @@ static int __devinit t43x_init_one(struc
+  	return 0;
+  
+  fail_exit:
+diff --git a/libs/dahdi-linux/patches/206-dahdi_echocan_mg2-rename-ABS-define-to-PARA_ABS.patch b/libs/dahdi-linux/patches/206-dahdi_echocan_mg2-rename-ABS-define-to-PARA_ABS.patch
+new file mode 100644
+index 0000000..18e8735
+--- /dev/null
++++ b/libs/dahdi-linux/patches/206-dahdi_echocan_mg2-rename-ABS-define-to-PARA_ABS.patch
+@@ -0,0 +1,42 @@
++From d2563faf053da31e1329e7313339669f31c989da Mon Sep 17 00:00:00 2001
++From: Christian Marangi <ansuelsmth@gmail.com>
++Date: Wed, 20 Mar 2024 19:48:33 +0100
++Subject: [PATCH] dahdi_echocan_mg2: rename ABS define to PARA_ABS
++
++Rename ABS define to PARA_ABS to fix compilation error with mips 24kc
++arch.
++
++This target define in his ASM header a similar define ABS that cause
++conflicts and redefinition error for this driver.
++
++Rename ABS to PARA_ABS to better suite the usage as it's abs usage with
++value decremented by one if it's the max negative int.
++
++Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
++---
++ drivers/dahdi/dahdi_echocan_mg2.c | 6 +++---
++ 1 file changed, 3 insertions(+), 3 deletions(-)
++
++--- a/drivers/dahdi/dahdi_echocan_mg2.c
+++++ b/drivers/dahdi/dahdi_echocan_mg2.c
++@@ -44,7 +44,7 @@
++ static int debug;
++ static int aggressive;
++ 
++-#define ABS(a) abs(a!=-32768?a:-32767)
+++#define PARA_ABS(a) abs(a!=-32768?a:-32767)
++ 
++ #define RESTORE_COEFFS {\
++ 				int x;\
++@@ -464,9 +464,9 @@ static inline short sample_update(struct
++ 			RESTORE_COEFFS;
++ 		}
++ 
++-		sign_error = ABS(rs) - ABS(isig);
+++		sign_error = PARA_ABS(rs) - PARA_ABS(isig);
++ 
++-		if (ABS(sign_error) > MAX_SIGN_ERROR)
+++		if (PARA_ABS(sign_error) > MAX_SIGN_ERROR)
++ 		{
++ 			rs = 0;
++ 			RESTORE_COEFFS;
+-- 
+2.34.1
+

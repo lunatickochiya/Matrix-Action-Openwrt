@@ -137,6 +137,77 @@ function patch_rockchip() {
         rm -rf tpm312
         }
 
+function patch_op_tele() {
+        for telepatch in $( ls feeds/telephony/tele ); do
+        cd feeds/telephony/
+        echo Applying telepatch $telepatch
+            patch -p1 --no-backup-if-mismatch < tele/$telepatch
+        cd ../..
+        done
+        }
+
+function patch_kernel61() {
+
+for rockpatch in $( ls tpm312/openwrt-23.05-k6.1/core ); do
+    echo Applying openwrt-23.05-k6.1 $rockpatch
+    patch -p1 --no-backup-if-mismatch < tpm312/openwrt-23.05-k6.1/core/$rockpatch
+done
+
+directories2=(
+    "package/kernel/mac80211"
+    "package/kernel/mt76"
+)
+
+for directory2 in "${directories2[@]}"; do
+    if [ -d "$directory2" ]; then
+        echo "目录 $directory2 存在，进行删除操作..."
+        rm -r "$directory2"
+        echo "目录 $directory2 已删除。"
+    else
+        echo "目录 $directory2 不存在。"
+    fi
+done
+
+source_directory="tpm312/package/kernel/mac80211"
+source_directory2="tpm312/package/kernel/mt76"
+target_directory="package/kernel/mac80211"
+target_directory2="package/kernel/mt76"
+
+# 检查源目录1是否存在
+if [ -d "$source_directory" ]; then
+    echo "源目录 $source_directory 存在。"
+
+    # 检查目标目录1是否存在
+    if [ -d "$target_directory" ]; then
+        echo "目标目录 $target_directory 已经存在，无需移动。"
+    else
+        echo "目标目录 $target_directory 不存在，进行恢复操作..."
+        mv -f "$source_directory" "$target_directory"
+        echo "目录 $source_directory 已移动到目标目录 $target_directory。"
+    fi
+else
+    echo "源目录 $source_directory 不存在。"
+fi
+
+# 检查源目录2是否存在
+if [ -d "$source_directory2" ]; then
+    echo "源目录 $source_directory2 存在。"
+
+    # 检查目标目录2是否存在
+    if [ -d "$target_directory2" ]; then
+        echo "目标目录 $target_directory2 已经存在，无需移动。"
+    else
+        echo "目标目录 $target_directory2 不存在，进行恢复操作..."
+        mv -f "$source_directory2" "$target_directory2"
+        echo "目录 $source_directory2 已移动到目标目录 $target_directory2。"
+    fi
+else
+    echo "源目录 $source_directory2 不存在。"
+fi
+
+rm -rf tpm312
+}
+
 function remove_firewall() {
 
 directories1=(
@@ -177,6 +248,11 @@ echo "$(cat package-configs/rockchip-nft-2305.config)" >> package-configs/.confi
 mv -f package-configs/.config .config
 }
 
+function add_test_kernel_config() {
+sed -i '1i\
+CONFIG_TESTING_KERNEL=y\nCONFIG_HAS_TESTING_KERNEL=y\nCONFIG_LINUX_6_1=y' machine-configs/single/*
+}
+
 if [ "$1" == "meson-ipt" ]; then
 autosetver
 remove_error_package_not_install
@@ -211,6 +287,12 @@ elif [ "$1" == "rockpatch" ]; then
 patch_rockchip
 elif [ "$1" == "firewallremove" ]; then
 remove_firewall
+elif [ "$1" == "kernel61" ]; then
+patch_kernel61
+elif [ "$1" == "patchtele" ]; then
+patch_op_tele
+elif [ "$1" == "add-test-config" ]; then
+add_test_kernel_config
 else
 echo "Invalid argument"
 fi

@@ -45,10 +45,25 @@ on:
         - '192.168.19.1'
         - '192.168.9.1'
         - '192.168.166.1'
-      ssh:
-        description: 'SSH connection to Actions'
-        required: false
+        - '172.16.0.1'
+        - '172.18.0.1'
+        - '10.0.0.1'
+        - '10.88.0.1'
+      ALLKMOD:
+        description: 'Compile All Kmods'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+      TEST-KERNEL:
+        description: 'OpenWrt-23.05 Use kernel 6.1'
         default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
 env:
   TZ: Asia/Shanghai
 
@@ -86,6 +101,19 @@ jobs:
     steps:
     - name: 检查
       uses: actions/checkout@main
+
+    - name: 释放Ubuntu磁盘空间
+      uses: endersonmenezes/free-disk-space@v2
+      with:
+        remove_android: true
+        remove_dotnet: true
+        remove_haskell: true
+        remove_tool_cache: true
+        remove_swap: true
+        remove_packages: "azure-cli google-cloud-cli microsoft-edge-stable google-chrome-stable firefox postgresql* temurin-* *llvm* mysql* dotnet-sdk-*"
+        remove_packages_one_command: true
+        remove_folders: "/usr/share/swift /usr/share/miniconda /usr/share/az* /usr/share/glade* /usr/local/lib/node_modules /usr/local/share/chromium /usr/local/share/powershell"
+        testing: false
 
     - name: 初始化环境
       env:
@@ -135,6 +163,9 @@ jobs:
 
     - name: 导入机器及安装包config
       run: |
+        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
+        $GITHUB_WORKSPACE/$DIY_SH add-test-config
+        fi
         if [ ${{matrix.target}} == 'meson-ipt' ]; then
                 mv -f machine-configs/single/${{github.event.inputs.MACH}}-ipt.config machine-configs/${{matrix.target}}.config
                 echo "----${{matrix.target}}-----IPT-Machine--------"
@@ -161,6 +192,10 @@ jobs:
         git checkout v23.05.3
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
         sed -i 's|src-git packages https://git.openwrt.org/feed/packages.git\^8e3a1824645f5e73ec44c897ac0755c53fb4a1f8|src-git packages https://git.openwrt.org/feed/packages.git;openwrt-23.05|g' feeds.conf.default
+        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
+        git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
+        $GITHUB_WORKSPACE/$DIY_SH kernel61
+        fi
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 增加磁盘空间
@@ -171,7 +206,7 @@ jobs:
         ln -sf /mnt/openwrt/dl openwrt/dl
         ln -sf /mnt/openwrt/bin openwrt/bin
         ln -sf /mnt/openwrt/staging_dir openwrt/staging_dir
-        ln -sf /mnt/openwrt/build_dir openwrt/build_dir
+        #ln -sf /mnt/openwrt/build_dir openwrt/build_dir
         df -hT
         ls /mnt/openwrt
 
@@ -211,6 +246,10 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
+        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
+        mv -f openwrt-2305/K61/tele openwrt/feeds/telephony
+        mv -f openwrt-2305/K61/packages/* openwrt-2305/feeds-package-patch-2305
+        fi
         [ -d lunatic7-revert ] && mv -f openwrt-2305/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-2305/luci-patch-2305 ] && mv -f openwrt-2305/luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
         [ -d openwrt-2305/feeds-package-patch-23053 ] && mv -f openwrt-2305/feeds-package-patch-23053 openwrt/feeds/packages/feeds-package-patch-2305
@@ -218,13 +257,16 @@ jobs:
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
+        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
+        $GITHUB_WORKSPACE/$DIY_SH patchtele
+        fi
         $GITHUB_WORKSPACE/$DIY_SH ${{matrix.target}}
         make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 添加kmod
-      if: steps.config.outputs.status == 'success' && env.UPLOAD_ALLKMOD == 'true'
+      if: steps.config.outputs.status == 'success' && github.event.inputs.ALLKMOD == 'true'
       id: config2
       run: |
         cd openwrt
@@ -261,6 +303,8 @@ jobs:
         awk '/firewall/ { print }' .config
         echo "------------------------"
         awk '/CONFIG_PACKAGE_kmod/ { print }' .config
+        echo "------------------------"
+        awk '/CONFIG_LINUX/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
