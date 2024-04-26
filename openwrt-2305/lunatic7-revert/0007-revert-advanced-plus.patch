@@ -1,0 +1,676 @@
+From ffca9d7ae843893e2489ef1133ae6b2a8e0bb20b Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]"
+ <41898282+github-actions[bot]@users.noreply.github.com>
+Date: Thu, 11 Apr 2024 20:34:05 +0800
+Subject: [PATCH] =?UTF-8?q?=F0=9F=9A=80=20Sync=202024-04-11=2020:34:05?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .../luasrc/controller/advancedplus.lua        |  53 ++++++-
+ .../model/cbi/advancedplus/advancedipk.lua    |  29 ++++
+ .../model/cbi/advancedplus/advancedset.lua    |  14 +-
+ .../luasrc/view/advancedplus/advanced.htm     |  89 +++++++++++
+ .../po/zh-cn/advancedplus.po                  |  45 +++++-
+ .../po/zh_Hans/advancedplus.po                |  46 +++++-
+ .../root/etc/config/advancedplus              |   9 +-
+ .../root/etc/init.d/advancedplus              |  65 ++++++++-
+ .../root/usr/bin/advancedplusipk              | 138 ++++++++++++++++++
+ 9 files changed, 467 insertions(+), 21 deletions(-)
+ create mode 100644 luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedipk.lua
+ create mode 100644 luci-app-advancedplus/luasrc/view/advancedplus/advanced.htm
+ create mode 100644 luci-app-advancedplus/root/usr/bin/advancedplusipk
+
+diff --git a/luci-app-advancedplus/luasrc/controller/advancedplus.lua b/luci-app-advancedplus/luasrc/controller/advancedplus.lua
+index e05911332..a9021bb71 100644
+--- a/luci-app-advancedplus/luasrc/controller/advancedplus.lua
++++ b/luci-app-advancedplus/luasrc/controller/advancedplus.lua
+@@ -1,6 +1,12 @@
+--- Copyright 2023-2024 sirpdboy team <herboy2008@gmail.com>
+--- Licensed to the public under the Apache License 2.0.
++--[[
++LuCI - Lua Configuration Advancedplus
++ Copyright (C) 2022-2024  sirpdboy <herboy2008@gmail.com> https://github.com/sirpdboy/luci-app-advancedplus
++]]--
+ 
++local fs = require "nixio.fs"
++local http = require "luci.http"
++local uci = require"luci.model.uci".cursor()
++local name = 'advancedplus'
+ module("luci.controller.advancedplus", package.seeall)
+ 
+ function index()
+@@ -9,18 +15,49 @@ function index()
+ 	end
+ 
+ 	local page
+-	page = entry({"admin","system","advancedplus"},alias("admin","system","advancedplus","kucatset"),_("Advanced plus"),61)
++	page = entry({"admin","system","advancedplus"},alias("admin","system","advancedplus","advancededit"),_("Advanced plus"),61)
+ 	page.dependent = true
+ 	page.acl_depends = { "luci-app-advancedplus" }
+-	entry({"admin","system","advancedplus","kucatset"},cbi("advancedplus/kucatset"),_("KuCat Theme Config"),20).leaf = true
++	
++	entry({"admin","system","advancedplus","advancededit"},cbi("advancedplus/advancededit"),_("Advanced Edit"),10).leaf = true
++	entry({"admin","system","advancedplus","advancedset"},cbi("advancedplus/advancedset"),_("Advanced Setting"),20).leaf = true
++	entry({"admin","system","advancedplus","advancedipk"},cbi("advancedplus/advancedipk", {hideapplybtn=true, hidesavebtn=true, hideresetbtn=true}),_("Loading plugins"),30).leaf = true
++	if nixio.fs.access('/www/luci-static/kucat/css/style.css') then
++	    entry({"admin","system","advancedplus","kucatset"},cbi("advancedplus/kucatset"),_("KuCat Theme Config"),40).leaf = true
++	end
+ 	if nixio.fs.access('/www/luci-static/argon/css/cascade.css') then
+-	    entry({"admin", "system", "advancedplus","argon-config"}, form("advancedplus/argon-config"), _("Argon Config"), 30).leaf = true
++	    entry({"admin", "system", "advancedplus","argon-config"}, form("advancedplus/argon-config"), _("Argon Config"), 50).leaf = true
+ 	end
+ 	if nixio.fs.access('/www/luci-static/design/css/style.css') then
+-	    entry({"admin", "system",  "advancedplus","design-config"}, form("advancedplus/design-config"), _("Design Config"), 40).leaf = true
++	    entry({"admin", "system",  "advancedplus","design-config"}, form("advancedplus/design-config"), _("Design Config"), 60).leaf = true
+ 	end
+-	entry({"admin","system","advancedplus","advancedset"},cbi("advancedplus/advancedset"),_("Advanced Setting"),10).leaf = true
+-	entry({"admin","system","advancedplus","advancededit"},cbi("advancedplus/advancededit"),_("Advanced Edit"),60).leaf = true
+ 	entry({"admin", "system","advancedplus","upload"}, form("advancedplus/upload"), _("Login Background Upload"), 70).leaf = true
+ 	entry({"admin", "system","advancedplus","kucatupload"}, form("advancedplus/kucatupload"), _("Desktop background upload"), 80).leaf = true
++	
++
++	entry({"admin", "system", "advancedplus", "advancedrun"}, call("advanced_run"))
++	entry({"admin", "system", "advancedplus", "check"}, call("act_check"))
++end
++
++function act_check()
++	http.prepare_content("text/plain; charset=utf-8")
++	local f=io.open("/tmp/advancedplus.log", "r+")
++	local fdp=fs.readfile("/tmp/advancedpos") or 0
++	f:seek("set",fdp)
++	local a=f:read(2048000) or ""
++	fdp=f:seek()
++	fs.writefile("/tmp/advancedpos",tostring(fdp))
++	f:close()
++	http.write(a)
++end
++
++function advanced_run()
++	local selectipk = luci.http.formvalue('select_ipk')
++	luci.sys.exec("echo  'start' > /tmp/advancedplus.log&&echo  'start' > /tmp/advancedpos")
++	uci:set(name, 'advancedplus', 'select_ipk', selectipk)
++	uci:commit(name)
++	fs.writefile("/tmp/advancedpos","0")
++	http.prepare_content("application/json")
++	http.write('')
++	luci.sys.exec(string.format("bash /usr/bin/advancedplusipk " ..selectipk.. " > /tmp/advancedplus.log 2>&1 &" ))
+ end
+diff --git a/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedipk.lua b/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedipk.lua
+new file mode 100644
+index 000000000..0328fff76
+--- /dev/null
++++ b/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedipk.lua
+@@ -0,0 +1,29 @@
++--[[
++LuCI - Lua Configuration Interface
++ Copyright (C) 2022-2024  sirpdboy <herboy2008@gmail.com> https://github.com/sirpdboy/luci-app-advancedplus
++]]--
++
++local fs = require "nixio.fs"
++local uci=luci.model.uci.cursor()
++local m,s,e
++
++m = Map("advancedplus")
++m.title = translate("Loading plugins")
++m.description = translate("Choose to load and install the app store, DOCKER, all drivers, etc")..
++translate("</br>For specific usage, see:")..translate("<a href=\'https://github.com/sirpdboy/luci-app-advancedplus.git' target=\'_blank\'>GitHub @sirpdboy/luci-app-advancedplus </a>")
++m.apply_on_parse=true
++
++s=m:section(TypedSection, "basic", "")
++s.anonymous=true
++
++e=s:option(ListValue,'select_ipk', translate('Select the type of loading'))
++e:value("istore", translate("Install iStore"))
++e:value("docker", translate("Install Docker"))
++e:value("drv", translate("Install All drives"))
++e.default="istore"
++
++e=s:option(Button, "restart", translate("Perform operation"))
++e.inputtitle=translate("Click to execute")
++e.template ='advancedplus/advanced'
++
++return m
+diff --git a/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedset.lua b/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedset.lua
+index bff23f748..3139f91e2 100644
+--- a/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedset.lua
++++ b/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedset.lua
+@@ -4,7 +4,7 @@ local uci=luci.model.uci.cursor()
+ local a, t, e
+ a = Map("advancedplus")
+ a.title = translate("Advanced Setting")
+-a.description = translate("The enhanced version of the original advanced settings allows for unified setting and management of background images for kucat, Agron, and Opentopd themes, without the need to upload them separately. Color schemes for kucat and Agron themes can be set.<br>")..
++a.description = translate("The enhanced version of the original advanced settings allows for unified setting and management of background images for kucat/Agron/Opentopd themes, without the need to upload them separately. Color schemes for kucat/Agron/design themes can be set.<br>")..
+ translate("At the same time, important plugin parameters can be compiled. At the same time, some system parameters can also be set, such as display and hide settings.")..
+ translate("</br>For specific usage, see:")..translate("<a href=\'https://github.com/sirpdboy/luci-app-advancedplus.git' target=\'_blank\'>GitHub @sirpdboy/luci-app-advancedplus </a>")
+ 
+@@ -30,5 +30,17 @@ e = t:option(Flag, "wizard",translate('Hide Wizard'), translate('Show or hide th
+ e.default = "0"
+ e.rmempty = false
+ 
++e = t:option(Flag, "tsoset",translate('TSO optimization for network card interruption'), translate('Turn off the TSO parameters of the INTEL225 network card to improve network interruption'))
++e.default = "1"
++e.rmempty = false
++
++e = t:option(Flag, "set_ttyd",translate('Allow TTYD external network access'))
++e.default = "0"
++
++e = t:option(Flag, "set_firewall_wan",translate('Set firewall wan to open'))
++e.default = "0"
++
++e = t:option(Flag, "dhcp_domain",translate('Add Android host name mapping'), translate('Resolve the issue of Android native TV not being able to connect to WiFi for the first time'))
++e.default = "0"
+ 
+ return a
+diff --git a/luci-app-advancedplus/luasrc/view/advancedplus/advanced.htm b/luci-app-advancedplus/luasrc/view/advancedplus/advanced.htm
+new file mode 100644
+index 000000000..81d679a3f
+--- /dev/null
++++ b/luci-app-advancedplus/luasrc/view/advancedplus/advanced.htm
+@@ -0,0 +1,89 @@
++<%#
++Copyright (C)  2022-2024  sirpdboy  <herboy2008@gmail.com> 
++-%>
++<%+cbi/valueheader%>
++<%local fs=require"nixio.fs"%>
++<input type="button" class="btn cbi-button cbi-button-apply" id="apply_run_button" value="<%:Click to execute%>" onclick=" return apply_run(this) "/>
++<div id="logview" style="display:none">
++<textarea id="cbid.logview.1.conf" class="cbi-input-textarea" style="width: 100%;display:block;" data-update="change" rows="30" cols="60" readonly="readonly" > </textarea>
++</div>
++<script type="text/javascript">//<![CDATA[
++
++var checkbtn = document.getElementById('apply_run_button');
++
++function apply_run(btn){
++	var sid='cfg018967'
++	var opt={
++		base:"cbid.advancedplus."+sid,
++		get:function(opt){
++			var id=this.base+'.'+opt;
++			var obj=document.getElementsByName(id)[0] || document.getElementsByClassName(id)[0] || document.getElementById(id)
++			if (obj){
++				return obj;
++			}else{
++				return null;
++			}
++		},
++		getlist:function(opt){
++			var id=this.base+'.'+opt;
++			var objs=document.getElementsByName(id) || document.getElementsByClassName(id);
++			var ret=[];
++			if (objs){
++				for (var i=0;i < objs.length;i++){
++					ret[i]=objs[i].value;
++				}
++			}else{
++				alert("<%:Fatal on get option,please help in debug%>:"+opt);
++			}
++			return ret;
++		},
++		query:function(param,src,tval="1",fval="0"){
++			var ret="&"+param+"=";
++			var obj=this.get(src);
++			if (obj){
++				if (obj.type=="checkbox"){
++					return ret+(obj.checked==true ? tval:fval);
++				}else{
++					return ret+encodeURIComponent(obj.value);
++				}
++			}
++			return ''
++		}
++	}
++	btn.value='<%:Waiting,(executing)...%>';
++	btn.disabled=true;
++    var select_ipk=opt.get("select_ipk").value;
++	console.log(select_ipk);
++	XHR.get('<%=url([[admin]], [[system]], [[advancedplus]], [[advancedrun]])%>',{
++            select_ipk: select_ipk
++			},function(x){});
++	poll_check();
++	return
++}
++
++function poll_check(){
++var tag = document.getElementById('logview');
++tag.style.display="block"
++XHR.poll(3, '<%=url([[admin]], [[system]], [[advancedplus]], [[check]])%>', null,
++	function(x, data) {
++		var lv = document.getElementById('cbid.logview.1.conf');
++		if (x.responseText && lv) {
++			if (x.responseText=="\u0000"){
++				for(j = 0,len=this.XHR._q.length; j < len; j++) {
++					if (this.XHR._q[j].url == '<%=url([[admin]], [[system]], [[advancedplus]], [[check]])%>'){
++						this.XHR._q.splice(j,1);
++						checkbtn.disabled = false;
++						checkbtn.value    = '<%:Click to execute%>';
++						break;
++					}
++				}
++				return	
++			}
++			lv.innerHTML += x.responseText;
++		}
++	}
++);}
++
++//]]>
++</script>
++<%+cbi/valuefooter%>
+diff --git a/luci-app-advancedplus/po/zh-cn/advancedplus.po b/luci-app-advancedplus/po/zh-cn/advancedplus.po
+index f1e614f30..49d9aebb6 100644
+--- a/luci-app-advancedplus/po/zh-cn/advancedplus.po
++++ b/luci-app-advancedplus/po/zh-cn/advancedplus.po
+@@ -30,8 +30,8 @@ msgstr "进阶参数编辑"
+ msgid "Built-in"
+ msgstr "内建"
+ 
+-msgid "The enhanced version of the original advanced settings allows for unified setting and management of background images for kucat, Agron, and Opentopd themes, without the need to upload them separately. Color schemes for kucat and Agron themes can be set.<br>"
+-msgstr "原高级设置的加强版，可以统一设置管理 kucat,Agron,Opentopd三个主题登录壁纸图片，无须分开上传，可以设置kucat,Agron主题的颜色方案<br>"
++msgid "The enhanced version of the original advanced settings allows for unified setting and management of background images for kucat/Agron/Opentopd themes, without the need to upload them separately. Color schemes for kucat/Agron/design themes can be set.<br>"
++msgstr "原高级设置的加强版，可以统一设置管理 kucat/Agron/Opentopd三个主题登录壁纸图片，无须分开上传，可以设置kucat/Agron/design主题的颜色方案<br>"
+ 
+ msgid "At the same time, important plugin parameters can be compiled. At the same time, some system parameters can also be set, such as display and hide settings."
+ msgstr "同时可以编译重要的插件参数。同时还可以设置部分系统参数，如：显示隐藏设置设置等功能。"
+@@ -373,3 +373,44 @@ msgstr "本页是配置"
+ msgid "Document content. Automatic restart takes effect after saving the application"
+ msgstr "文档内容。应用保存后自动重启生效"
+ 
++msgid "TSO optimization for network card interruption"
++msgstr "网卡断流TSO优化"
++
++msgid "Turn off the TSO parameters of the INTEL225 network card to improve network interruption"
++msgstr "关闭INTEL225网卡TSO参数，改善网络断流"
++
++msgid "Loading plugins"
++msgstr "加载插件"
++
++msgid "Choose to load and install the app store, DOCKER, all drivers, etc"
++msgstr "选择加载安装应用商店、DOCKER、所有驱动等"
++
++msgid "Select the type of loading"
++msgstr "选择加载的类型"
++
++msgid "Install iStore"
++msgstr "安装iStore"
++
++msgid "Install Docker"
++msgstr "安装Docker仓库"
++
++msgid "Install All drives"
++msgstr "安装全部驱动"
++
++msgid "Perform operation"
++msgstr "执行操作"
++
++msgid "Click to execute"
++msgstr "点击执行"
++
++msgid "Allow TTYD external network access"
++msgstr "允许TTYD外网访问"
++
++msgid "Set firewall wan to open"
++msgstr "设置防火墙wan打开"
++
++msgid "Add Android host name mapping"
++msgstr "添加安卓主机名映射"
++
++msgid "Resolve the issue of Android native TV not being able to connect to WiFi for the first time"
++msgstr "解决安卓原生TV首次连不上wifi的问题"
+diff --git a/luci-app-advancedplus/po/zh_Hans/advancedplus.po b/luci-app-advancedplus/po/zh_Hans/advancedplus.po
+index bf85288e0..49d9aebb6 100644
+--- a/luci-app-advancedplus/po/zh_Hans/advancedplus.po
++++ b/luci-app-advancedplus/po/zh_Hans/advancedplus.po
+@@ -14,6 +14,7 @@ msgstr "Argon主题设置"
+ msgid "Design Config"
+ msgstr "Design主题设置"
+ 
++
+ msgid "Advanced Setting"
+ msgstr "高级设置"
+ 
+@@ -29,8 +30,8 @@ msgstr "进阶参数编辑"
+ msgid "Built-in"
+ msgstr "内建"
+ 
+-msgid "The enhanced version of the original advanced settings allows for unified setting and management of background images for kucat, Agron, and Opentopd themes, without the need to upload them separately. Color schemes for kucat and Agron themes can be set.<br>"
+-msgstr "原高级设置的加强版，可以统一设置管理 kucat,Agron,Opentopd三个主题登录壁纸图片，无须分开上传，可以设置kucat,Agron主题的颜色方案<br>"
++msgid "The enhanced version of the original advanced settings allows for unified setting and management of background images for kucat/Agron/Opentopd themes, without the need to upload them separately. Color schemes for kucat/Agron/design themes can be set.<br>"
++msgstr "原高级设置的加强版，可以统一设置管理 kucat/Agron/Opentopd三个主题登录壁纸图片，无须分开上传，可以设置kucat/Agron/design主题的颜色方案<br>"
+ 
+ msgid "At the same time, important plugin parameters can be compiled. At the same time, some system parameters can also be set, such as display and hide settings."
+ msgstr "同时可以编译重要的插件参数。同时还可以设置部分系统参数，如：显示隐藏设置设置等功能。"
+@@ -372,3 +373,44 @@ msgstr "本页是配置"
+ msgid "Document content. Automatic restart takes effect after saving the application"
+ msgstr "文档内容。应用保存后自动重启生效"
+ 
++msgid "TSO optimization for network card interruption"
++msgstr "网卡断流TSO优化"
++
++msgid "Turn off the TSO parameters of the INTEL225 network card to improve network interruption"
++msgstr "关闭INTEL225网卡TSO参数，改善网络断流"
++
++msgid "Loading plugins"
++msgstr "加载插件"
++
++msgid "Choose to load and install the app store, DOCKER, all drivers, etc"
++msgstr "选择加载安装应用商店、DOCKER、所有驱动等"
++
++msgid "Select the type of loading"
++msgstr "选择加载的类型"
++
++msgid "Install iStore"
++msgstr "安装iStore"
++
++msgid "Install Docker"
++msgstr "安装Docker仓库"
++
++msgid "Install All drives"
++msgstr "安装全部驱动"
++
++msgid "Perform operation"
++msgstr "执行操作"
++
++msgid "Click to execute"
++msgstr "点击执行"
++
++msgid "Allow TTYD external network access"
++msgstr "允许TTYD外网访问"
++
++msgid "Set firewall wan to open"
++msgstr "设置防火墙wan打开"
++
++msgid "Add Android host name mapping"
++msgstr "添加安卓主机名映射"
++
++msgid "Resolve the issue of Android native TV not being able to connect to WiFi for the first time"
++msgstr "解决安卓原生TV首次连不上wifi的问题"
+diff --git a/luci-app-advancedplus/root/etc/config/advancedplus b/luci-app-advancedplus/root/etc/config/advancedplus
+index e7e7133bd..295aaf64c 100644
+--- a/luci-app-advancedplus/root/etc/config/advancedplus
++++ b/luci-app-advancedplus/root/etc/config/advancedplus
+@@ -9,7 +9,7 @@ config basic
+ 	option font_x '0.875rem'
+ 	option bklock '1'
+ 	option setbar '1'
+-	option dayword '1'
++	option dayword '0'
+ 	option background '0'
+ 	option bgqs '1'
+ 	option mode 'light'
+@@ -19,7 +19,7 @@ config basic
+ 	option primary_opacity '0'
+ 	option primary_rgbs_ts '0.1'
+ 	option primary_rgbs '28,66,188'
+-	option bkuse '1'
++	option bkuse '0'
+ 
+ config theme
+ 	option primary_rgbbody '33,45,60'
+@@ -31,7 +31,7 @@ config theme
+ 	option primary_rgbm_ts '0.9'
+ 	option primary_rgbm 'blue'
+ 	option use '1'
+-	option bkuse '1'
++	option bkuse '0'
+ 
+ config theme
+ 	option primary_rgbbody '33,45,60'
+@@ -88,7 +88,7 @@ config theme
+ 	option remarks '炫灰隔栏模糊'
+ 	option primary_rgbs_ts '0.5'
+ 	option primary_opacity '4'
+-	option use '0'
++	option use '1'
+ 
+ config theme
+ 	option mode 'light'
+@@ -100,4 +100,3 @@ config theme
+ 	option bkuse '1'
+ 	option use '1'
+ 	option primary_opacity '4'
+-
+diff --git a/luci-app-advancedplus/root/etc/init.d/advancedplus b/luci-app-advancedplus/root/etc/init.d/advancedplus
+index e76ed6857..e4dd2c908 100644
+--- a/luci-app-advancedplus/root/etc/init.d/advancedplus
++++ b/luci-app-advancedplus/root/etc/init.d/advancedplus
+@@ -115,18 +115,28 @@ config theme
+ 	option use '1'
+ 	option primary_opacity '4'
+ 
+-
+-
+ EOF
+ }
++
+ cpumodeset()
+ {
+ for i in 0 1 2 3 ;do
+    echo $1 > /sys/devices/system/cpu/cpufreq/policy$i/scaling_governor
+ done
+ }
+-sethttps() {
+ 
++tsoset() {
++ tautocore=/etc/init.d/autocore
++ [ -f $tautocore ] || return
++ if [ "x$(uci -q get advancedplus.@basic[0].tsoset)" = "x1" ]  ;then
++     sed -i 's/tso on/tso off/g' $tautocore
++     $tautocore restart
++else
++     sed -i 's/tso off/tso on/g' $tautocore
++     $tautocore restart
++fi
++}
++sethttps() {
+     uhttp=`uci -q get uhttpd.main.listen_https | awk -F ' ' '{printf $1}'`
+     if [ "x$(uci -q get advancedplus.@basic[0].uhttps)" = "x1" ] ; then
+ 	     [  $uhttp ] || {
+@@ -160,12 +170,61 @@ setnetwizard(){
+     fi
+ }
+ 
++set_firewall_wan() {
++    if [ "x$(uci -q get advancedplus.@basic[0].set_firewall_wan)" = "x1" ] ; then
++    ## 设置防火墙wan 打开
++    uci -q set firewall.@zone[1].input='ACCEPT'
++    uci commit firewall
++    /etc/init.d/firewall reload
++    else
++    uci -q set firewall.@zone[1].input='REJECT'
++    uci commit firewall
++    /etc/init.d/firewall reload
++    fi
++}
++
++set_ttyd() {
++    if [ "x$(uci -q get advancedplus.@basic[0].set_ttyd)" = "x1" ] ; then
++    uci delete ttyd.@ttyd[0].interface
++    uci commit
++    /etc/init.d/firewall reload
++    else
++    uci -q set ttyd.@ttyd[0].interface='@lan'
++    uci commit
++    /etc/init.d/firewall reload
++    fi
++}
++
++dhcp_domain() {
++    if [ "x$(uci -q get advancedplus.@basic[0].dhcp_domain)" = "x1" ] ; then
++        local domain_name="time.android.com"
++        local domain_ip="203.107.6.88"
++        existing_records=$(uci show dhcp | grep "dhcp.@domain\[[0-9]\+\].name='$domain_name'")
++        if [ -z "$existing_records" ]; then
++        uci add dhcp domain
++        uci -q set "dhcp.@domain[-1].name=$domain_name"
++        uci -q set "dhcp.@domain[-1].ip=$domain_ip"
++        uci commit dhcp
++        fi
++    else
++       existing_records=$(uci show dhcp | grep "dhcp.@domain\[[0-9]\+\].name='$domain_name'")
++       if [ -z "$existing_records" ]; then
++       uci delete dhcp.@domain[-1].name
++       uci delete dhcp.@domain[-1].ip
++       uci commit dhcp
++       fi
++    fi
++}
+ advancedset(){
+ dev=`ifconfig | grep "Point-to-Point" | cut -d " " -f1`
+ [ ! $dev ] && dev=` uci -q get network.wan.device ` || dev=` uci -q get network.wan.device ` 
+ [ ! $dev ] && dev=br-lan
+ setnetwizard
+ sethttps
++dhcp_domain
++set_ttyd
++set_firewall_wan
++tsoset
+     [ "x$(uci -q get advancedplus.@basic[0].qos)" = "x1" ] && \usr\bin\qoshome
+     if [ "x$(uci -q get advancedplus.@basic[0].ttl)" = "x1" ] ; then
+         $ipt -t mangle -A PREROUTING -p tcp --tcp-flags RST RST -i $dev -j DROP
+diff --git a/luci-app-advancedplus/root/usr/bin/advancedplusipk b/luci-app-advancedplus/root/usr/bin/advancedplusipk
+new file mode 100644
+index 000000000..c93a6ef27
+--- /dev/null
++++ b/luci-app-advancedplus/root/usr/bin/advancedplusipk
+@@ -0,0 +1,138 @@
++#!/bin/sh
++
++skin="Kucat"
++
++is_x86_64() {
++    DISTRIB_ARCH=$(cat /etc/openwrt_release | grep "DISTRIB_ARCH" | cut -d "'" -f 2)
++    if [ "$DISTRIB_ARCH" = "x86_64" ]; then
++        return 0
++    else
++        return 1
++    fi
++}
++
++remove_check_signature() {
++    local opkg_conf="/etc/opkg.conf"
++    sed -i '/option check_signature/d' "$opkg_conf"
++}
++
++is_iStore() {
++    [ -s "/www/luci-static/istore/index.js" ] && return 0  || return 1
++}
++
++is_vip() {
++     DISTRIB_FREE=$(cat /etc/openwrt_release | grep "Vip" | cut -d " " -f 2 | cut -d "-" -f 1)
++    if [ "$DISTRIB_FREE" = "Vip" ]; then
++        return 0
++    else
++        return 1
++    fi
++}
++
++is_free() {
++     DISTRIB_FREE=$(cat /etc/openwrt_release | grep "Free" | cut -d " " -f 2 | cut -d "-" -f 1)
++    if [ "$DISTRIB_FREE" = "Free" ]; then
++        return 0
++    else
++        return 1
++    fi
++}
++
++istore_install(){
++    if is_iStore; then
++        echo "已经内置iStore应用商店,无须安装！"
++     else
++       echo "正在安装iStore应用商店...."
++	remove_check_signature
++        opkg update
++        opkg remove git-lfs
++        setup_software_source 1
++	ISTORE_REPO=https://istore.linkease.com/repo/all/store
++	FCURL="curl --fail --show-error"
++	curl -V >/dev/null 2>&1 || {
++  	  echo "prereq: install curl"
++  	  opkg info curl | grep -Fqm1 curl || opkg update
++  	  opkg install curl
++	}
++	IPK=$($FCURL "$ISTORE_REPO/Packages.gz" | zcat | grep -m1 '^Filename: luci-app-store.*\.ipk$' | sed -n -e 's/^Filename: \(.\+\)$/\1/p')
++	[ -n "$IPK" ] || exit 1
++	$FCURL "$ISTORE_REPO/$IPK" | tar -xzO ./data.tar.gz | tar -xzO ./bin/is-opkg >/tmp/is-opkg
++	chmod 755 /tmp/is-opkg
++	/tmp/is-opkg update
++	# /tmp/is-opkg install taskd
++	/tmp/is-opkg opkg install --force-reinstall luci-lib-taskd luci-lib-xterm
++	/tmp/is-opkg opkg install --force-reinstall luci-app-store || exit $?
++	[ -s "/etc/init.d/tasks" ] || /tmp/is-opkg opkg install --force-reinstall taskd
++	[ -s "/usr/lib/lua/luci/cbi.lua" ] || /tmp/is-opkg opkg install luci-compat >/dev/null 2>&1
++            uci set system.@system[0].hostname='iStoreOS'
++            uci commit system
++            /etc/init.d/system reload
++            if is_x86_64; then
++                extra_info="with iStoreOS Style"
++		echo "src/gz is_store https://istore.linkease.com/repo/all/store" >/etc/opkg/customfeeds.conf
++		if is_vip; then
++	        	echo "src/gz dllkids https://op.dllkids.xyz/packages/x86_64" >>/etc/opkg/customfeeds.conf
++		fi
++                current_revision=$(grep "DISTRIB_REVISION" /etc/openwrt_release | cut -d "'" -f 2)
++                if [[ $current_revision != *"$extra_info"* ]]; then
++                    new_revision="${current_revision} ${extra_info}"
++                    sed -i "s/DISTRIB_REVISION=.*$/DISTRIB_REVISION='$new_revision'/" /etc/openwrt_release
++                fi
++            else
++                echo "src/gz is_store https://istore.linkease.com/repo/all/store" >/etc/opkg/customfeeds.conf
++		if is_vip; then
++                  local total_lines=$(opkg print-architecture | wc -l)
++                  local architecture=""
++                  local source="https://op.dllkids.xyz/packages/"
++                  if [ "$total_lines" -eq 4 ]; then
++                     architecture=$(opkg print-architecture | awk 'NR==4{print $2}')
++                     echo "No.4 architecture info===="${architecture}
++                     echo "src/gz custom_dllkids "${source}${architecture} >>/etc/opkg/customfeeds.conf
++                   elif [ "$total_lines" -eq 3 ]; then
++                     architecture=$(opkg print-architecture | awk 'NR==3{print $2}')
++                     echo "No.3 architecture info===="${architecture}
++                     echo "src/gz custom_dllkids "${source}${architecture} >>/etc/opkg/customfeeds.conf
++                   else
++                      echo "未知的返回结果行数: $total_lines"
++                   fi
++		fi
++                if ! grep -q " like iStoreOS" /tmp/sysinfo/model; then
++                    sed -i '1s/$/ like iStoreOS/' /tmp/sysinfo/model
++                fi
++            fi
++        uci set luci.main.mediaurlbase='/luci-static/Kucat'
++        uci commit
++        opkg update
++	rm -rf /tmp/is-opkg
++        echo "iStore应用商店安装完成,需要重启OPENWRT才能生效！"
++    fi
++}
++
++drv_install(){
++    if is_vip; then
++        echo "开始安装Docker安装完成..."
++        bash /etc/kmodreg docker
++        echo "Docker安装完成,需要重启OPENWRT才能生效！"
++    else
++            echo "目前此功能仅限VIP版本提供！"
++    fi
++}
++
++docker_install(){
++    if is_vip; then
++        echo "开始安装所有驱动..."
++        bash /etc/kmodreg drv 
++        echo "所有驱动完成,需要重启OPENWRT才能生效！"
++    else
++        echo "目前此功能仅限VIP版本提供！"
++    fi
++}
++
++case $1 in
++    istore) 
++        istore_install ;;  
++    drv) 
++        drv_install ;;  
++    docker) 
++        docker_install;;  
++    esac
+\ No newline at end of file
