@@ -173,6 +173,9 @@ jobs:
         echo "UPLOAD_ALLKMOD=${UPLOAD_ALLKMOD}" >> $GITHUB_ENV
         echo "UPLOAD_SYSUPGRADE=${UPLOAD_SYSUPGRADE}" >> $GITHUB_ENV
         echo "USE_Cache=${USE_Cache}" >> $GITHUB_ENV
+        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
+        echo "_Kernel_Test_Ver=${Kernel_Test}" >> $GITHUB_ENV
+        fi
         chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh
 
     - name: 导入机器及安装包config
@@ -306,6 +309,8 @@ jobs:
       if: steps.config.outputs.status == 'success'
       working-directory: ./openwrt
       run: |
+        echo "------------------------"
+        awk '/CONFIG_LINUX/ { print }' .config
         awk '/${{matrix.target}}/ { print }' .config
         awk '/${{github.event.inputs.MACH}}/ { print }' .config
         echo "------------------------"
@@ -334,8 +339,6 @@ jobs:
         awk '/GCC_VERSION/ { print }' .config
         echo "------------------------"
         awk '/CONFIG_PACKAGE_kmod/ { print }' .config
-        echo "------------------------"
-        awk '/CONFIG_LINUX/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
@@ -407,7 +410,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${Kernel_Test}
         path: |
           firmware
 
@@ -416,7 +419,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_IPK_DIR == 'true' && steps.afb.outputs.status == 'success'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}
+        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${Kernel_Test}
         path: |
           ipks
 
