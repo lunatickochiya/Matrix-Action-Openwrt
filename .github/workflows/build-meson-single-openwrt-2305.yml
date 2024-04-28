@@ -163,9 +163,6 @@ jobs:
 
     - name: 导入机器及安装包config
       run: |
-        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
-        $GITHUB_WORKSPACE/$DIY_SH add-test-config
-        fi
         if [ ${{matrix.target}} == 'meson-ipt' ]; then
                 mv -f machine-configs/single/${{github.event.inputs.MACH}}-ipt.config machine-configs/${{matrix.target}}.config
                 echo "----${{matrix.target}}-----IPT-Machine--------"
@@ -215,7 +212,11 @@ jobs:
       id: files
       run: |
         [ -d package ] && mv -f package/* openwrt/package
+        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
+        [ -d openwrt-2305/target ] && mv -f openwrt-2305/target/linux/meson61 openwrt/target/linux/meson
+        else
         [ -d openwrt-2305/target ] && mv -f openwrt-2305/target/linux/meson515 openwrt/target/linux/meson
+        fi
         [ -d openwrt-2305/mypatch-2305-${{matrix.target}} ] && mv -f openwrt-2305/mypatch-2305-${{matrix.target}} openwrt/mypatch
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
@@ -248,21 +249,29 @@ jobs:
       run: |
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         mv -f openwrt-2305/K61/tele openwrt/feeds/telephony
-        mv -f openwrt-2305/K61/packages/* openwrt-2305/feeds-package-patch-2305
+        mv -f openwrt-2305/K61/packages/* openwrt-2305/feeds-package-patch-23053
         fi
-        [ -d lunatic7-revert ] && mv -f openwrt-2305/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
+        [ -d openwrt-2305/lunatic7-revert ] && mv -f openwrt-2305/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-2305/luci-patch-2305 ] && mv -f openwrt-2305/luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
         [ -d openwrt-2305/feeds-package-patch-23053 ] && mv -f openwrt-2305/feeds-package-patch-23053 openwrt/feeds/packages/feeds-package-patch-2305
         [ -e files ] && mv files openwrt/files
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
+        grep "meson8b" openwrt/package-configs/.config
+        echo "------------------------"
         cd openwrt
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         $GITHUB_WORKSPACE/$DIY_SH patchtele
         fi
         $GITHUB_WORKSPACE/$DIY_SH ${{matrix.target}}
+        echo "--------diy----------------"
+        grep "meson8b" .config
         make defconfig
+        echo "--------before-rfc----------------"
+        awk '/meson8b/ { print }' .config
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
+        echo "--------rfc----------------"
+        awk '/meson8b/ { print }' .config
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 添加kmod
@@ -277,6 +286,7 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
         make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
+        awk '/meson8b/ { print }' .config
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Run awk command

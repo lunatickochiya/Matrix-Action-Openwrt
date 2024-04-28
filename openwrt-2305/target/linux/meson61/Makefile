@@ -25,6 +25,7 @@ DEFAULT_PACKAGES += \
 	kmod-sound-core \
 	kmod-usb-hid \
 	mkf2fs \
+	parted losetup resize2fs \
 	partx-utils
 
 KERNELNAME:=Image dtbs

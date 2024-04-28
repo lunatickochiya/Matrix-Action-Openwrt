@@ -12,7 +12,6 @@ MAINTAINER:=Stijn Tintel <stijn@linux-ipv6.be>
 SUBTARGETS:=meson8b mesongx
 
 KERNEL_PATCHVER:=5.15
-KERNEL_TESTING_PATCHVER:=6.1
 
 define Target/Description
 	Build firmware image for Amlogic Meson SoC devices.
