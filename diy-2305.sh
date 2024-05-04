@@ -26,8 +26,10 @@ function remove_error_package() {
 
 packages=(
     "luci-app-dockerman"
+    "luci-app-smartdns"
     "rtl8821cu"
     "xray-core"
+    "smartdns"
 )
 
 for package in "${packages[@]}"; do
@@ -38,8 +40,10 @@ done
 
 directories=(
     "feeds/luci/applications/luci-app-dockerman"
+    "feeds/luci/applications/luci-app-smartdns"
     "feeds/lunatic7/rtl8821cu"
     "feeds/packages/net/xray-core"
+    "feeds/packages/net/smartdns"
 )
 
 for directory in "${directories[@]}"; do
@@ -60,8 +64,10 @@ function remove_error_package_not_install() {
 
 packages=(
     "luci-app-dockerman"
+    "luci-app-smartdns"
     "rtl8821cu"
     "xray-core"
+    "smartdns"
 )
 
 for package in "${packages[@]}"; do
@@ -72,8 +78,10 @@ done
 
 directories=(
     "feeds/luci/applications/luci-app-dockerman"
+    "feeds/luci/applications/luci-app-smartdns"
     "feeds/lunatic7/rtl8821cu"
     "feeds/packages/net/xray-core"
+    "feeds/packages/net/smartdns"
 )
 
 for directory in "${directories[@]}"; do
