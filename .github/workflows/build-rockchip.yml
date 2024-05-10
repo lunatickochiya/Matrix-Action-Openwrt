@@ -66,7 +66,14 @@ on:
         - 'true'
         - 'false'
       TEST-KERNEL:
-        description: 'OpenWrt-23.05 Use kernel 6.1'
+        description: 'OpenWrt-23.05 use testing kernel'
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+      KERNEL66:
+        description: 'OpenWrt-23.05 use 6.6 kernel'
         default: 'false'
         type: choice
         options:
@@ -212,6 +219,10 @@ jobs:
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
         $GITHUB_WORKSPACE/$DIY_SH kernel61
+        fi
+        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
+        git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
+        $GITHUB_WORKSPACE/$DIY_SH kernel66
         fi
         echo "status=success" >> $GITHUB_OUTPUT
 

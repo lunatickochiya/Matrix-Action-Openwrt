@@ -216,6 +216,78 @@ fi
 rm -rf tpm312
 }
 
+function patch_kernel66() {
+
+for rockpatch in $( ls tpm312/openwrt-23.05-k6.6/core ); do
+    echo Applying openwrt-23.05-k6.6 $rockpatch
+    patch -p1 --no-backup-if-mismatch < tpm312/openwrt-23.05-k6.6/core/$rockpatch
+done
+
+rm -rf tpm312
+}
+
+function patch_kernel515-66() {
+
+for rockpatch in $( ls tpm312/openwrt-23.05-k6.6/core ); do
+    echo Applying openwrt-23.05-k6.6 $rockpatch
+    patch -p1 --no-backup-if-mismatch < tpm312/openwrt-23.05-k6.6/core/$rockpatch
+done
+
+directories2=(
+    "package/kernel/mac80211"
+    "package/kernel/mt76"
+)
+
+for directory2 in "${directories2[@]}"; do
+    if [ -d "$directory2" ]; then
+        echo "目录 $directory2 存在，进行删除操作..."
+        rm -r "$directory2"
+        echo "目录 $directory2 已删除。"
+    else
+        echo "目录 $directory2 不存在。"
+    fi
+done
+
+source_directory="tpm312/package/kernel/mac80211"
+source_directory2="tpm312/package/kernel/mt76"
+target_directory="package/kernel/mac80211"
+target_directory2="package/kernel/mt76"
+
+# 检查源目录1是否存在
+if [ -d "$source_directory" ]; then
+    echo "源目录 $source_directory 存在。"
+
+    # 检查目标目录1是否存在
+    if [ -d "$target_directory" ]; then
+        echo "目标目录 $target_directory 已经存在，无需移动。"
+    else
+        echo "目标目录 $target_directory 不存在，进行恢复操作..."
+        mv -f "$source_directory" "$target_directory"
+        echo "目录 $source_directory 已移动到目标目录 $target_directory。"
+    fi
+else
+    echo "源目录 $source_directory 不存在。"
+fi
+
+# 检查源目录2是否存在
+if [ -d "$source_directory2" ]; then
+    echo "源目录 $source_directory2 存在。"
+
+    # 检查目标目录2是否存在
+    if [ -d "$target_directory2" ]; then
+        echo "目标目录 $target_directory2 已经存在，无需移动。"
+    else
+        echo "目标目录 $target_directory2 不存在，进行恢复操作..."
+        mv -f "$source_directory2" "$target_directory2"
+        echo "目录 $source_directory2 已移动到目标目录 $target_directory2。"
+    fi
+else
+    echo "源目录 $source_directory2 不存在。"
+fi
+
+rm -rf tpm312
+}
+
 function remove_firewall() {
 
 directories1=(
@@ -297,6 +369,8 @@ elif [ "$1" == "firewallremove" ]; then
 remove_firewall
 elif [ "$1" == "kernel61" ]; then
 patch_kernel61
+elif [ "$1" == "kernel66" ]; then
+patch_kernel66
 elif [ "$1" == "patchtele" ]; then
 patch_op_tele
 elif [ "$1" == "add-test-config" ]; then
