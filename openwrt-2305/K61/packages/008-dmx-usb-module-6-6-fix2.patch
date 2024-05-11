@@ -1,0 +1,45 @@
+From 9233703a1ed52775ced09de9e4fa682815a2de0a Mon Sep 17 00:00:00 2001
+From: Adam Duskett <adam.duskett@amarulasolutions.com>
+Date: Wed, 3 Apr 2024 14:19:00 -0600
+Subject: [PATCH] dmx_usb_module: fix 6.6 kernel compile
+
+Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
+---
+ libs/dmx_usb_module/Makefile                       |  2 +-
+ .../patches/101-fix-kernel-6.6-builds.patch        | 14 ++++++++++++++
+ 2 files changed, 15 insertions(+), 1 deletion(-)
+ create mode 100644 libs/dmx_usb_module/patches/101-fix-kernel-6.6-builds.patch
+
+diff --git a/libs/dmx_usb_module/Makefile b/libs/dmx_usb_module/Makefile
+index 971648cfad22d..309c6fe130382 100644
+--- a/libs/dmx_usb_module/Makefile
++++ b/libs/dmx_usb_module/Makefile
+@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=dmx_usb_module
+ PKG_VERSION:=19.12.1
+-PKG_RELEASE:=1
++PKG_RELEASE:=2
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://codeload.github.com/lowlander/dmx_usb_module/tar.gz/V$(PKG_VERSION)?
+diff --git a/libs/dmx_usb_module/patches/101-fix-kernel-6.6-builds.patch b/libs/dmx_usb_module/patches/101-fix-kernel-6.6-builds.patch
+new file mode 100644
+index 0000000000000..d0cd7bdbb3e2a
+--- /dev/null
++++ b/libs/dmx_usb_module/patches/101-fix-kernel-6.6-builds.patch
+@@ -0,0 +1,14 @@
++--- a/dmx_usb.c
+++++ b/dmx_usb.c
++@@ -97,7 +97,11 @@ struct dmx_usb_device {
++ 
++ 
++ /* prevent races between open() and disconnect() */
+++#if(LINUX_VERSION_CODE < KERNEL_VERSION(6,5,3))
++ 	static DEFINE_SEMAPHORE(disconnect_sem);
+++#else
+++	static DEFINE_SEMAPHORE(disconnect_sem, 1);
+++#endif
++ 
++ /* local function prototypes */
++ static ssize_t dmx_usb_write	(struct file *file, const char *buffer, size_t count, loff_t *ppos);

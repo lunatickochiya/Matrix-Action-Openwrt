@@ -1,0 +1,73 @@
+From 724073924214812284a574ae725c18678af1eabe Mon Sep 17 00:00:00 2001
+From: Adam Duskett <adam.duskett@amarulasolutions.com>
+Date: Wed, 3 Apr 2024 13:13:17 -0600
+Subject: [PATCH] libs/xr_usb_serial_common: fix 6.6 kernel compile
+
+Upstream: submitted
+https://github.com/kasbert/epsolar-tracer/pull/61
+
+Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
+---
+ libs/xr_usb_serial_common/Makefile            |  4 +-
+ .../patches/0001-fix-kernel-6.6-builds.patch  | 52 +++++++++++++++++++
+ 2 files changed, 54 insertions(+), 2 deletions(-)
+ create mode 100644 libs/xr_usb_serial_common/patches/0001-fix-kernel-6.6-builds.patch
+
+diff --git a/libs/xr_usb_serial_common/patches/0001-fix-kernel-6.6-builds.patch b/libs/xr_usb_serial_common/patches/0001-fix-kernel-6.6-builds.patch
+new file mode 100644
+index 0000000000000..3389aeb92ff19
+--- /dev/null
++++ b/libs/xr_usb_serial_common/patches/0001-fix-kernel-6.6-builds.patch
+@@ -0,0 +1,52 @@
++From 5115918c11cc99e93586cef7f33d8d3907b7258a Mon Sep 17 00:00:00 2001
++From: Adam Duskett <adam.duskett@amarulasolutions.com>
++Date: Wed, 3 Apr 2024 12:45:41 -0600
++Subject: [PATCH] Support Linux >= 6.2.0
++
++FROM: https://github.com/kasbert/epsolar-tracer/pull/61
++
++Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
++---
++ xr_usb_serial_common-1a/xr_usb_serial_common.c | 13 +++++++++++++
++ 1 file changed, 13 insertions(+)
++
++--- a/xr_usb_serial_common-1a/xr_usb_serial_common.c
+++++ b/xr_usb_serial_common-1a/xr_usb_serial_common.c
++@@ -643,8 +643,13 @@ static void xr_usb_serial_tty_close(stru
++ 	tty_port_close(&xr_usb_serial->port, tty, filp);
++ }
++ 
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 2, 0)
+++static ssize_t xr_usb_serial_tty_write(struct tty_struct *tty,
+++					const unsigned char *buf, size_t count)
+++#else
++ static int xr_usb_serial_tty_write(struct tty_struct *tty,
++ 					const unsigned char *buf, int count)
+++#endif
++ {
++ 	struct xr_usb_serial *xr_usb_serial = tty->driver_data;
++ 	int stat;
++@@ -655,7 +660,11 @@ static int xr_usb_serial_tty_write(struc
++ 	if (!count)
++ 		return 0;
++ 
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 2, 0)
+++	dev_vdbg(&xr_usb_serial->data->dev, "%s - count %ld\n", __func__, count);
+++#else
++ 	dev_vdbg(&xr_usb_serial->data->dev, "%s - count %d\n", __func__, count);
+++#endif
++ 
++ 	spin_lock_irqsave(&xr_usb_serial->write_lock, flags);
++ 	wbn = xr_usb_serial_wb_alloc(xr_usb_serial);
++@@ -672,7 +681,11 @@ static int xr_usb_serial_tty_write(struc
++ 	}
++ 
++ 	count = (count > xr_usb_serial->writesize) ? xr_usb_serial->writesize : count;
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 2, 0)
+++	dev_vdbg(&xr_usb_serial->data->dev, "%s - write %ld\n", __func__, count);
+++#else
++ 	dev_vdbg(&xr_usb_serial->data->dev, "%s - write %d\n", __func__, count);
+++#endif
++ 	memcpy(wb->buf, buf, count);
++ 	wb->len = count;
++ 

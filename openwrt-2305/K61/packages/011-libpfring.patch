@@ -1,0 +1,255 @@
+From 5e27e2cc5d280d5305d5ea71706b1b7f9790762d Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Fri, 8 Mar 2024 16:44:48 -0800
+Subject: [PATCH] libpfring: update to 8.6.1
+
+Fixes compilation with kernel 6.6
+
+Remove upstream backport.
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ libs/libpfring/Makefile                       |  6 +-
+ .../patches/0001-fix-cross-compiling.patch    |  6 +-
+ ...002-implement-probabilistic-sampling.patch | 89 -------------------
+ .../patches/100-fix-compilation-warning.patch |  2 +-
+ ...l-pf_ring-better-define-sa_data-size.patch | 72 ---------------
+ 5 files changed, 7 insertions(+), 168 deletions(-)
+ delete mode 100644 libs/libpfring/patches/002-implement-probabilistic-sampling.patch
+ delete mode 100644 libs/libpfring/patches/101-kernel-pf_ring-better-define-sa_data-size.patch
+
+diff --git a/libs/libpfring/Makefile b/libs/libpfring/Makefile
+index 1083d6ec78bb6..b115e722c73c8 100644
+--- a/libs/libpfring/Makefile
++++ b/libs/libpfring/Makefile
+@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
+ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=libpfring
+-PKG_VERSION:=8.4.0
+-PKG_RELEASE:=2
++PKG_VERSION:=8.6.1
++PKG_RELEASE:=1
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://codeload.github.com/ntop/PF_RING/tar.gz/$(PKG_VERSION)?
+-PKG_HASH:=2756a45ab250da11850160beb62aa879075aedfb49bf8f323b404f02b0c36670
++PKG_HASH:=c3b3233a59bb642457e60596d2e5b58b4207cccd713f3fe7b0ce5c9ea1a4a131
+ PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/PF_RING-$(PKG_VERSION)
+ 
+ PKG_MAINTAINER:=Banglang Huang <banglang.huang@foxmail.com>
+diff --git a/libs/libpfring/patches/0001-fix-cross-compiling.patch b/libs/libpfring/patches/0001-fix-cross-compiling.patch
+index 021162bbbfa4e..1b9d455408eed 100644
+--- a/libs/libpfring/patches/0001-fix-cross-compiling.patch
++++ b/libs/libpfring/patches/0001-fix-cross-compiling.patch
+@@ -1,6 +1,6 @@
+ --- a/userland/configure
+ +++ b/userland/configure
+-@@ -3868,12 +3868,6 @@ $as_echo "no" >&6; }
++@@ -3873,12 +3873,6 @@ $as_echo "no" >&6; }
+          if test "$IS_FREEBSD" != "1" && test "$cross_compiling" != "yes" ; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking if r/w locks are supported" >&5
+  $as_echo_n "checking if r/w locks are supported... " >&6; }
+@@ -13,7 +13,7 @@
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+  /* end confdefs.h.  */
+  
+-@@ -3886,7 +3880,7 @@ else
++@@ -3891,7 +3885,7 @@ else
+  
+  
+  _ACEOF
+@@ -22,7 +22,7 @@
+     { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+  $as_echo "yes" >&6; }
+  cat >>confdefs.h <<_ACEOF
+-@@ -3900,7 +3894,6 @@ $as_echo "no" >&6; }
++@@ -3905,7 +3899,6 @@ $as_echo "no" >&6; }
+  fi
+  rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+    conftest.$ac_objext conftest.beam conftest.$ac_ext
+diff --git a/libs/libpfring/patches/002-implement-probabilistic-sampling.patch b/libs/libpfring/patches/002-implement-probabilistic-sampling.patch
+deleted file mode 100644
+index d7b3e833997e9..0000000000000
+--- a/libs/libpfring/patches/002-implement-probabilistic-sampling.patch
++++ /dev/null
+@@ -1,89 +0,0 @@
+-From 405caa1424358032574230ec5479e64834869298 Mon Sep 17 00:00:00 2001
+-From: Alfredo Cardigliano <cardigliano@ntop.org>
+-Date: Thu, 13 Apr 2023 13:03:28 +0200
+-Subject: [PATCH] Implement probabilistic sampling
+-
+----
+- kernel/linux/pf_ring.h |  4 +++-
+- kernel/pf_ring.c       | 34 ++++++++++++++++++++++++----------
+- 2 files changed, 27 insertions(+), 11 deletions(-)
+-
+---- a/kernel/linux/pf_ring.h
+-+++ b/kernel/linux/pf_ring.h
+-@@ -1310,7 +1310,9 @@ struct pf_ring_socket {
+-   u_char *ring_slots;       /* Points to ring_memory+sizeof(FlowSlotInfo) */
+- 
+-   /* Packet Sampling */
+--  u_int32_t pktToSample, sample_rate;
+-+  u_int32_t sample_rate;
+-+  u_int32_t pkts_to_sample;
+-+  u_int32_t sample_rnd_shift;
+- 
+-   /* Virtual Filtering Device */
+-   virtual_filtering_device_element *v_filtering_dev;
+---- a/kernel/pf_ring.c
+-+++ b/kernel/pf_ring.c
+-@@ -3695,6 +3695,26 @@ int bpf_filter_skb(struct sk_buff *skb,
+- 
+- /* ********************************** */
+- 
+-+int sample_packet(struct pf_ring_socket *pfr) {
+-+  if(pfr->pkts_to_sample <= 1) {
+-+    u_int32_t rnd = 0;
+-+
+-+    get_random_bytes(&rnd, sizeof(u_int32_t));
+-+    rnd = rnd % pfr->sample_rate;
+-+
+-+    pfr->pkts_to_sample = pfr->sample_rate - pfr->sample_rnd_shift + rnd;
+-+
+-+    pfr->sample_rnd_shift = rnd;
+-+
+-+    return 1; /* Pass packet */
+-+  } else {
+-+    pfr->pkts_to_sample--;
+-+    return 0; /* Discard packet */
+-+  }
+-+}
+-+
+-+/* ********************************** */
+-+
+- u_int32_t default_rehash_rss_func(struct sk_buff *skb, struct pfring_pkthdr *hdr)
+- {
+-   return hash_pkt_header(hdr, 0);
+-@@ -3805,12 +3825,9 @@ static int add_skb_to_ring(struct sk_buf
+-     if(pfr->sample_rate > 1) {
+-       spin_lock_bh(&pfr->ring_index_lock);
+- 
+--      if(pfr->pktToSample <= 1) {
+--	pfr->pktToSample = pfr->sample_rate;
+--      } else {
+-+      if(!sample_packet(pfr)) {
+-+        /* Discard packet */
+-         pfr->slots_info->tot_pkts++;
+--	pfr->pktToSample--;
+--
+- 	spin_unlock_bh(&pfr->ring_index_lock);
+- 	atomic_dec(&pfr->num_ring_users);
+- 	return(-1);
+-@@ -4161,11 +4178,8 @@ int pf_ring_skb_ring_handler(struct sk_b
+- 
+-         if(pfr->sample_rate > 1) {
+-           spin_lock_bh(&pfr->ring_index_lock);
+--          if(pfr->pktToSample <= 1) {
+--            pfr->pktToSample = pfr->sample_rate;
+--          } else {
+-+          if (!sample_packet(pfr)) {
+-             pfr->slots_info->tot_pkts++;
+--            pfr->pktToSample--;
+-             rc = 0;
+-           }
+-           spin_unlock_bh(&pfr->ring_index_lock);
+-@@ -7957,7 +7971,7 @@ static int ring_getsockopt(struct socket
+- 	if(copy_to_user(optval, lowest_if_mac, ETH_ALEN))
+- 	  return(-EFAULT);
+-       } else {
+--        char *dev_addr = pfr->ring_dev->dev->dev_addr;
+-+        const char *dev_addr = pfr->ring_dev->dev->dev_addr;
+- 
+-         if (dev_addr == NULL) /* e.g. 'any' device */
+-           dev_addr = empty_mac;
+diff --git a/libs/libpfring/patches/100-fix-compilation-warning.patch b/libs/libpfring/patches/100-fix-compilation-warning.patch
+index 97115b1761a77..85393a2efbd85 100644
+--- a/libs/libpfring/patches/100-fix-compilation-warning.patch
++++ b/libs/libpfring/patches/100-fix-compilation-warning.patch
+@@ -1,6 +1,6 @@
+ --- a/kernel/pf_ring.c
+ +++ b/kernel/pf_ring.c
+-@@ -3902,7 +3902,7 @@ static int hash_pkt_cluster(ring_cluster
++@@ -3903,7 +3903,7 @@ static int hash_pkt_cluster(ring_cluster
+        break;
+      }
+      /* else, fall through, because it's like 2-tuple for non-TCP packets */
+diff --git a/libs/libpfring/patches/101-kernel-pf_ring-better-define-sa_data-size.patch b/libs/libpfring/patches/101-kernel-pf_ring-better-define-sa_data-size.patch
+deleted file mode 100644
+index 7c27515f4c0a7..0000000000000
+--- a/libs/libpfring/patches/101-kernel-pf_ring-better-define-sa_data-size.patch
++++ /dev/null
+@@ -1,72 +0,0 @@
+-From fae2437c2af80d3ea64f5bc9678a5b697772295b Mon Sep 17 00:00:00 2001
+-From: Christian Marangi <ansuelsmth@gmail.com>
+-Date: Mon, 18 Mar 2024 10:03:43 +0100
+-Subject: [PATCH] kernel: pf_ring: better define sa_data size
+-
+-pfring_mod_bind() needs to specify the interface
+-name using struct sockaddr that is defined as
+-
+-struct sockaddr { ushort sa_family; char sa_data[14]; };
+-
+-so the total interface name length is 13 chars (plus \0 trailer).
+-
+-Since sa_data size is arbitrary, define a more precise size for
+-PF_RING socket use.
+-
+-This fix some compilation error with fortify string and makes the array
+-handling more deterministic.
+-
+-Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+----
+- kernel/pf_ring.c | 22 ++++++++++++++++++----
+- 1 file changed, 18 insertions(+), 4 deletions(-)
+-
+---- a/kernel/pf_ring.c
+-+++ b/kernel/pf_ring.c
+-@@ -155,6 +155,18 @@
+- #endif
+- #endif
+- 
+-+/*
+-+  pfring_mod_bind() needs to specify the interface
+-+	name using struct sockaddr that is defined as
+-+
+-+  struct sockaddr { ushort sa_family; char sa_data[14]; };
+-+
+-+  so the total interface name length is 13 chars (plus \0 trailer).
+-+  Since sa_data size is arbitrary, define a more precise size for
+-+  PF_RING socket use.
+-+*/
+-+#define RING_SA_DATA_LEN 14
+-+
+- /* ************************************************* */
+- 
+- #if(LINUX_VERSION_CODE >= KERNEL_VERSION(5,6,0))
+-@@ -1029,7 +1041,7 @@ pf_ring_device *pf_ring_device_name_look
+- 	  so the total interface name length is 13 chars (plus \0 trailer).
+- 	  The check below is to trap this case.
+- 	 */
+--	|| ((l >= 13) && (strncmp(dev_ptr->device_name, name, 13) == 0)))
+-+	|| ((l >= RING_SA_DATA_LEN - 1) && (strncmp(dev_ptr->device_name, name, RING_SA_DATA_LEN - 1) == 0)))
+-        && device_net_eq(dev_ptr, net))
+-       return dev_ptr;
+-   }
+-@@ -5571,15 +5583,15 @@ static int ring_bind(struct socket *sock
+-    * Check legality
+-    */
+-   if (addr_len == sizeof(struct sockaddr)) {
+--    char name[sizeof(sa->sa_data)+1];
+-+    char name[RING_SA_DATA_LEN];
+- 
+-     if (sa->sa_family != PF_RING)
+-       return(-EINVAL);
+- 
+--    memcpy(name, sa->sa_data, sizeof(sa->sa_data));
+-+    memcpy(name, sa->sa_data, RING_SA_DATA_LEN - 1);
+- 
+-     /* Add trailing zero if missing */
+--    name[sizeof(name)-1] = '\0';
+-+    name[RING_SA_DATA_LEN-1] = '\0';
+- 
+-     debug_printk(2, "searching device %s\n", name);
+- 

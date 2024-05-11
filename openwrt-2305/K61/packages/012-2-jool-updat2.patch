@@ -1,0 +1,85 @@
+From 643e3bf73a9222b460f00dcd23aa11b6ecf3e852 Mon Sep 17 00:00:00 2001
+From: Tiago Gaspar <tiagogaspar8@gmail.com>
+Date: Fri, 9 Feb 2024 15:21:25 +0000
+Subject: [PATCH] jool: update to 4.1.11
+
+Update jool to 4.1.11 and remove unneeded patch.
+Changelog: https://github.com/NICMx/Jool/releases/tag/v4.1.11
+
+Signed-off-by: Tiago Gaspar <tiagogaspar8@gmail.com>
+---
+ net/jool/Makefile                             |  6 ++---
+ ...000-include-csum_tcpudp_magic-header.patch | 26 -------------------
+ ...0-fix-compilation-warning-simple-fix.patch |  2 +-
+ 3 files changed, 4 insertions(+), 30 deletions(-)
+ delete mode 100644 net/jool/patches/000-include-csum_tcpudp_magic-header.patch
+
+diff --git a/net/jool/Makefile b/net/jool/Makefile
+index 6d5069d81552b..fa289ebca4a18 100644
+--- a/net/jool/Makefile
++++ b/net/jool/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
+ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=jool
+-PKG_VERSION:=4.1.10
++PKG_VERSION:=4.1.11
+ PKG_RELEASE:=1
+ 
+ PKG_LICENSE:=GPL-2.0-only
+@@ -16,8 +16,8 @@ PKG_LICENSE_FILES:=COPYING
+ 
+ PKG_SOURCE_PROTO:=git
+ PKG_SOURCE_URL:=https://github.com/NICMx/Jool.git
+-PKG_SOURCE_VERSION:=47334c9124b7a2e3253fb279e6c33acb9c2b09a6
+-PKG_MIRROR_HASH:=ef34f68eb911c97016180ed09e852625a3c0fe49f7d7574382a03db75c23b60e
++PKG_SOURCE_VERSION:=aed966aa4873af2d84fd445f49cf33f719539c9e
++PKG_MIRROR_HASH:=84dcd6884d849f45a3374ab25654b20cef681a3bcf0fb7f7381281f6f14c31a4
+ 
+ PKG_BUILD_DIR=$(KERNEL_BUILD_DIR)/$(PKG_SOURCE_SUBDIR)
+ PKG_BUILD_PARALLEL:=1
+diff --git a/net/jool/patches/000-include-csum_tcpudp_magic-header.patch b/net/jool/patches/000-include-csum_tcpudp_magic-header.patch
+deleted file mode 100644
+index 4d004b865d2f8..0000000000000
+--- a/net/jool/patches/000-include-csum_tcpudp_magic-header.patch
++++ /dev/null
+@@ -1,26 +0,0 @@
+-From aa511f8856b4a437de005f23c6932948fffd8768 Mon Sep 17 00:00:00 2001
+-From: Alberto Leiva Popper <ydahhrk@gmail.com>
+-Date: Sat, 1 Jul 2023 09:52:09 -0600
+-Subject: [PATCH] Include csum_tcpudp_magic's header
+-
+-Fixes build in some kernels.
+-In fact, I'm not sure why I'm not getting the warning. It looks as
+-though I should.
+-
+-Thanks to Charles Hardin for this patch.
+-
+-Fixes #407.
+----
+- src/mod/common/rfc7915/6to4.c | 1 +
+- 1 file changed, 1 insertion(+)
+-
+---- a/src/mod/common/rfc7915/6to4.c
+-+++ b/src/mod/common/rfc7915/6to4.c
+-@@ -1,6 +1,7 @@
+- #include "mod/common/rfc7915/6to4.h"
+- 
+- #include <linux/inetdevice.h>
+-+#include <net/ip6_checksum.h>
+- #include <net/udp.h>
+- #include <net/tcp.h>
+- 
+diff --git a/net/jool/patches/100-fix-compilation-warning-simple-fix.patch b/net/jool/patches/100-fix-compilation-warning-simple-fix.patch
+index dccd70f09bbb9..2b02459437c40 100644
+--- a/net/jool/patches/100-fix-compilation-warning-simple-fix.patch
++++ b/net/jool/patches/100-fix-compilation-warning-simple-fix.patch
+@@ -15,7 +15,7 @@
+  static int truncated(unsigned int tabs)
+ --- a/src/mod/common/xlator.c
+ +++ b/src/mod/common/xlator.c
+-@@ -889,7 +889,7 @@ void xlator_put(struct xlator *jool)
++@@ -890,7 +890,7 @@ void xlator_put(struct xlator *jool)
+  static bool offset_equals(struct instance_entry_usr *offset,
+  		struct jool_instance *instance)
+  {

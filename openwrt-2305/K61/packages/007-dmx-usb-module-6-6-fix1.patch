@@ -1,0 +1,62 @@
+From 0feea716bd6a39ebccc94ef638881f5548709aaa Mon Sep 17 00:00:00 2001
+From: Josef Schlehofer <pepe.schlehofer@gmail.com>
+Date: Mon, 15 May 2023 13:54:50 +0200
+Subject: [PATCH] dmx_usb_module: use upstream commit to fix compilation with
+ kernel 6.2+
+
+Recently, there was pushed patch, which fixed only part to get it working with
+Linux kernel 6.2+, but it was only local change and it did not use the changes,
+which are going to be included in the upcoming dmx_usb_module release.
+
+This commit use the commit from the upstream repository:
+https://github.com/lowlander/dmx_usb_module/commit/eeecf40c3eb3dbdf1981c508080ab3aa61e105e2
+
+Fixes: e15d9f75dac2888b9d863c6f2d1c19637631c1fb ("dmx_usb_module: fix compilation warning")
+
+Signed-off-by: Josef Schlehofer <pepe.schlehofer@gmail.com>
+---
+ ...0-fix-compilation-warning-wrong-cast.patch | 28 ++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
+
+diff --git a/libs/dmx_usb_module/patches/100-fix-compilation-warning-wrong-cast.patch b/libs/dmx_usb_module/patches/100-fix-compilation-warning-wrong-cast.patch
+index 413cb63eac3eb..9d9767d1bb87d 100644
+--- a/libs/dmx_usb_module/patches/100-fix-compilation-warning-wrong-cast.patch
++++ b/libs/dmx_usb_module/patches/100-fix-compilation-warning-wrong-cast.patch
+@@ -1,6 +1,23 @@
++From eeecf40c3eb3dbdf1981c508080ab3aa61e105e2 Mon Sep 17 00:00:00 2001
++From: Erwin Rol <erwin@erwinrol.com>
++Date: Fri, 13 Jan 2023 17:57:36 +0100
++Subject: [PATCH] Fix format warnings
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++Fix the following warning
++
++warning: format ‘%d’ expects argument of type ‘int’, but argument 4 has type ‘size_t’ {aka ‘long unsigned int’}
++
++Signed-off-by: Erwin Rol <erwin@erwinrol.com>
++---
++ dmx_usb.c | 4 ++--
++ 1 file changed, 2 insertions(+), 2 deletions(-)
++
+ --- a/dmx_usb.c
+ +++ b/dmx_usb.c
+-@@ -406,7 +406,7 @@ static ssize_t dmx_usb_write (struct file *file, const char *buffer, size_t coun
++@@ -406,7 +406,7 @@ static ssize_t dmx_usb_write (struct fil
+  
+  	dev = (struct dmx_usb_device *)file->private_data;
+  
+@@ -9,3 +26,12 @@
+  
+  	/* lock this object */
+  	down (&dev->sem);
++@@ -500,7 +500,7 @@ static long dmx_usb_ioctl (struct file *
++ 		return -ENODEV;
++ 	}
++ 
++-	dbg("%s - minor %d, cmd 0x%.4x, arg %ld", __FUNCTION__,
+++	dbg("%s - minor %d, cmd 0x%.4x, arg %lu", __FUNCTION__,
++ 	    dev->minor, cmd, arg);
++ 
++ 	/* fill in your device specific stuff here */
