@@ -312,12 +312,21 @@ jobs:
       id: config2
       run: |
         cd openwrt
+        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
+        make defconfig
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
+        make defconfig
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
+        make defconfig
+        else
         $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
         make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
         make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
         make defconfig
+        fi
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
         echo "status=success" >> $GITHUB_OUTPUT
 
