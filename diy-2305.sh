@@ -306,6 +306,46 @@ for directory1 in "${directories1[@]}"; do
 done
         }
 
+function feeds_replace() {
+
+source_directory="feeds-bump/packages/kernel/ovpn-dco"
+target_directory="feeds/packages/kernel/ovpn-dco"
+source_directory2="feeds-bump/packages/utils/cryptsetup"
+target_directory2="feeds/packages/utils/cryptsetup"
+source_directory3="feeds-bump/telephony/libs/dahdi-linux"
+target_directory3="feeds/telephony/libs/dahdi-linux"
+
+
+# 定义源目录数组和目标目录数组
+source_directories=("$source_directory" "$source_directory2" "$source_directory3")
+target_directories=("$target_directory" "$target_directory2" "$target_directory3")
+
+# 遍历数组中的每个源目录和目标目录
+for ((i=0; i<${#source_directories[@]}; i++)); do
+    source_dir=${source_directories[i]}
+    target_dir=${target_directories[i]}
+
+    # 检查源目录是否存在
+    if [ -d "$source_dir" ]; then
+        echo "源目录 $source_dir 存在。"
+
+        # 检查目标目录是否存在
+        if [ -d "$target_dir" ]; then
+            echo "目标目录 $target_dir 存在，先删除目标目录..."
+            rm -rf "$target_dir"
+            echo "目标目录 $target_dir 已删除。"
+        fi
+
+        # 移动源目录到目标目录
+        mv -f "$source_dir" "$target_dir"
+        echo "目录 $source_dir 已移动到目标目录 $target_dir。"
+    else
+        echo "源目录 $source_dir 不存在。"
+    fi
+done
+
+}
+
 # add luci
 function add_meson_ipt_packages() {
 echo "$(cat package-configs/meson-ipt-2305.config)" >> package-configs/.config
@@ -373,6 +413,8 @@ elif [ "$1" == "kernel66" ]; then
 patch_kernel66
 elif [ "$1" == "patchtele" ]; then
 patch_op_tele
+elif [ "$1" == "feeds-replace" ]; then
+feeds_replace
 elif [ "$1" == "add-test-config" ]; then
 add_test_kernel_config
 else

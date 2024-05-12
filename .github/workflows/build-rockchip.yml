@@ -243,6 +243,8 @@ jobs:
       id: files
       run: |
         [ -d package ] && mv -f package/* openwrt/package
+        mkdir openwrt/feeds-bump
+        [ -d feeds-packages ] && mv -f feeds-packages/openwrt-23.05/feeds/* openwrt/feeds-bump
         if [ "${{ matrix.repo }}" == "openwrt-23.05" ]; then
         [ -d openwrt-2305/mypatch-2305-${{matrix.target}} ] && mv -f openwrt-2305/mypatch-2305-${{matrix.target}} openwrt/mypatch
         elif [ "${{ matrix.repo }}" == "main" ]; then
@@ -300,6 +302,9 @@ jobs:
         fi
         make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
+        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
+        $GITHUB_WORKSPACE/$DIY_SH feeds-replace
+        fi
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 添加kmod
