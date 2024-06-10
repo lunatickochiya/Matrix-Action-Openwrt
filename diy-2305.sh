@@ -140,7 +140,7 @@ function patch_lunatic7() {
 function patch_rockchip() {
         for rockpatch in $( ls tpm312/core ); do
             echo Applying tpm312 $rockpatch
-            patch -p1 --no-backup-if-mismatch < tpm312/core/$rockpatch
+            patch -p1 --no-backup-if-mismatch --quiet < tpm312/core/$rockpatch
         done
         rm -rf tpm312
         }
