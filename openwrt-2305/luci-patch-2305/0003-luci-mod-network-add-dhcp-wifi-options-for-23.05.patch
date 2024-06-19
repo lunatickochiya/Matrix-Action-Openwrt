@@ -1,15 +1,15 @@
-From 3c6a3fbd4d5cf302c4761d61e31ebb2375368d87 Mon Sep 17 00:00:00 2001
+From 8de6bb01766582426e2ec0060426c5db7dfbbc90 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Tue, 19 Dec 2023 14:50:37 +0800
 Subject: [PATCH 3/3] luci-mod-network:add dhcp wifi options for 23.05
 
 ---
- .../htdocs/luci-static/resources/view/network/dhcp.js | 11 +++++++++++
- .../luci-static/resources/view/network/wireless.js    |  6 ++++++
- 2 files changed, 17 insertions(+)
+ .../htdocs/luci-static/resources/view/network/dhcp.js       | 4 ++++
+ .../htdocs/luci-static/resources/view/network/wireless.js   | 6 ++++++
+ 2 files changed, 10 insertions(+)
 
 diff --git a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js
-index 43d27e2..0aa1f2f 100644
+index c723a45..555bcdf 100644
 --- a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js
 +++ b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js
 @@ -347,6 +347,10 @@ return view.extend({
@@ -24,7 +24,7 @@ index 43d27e2..0aa1f2f 100644
  			_('Resolve these locally'),
  			_('Never forward these matching domains or subdomains; resolve from DHCP or hosts files only.'));
 diff --git a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
-index ad633b4..cff69a6 100644
+index 39dc915..bb8c097 100644
 --- a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
 +++ b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
 @@ -950,6 +950,9 @@ return view.extend({

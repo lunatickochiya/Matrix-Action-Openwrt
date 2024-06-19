@@ -218,10 +218,12 @@ jobs:
         $GITHUB_WORKSPACE/$DIY_SH rockpatch
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
+        bash tpm312/cus.sh
         $GITHUB_WORKSPACE/$DIY_SH kernel61
         fi
         if [ ${{github.event.inputs.KERNEL66}} = true ]; then
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
+        bash tpm312/cus.sh
         $GITHUB_WORKSPACE/$DIY_SH kernel66
         fi
         echo "status=success" >> $GITHUB_OUTPUT
