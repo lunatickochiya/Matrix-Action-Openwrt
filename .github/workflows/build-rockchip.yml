@@ -233,10 +233,10 @@ jobs:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo mkdir -p -m 777 /mnt/openwrt/dl /mnt/openwrt/bin /mnt/openwrt/staging_dir /mnt/openwrt/build_dir
-        ln -sf /mnt/openwrt/dl openwrt/dl
+        #ln -sf /mnt/openwrt/dl openwrt/dl
         ln -sf /mnt/openwrt/bin openwrt/bin
         ln -sf /mnt/openwrt/staging_dir openwrt/staging_dir
-        #ln -sf /mnt/openwrt/build_dir openwrt/build_dir
+        ln -sf /mnt/openwrt/build_dir openwrt/build_dir
         df -hT
         ls /mnt/openwrt
 
@@ -424,7 +424,7 @@ jobs:
         cp openwrt/.config  ./firmware/${{matrix.target}}.config
         cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
         mv -f openwrt/bin/targets/*/*/{*combined*,*ext4*,*sdk*,*imagebuilder*,*buildinfo*,*manifest*,*json*,*sha256sums*} ./firmware/ 2>/dev/null || true
-        [ $UPLOAD_SYSUPGRADE = true ] && mv -f openwrt/bin/targets/*/*/{*sysupgrade*} ./firmware/ 2>/dev/null || true
+        [ $UPLOAD_SYSUPGRADE = true ] && mv -f openwrt/bin/targets/*/*/{*squashfs*,*sysupgrade*} ./firmware/ 2>/dev/null || true
         cd firmware
         echo "v${{ env.date2 }}" > version.txt
         echo ${{matrix.target}} >> version.txt
