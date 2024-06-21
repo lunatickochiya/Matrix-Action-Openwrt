@@ -74,6 +74,8 @@ EOF
 /etc/init.d/olsrd6 disable
 /etc/init.d/advancedplus stop
 /etc/init.d/advancedplus disable
+/etc/init.d/tailscale stop
+/etc/init.d/tailscale disable
 #/etc/modechange start
 
 exit 0
