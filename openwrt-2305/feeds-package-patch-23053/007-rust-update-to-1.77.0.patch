@@ -1,0 +1,250 @@
+From d6b26c4b0f90259955f14c2616a0dd9161117ac4 Mon Sep 17 00:00:00 2001
+From: krant <aleksey.vasilenko@gmail.com>
+Date: Sun, 24 Mar 2024 11:47:43 +0200
+Subject: [PATCH] rust: update to 1.77.0
+
+- Restore patch hunk mis-deleted in dccb910
+- Refresh patches
+- Remove --enable-missing-tools configure option deleted in the upstream
+
+Signed-off-by: krant <aleksey.vasilenko@gmail.com>
+(cherry picked from commit 7f01006f96190947a799621970bfdc719af732ec)
+rust: update to 1.76.0
+
+- Use .xz for source archive
+- Refresh patches
+
+Signed-off-by: krant <aleksey.vasilenko@gmail.com>
+(cherry picked from commit dccb910ae0cb3d654a6432f7b82cd44d46db75e2)
+---
+ lang/rust/Makefile                            |  7 +-
+ .../0001-Update-xz2-and-use-it-static.patch   | 36 ++--------
+ .../patches/0002-rustc-bootstrap-cache.patch  | 19 ++---
+ .../0003-bump-libc-deps-to-0.2.146.patch      | 70 -------------------
+ 4 files changed, 18 insertions(+), 114 deletions(-)
+
+diff --git a/lang/rust/Makefile b/lang/rust/Makefile
+index 46ee84e..53f9aa3 100644
+--- a/lang/rust/Makefile
++++ b/lang/rust/Makefile
+@@ -5,12 +5,12 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=rust
+-PKG_VERSION:=1.75.0
++PKG_VERSION:=1.77.0
+ PKG_RELEASE:=1
+ 
+-PKG_SOURCE:=rustc-$(PKG_VERSION)-src.tar.gz
++PKG_SOURCE:=rustc-$(PKG_VERSION)-src.tar.xz
+ PKG_SOURCE_URL:=https://static.rust-lang.org/dist/
+-PKG_HASH:=5b739f45bc9d341e2d1c570d65d2375591e22c2d23ef5b8a37711a0386abc088
++PKG_HASH:=66126989782cbf77fa3aff121bbb108429f2d46fe19328c3de231553de711b90
+ HOST_BUILD_DIR:=$(BUILD_DIR)/host/rustc-$(PKG_VERSION)-src
+ 
+ PKG_MAINTAINER:=Luca Barbato <lu_zero@luminem.org>
+@@ -71,7 +71,6 @@ HOST_CONFIGURE_ARGS = \
+ 	--datadir=$(STAGING_DIR)/host/share \
+ 	--mandir=$(STAGING_DIR)/host/man \
+ 	--dist-compression-formats=gz \
+-	--enable-missing-tools \
+ 	--disable-sanitizers \
+ 	--release-channel=stable \
+ 	--enable-cargo-native-static \
+diff --git a/lang/rust/patches/0001-Update-xz2-and-use-it-static.patch b/lang/rust/patches/0001-Update-xz2-and-use-it-static.patch
+index 2360136..fe10529 100644
+--- a/lang/rust/patches/0001-Update-xz2-and-use-it-static.patch
++++ b/lang/rust/patches/0001-Update-xz2-and-use-it-static.patch
+@@ -4,45 +4,17 @@ Date: Sun, 4 Jun 2023 19:32:28 +0000
+ Subject: [PATCH] Update xz2 and use it static
+ 
+ ---
+- Cargo.lock               | 8 ++++----
+- src/bootstrap/Cargo.lock | 8 ++++----
+  src/bootstrap/Cargo.toml | 2 +-
+  3 files changed, 9 insertions(+), 9 deletions(-)
+ 
+---- a/src/bootstrap/Cargo.lock
+-+++ b/src/bootstrap/Cargo.lock
+-@@ -391,9 +391,9 @@ dependencies = [
+- 
+- [[package]]
+- name = "lzma-sys"
+--version = "0.1.17"
+-+version = "0.1.20"
+- source = "registry+https://github.com/rust-lang/crates.io-index"
+--checksum = "bdb4b7c3eddad11d3af9e86c487607d2d2442d185d848575365c4856ba96d619"
+-+checksum = "5fda04ab3764e6cde78b9974eec4f779acaba7c4e84b36eca3cf77c581b85d27"
+- dependencies = [
+-  "cc",
+-  "libc",
+-@@ -834,9 +834,9 @@ dependencies = [
+- 
+- [[package]]
+- name = "xz2"
+--version = "0.1.6"
+-+version = "0.1.7"
+- source = "registry+https://github.com/rust-lang/crates.io-index"
+--checksum = "c179869f34fc7c01830d3ce7ea2086bc3a07e0d35289b667d0a8bf910258926c"
+-+checksum = "388c44dc09d76f1536602ead6d325eb532f5c122f17782bd57fb47baeeb767e2"
+- dependencies = [
+-  "lzma-sys",
+- ]
+ --- a/src/bootstrap/Cargo.toml
+ +++ b/src/bootstrap/Cargo.toml
+-@@ -57,7 +57,7 @@ tar = "0.4"
+- termcolor = "1.2.0"
++@@ -61,7 +61,7 @@ tar = "0.4"
++ termcolor = "1.4"
+  toml = "0.5"
+- walkdir = "2"
++ walkdir = "2.4"
+ -xz2 = "0.1"
+ +xz2 = { version = "0.1", features = ["static"] }
+  
+  # Dependencies needed by the build-metrics feature
+- sysinfo = { version = "0.26.0", optional = true }
++ sysinfo = { version = "0.30", optional = true }
+diff --git a/lang/rust/patches/0002-rustc-bootstrap-cache.patch b/lang/rust/patches/0002-rustc-bootstrap-cache.patch
+index 959e234..61cd009 100644
+--- a/lang/rust/patches/0002-rustc-bootstrap-cache.patch
++++ b/lang/rust/patches/0002-rustc-bootstrap-cache.patch
+@@ -11,25 +11,28 @@
+                  os.makedirs(rustc_cache)
+ --- a/src/bootstrap/src/core/download.rs
+ +++ b/src/bootstrap/src/core/download.rs
+-@@ -208,7 +208,13 @@ impl Config {
++@@ -208,10 +208,13 @@ impl Config {
+              Some(other) => panic!("unsupported protocol {other} in {url}"),
+              None => panic!("no protocol in {url}"),
+          }
+--        t!(std::fs::rename(&tempfile, dest_path));
++-        t!(
++-            std::fs::rename(&tempfile, dest_path),
++-            format!("failed to rename {tempfile:?} to {dest_path:?}")
++-        );
+ +        match std::fs::rename(&tempfile, dest_path) {
+ +            Ok(v) => v,
+ +            Err(_) => {
+ +                t!(std::fs::copy(&tempfile, dest_path));
+ +                t!(std::fs::remove_file(&tempfile));
+ +            }
+-+        }
+++        };
+      }
+  
+      fn download_http_with_retries(&self, tempfile: &Path, url: &str, help_on_error: &str) {
+-@@ -544,7 +550,10 @@ impl Config {
+-         key: &str,
+-         destination: &str,
+-     ) {
++@@ -577,7 +580,10 @@ impl Config {
++             return;
++         }
++ 
+ -        let cache_dst = self.out.join("cache");
+ +        let cache_dst = match env::var_os("OPENWRT_RUSTC_BOOTSTRAP_CACHE") {
+ +            Some(v) => PathBuf::from(v),
+@@ -38,7 +41,7 @@
+          let cache_dir = cache_dst.join(key);
+          if !cache_dir.exists() {
+              t!(fs::create_dir_all(&cache_dir));
+-@@ -671,7 +680,10 @@ download-rustc = false
++@@ -704,7 +710,10 @@ download-rustc = false
+          let llvm_assertions = self.llvm_assertions;
+  
+          let cache_prefix = format!("llvm-{llvm_sha}-{llvm_assertions}");
+diff --git a/lang/rust/patches/0003-bump-libc-deps-to-0.2.146.patch b/lang/rust/patches/0003-bump-libc-deps-to-0.2.146.patch
+index bb131d2..d2589d8 100644
+--- a/lang/rust/patches/0003-bump-libc-deps-to-0.2.146.patch
++++ b/lang/rust/patches/0003-bump-libc-deps-to-0.2.146.patch
+@@ -1,47 +1,5 @@
+ This patch bumps all libc dependencies and checksums to 0.2.147, which includes the fix for musl 1.2.4.
+ 
+---- a/vendor/addr2line-0.19.0/Cargo.lock
+-+++ b/vendor/addr2line-0.19.0/Cargo.lock
+-@@ -235,9 +235,9 @@ checksum = "e2abad23fbc42b3700f2f279844d
+- 
+- [[package]]
+- name = "libc"
+--version = "0.2.126"
+-+version = "0.2.147"
+- source = "registry+https://github.com/rust-lang/crates.io-index"
+--checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
+-+checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
+- 
+- [[package]]
+- name = "memchr"
+---- a/vendor/backtrace-0.3.67/Cargo.lock
+-+++ b/vendor/backtrace-0.3.67/Cargo.lock
+-@@ -64,9 +64,9 @@ checksum = "dec7af912d60cdbd3677c1af9352
+- 
+- [[package]]
+- name = "libc"
+--version = "0.2.138"
+-+version = "0.2.147"
+- source = "registry+https://github.com/rust-lang/crates.io-index"
+--checksum = "db6d7e329c562c5dfab7a46a2afabc8b987ab9a4834c9d1ca04dc54c1546cef8"
+-+checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
+- 
+- [[package]]
+- name = "libloading"
+---- a/vendor/crossbeam-channel/Cargo.lock
+-+++ b/vendor/crossbeam-channel/Cargo.lock
+-@@ -50,9 +50,9 @@ dependencies = [
+- 
+- [[package]]
+- name = "libc"
+--version = "0.2.141"
+-+version = "0.2.147"
+- source = "registry+https://github.com/rust-lang/crates.io-index"
+--checksum = "3304a64d199bb964be99741b7a14d26972741915b3649639149b2479bb46f4b5"
+-+checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
+- 
+- [[package]]
+- name = "num_cpus"
+ --- a/vendor/elasticlunr-rs/Cargo.lock
+ +++ b/vendor/elasticlunr-rs/Cargo.lock
+ @@ -555,9 +555,9 @@ checksum = "e2abad23fbc42b3700f2f279844d
+@@ -56,20 +14,6 @@ This patch bumps all libc dependencies and checksums to 0.2.147, which includes
+  
+  [[package]]
+  name = "lindera"
+---- a/vendor/handlebars/Cargo.lock
+-+++ b/vendor/handlebars/Cargo.lock
+-@@ -550,9 +550,9 @@ checksum = "e2abad23fbc42b3700f2f279844d
+- 
+- [[package]]
+- name = "libc"
+--version = "0.2.140"
+-+version = "0.2.147"
+- source = "registry+https://github.com/rust-lang/crates.io-index"
+--checksum = "99227334921fae1a979cf0bfdfcc6b3e5ce376ef57e16fb6fb3ea2ed6095f80c"
+-+checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
+- 
+- [[package]]
+- name = "lock_api"
+ --- a/vendor/libffi/Cargo.lock
+ +++ b/vendor/libffi/Cargo.lock
+ @@ -10,9 +10,9 @@ checksum = "50d30906286121d95be3d479533b
+@@ -84,17 +28,3 @@ This patch bumps all libc dependencies and checksums to 0.2.147, which includes
+  
+  [[package]]
+  name = "libffi"
+---- a/vendor/tracing-tree/Cargo.lock
+-+++ b/vendor/tracing-tree/Cargo.lock
+-@@ -296,9 +296,9 @@ checksum = "e2abad23fbc42b3700f2f279844d
+- 
+- [[package]]
+- name = "libc"
+--version = "0.2.141"
+-+version = "0.2.147"
+- source = "registry+https://github.com/rust-lang/crates.io-index"
+--checksum = "3304a64d199bb964be99741b7a14d26972741915b3649639149b2479bb46f4b5"
+-+checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
+- 
+- [[package]]
+- name = "linux-raw-sys"
+-- 
+2.34.1
+
