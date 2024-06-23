@@ -159,10 +159,17 @@ jobs:
         echo "UPLOAD_ALLKMOD=${UPLOAD_ALLKMOD}" >> $GITHUB_ENV
         echo "UPLOAD_SYSUPGRADE=${UPLOAD_SYSUPGRADE}" >> $GITHUB_ENV
         echo "USE_Cache=${USE_Cache}" >> $GITHUB_ENV
-        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh
+        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh add-test-packages.sh
 
     - name: 导入机器及安装包config
       run: |
+        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
+        $GITHUB_WORKSPACE/$DIY_SH add-test-config
+        fi
+        if [ ${{matrix.target}} == 'meson-nft' ]; then
+                bash $GITHUB_WORKSPACE/add-test-packages.sh nft
+                echo "----${{matrix.target}}-----NFT-test---"
+        fi
         if [ ${{matrix.target}} == 'meson-ipt' ]; then
                 mv -f machine-configs/single/${{github.event.inputs.MACH}}-ipt.config machine-configs/${{matrix.target}}.config
                 echo "----${{matrix.target}}-----IPT-Machine--------"
@@ -220,6 +227,10 @@ jobs:
         [ -d openwrt-2305/mypatch-2305-${{matrix.target}} ] && mv -f openwrt-2305/mypatch-2305-${{matrix.target}} openwrt/mypatch
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
+        if [ ${{matrix.target}} == 'meson-nft' ]; then
+        curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh && bash add_turboacc.sh
+        echo "----${{matrix.target}}-----NFT-acc----"
+        fi
         cd ../
         echo "status=success" >> $GITHUB_OUTPUT
 

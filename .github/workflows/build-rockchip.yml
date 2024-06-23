@@ -183,12 +183,16 @@ jobs:
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         echo "Kernel_Test=_Kernel_Test_Ver" >> $GITHUB_ENV
         fi
-        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh
+        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh add-test-packages.sh
 
     - name: 导入机器及安装包config
       run: |
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         $GITHUB_WORKSPACE/$DIY_SH add-test-config
+        fi
+        if [ ${{matrix.target}} == 'rockchip-nft' ]; then
+        bash $GITHUB_WORKSPACE/add-test-packages.sh nft
+        echo "----${{matrix.target}}-----NFT-test---"
         fi
         if [ ${{matrix.target}} == 'rockchip-ipt' ]; then
                 mv -f machine-configs/single/${{github.event.inputs.MACH}}-ipt.config machine-configs/${{matrix.target}}.config
@@ -225,6 +229,10 @@ jobs:
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
         bash tpm312/cus.sh
         $GITHUB_WORKSPACE/$DIY_SH kernel66
+        fi
+        if [ ${{matrix.target}} == 'rockchip-nft' ]; then
+        curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh && bash add_turboacc.sh
+        echo "----${{matrix.target}}-----NFT-acc----"
         fi
         echo "status=success" >> $GITHUB_OUTPUT
 
