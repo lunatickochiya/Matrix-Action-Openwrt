@@ -12,10 +12,6 @@ CONFIG_PACKAGE_luci-app-turboacc=y
 CONFIG_PACKAGE_ip6tables-zz-legacy=y
 CONFIG_PACKAGE_iptables-zz-legacy=y
 
-# sfe
-CONFIG_PACKAGE_kmod-fast-classifier=m
-CONFIG_PACKAGE_kmod-shortcut-fe=m
-CONFIG_PACKAGE_kmod-shortcut-fe-cm=m
 " >> "$file"; done
 }
 
@@ -27,10 +23,6 @@ CONFIG_PACKAGE_luci-app-turboacc=y
 CONFIG_PACKAGE_ip6tables-zz-legacy=y
 CONFIG_PACKAGE_iptables-zz-legacy=y
 
-# sfe
-CONFIG_PACKAGE_kmod-fast-classifier=m
-CONFIG_PACKAGE_kmod-shortcut-fe=m
-CONFIG_PACKAGE_kmod-shortcut-fe-cm=m
 " >> "$file"; done
 }
 
