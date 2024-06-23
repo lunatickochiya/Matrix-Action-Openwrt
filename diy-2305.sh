@@ -80,6 +80,7 @@ directories=(
     "feeds/luci/applications/luci-app-dockerman"
     "feeds/luci/applications/luci-app-smartdns"
     "feeds/lunatic7/rtl8821cu"
+    "feeds/lunatic7/shortcut-fe"
     "feeds/packages/net/xray-core"
     "feeds/packages/net/smartdns"
 )
