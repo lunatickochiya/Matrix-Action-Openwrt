@@ -33,6 +33,7 @@ on:
         options:
         - 'tpm312'
         - 'mpc1917'
+        - 'r08'
       REPO:
         description: 'Choose repo'
         required: true
@@ -92,6 +93,7 @@ jobs:
         include:
         - rockchip: mpc1917
         - rockchip: tpm312
+        - rockchip: r08
 
     steps:
       - name: 检查

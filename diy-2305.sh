@@ -81,6 +81,8 @@ directories=(
     "feeds/luci/applications/luci-app-smartdns"
     "feeds/lunatic7/rtl8821cu"
     "feeds/lunatic7/shortcut-fe"
+    "feeds/lunatic7/fullconenat-nft"
+    "feeds/lunatic7/luci-app-turboacc"
     "feeds/packages/net/xray-core"
     "feeds/packages/net/smartdns"
 )
