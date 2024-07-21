@@ -257,6 +257,9 @@ jobs:
         [ -d package ] && mv -f package/* openwrt/package
         mkdir openwrt/feeds-bump
         [ -d feeds-packages ] && mv -f feeds-packages/openwrt-23.05/feeds/* openwrt/feeds-bump
+        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
+        rm -rf openwrt-2305/mypatch-2305-${{matrix.target}}/0004-fix.patch
+        fi
         if [ "${{ matrix.repo }}" == "openwrt-23.05" ]; then
         [ -d openwrt-2305/mypatch-2305-${{matrix.target}} ] && mv -f openwrt-2305/mypatch-2305-${{matrix.target}} openwrt/mypatch
         elif [ "${{ matrix.repo }}" == "main" ]; then
