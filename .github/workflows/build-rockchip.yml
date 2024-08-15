@@ -111,7 +111,7 @@ jobs:
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
   build:
-    runs-on: Ubuntu-22.04
+    runs-on: Ubuntu-latest
     needs: prepare
     strategy:
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
