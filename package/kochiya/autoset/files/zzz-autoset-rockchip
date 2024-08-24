@@ -76,6 +76,14 @@ EOF
 /etc/init.d/advancedplus disable
 /etc/init.d/tailscale stop
 /etc/init.d/tailscale disable
+/etc/init.d/adguardhome stop
+/etc/init.d/adguardhome disable
+/etc/init.d/netdata stop
+/etc/init.d/netdata disable
+/etc/init.d/frpc stop
+/etc/init.d/frpc disable
+/etc/init.d/frps stop
+/etc/init.d/frps disable
 #/etc/modechange start
 
 exit 0
