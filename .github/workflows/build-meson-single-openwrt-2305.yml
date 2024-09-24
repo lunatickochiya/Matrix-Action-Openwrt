@@ -1,4 +1,4 @@
-name: Build 23.05.3 Single Burn
+name: Build 23.05.5 Single Burn
 
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
@@ -193,7 +193,7 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
-        git checkout v23.05.3
+        git checkout v23.05.5
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
         sed -i 's|src-git packages https://git.openwrt.org/feed/packages.git\^8e3a1824645f5e73ec44c897ac0755c53fb4a1f8|src-git packages https://git.openwrt.org/feed/packages.git;openwrt-23.05|g' feeds.conf.default
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
@@ -260,11 +260,11 @@ jobs:
       run: |
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         mv -f openwrt-2305/K61/tele openwrt/feeds/telephony
-        mv -f openwrt-2305/K61/packages/* openwrt-2305/feeds-package-patch-23053
+        mv -f openwrt-2305/K61/packages/* openwrt-2305/feeds-package-patch-23055
         fi
         [ -d openwrt-2305/lunatic7-revert ] && mv -f openwrt-2305/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-2305/luci-patch-2305 ] && mv -f openwrt-2305/luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
-        [ -d openwrt-2305/feeds-package-patch-23053 ] && mv -f openwrt-2305/feeds-package-patch-23053 openwrt/feeds/packages/feeds-package-patch-2305
+        [ -d openwrt-2305/feeds-package-patch-23055 ] && mv -f openwrt-2305/feeds-package-patch-23055 openwrt/feeds/packages/feeds-package-patch-2305
         [ -e files ] && mv files openwrt/files
         [ -e package-configs ] && mv package-configs openwrt/package-configs
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
