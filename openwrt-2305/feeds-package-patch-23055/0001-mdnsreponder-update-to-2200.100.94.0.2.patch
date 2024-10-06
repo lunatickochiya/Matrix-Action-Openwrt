@@ -1,0 +1,1014 @@
+From a770f6408b0116597a0f56f311335542fd39e168 Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Sun, 26 May 2024 17:49:38 -0700
+Subject: [PATCH] mdnsreponder: update to 2200.100.94.0.2
+
+The IETF fork is unmaintained. In addition, the versioning is incompatible with apk.
+
+010-uclibc.patch is pointless as uclibc is no longer used by OpenWrt.
+
+020-fix-core-dump-while-parsing-interface-list.patch was an upstream
+backport. No longer needed.
+
+Added tls=no to avoid mbedtls dependency.
+
+mDNSIdentify is gone.
+
+Added back patches from version 878.200.35. They required manual
+refreshing. 120-reproducible-builds.patch is probably needed. Not sure
+about 100-linux_fixes.patch.
+
+Add OpenEmbedded patches. Some crash fixes. mdnsd is less noisy with
+them.
+
+Log stderr to the log. Otherwise there's no output.
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ net/mdnsresponder/Makefile                    |  17 +-
+ net/mdnsresponder/files/mdnsd.init            |   1 +
+ ...utine-for-cleaning-recent-interfaces.patch |  56 ++++++
+ ...0001-Fix-SIGSEGV-during-DumpStateLog.patch |  25 +++
+ ...outine-for-tearing-down-an-interface.patch |  54 ++++++
+ ...ke-Set-libdns_sd.so-soname-correctly.patch |  22 +++
+ .../0003-Track-interface-socket-family.patch  |  44 +++++
+ ...cate-loopback-interface-to-mDNS-core.patch |  53 +++++
+ ...0005-Use-list-for-changed-interfaces.patch | 164 ++++++++++++++++
+ ...-mDNSCore-Fix-broken-debug-parameter.patch |  23 +++
+ ...-deleted-interfaces-as-being-changed.patch |  35 ++++
+ ...0008-Handle-errors-from-socket-calls.patch |  58 ++++++
+ net/mdnsresponder/patches/010-uclibc.patch    |  13 --
+ ...re-dump-while-parsing-interface-list.patch |  18 --
+ .../patches/100-linux_fixes.patch             | 182 ++++++++++++++++++
+ .../patches/120-reproducible-builds.patch     |  55 ++++++
+ 16 files changed, 780 insertions(+), 40 deletions(-)
+ create mode 100644 net/mdnsresponder/patches/0001-Create-subroutine-for-cleaning-recent-interfaces.patch
+ create mode 100644 net/mdnsresponder/patches/0001-Fix-SIGSEGV-during-DumpStateLog.patch
+ create mode 100644 net/mdnsresponder/patches/0002-Create-subroutine-for-tearing-down-an-interface.patch
+ create mode 100644 net/mdnsresponder/patches/0002-make-Set-libdns_sd.so-soname-correctly.patch
+ create mode 100644 net/mdnsresponder/patches/0003-Track-interface-socket-family.patch
+ create mode 100644 net/mdnsresponder/patches/0004-Indicate-loopback-interface-to-mDNS-core.patch
+ create mode 100644 net/mdnsresponder/patches/0005-Use-list-for-changed-interfaces.patch
+ create mode 100644 net/mdnsresponder/patches/0005-mDNSCore-Fix-broken-debug-parameter.patch
+ create mode 100644 net/mdnsresponder/patches/0007-Mark-deleted-interfaces-as-being-changed.patch
+ create mode 100644 net/mdnsresponder/patches/0008-Handle-errors-from-socket-calls.patch
+ delete mode 100644 net/mdnsresponder/patches/010-uclibc.patch
+ delete mode 100644 net/mdnsresponder/patches/020-fix-core-dump-while-parsing-interface-list.patch
+ create mode 100644 net/mdnsresponder/patches/100-linux_fixes.patch
+ create mode 100644 net/mdnsresponder/patches/120-reproducible-builds.patch
+
+diff --git a/net/mdnsresponder/Makefile b/net/mdnsresponder/Makefile
+index 0c886f3cc..7d675899f 100644
+--- a/net/mdnsresponder/Makefile
++++ b/net/mdnsresponder/Makefile
+@@ -8,18 +8,18 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=mDNSResponder
+-PKG_VERSION:=IETF104
+-PKG_RELEASE:=5
++PKG_VERSION:=2200.100.94.0.2
++PKG_RELEASE:=1
++
++PKG_SOURCE_PROTO:=git
++PKG_SOURCE_VERSION:=$(PKG_NAME)-$(PKG_VERSION)
++PKG_SOURCE_URL:=https://github.com/apple-oss-distributions/mDNSResponder
++PKG_MIRROR_HASH:=6d019ca318d189233b10e7d4a51ec6952547a87c3b81646c094021490d5990a7
+ 
+-PKG_SOURCE:=mDNSResponder-$(PKG_VERSION).tar.gz
+-PKG_SOURCE_URL:=https://opensource.apple.com/tarballs/mDNSResponder/IETF/
+-PKG_HASH:=b3a76fd35cf2d561546c2fbeaea1e5998b7e04b8330afb918ea5fbdeb202162c
+ PKG_MAINTAINER:=
+ PKG_LICENSE:=Apache-2.0
+ PKG_CPE_ID:=cpe:/a:apple:mdnsresponder
+ 
+-PKG_BUILD_DIR:=$(BUILD_DIR)/mDNSResponder-$(PKG_VERSION)
+-
+ PKG_BUILD_PARALLEL:=0
+ PKG_INSTALL:=1
+ 
+@@ -54,7 +54,6 @@ $(call Package/mDNSResponder/Default/description)
+  This package contains mDNS client utilities:
+  - dns-sd
+  - mDNSClient
+- - mDNSIdentify
+  - mDNSNetMonitor
+  - mDNSProxyResponder
+  - mDNSResponder
+@@ -96,6 +95,7 @@ MAKE_FLAGS += \
+ 	MANPATH="$(PKG_INSTALL_DIR)/usr/man" \
+ 	STARTUPSCRIPTDIR="$(PKG_INSTALL_DIR)/etc/init.d" \
+ 	RUNLEVELSCRIPTSDIR="$(PKG_INSTALL_DIR)/etc/rc.d" \
++	tls=no \
+ 	os=linux-uclibc
+ MAKE_PATH = mDNSPosix
+ 
+@@ -132,7 +132,6 @@ define Package/mdns-utils/install
+ 	$(INSTALL_DIR) $(1)/usr/bin/
+ 	$(CP) $(PKG_INSTALL_DIR)/usr/bin/dns-sd $(1)/usr/bin/
+ 	$(CP) $(PKG_BUILD_DIR)/mDNSPosix/build/prod/mDNSClientPosix $(1)/usr/bin/mDNSClient
+-	$(CP) $(PKG_BUILD_DIR)/mDNSPosix/build/prod/mDNSIdentify $(1)/usr/bin/mDNSIdentify
+ 	$(CP) $(PKG_BUILD_DIR)/mDNSPosix/build/prod/mDNSNetMonitor $(1)/usr/bin/mDNSNetMonitor
+ 	$(CP) $(PKG_BUILD_DIR)/mDNSPosix/build/prod/mDNSProxyResponderPosix $(1)/usr/bin/mDNSProxyResponder
+ 	$(CP) $(PKG_BUILD_DIR)/mDNSPosix/build/prod/mDNSResponderPosix $(1)/usr/bin/mDNSResponder
+diff --git a/net/mdnsresponder/files/mdnsd.init b/net/mdnsresponder/files/mdnsd.init
+index 817604bab..8f7393755 100755
+--- a/net/mdnsresponder/files/mdnsd.init
++++ b/net/mdnsresponder/files/mdnsd.init
+@@ -9,6 +9,7 @@ start_service() {
+     procd_open_instance
+     procd_set_param command /usr/sbin/mdnsd -debug
+     procd_set_param respawn
++    procd_set_param stderr 1
+     procd_close_instance
+ }
+ 
+diff --git a/net/mdnsresponder/patches/0001-Create-subroutine-for-cleaning-recent-interfaces.patch b/net/mdnsresponder/patches/0001-Create-subroutine-for-cleaning-recent-interfaces.patch
+new file mode 100644
+index 000000000..720cc4978
+--- /dev/null
++++ b/net/mdnsresponder/patches/0001-Create-subroutine-for-cleaning-recent-interfaces.patch
+@@ -0,0 +1,56 @@
++From c1f3e19d3cb0aa948248616eb1684a1e80aa39b4 Mon Sep 17 00:00:00 2001
++From: Nate Karstens <nate.karstens@garmin.com>
++Date: Wed, 28 Jun 2017 17:30:00 -0500
++Subject: [PATCH 1/8] Create subroutine for cleaning recent interfaces
++
++Moves functionality for cleaning the list of recent
++interfaces into its own subroutine.
++
++Upstream-Status: Submitted [dts@apple.com]
++
++Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
++Signed-off-by: Alex Kiernan <alex.kiernan@gmail.com>
++---
++ mDNSPosix/mDNSPosix.c | 24 ++++++++++++++----------
++ 1 file changed, 14 insertions(+), 10 deletions(-)
++
++--- a/mDNSPosix/mDNSPosix.c
+++++ b/mDNSPosix/mDNSPosix.c
++@@ -1322,6 +1322,19 @@ mDNSlocal int SetupSocket(struct sockadd
++     return err;
++ }
++ 
+++// Clean up any interfaces that have been hanging around on the RecentInterfaces list for more than a minute
+++mDNSlocal void CleanRecentInterfaces(void)
+++{
+++    PosixNetworkInterface **ri = &gRecentInterfaces;
+++    const mDNSs32 utc = mDNSPlatformUTC();
+++    while (*ri)
+++    {
+++        PosixNetworkInterface *pi = *ri;
+++        if (utc - pi->LastSeen < 60) ri = (PosixNetworkInterface **)&pi->coreIntf.next;
+++        else { *ri = (PosixNetworkInterface *)pi->coreIntf.next; mdns_free(pi); }
+++    }
+++}
+++
++ // Creates a PosixNetworkInterface for the interface whose IP address is
++ // intfAddr and whose name is intfName and registers it with mDNS core.
++ mDNSlocal int SetupOneInterface(mDNS *const m, struct sockaddr *intfAddr, struct sockaddr *intfMask,
++@@ -1559,16 +1572,7 @@ mDNSlocal int SetupInterfaceList(mDNS *c
++ 
++     // Clean up.
++     if (intfList != NULL) freeifaddrs(intfList);
++-
++-    // Clean up any interfaces that have been hanging around on the RecentInterfaces list for more than a minute
++-    PosixNetworkInterface **ri = &gRecentInterfaces;
++-    const mDNSs32 utc = mDNSPlatformUTC();
++-    while (*ri)
++-    {
++-        PosixNetworkInterface *pi = *ri;
++-        if (utc - pi->LastSeen < 60) ri = (PosixNetworkInterface **)&pi->coreIntf.next;
++-        else { *ri = (PosixNetworkInterface *)pi->coreIntf.next; mdns_free(pi); }
++-    }
+++    CleanRecentInterfaces();
++ 
++     return err;
++ }
+diff --git a/net/mdnsresponder/patches/0001-Fix-SIGSEGV-during-DumpStateLog.patch b/net/mdnsresponder/patches/0001-Fix-SIGSEGV-during-DumpStateLog.patch
+new file mode 100644
+index 000000000..ea0e4dd40
+--- /dev/null
++++ b/net/mdnsresponder/patches/0001-Fix-SIGSEGV-during-DumpStateLog.patch
+@@ -0,0 +1,25 @@
++From 14cc53bb09a3d8adf301f3842c765598467e63e1 Mon Sep 17 00:00:00 2001
++From: Alex Kiernan <alex.kiernan@gmail.com>
++Date: Thu, 1 Feb 2024 14:07:03 +0000
++Subject: [PATCH] Fix SIGSEGV during DumpStateLog()
++
++DumpStateLog() calls LogMsgWithLevelv() with category == NULL, avoid
++crashing in this case.
++
++Upstream-Status: Inactive-Upstream [Upstream does not take patches]
++Signed-off-by: Alex Kiernan <alex.kiernan@gmail.com>
++---
++ mDNSShared/mDNSDebug.c | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/mDNSShared/mDNSDebug.c
+++++ b/mDNSShared/mDNSDebug.c
++@@ -71,7 +71,7 @@ mDNSlocal void LogMsgWithLevelv(os_log_t
++ mDNSlocal void LogMsgWithLevelv(const char *category, mDNSLogLevel_t level, const char *format, va_list args)
++ {
++     // Do not print the logs if the log category is MDNS_LOG_CATEGORY_DISABLED.
++-    if (strcmp(category, MDNS_LOG_CATEGORY_DISABLED) == 0)
+++    if (category && strcmp(category, MDNS_LOG_CATEGORY_DISABLED) == 0)
++     {
++         return;
++     }
+diff --git a/net/mdnsresponder/patches/0002-Create-subroutine-for-tearing-down-an-interface.patch b/net/mdnsresponder/patches/0002-Create-subroutine-for-tearing-down-an-interface.patch
+new file mode 100644
+index 000000000..b572a4a5c
+--- /dev/null
++++ b/net/mdnsresponder/patches/0002-Create-subroutine-for-tearing-down-an-interface.patch
+@@ -0,0 +1,54 @@
++From 40ef0241afbb49f84e76afd65eb3ee17466bb582 Mon Sep 17 00:00:00 2001
++From: Nate Karstens <nate.karstens@garmin.com>
++Date: Wed, 28 Jun 2017 17:30:00 -0500
++Subject: [PATCH 2/8] Create subroutine for tearing down an interface
++
++Creates a subroutine for tearing down an interface.
++
++Upstream-Status: Submitted [dts@apple.com]
++
++Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
++Signed-off-by: Alex Kiernan <alex.kiernan@gmail.com>
++---
++ mDNSPosix/mDNSPosix.c | 22 ++++++++++++++++------
++ 1 file changed, 16 insertions(+), 6 deletions(-)
++
++--- a/mDNSPosix/mDNSPosix.c
+++++ b/mDNSPosix/mDNSPosix.c
++@@ -1043,6 +1043,19 @@ mDNSlocal void FreePosixNetworkInterface
++     gRecentInterfaces = intf;
++ }
++ 
+++mDNSlocal void TearDownInterface(mDNS *const m, PosixNetworkInterface *intf)
+++{
+++    mDNS_DeregisterInterface(m, &intf->coreIntf, NormalActivation);
+++    if (gMDNSPlatformPosixVerboseLevel > 0) fprintf(stderr, "Deregistered interface %s\n", intf->intfName);
+++    FreePosixNetworkInterface(intf);
+++
+++    num_registered_interfaces--;
+++    if (num_registered_interfaces == 0) {
+++        num_pkts_accepted = 0;
+++        num_pkts_rejected = 0;
+++    }
+++}
+++
++ // Grab the first interface, deregister it, free it, and repeat until done.
++ mDNSlocal void ClearInterfaceList(mDNS *const m)
++ {
++@@ -1051,13 +1064,10 @@ mDNSlocal void ClearInterfaceList(mDNS *
++     while (m->HostInterfaces)
++     {
++         PosixNetworkInterface *intf = (PosixNetworkInterface*)(m->HostInterfaces);
++-        mDNS_DeregisterInterface(m, &intf->coreIntf, NormalActivation);
++-        if (gMDNSPlatformPosixVerboseLevel > 0) fprintf(stderr, "Deregistered interface %s\n", intf->intfName);
++-        FreePosixNetworkInterface(intf);
+++        TearDownInterface(m, intf);
++     }
++-    num_registered_interfaces = 0;
++-    num_pkts_accepted = 0;
++-    num_pkts_rejected = 0;
+++
+++    assert(num_registered_interfaces == 0);
++ }
++ 
++ mDNSlocal int SetupIPv6Socket(int fd)
+diff --git a/net/mdnsresponder/patches/0002-make-Set-libdns_sd.so-soname-correctly.patch b/net/mdnsresponder/patches/0002-make-Set-libdns_sd.so-soname-correctly.patch
+new file mode 100644
+index 000000000..f8550b530
+--- /dev/null
++++ b/net/mdnsresponder/patches/0002-make-Set-libdns_sd.so-soname-correctly.patch
+@@ -0,0 +1,22 @@
++From a198bcd457abd04f2e22812ff3a37246aa564614 Mon Sep 17 00:00:00 2001
++From: Alex Kiernan <alex.kiernan@gmail.com>
++Date: Mon, 5 Dec 2022 15:14:12 +0000
++Subject: [PATCH 2/6] make: Set libdns_sd.so soname correctly
++
++Upstream-Status: Pending
++Signed-off-by: Alex Kiernan <alex.kiernan@gmail.com>
++---
++ mDNSPosix/Makefile | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/mDNSPosix/Makefile
+++++ b/mDNSPosix/Makefile
++@@ -276,7 +276,7 @@ libdns_sd: setup $(BUILDDIR)/libdns_sd.$
++ CLIENTLIBOBJS = $(OBJDIR)/dnssd_clientlib.c.so.o $(OBJDIR)/dnssd_clientstub.c.so.o $(OBJDIR)/dnssd_ipc.c.so.o $(OBJDIR)/dnssd_errstring.c.so.o
++ 
++ $(BUILDDIR)/libdns_sd.$(LDSUFFIX): $(CLIENTLIBOBJS)
++-	$(LD) $(SOOPTS) $(LINKOPTS) -o $@ $+
+++	$(LD) $(SOOPTS) $(LINKOPTS) -Wl,-soname,libdns_sd.$(LDSUFFIX).1 -o $@ $+
++ 	$(STRIP) $@
++ 
++ Clients: setup libdns_sd ../Clients/build/dns-sd
+diff --git a/net/mdnsresponder/patches/0003-Track-interface-socket-family.patch b/net/mdnsresponder/patches/0003-Track-interface-socket-family.patch
+new file mode 100644
+index 000000000..ec0367d0f
+--- /dev/null
++++ b/net/mdnsresponder/patches/0003-Track-interface-socket-family.patch
+@@ -0,0 +1,44 @@
++From deb3a2c51f32e0d2741be11a492e727129f770e2 Mon Sep 17 00:00:00 2001
++From: Nate Karstens <nate.karstens@garmin.com>
++Date: Wed, 28 Jun 2017 17:30:00 -0500
++Subject: [PATCH 3/8] Track interface socket family
++
++Tracks the socket family associated with the interface.
++
++Upstream-Status: Submitted [dts@apple.com]
++
++Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
++Signed-off-by: Alex Kiernan <alex.kiernan@gmail.com>
++---
++ mDNSPosix/mDNSPosix.c | 1 +
++ mDNSPosix/mDNSPosix.h | 2 ++
++ 2 files changed, 3 insertions(+)
++
++--- a/mDNSPosix/mDNSPosix.c
+++++ b/mDNSPosix/mDNSPosix.c
++@@ -1415,6 +1415,7 @@ mDNSlocal int SetupOneInterface(mDNS *co
++         // Set up the extra fields in PosixNetworkInterface.
++         assert(intf->intfName != NULL);         // intf->intfName already set up above
++         intf->index                = intfIndex;
+++        intf->sa_family            = intfAddr->sa_family;
++         intf->multicastSocket4     = -1;
++ #if HAVE_IPV6
++         intf->multicastSocket6     = -1;
++--- a/mDNSPosix/mDNSPosix.h
+++++ b/mDNSPosix/mDNSPosix.h
++@@ -19,6 +19,7 @@
++ #define __mDNSPlatformPosix_h
++ 
++ #include <signal.h>
+++#include <sys/socket.h>
++ #include <sys/time.h>
++ 
++ #ifdef  __cplusplus
++@@ -40,6 +41,7 @@ struct PosixNetworkInterface
++     char *                  intfName;
++     PosixNetworkInterface * aliasIntf;
++     int index;
+++    sa_family_t sa_family;
++     int multicastSocket4;
++ #if HAVE_IPV6
++     int multicastSocket6;
+diff --git a/net/mdnsresponder/patches/0004-Indicate-loopback-interface-to-mDNS-core.patch b/net/mdnsresponder/patches/0004-Indicate-loopback-interface-to-mDNS-core.patch
+new file mode 100644
+index 000000000..5c7f381a6
+--- /dev/null
++++ b/net/mdnsresponder/patches/0004-Indicate-loopback-interface-to-mDNS-core.patch
+@@ -0,0 +1,53 @@
++From beab76b5708862f44d9acbe7a92db45e2f99259f Mon Sep 17 00:00:00 2001
++From: Nate Karstens <nate.karstens@garmin.com>
++Date: Tue, 1 Aug 2017 17:06:01 -0500
++Subject: [PATCH 4/8] Indicate loopback interface to mDNS core
++
++Tells the mDNS core if an interface is a loopback interface,
++similar to AddInterfaceToList() in the MacOS implementation.
++
++Upstream-Status: Submitted [dts@apple.com]
++
++Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
++Signed-off-by: Alex Kiernan <alex.kiernan@gmail.com>
++---
++ mDNSPosix/mDNSPosix.c | 7 ++++---
++ 1 file changed, 4 insertions(+), 3 deletions(-)
++
++--- a/mDNSPosix/mDNSPosix.c
+++++ b/mDNSPosix/mDNSPosix.c
++@@ -1348,7 +1348,7 @@ mDNSlocal void CleanRecentInterfaces(voi
++ // Creates a PosixNetworkInterface for the interface whose IP address is
++ // intfAddr and whose name is intfName and registers it with mDNS core.
++ mDNSlocal int SetupOneInterface(mDNS *const m, struct sockaddr *intfAddr, struct sockaddr *intfMask,
++-    const mDNSu8 *intfHaddr, mDNSu16 intfHlen, const char *intfName, int intfIndex)
+++    const mDNSu8 *intfHaddr, mDNSu16 intfHlen, const char *intfName, int intfIndex, int intfFlags)
++ {
++     int err = 0;
++     PosixNetworkInterface *intf;
++@@ -1411,6 +1411,7 @@ mDNSlocal int SetupOneInterface(mDNS *co
++ 
++         intf->coreIntf.Advertise = m->AdvertiseLocalAddresses;
++         intf->coreIntf.McastTxRx = mDNStrue;
+++        intf->coreIntf.Loopback = ((intfFlags & IFF_LOOPBACK) != 0) ? mDNStrue : mDNSfalse;
++ 
++         // Set up the extra fields in PosixNetworkInterface.
++         assert(intf->intfName != NULL);         // intf->intfName already set up above
++@@ -1561,7 +1562,7 @@ mDNSlocal int SetupInterfaceList(mDNS *c
++                     }
++ #endif
++                     if (SetupOneInterface(m, i->ifa_addr, i->ifa_netmask,
++-                                          hwaddr, hwaddr_len, i->ifa_name, ifIndex) == 0)
+++                                          hwaddr, hwaddr_len, i->ifa_name, ifIndex, i->ifa_flags) == 0)
++                     {
++                         if (i->ifa_addr->sa_family == AF_INET)
++                             foundav4 = mDNStrue;
++@@ -1578,7 +1579,7 @@ mDNSlocal int SetupInterfaceList(mDNS *c
++         // if ((m->HostInterfaces == NULL) && (firstLoopback != NULL))
++         if (!foundav4 && firstLoopback)
++             (void) SetupOneInterface(m, firstLoopback->ifa_addr, firstLoopback->ifa_netmask,
++-                NULL, 0, firstLoopback->ifa_name, firstLoopbackIndex);
+++                NULL, 0, firstLoopback->ifa_name, firstLoopbackIndex, firstLoopback->ifa_flags);
++     }
++ 
++     // Clean up.
+diff --git a/net/mdnsresponder/patches/0005-Use-list-for-changed-interfaces.patch b/net/mdnsresponder/patches/0005-Use-list-for-changed-interfaces.patch
+new file mode 100644
+index 000000000..99d7a510f
+--- /dev/null
++++ b/net/mdnsresponder/patches/0005-Use-list-for-changed-interfaces.patch
+@@ -0,0 +1,164 @@
++From e79f81f5cd626ad77ec64de4325f6645cf253c5e Mon Sep 17 00:00:00 2001
++From: Nate Karstens <nate.karstens@garmin.com>
++Date: Thu, 13 Jul 2017 09:00:00 -0500
++Subject: [PATCH 5/8] Use list for changed interfaces
++
++Uses a linked list to store the index of changed network interfaces
++instead of a bitfield. This allows for network interfaces with an
++index greater than 31 (an index of 36 was seen on Android).
++
++Upstream-Status: Submitted [dts@apple.com]
++
++Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
++Signed-off-by: Alex Kiernan <alex.kiernan@gmail.com>
++---
++ mDNSPosix/mDNSPosix.c | 58 ++++++++++++++++++++++++++++++++-----------
++ 1 file changed, 43 insertions(+), 15 deletions(-)
++
++--- a/mDNSPosix/mDNSPosix.c
+++++ b/mDNSPosix/mDNSPosix.c
++@@ -74,6 +74,14 @@ struct IfChangeRec
++ };
++ typedef struct IfChangeRec IfChangeRec;
++ 
+++// Used to build a list of network interface indices
+++struct NetworkInterfaceIndex
+++{
+++    int if_index;
+++    struct NetworkInterfaceIndex *Next;
+++};
+++typedef struct NetworkInterfaceIndex NetworkInterfaceIndex;
+++
++ // Note that static data is initialized to zero in (modern) C.
++ static PosixEventSource *gEventSources;             // linked list of PosixEventSource's
++ static sigset_t gEventSignalSet;                // Signals which event loop listens for
++@@ -1621,6 +1629,23 @@ mDNSlocal mStatus OpenIfNotifySocket(int
++     return err;
++ }
++ 
+++mDNSlocal void AddInterfaceIndexToList(GenLinkedList *list, int if_index)
+++{
+++    NetworkInterfaceIndex *item;
+++
+++    for (item = (NetworkInterfaceIndex*)list->Head; item != NULL; item = item->Next)
+++    {
+++        if (if_index == item->if_index) return;
+++    }
+++
+++    item = mdns_malloc(sizeof *item);
+++    if (item == NULL) return;
+++
+++    item->if_index = if_index;
+++    item->Next = NULL;
+++    AddToTail(list, item);
+++}
+++
++ #if MDNS_DEBUGMSGS
++ mDNSlocal void      PrintNetLinkMsg(const struct nlmsghdr *pNLMsg)
++ {
++@@ -1648,14 +1673,13 @@ mDNSlocal void      PrintNetLinkMsg(cons
++ }
++ #endif
++ 
++-mDNSlocal mDNSu32       ProcessRoutingNotification(int sd)
+++mDNSlocal void          ProcessRoutingNotification(int sd, GenLinkedList *changedInterfaces)
++ // Read through the messages on sd and if any indicate that any interface records should
++ // be torn down and rebuilt, return affected indices as a bitmask. Otherwise return 0.
++ {
++     ssize_t readCount;
++     char buff[4096];
++     struct nlmsghdr         *pNLMsg = (struct nlmsghdr*) buff;
++-    mDNSu32 result = 0;
++ 
++     // The structure here is more complex than it really ought to be because,
++     // unfortunately, there's no good way to size a buffer in advance large
++@@ -1691,9 +1715,9 @@ mDNSlocal mDNSu32       ProcessRoutingNo
++ 
++         // Process the NetLink message
++         if (pNLMsg->nlmsg_type == RTM_GETLINK || pNLMsg->nlmsg_type == RTM_NEWLINK)
++-            result |= 1 << ((struct ifinfomsg*) NLMSG_DATA(pNLMsg))->ifi_index;
+++            AddInterfaceIndexToList(changedInterfaces, ((struct ifinfomsg*) NLMSG_DATA(pNLMsg))->ifi_index);
++         else if (pNLMsg->nlmsg_type == RTM_DELADDR || pNLMsg->nlmsg_type == RTM_NEWADDR)
++-            result |= 1 << ((struct ifaddrmsg*) NLMSG_DATA(pNLMsg))->ifa_index;
+++            AddInterfaceIndexToList(changedInterfaces, ((struct ifaddrmsg*) NLMSG_DATA(pNLMsg))->ifa_index);
++ 
++         // Advance pNLMsg to the next message in the buffer
++         if ((pNLMsg->nlmsg_flags & NLM_F_MULTI) != 0 && pNLMsg->nlmsg_type != NLMSG_DONE)
++@@ -1704,8 +1728,6 @@ mDNSlocal mDNSu32       ProcessRoutingNo
++         else
++             break;  // all done!
++     }
++-
++-    return result;
++ }
++ 
++ #else // USES_NETLINK
++@@ -1737,14 +1759,13 @@ mDNSlocal void      PrintRoutingSocketMs
++ }
++ #endif
++ 
++-mDNSlocal mDNSu32       ProcessRoutingNotification(int sd)
+++mDNSlocal void          ProcessRoutingNotification(int sd, GenLinkedList *changedInterfaces)
++ // Read through the messages on sd and if any indicate that any interface records should
++ // be torn down and rebuilt, return affected indices as a bitmask. Otherwise return 0.
++ {
++     ssize_t readCount;
++     char buff[4096];
++     struct ifa_msghdr       *pRSMsg = (struct ifa_msghdr*) buff;
++-    mDNSu32 result = 0;
++ 
++     readCount = read(sd, buff, sizeof buff);
++     if (readCount < (ssize_t) sizeof(struct ifa_msghdr))
++@@ -1759,12 +1780,10 @@ mDNSlocal mDNSu32       ProcessRoutingNo
++         pRSMsg->ifam_type == RTM_IFINFO)
++     {
++         if (pRSMsg->ifam_type == RTM_IFINFO)
++-            result |= 1 << ((struct if_msghdr*) pRSMsg)->ifm_index;
+++            AddInterfaceIndexToList(changedInterfaces, ((struct if_msghdr*) pRSMsg)->ifm_index);
++         else
++-            result |= 1 << pRSMsg->ifam_index;
+++            AddInterfaceIndexToList(changedInterfaces, pRSMsg->ifam_index);
++     }
++-
++-    return result;
++ }
++ 
++ #endif // USES_NETLINK
++@@ -1774,7 +1793,8 @@ mDNSlocal void InterfaceChangeCallback(i
++ {
++     IfChangeRec     *pChgRec = (IfChangeRec*) context;
++     fd_set readFDs;
++-    mDNSu32 changedInterfaces = 0;
+++    GenLinkedList changedInterfaces;
+++    NetworkInterfaceIndex *changedInterface;
++     struct timeval zeroTimeout = { 0, 0 };
++ 
++     (void)fd; // Unused
++@@ -1782,17 +1802,25 @@ mDNSlocal void InterfaceChangeCallback(i
++     FD_ZERO(&readFDs);
++     FD_SET(pChgRec->NotifySD, &readFDs);
++ 
+++    InitLinkedList(&changedInterfaces, offsetof(NetworkInterfaceIndex, Next));
+++
++     do
++     {
++-        changedInterfaces |= ProcessRoutingNotification(pChgRec->NotifySD);
+++        ProcessRoutingNotification(pChgRec->NotifySD, &changedInterfaces);
++     }
++     while (0 < select(pChgRec->NotifySD + 1, &readFDs, (fd_set*) NULL, (fd_set*) NULL, &zeroTimeout));
++ 
++     // Currently we rebuild the entire interface list whenever any interface change is
++     // detected. If this ever proves to be a performance issue in a multi-homed
++     // configuration, more care should be paid to changedInterfaces.
++-    if (changedInterfaces)
+++    if (changedInterfaces.Head != NULL)
++         mDNSPlatformPosixRefreshInterfaceList(pChgRec->mDNS);
+++
+++    while ((changedInterface = (NetworkInterfaceIndex*)changedInterfaces.Head) != NULL)
+++    {
+++        RemoveFromList(&changedInterfaces, changedInterface);
+++        mdns_free(changedInterface);
+++    }
++ }
++ 
++ // Register with either a Routing Socket or RtNetLink to listen for interface changes.
+diff --git a/net/mdnsresponder/patches/0005-mDNSCore-Fix-broken-debug-parameter.patch b/net/mdnsresponder/patches/0005-mDNSCore-Fix-broken-debug-parameter.patch
+new file mode 100644
+index 000000000..c1813d699
+--- /dev/null
++++ b/net/mdnsresponder/patches/0005-mDNSCore-Fix-broken-debug-parameter.patch
+@@ -0,0 +1,23 @@
++From 764b6202402e9e5687ff873330e5ad6be6f69df7 Mon Sep 17 00:00:00 2001
++From: Alex Kiernan <alex.kiernan@gmail.com>
++Date: Mon, 5 Dec 2022 22:49:49 +0000
++Subject: [PATCH] mDNSCore: Fix broken debug parameter
++
++Upstream-Status: Pending
++Signed-off-by: Alex Kiernan <alex.kiernan@gmail.com>
++
++---
++ mDNSCore/mDNS.c | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/mDNSCore/mDNS.c
+++++ b/mDNSCore/mDNS.c
++@@ -10249,7 +10249,7 @@ mDNSlocal void mDNSCoreReceiveNoUnicastA
++ #else
++                             const DNSServRef dnsserv = qptr->qDNSServer;
++ #endif
++-                            debugf("mDNSCoreReceiveNoUnicastAnswers making negative cache entry TTL %d for %##s (%s)", negttl, currentQName, DNSTypeName(q.qtype));
+++                            debugf("mDNSCoreReceiveNoUnicastAnswers making negative cache entry TTL %d for %##s (%s)", negttl, currentQName->c, DNSTypeName(q.qtype));
++                             // Create a negative record for the current name in the CNAME chain.
++                             MakeNegativeCacheRecord(m, &m->rec.r, currentQName, currentQNameHash, q.qtype, q.qclass, negttl, mDNSInterface_Any,
++                                 dnsserv, response->h.flags);
+diff --git a/net/mdnsresponder/patches/0007-Mark-deleted-interfaces-as-being-changed.patch b/net/mdnsresponder/patches/0007-Mark-deleted-interfaces-as-being-changed.patch
+new file mode 100644
+index 000000000..c0a6400c3
+--- /dev/null
++++ b/net/mdnsresponder/patches/0007-Mark-deleted-interfaces-as-being-changed.patch
+@@ -0,0 +1,35 @@
++From a8accffb95267490b50401c8b65ec18db57b5ef5 Mon Sep 17 00:00:00 2001
++From: Nate Karstens <nate.karstens@garmin.com>
++Date: Wed, 9 Aug 2017 09:16:58 -0500
++Subject: [PATCH 7/8] Mark deleted interfaces as being changed
++
++Netlink notification handling ignores messages for deleted links,
++RTM_DELLINK. It does handle RTM_GETLINK. According to libnl docu-
++mentation (http://www.infradead.org/~tgr/libnl/doc/route.html)
++RTM_DELLINK can be sent by the kernel, but RTM_GETLINK cannot.
++There was likely a mixup in the original implementation, so this
++change replaces handling for RTM_GETLINK with RTM_DELLINK.
++
++Testing and Verification Instructions:
++  1. Use ip-link to add and remove a VLAN interface and verify
++     that mDNSResponder handles the deleted link.
++
++Upstream-Status: Submitted [dts@apple.com]
++
++Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
++Signed-off-by: Alex Kiernan <alex.kiernan@gmail.com>
++---
++ mDNSPosix/mDNSPosix.c | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/mDNSPosix/mDNSPosix.c
+++++ b/mDNSPosix/mDNSPosix.c
++@@ -1714,7 +1714,7 @@ mDNSlocal void          ProcessRoutingNo
++ #endif
++ 
++         // Process the NetLink message
++-        if (pNLMsg->nlmsg_type == RTM_GETLINK || pNLMsg->nlmsg_type == RTM_NEWLINK)
+++        if (pNLMsg->nlmsg_type == RTM_DELLINK || pNLMsg->nlmsg_type == RTM_NEWLINK)
++             AddInterfaceIndexToList(changedInterfaces, ((struct ifinfomsg*) NLMSG_DATA(pNLMsg))->ifi_index);
++         else if (pNLMsg->nlmsg_type == RTM_DELADDR || pNLMsg->nlmsg_type == RTM_NEWADDR)
++             AddInterfaceIndexToList(changedInterfaces, ((struct ifaddrmsg*) NLMSG_DATA(pNLMsg))->ifa_index);
+diff --git a/net/mdnsresponder/patches/0008-Handle-errors-from-socket-calls.patch b/net/mdnsresponder/patches/0008-Handle-errors-from-socket-calls.patch
+new file mode 100644
+index 000000000..97d8a7f68
+--- /dev/null
++++ b/net/mdnsresponder/patches/0008-Handle-errors-from-socket-calls.patch
+@@ -0,0 +1,58 @@
++From ed58146d3aeecdb9920fdc017f85c18b5b10f2db Mon Sep 17 00:00:00 2001
++From: Nate Karstens <nate.karstens@garmin.com>
++Date: Thu, 10 Aug 2017 08:27:32 -0500
++Subject: [PATCH 8/8] Handle errors from socket calls
++
++Adds handling for socket() or read() returning a
++negative value (indicating an error has occurred).
++
++Upstream-Status: Submitted [dts@apple.com]
++
++Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
++Signed-off-by: Alex Kiernan <alex.kiernan@gmail.com>
++---
++ mDNSPosix/mDNSPosix.c | 12 +++++++++---
++ 1 file changed, 9 insertions(+), 3 deletions(-)
++
++--- a/mDNSPosix/mDNSPosix.c
+++++ b/mDNSPosix/mDNSPosix.c
++@@ -1677,7 +1677,7 @@ mDNSlocal void          ProcessRoutingNo
++ // Read through the messages on sd and if any indicate that any interface records should
++ // be torn down and rebuilt, return affected indices as a bitmask. Otherwise return 0.
++ {
++-    ssize_t readCount;
+++    ssize_t readVal, readCount;
++     char buff[4096];
++     struct nlmsghdr         *pNLMsg = (struct nlmsghdr*) buff;
++ 
++@@ -1686,7 +1686,10 @@ mDNSlocal void          ProcessRoutingNo
++     // enough to hold all pending data and so avoid message fragmentation.
++     // (Note that FIONREAD is not supported on AF_NETLINK.)
++ 
++-    readCount = read(sd, buff, sizeof buff);
+++    readVal = read(sd, buff, sizeof buff);
+++    if (readVal < 0) return;
+++    readCount = readVal;
+++
++     while (1)
++     {
++         // Make sure we've got an entire nlmsghdr in the buffer, and payload, too.
++@@ -1702,7 +1705,9 @@ mDNSlocal void          ProcessRoutingNo
++                 pNLMsg = (struct nlmsghdr*) buff;
++ 
++                 // read more data
++-                readCount += read(sd, buff + readCount, sizeof buff - readCount);
+++                readVal = read(sd, buff + readCount, sizeof buff - readCount);
+++                if (readVal < 0) return;
+++                readCount += readVal;
++                 continue;                   // spin around and revalidate with new readCount
++             }
++             else
++@@ -1851,6 +1856,7 @@ mDNSlocal mDNSBool mDNSPlatformInit_CanR
++     int err;
++     int s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
++     struct sockaddr_in s5353;
+++    if (s < 0) return mDNSfalse;
++     s5353.sin_family      = AF_INET;
++     s5353.sin_port        = MulticastDNSPort.NotAnInteger;
++     s5353.sin_addr.s_addr = 0;
+diff --git a/net/mdnsresponder/patches/010-uclibc.patch b/net/mdnsresponder/patches/010-uclibc.patch
+deleted file mode 100644
+index a4d1308ee..000000000
+--- a/net/mdnsresponder/patches/010-uclibc.patch
++++ /dev/null
+@@ -1,13 +0,0 @@
+---- a/mDNSShared/PlatformCommon.c
+-+++ b/mDNSShared/PlatformCommon.c
+-@@ -43,6 +43,10 @@
+- typedef unsigned int socklen_t;
+- #endif
+- 
+-+#ifndef TCP_NOTSENT_LOWAT
+-+#define TCP_NOTSENT_LOWAT 25
+-+#endif
+-+
+- #if MDNS_MALLOC_DEBUGGING
+- // We ONLY want this for malloc debugging--on a running production system we want to deal with
+- // malloc failures, not just die.   There is a small performance penalty for enabling these options
+diff --git a/net/mdnsresponder/patches/020-fix-core-dump-while-parsing-interface-list.patch b/net/mdnsresponder/patches/020-fix-core-dump-while-parsing-interface-list.patch
+deleted file mode 100644
+index d62cb7b2f..000000000
+--- a/net/mdnsresponder/patches/020-fix-core-dump-while-parsing-interface-list.patch
++++ /dev/null
+@@ -1,18 +0,0 @@
+-From 1fb07b9524b4afed3a826c087db4dc48a7bfdb89 Mon Sep 17 00:00:00 2001
+-From: Ted Lemon <elemon@apple.com>
+-Date: Thu, 6 Jun 2019 13:35:43 -0400
+-Subject: [PATCH] Fix core dump while parsing interface list on Posix
+-
+----
+---- a/mDNSPosix/mDNSPosix.c
+-+++ b/mDNSPosix/mDNSPosix.c
+-@@ -1320,7 +1320,8 @@ mDNSlocal int SetupInterfaceList(mDNS *c
+-         struct ifaddrs *i = intfList;
+-         while (i)
+-         {
+--            if (     ((i->ifa_addr->sa_family == AF_INET)
+-+            if (     i->ifa_addr != NULL &&
+-+                     ((i->ifa_addr->sa_family == AF_INET)
+- #if HAVE_IPV6
+-                       || (i->ifa_addr->sa_family == AF_INET6)
+- #endif
+diff --git a/net/mdnsresponder/patches/100-linux_fixes.patch b/net/mdnsresponder/patches/100-linux_fixes.patch
+new file mode 100644
+index 000000000..e775cfe4c
+--- /dev/null
++++ b/net/mdnsresponder/patches/100-linux_fixes.patch
+@@ -0,0 +1,182 @@
++--- a/Clients/Makefile
+++++ b/Clients/Makefile
++@@ -42,7 +42,7 @@ TARGETS = build/dns-sd build/dns-sd64
++ LIBS =
++ else
++ TARGETS = build/dns-sd
++-LIBS = -L../mDNSPosix/$(BUILDDIR)/ -ldns_sd
+++LIBS ?= -L../mDNSPosix/$(BUILDDIR)/ -ldns_sd
++ endif
++ 
++ all: $(TARGETS)
++--- a/mDNSPosix/PosixDaemon.c
+++++ b/mDNSPosix/PosixDaemon.c
++@@ -38,6 +38,11 @@
++ #include <pwd.h>
++ #include <sys/types.h>
++ #include <sys/socket.h>
+++#ifdef __linux__
+++#include <sys/capability.h> /* !!! We require libcap-dev for this. Oh well. */
+++/* prctl is required to enable inheriting of capabilities across setuid */
+++#include <sys/prctl.h>
+++#endif /* __linux__ */
++ 
++ #if __APPLE__
++ #undef daemon
++@@ -194,6 +199,18 @@ int main(int argc, char **argv)
++ 
++     Reconfigure(&mDNSStorage);
++ 
+++#ifdef __linux__
+++    /*
+++     * SO_BINDTODEVICE is privileged operation; however, we can get
+++     * around it using capabilities instead of remaining root.
+++     */
+++    if (mStatus_NoError == err)
+++      {
+++        if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0) < 0)
+++          perror("prctl PR_SET_KEEPCAPS");
+++      }
+++#endif /* __linux__ */
+++
++     // Now that we're finished with anything privileged, switch over to running as "nobody"
++     if (mStatus_NoError == err)
++     {
++@@ -209,6 +226,21 @@ int main(int argc, char **argv)
++             {
++                 LogMsg("WARNING: mdnsd continuing as root because setuid to \"nobody\" failed with %s", strerror(errno));
++             }
+++#ifdef __linux__
+++            struct __user_cap_header_struct ch;
+++            struct __user_cap_data_struct cd[_LINUX_CAPABILITY_U32S_3];
+++
+++            memset(&ch, 0, sizeof(ch));
+++            ch.version = _LINUX_CAPABILITY_VERSION_3;
+++            ch.pid = getpid();
+++            memset(&cd[0], 0, sizeof(cd));
+++            /* CAP_NET_RAW is required to use SO_BINDTODEVICE */
+++            int caps = CAP_TO_MASK(CAP_NET_RAW);
+++            cd[0].permitted = caps;
+++            cd[0].effective = caps;
+++            if (capset(&ch, &cd[0]) < 0)
+++              perror("capset");
+++#endif /* __linux__ */
++         }
++         else
++         {
++@@ -216,6 +248,11 @@ int main(int argc, char **argv)
++         }
++     }
++ 
+++#ifdef __linux__
+++    if (mStatus_NoError == err)
+++      err = mDNSPlatformPosixRefreshInterfaceList(&mDNSStorage);
+++#endif /* __linux__ */
+++
++     if (mStatus_NoError == err)
++         err = MainLoop(&mDNSStorage);
++ 
++--- a/mDNSPosix/mDNSPosix.c
+++++ b/mDNSPosix/mDNSPosix.c
++@@ -1223,6 +1223,29 @@ mDNSlocal int SetupSocket(struct sockadd
++             if (err < 0) { err = errno; perror("setsockopt - IP_MULTICAST_TTL"); }
++         }
++ 
+++#ifdef __linux__
+++#ifdef SO_BINDTODEVICE
+++        if (err == 0 && interfaceIndex)
+++        {
+++            char ifname[IFNAMSIZ];
+++            if (if_indextoname(interfaceIndex, ifname))
+++              {
+++                err = setsockopt(*sktPtr, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen(ifname));
+++                if (err < 0)
+++                  {
+++                    err = errno;
+++                    perror("setsockopt - SO_BINDTODEVICE");
+++                  }
+++              }
+++            else
+++              {
+++                err = errno;
+++                perror("if_indextoname");
+++              }
+++        }
+++#endif /* SO_BINDTODEVICE */
+++#endif /* __linux__ */
+++
++         // And start listening for packets
++         if (err == 0)
++         {
++@@ -1298,6 +1321,29 @@ mDNSlocal int SetupSocket(struct sockadd
++             if (err < 0) { err = errno; perror("setsockopt - IPV6_MULTICAST_HOPS"); }
++         }
++ 
+++#ifdef __linux__
+++#ifdef SO_BINDTODEVICE
+++        if (err == 0 && interfaceIndex)
+++        {
+++            char ifname[IFNAMSIZ];
+++            if (if_indextoname(interfaceIndex, ifname))
+++              {
+++                err = setsockopt(*sktPtr, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen(ifname));
+++                if (err < 0)
+++                  {
+++                    err = errno;
+++                    perror("setsockopt - SO_BINDTODEVICE");
+++                  }
+++              }
+++            else
+++              {
+++                err = errno;
+++                perror("if_indextoname");
+++              }
+++        }
+++#endif /* SO_BINDTODEVICE */
+++#endif /* __linux__ */
+++
++         // And start listening for packets
++         if (err == 0)
++         {
++@@ -1899,8 +1945,12 @@ mDNSexport mStatus mDNSPlatformInit(mDNS
++     if (err == mStatus_NoError) err = SetupSocket(&sa, zeroIPPort, 0, &m->p->unicastSocket6);
++ #endif
++ 
+++    // In Linux case, we can't set up sockets with different owner -
+++    // it blows up SO_REUSEPORT. So we do this step bit later.
+++#ifndef __linux__
++     // Tell mDNS core about the network interfaces on this machine.
++     if (err == mStatus_NoError) err = SetupInterfaceList(m);
+++#endif /* !__linux__ */
++ 
++     // Tell mDNS core about DNS Servers
++     mDNS_Lock(m);
++--- a/mDNSShared/dnsextd_parser.y
+++++ b/mDNSShared/dnsextd_parser.y
++@@ -15,6 +15,8 @@
++  * limitations under the License.
++  */
++ 
+++%parse-param { void *context }
+++
++ %{
++ #include <stdio.h>
++ #include <stdlib.h>
++@@ -23,7 +25,7 @@
++ #include "DebugServices.h"
++ #include "dnsextd.h"
++ 
++-void yyerror( const char* error );
+++void yyerror( void* context, const char* error );
++ int  yylex(void);
++ 
++ 
++@@ -409,7 +411,7 @@ int yywrap(void);
++ 
++ extern int yylineno;
++ 
++-void yyerror( const char *str )
+++void yyerror( void* context, const char *str )
++ {
++         fprintf( stderr,"%s:%d: error: %s\n", g_filename, yylineno, str );
++ }
+diff --git a/net/mdnsresponder/patches/120-reproducible-builds.patch b/net/mdnsresponder/patches/120-reproducible-builds.patch
+new file mode 100644
+index 000000000..d25972a0a
+--- /dev/null
++++ b/net/mdnsresponder/patches/120-reproducible-builds.patch
+@@ -0,0 +1,55 @@
++--- a/Clients/dns-sd.c
+++++ b/Clients/dns-sd.c
++@@ -2463,7 +2463,7 @@ Fail:
++ // The "@(#) " pattern is a special prefix the "what" command looks for
++ #pragma GCC diagnostic push
++ #pragma GCC diagnostic ignored "-Wdate-time"
++-    const char VersionString_SCCS[] = "@(#) dns-sd " STRINGIFY(mDNSResponderVersion) " (" __DATE__ " " __TIME__ ")";
+++    const char VersionString_SCCS[] = "@(#) dns-sd " STRINGIFY(mDNSResponderVersion);
++ #pragma GCC diagnostic pop
++ 
++ #if _BUILDING_XCODE_PROJECT_
++--- a/mDNSPosix/PosixDaemon.c
+++++ b/mDNSPosix/PosixDaemon.c
++@@ -308,9 +308,9 @@ asm (".desc ___crashreporter_info__, 0x1
++ 
++ // For convenience when using the "strings" command, this is the last thing in the file
++ #if mDNSResponderVersion > 1
++-mDNSexport const char mDNSResponderVersionString_SCCS[] = "@(#) mDNSResponder-" STRINGIFY(mDNSResponderVersion) " (" __DATE__ " " __TIME__ ")";
+++mDNSexport const char mDNSResponderVersionString_SCCS[] = "@(#) mDNSResponder-" STRINGIFY(mDNSResponderVersion);
++ #elif MDNS_VERSIONSTR_NODTS
++ mDNSexport const char mDNSResponderVersionString_SCCS[] = "@(#) mDNSResponder (Engineering Build)";
++ #else
++-mDNSexport const char mDNSResponderVersionString_SCCS[] = "@(#) mDNSResponder (Engineering Build) (" __DATE__ " " __TIME__ ")";
+++mDNSexport const char mDNSResponderVersionString_SCCS[] = "@(#) mDNSResponder (Engineering Build)";
++ #endif
++--- a/mDNSShared/Java/JNISupport.c
+++++ b/mDNSShared/Java/JNISupport.c
++@@ -1069,4 +1069,4 @@ exit:
++ 
++ // NOT static -- otherwise the compiler may optimize it out
++ // The "@(#) " pattern is a special prefix the "what" command looks for
++-const char VersionString_SCCS[] = "@(#) libjdns_sd " STRINGIFY(mDNSResponderVersion) " (" __DATE__ " " __TIME__ ")";
+++const char VersionString_SCCS[] = "@(#) libjdns_sd " STRINGIFY(mDNSResponderVersion);
++--- a/mDNSShared/dnsextd.c
+++++ b/mDNSShared/dnsextd.c
++@@ -3132,7 +3132,7 @@ mDNS mDNSStorage;
++ 
++ // For convenience when using the "strings" command, this is the last thing in the file
++ // The "@(#) " pattern is a special prefix the "what" command looks for
++-const char mDNSResponderVersionString_SCCS[] = "@(#) dnsextd " STRINGIFY(mDNSResponderVersion) " (" __DATE__ " " __TIME__ ")";
+++const char mDNSResponderVersionString_SCCS[] = "@(#) dnsextd " STRINGIFY(mDNSResponderVersion);
++ 
++ #if _BUILDING_XCODE_PROJECT_
++ // If the process crashes, then this string will be magically included in the automatically-generated crash log
++--- a/mDNSShared/dnssd_clientlib.c
+++++ b/mDNSShared/dnssd_clientlib.c
++@@ -372,7 +372,7 @@ DNSServiceErrorType DNSSD_API TXTRecordG
++ #pragma GCC diagnostic push
++ #pragma GCC diagnostic ignored "-Wdate-time"
++ #endif
++-const char VersionString_SCCS_libdnssd[] DNSSD_USED = "@(#) libdns_sd " STRINGIFY(mDNSResponderVersion) " (" __DATE__ " " __TIME__ ")";
+++const char VersionString_SCCS_libdnssd[] DNSSD_USED = "@(#) libdns_sd " STRINGIFY(mDNSResponderVersion);
++ #if defined(__GNUC__)
++ #pragma GCC diagnostic pop
++ #endif
+-- 
+2.34.1
+
