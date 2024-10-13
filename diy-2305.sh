@@ -219,13 +219,7 @@ fi
 rm -rf tpm312
 }
 
-function patch_kernel66() {
-
-for rockpatch in $( ls tpm312/openwrt-23.05-k6.6/core ); do
-    echo Applying openwrt-23.05-k6.6 $rockpatch
-    patch -p1 --no-backup-if-mismatch --quiet < tpm312/openwrt-23.05-k6.6/core/$rockpatch
-done
-
+function package69() {
 directories2=(
     "package/kernel/mac80211"
     "package/kernel/mt76"
@@ -277,6 +271,111 @@ if [ -d "$source_directory2" ]; then
 else
     echo "源目录 $source_directory2 不存在。"
 fi
+}
+
+function package611() {
+directories3=(
+    "package/kernel/mac80211"
+    "package/kernel/mt76"
+    "package/kernel/ath10k-ct"
+    "package/kernel/mwlwifi"
+)
+
+for directory3 in "${directories3[@]}"; do
+    if [ -d "$directory3" ]; then
+        echo "目录 $directory3 存在，进行删除操作..."
+        rm -r "$directory3"
+        echo "目录 $directory3 已删除。"
+    else
+        echo "目录 $directory3 不存在。"
+    fi
+done
+
+# 定义源目录和目标目录
+source_directory1="tpm312/package-611/kernel/mac80211"
+source_directory2="tpm312/package-611/kernel/mt76"
+source_directory3="tpm312/package-611/kernel/ath10k-ct"
+source_directory4="tpm312/package-611/kernel/mwlwifi"
+
+target_directory1="package/kernel/mac80211"
+target_directory2="package/kernel/mt76"
+target_directory3="package/kernel/ath10k-ct"
+target_directory4="package/kernel/mwlwifi"
+
+# 检查源目录1是否存在
+if [ -d "$source_directory1" ]; then
+    echo "源目录 $source_directory1 存在。"
+
+    # 检查目标目录1是否存在
+    if [ -d "$target_directory1" ]; then
+        echo "目标目录 $target_directory1 已经存在，无需移动。"
+    else
+        echo "目标目录 $target_directory1 不存在，进行恢复操作..."
+        mv -f "$source_directory1" "$target_directory1"
+        echo "目录 $source_directory1 已移动到目标目录 $target_directory1。"
+    fi
+else
+    echo "源目录 $source_directory1 不存在。"
+fi
+
+# 检查源目录2是否存在
+if [ -d "$source_directory2" ]; then
+    echo "源目录 $source_directory2 存在。"
+
+    # 检查目标目录2是否存在
+    if [ -d "$target_directory2" ]; then
+        echo "目标目录 $target_directory2 已经存在，无需移动。"
+    else
+        echo "目标目录 $target_directory2 不存在，进行恢复操作..."
+        mv -f "$source_directory2" "$target_directory2"
+        echo "目录 $source_directory2 已移动到目标目录 $target_directory2。"
+    fi
+else
+    echo "源目录 $source_directory2 不存在。"
+fi
+
+# 检查源目录3是否存在
+if [ -d "$source_directory3" ]; then
+    echo "源目录 $source_directory3 存在。"
+
+    # 检查目标目录3是否存在
+    if [ -d "$target_directory3" ]; then
+        echo "目标目录 $target_directory3 已经存在，无需移动。"
+    else
+        echo "目标目录 $target_directory3 不存在，进行恢复操作..."
+        mv -f "$source_directory3" "$target_directory3"
+        echo "目录 $source_directory3 已移动到目标目录 $target_directory3。"
+    fi
+else
+    echo "源目录 $source_directory3 不存在。"
+fi
+
+# 检查源目录4是否存在
+if [ -d "$source_directory4" ]; then
+    echo "源目录 $source_directory4 存在。"
+
+    # 检查目标目录4是否存在
+    if [ -d "$target_directory4" ]; then
+        echo "目标目录 $target_directory4 已经存在，无需移动。"
+    else
+        echo "目标目录 $target_directory4 不存在，进行恢复操作..."
+        mv -f "$source_directory4" "$target_directory4"
+        echo "目录 $source_directory4 已移动到目标目录 $target_directory4。"
+    fi
+else
+    echo "源目录 $source_directory4 不存在。"
+fi
+
+}
+
+function patch_kernel66() {
+
+for rockpatch in $( ls tpm312/openwrt-23.05-k6.6/core ); do
+    echo Applying openwrt-23.05-k6.6 $rockpatch
+    patch -p1 --no-backup-if-mismatch --quiet < tpm312/openwrt-23.05-k6.6/core/$rockpatch
+done
+
+package611
 
 rm -rf tpm312
 }
