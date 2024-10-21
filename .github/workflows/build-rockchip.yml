@@ -34,6 +34,7 @@ on:
         - 'tpm312'
         - 'mpc1917'
         - 'r08'
+        - 'fmx1'
       REPO:
         description: 'Choose repo'
         required: true
@@ -53,6 +54,7 @@ on:
         - '192.168.16.1'
         - '192.168.19.1'
         - '192.168.9.1'
+        - '192.168.99.1'
         - '192.168.166.1'
         - '172.16.0.1'
         - '172.18.0.1'
@@ -94,6 +96,7 @@ jobs:
         - rockchip: mpc1917
         - rockchip: tpm312
         - rockchip: r08
+        - rockchip: fmx1
 
     steps:
       - name: 检查
