@@ -1,0 +1,108 @@
+From ae0d0879f5e2dbc6857431924811542cdb133226 Mon Sep 17 00:00:00 2001
+From: Milinda Brantini <C_A_T_T_E_R_Y@outlook.com>
+Date: Sun, 29 Sep 2024 23:36:35 +0800
+Subject: [PATCH] golang: Optimized values to suit golang 1.23
+
+Added GOARM64 and GORISCV64 in golang-build.sh.
+Drop deprecated GOROOT_FINAL in GoCompiler/Default/Make.
+Updated environment vars in golang-values.mk for GOARM64 and GORISCV64.
+Refined host build in golang/Makefile for openbsd_riscv64.
+
+Co-authored-by: Tianling Shen <cnsztl@immortalwrt.org>
+Signed-off-by: Milinda Brantini <C_A_T_T_E_R_Y@outlook.com>
+---
+ lang/golang/golang-build.sh    | 2 +-
+ lang/golang/golang-compiler.mk | 9 +++------
+ lang/golang/golang-values.mk   | 2 ++
+ lang/golang/golang/Makefile    | 3 +--
+ 4 files changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/lang/golang/golang-build.sh b/lang/golang/golang-build.sh
+index fe8718ee761eb..01df4aa427a5b 100644
+--- a/lang/golang/golang-build.sh
++++ b/lang/golang/golang-build.sh
+@@ -120,7 +120,7 @@ build() {
+ 	if [ "$GO_GO_GENERATE" = 1 ]; then
+ 		log "Calling go generate"
+ 		# shellcheck disable=SC2086
+-		GOOS='' GOARCH='' GO386='' GOARM='' GOMIPS='' GOMIPS64='' \
++		GOOS='' GOARCH='' GO386='' GOARM='' GOARM64='' GOMIPS='' GOMIPS64='' GORISCV64=''\
+ 		go generate -v $targets
+ 		log
+ 	fi
+diff --git a/lang/golang/golang-compiler.mk b/lang/golang/golang-compiler.mk
+index 50cc44905165c..44defed7b4442 100644
+--- a/lang/golang/golang-compiler.mk
++++ b/lang/golang/golang-compiler.mk
+@@ -19,14 +19,11 @@ define GoCompiler/Default/CheckHost
+ endef
+ 
+ # $(1) source go root
+-# $(2) destination prefix
+-# $(3) go version id
+-# $(4) additional environment variables (optional)
++# $(2) additional environment variables (optional)
+ define GoCompiler/Default/Make
+ 	( \
+ 		cd "$(1)/src" ; \
+-		$(if $(2),GOROOT_FINAL="$(2)/lib/go-$(3)") \
+-		$(4) \
++		$(2) \
+ 		$(BASH) make.bash \
+ 		$(if $(findstring s,$(OPENWRT_VERBOSE)),-v) \
+ 		--no-banner \
+@@ -156,7 +153,7 @@ define GoCompiler/AddProfile
+ 
+   # $$(1) additional environment variables (optional)
+   define GoCompiler/$(1)/Make
+-	$$(call GoCompiler/Default/Make,$(2),$(3),$(4),$$(1))
++	$$(call GoCompiler/Default/Make,$(2),$$(1))
+   endef
+ 
+   # $$(1) override install prefix (optional)
+diff --git a/lang/golang/golang-values.mk b/lang/golang/golang-values.mk
+index a2a10f04d33c2..d57de5f3256cb 100644
+--- a/lang/golang/golang-values.mk
++++ b/lang/golang/golang-values.mk
+@@ -59,11 +59,13 @@ unexport \
+ # Architecture-specific environment variables:
+ unexport \
+   GOARM \
++  GOARM64 \
+   GO386 \
+   GOAMD64 \
+   GOMIPS \
+   GOMIPS64 \
+   GOPPC64 \
++  GORISCV64 \
+   GOWASM
+ 
+ # Environment variables for use with code coverage:
+diff --git a/lang/golang/golang/Makefile b/lang/golang/golang/Makefile
+index 601b320701dc3..adc47a4361bae 100644
+--- a/lang/golang/golang/Makefile
++++ b/lang/golang/golang/Makefile
+@@ -34,7 +34,6 @@ PKG_BUILD_FLAGS:=no-mips16
+ 
+ PKG_GO_PREFIX:=/usr
+ PKG_GO_VERSION_ID:=$(GO_VERSION_MAJOR_MINOR)
+-PKG_GO_ROOT:=$(PKG_GO_PREFIX)/lib/go-$(PKG_GO_VERSION_ID)
+ 
+ HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/go-$(PKG_VERSION)
+ HOST_BUILD_PARALLEL:=1
+@@ -65,6 +64,7 @@ HOST_GO_VALID_OS_ARCH:= \
+   wasip1_wasm \
+   \
+   freebsd_riscv64 \
++  openbsd_riscv64 \
+   \
+   linux_ppc64 linux_ppc64le \
+   linux_mips linux_mipsle linux_mips64 linux_mips64le \
+@@ -394,7 +394,6 @@ define Build/Compile
+ 		cd "$(PKG_BUILD_DIR)/bin" ; \
+ 		export $(GO_PKG_TARGET_VARS) ; \
+ 		$(CP) go go-host ; \
+-		GOROOT_FINAL="$(PKG_GO_ROOT)" \
+ 		GO_GCC_HELPER_CC="$(TARGET_CC)" \
+ 		GO_GCC_HELPER_CXX="$(TARGET_CXX)" \
+ 		$(PKG_GO_VARS) \
