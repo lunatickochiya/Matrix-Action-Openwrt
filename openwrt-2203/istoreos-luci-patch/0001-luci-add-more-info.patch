@@ -1,7 +1,7 @@
-From a865dd10e966120beb129a28625959f53e5d32ee Mon Sep 17 00:00:00 2001
+From 7476d4240c1c3526c73fe6e3e1d44580516355fb Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
-Date: Wed, 3 Jan 2024 17:46:11 +0800
-Subject: [PATCH] luci add more info
+Date: Thu, 19 Dec 2024 21:05:24 +0800
+Subject: [PATCH] luci:add more info
 
 ---
  modules/luci-base/po/zh_Hans/base.po          |  3 +
@@ -11,13 +11,13 @@ Subject: [PATCH] luci add more info
  4 files changed, 101 insertions(+), 5 deletions(-)
 
 diff --git a/modules/luci-base/po/zh_Hans/base.po b/modules/luci-base/po/zh_Hans/base.po
-index ad1504bf1f..bca33c6aff 100644
+index f30ebc14ef..bd792c3e11 100644
 --- a/modules/luci-base/po/zh_Hans/base.po
 +++ b/modules/luci-base/po/zh_Hans/base.po
-@@ -10518,3 +10518,6 @@ msgstr "« 后退"
+@@ -11049,3 +11049,6 @@ msgstr "\"<code>3,192.168.2.1</code>\"表示通告不同的网关给客户端。
  
- #~ msgid "List of domains to force to an IP address."
- #~ msgstr "此列表将域名强制指向某个 IP 地址。"
+ msgid "Note: Do not use \"odhcpd\" or network interface (such as \"lan\", \"wan\", \"wan6\", etc.) as name when adding tags, conflicts will occur. It is recommended to prefix the name with \"t_\" to avoid such conflicts."
+ msgstr "注意：添加标签时请勿将“odhcpd”或网络接口（例如“lan”，“wan”，“wan6”等）作为名称，将产生冲突。建议在名称前面加上前缀“t_”以杜绝此类冲突。"
 +
 +msgid "Source Code"
 +msgstr "源代码(免费使用，禁止商用)"
