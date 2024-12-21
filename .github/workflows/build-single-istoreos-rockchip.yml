@@ -207,6 +207,8 @@ jobs:
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        [ -d openwrt-2203/target ] && mv -f openwrt-2203/target openwrt/target
+        [ -d openwrt-2203/package ] && mv -f openwrt-2203/package openwrt/package
         [ -d openwrt-2203/patch-istoreos-${{matrix.target}} ] && mv -f openwrt-2203/patch-istoreos-${{matrix.target}} openwrt/patch-istoreos
         cd openwrt
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
