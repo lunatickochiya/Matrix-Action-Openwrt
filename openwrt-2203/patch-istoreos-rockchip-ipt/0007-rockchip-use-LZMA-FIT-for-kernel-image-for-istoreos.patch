@@ -1,0 +1,104 @@
+From 3d4e87b48eb63e4459c0eba8b528ae1eb51a8294 Mon Sep 17 00:00:00 2001
+From: Chuanhong Guo <gch981213@gmail.com>
+Date: Sun, 13 Nov 2022 21:29:26 +0800
+Subject: [PATCH 7/9] rockchip: use LZMA FIT for kernel image for istoreos
+
+Use LZMA compressed kernel to save some space in boot partition.
+
+Fixes: #11197
+Tested-by: Tianling Shen <cnsztl@immortalwrt.org> [NanoPi R2S]
+Signed-off-by: Chuanhong Guo <gch981213@gmail.com>
+---
+ target/linux/rockchip/image/Makefile              | 5 ++---
+ target/linux/rockchip/image/armv8.mk              | 3 +++
+ target/linux/rockchip/image/mmc.bootscript        | 3 +--
+ target/linux/rockchip/image/nanopi-r2s.bootscript | 3 +--
+ target/linux/rockchip/image/nanopi-r4s.bootscript | 3 +--
+ 5 files changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/target/linux/rockchip/image/Makefile b/target/linux/rockchip/image/Makefile
+index afc3693f33..111bde43ab 100644
+--- a/target/linux/rockchip/image/Makefile
++++ b/target/linux/rockchip/image/Makefile
+@@ -16,7 +16,6 @@ define Build/boot-common
+ 	rm -fR $@.boot
+ 	mkdir -p $@.boot
+ 
+-	$(CP) $(KDIR)/image-$(firstword $(DEVICE_DTS)).dtb $@.boot/rockchip.dtb
+ 	$(CP) $(IMAGE_KERNEL) $@.boot/kernel.img
+ endef
+ 
+@@ -49,7 +48,7 @@ define Build/pine64-img
+ 	# http://opensource.rock-chips.com/wiki_Boot_option#Boot_flow
+ 	#
+ 	# U-Boot SPL expects the U-Boot ITB to be located at sector 0x4000 (8 MiB) on the MMC storage
+-	$(SCRIPT_DIR)/gen_image_generic.sh \
++	PADDING=1 $(SCRIPT_DIR)/gen_image_generic.sh \
+ 		$@ \
+ 		$(CONFIG_TARGET_KERNEL_PARTSIZE) $@.boot \
+ 		$(CONFIG_TARGET_ROOTFS_PARTSIZE) $(IMAGE_ROOTFS) \
+@@ -63,7 +62,7 @@ endef
+ ### Devices ###
+ define Device/Default
+   PROFILES := Default
+-  KERNEL := kernel-bin
++  KERNEL = kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb
+   IMAGES := sysupgrade.img.gz
+   DEVICE_DTS_DIR := $(DTS_DIR)/rockchip
+   DEVICE_DTS = $$(SOC)-$(lastword $(subst _, ,$(1)))
+diff --git a/target/linux/rockchip/image/armv8.mk b/target/linux/rockchip/image/armv8.mk
+index 8474026762..36b7cedea1 100644
+--- a/target/linux/rockchip/image/armv8.mk
++++ b/target/linux/rockchip/image/armv8.mk
+@@ -2,6 +2,9 @@
+ #
+ # Copyright (C) 2020 Tobias Maedel
+ 
++# FIT will be loaded at 0x02080000. Leave 16M for that, align it to 2M and load the kernel after it.
++KERNEL_LOADADDR := 0x03200000
++
+ define Device/friendlyarm_nanopi-r2s
+   DEVICE_VENDOR := FriendlyARM
+   DEVICE_MODEL := NanoPi R2S
+diff --git a/target/linux/rockchip/image/mmc.bootscript b/target/linux/rockchip/image/mmc.bootscript
+index b70a62c4c7..9269fda9cf 100644
+--- a/target/linux/rockchip/image/mmc.bootscript
++++ b/target/linux/rockchip/image/mmc.bootscript
+@@ -2,7 +2,6 @@ part uuid mmc ${devnum}:2 uuid
+ 
+ setenv bootargs "console=ttyS2,1500000 console=tty1 earlycon=uart8250,mmio32,0xff1a0000 root=PARTUUID=${uuid} rw rootwait"
+ 
+-load mmc ${devnum}:1 ${fdt_addr_r} rockchip.dtb
+ load mmc ${devnum}:1 ${kernel_addr_r} kernel.img
+ 
+-booti ${kernel_addr_r} - ${fdt_addr_r}
++bootm ${kernel_addr_r}
+diff --git a/target/linux/rockchip/image/nanopi-r2s.bootscript b/target/linux/rockchip/image/nanopi-r2s.bootscript
+index 5198881a26..8f961d3732 100644
+--- a/target/linux/rockchip/image/nanopi-r2s.bootscript
++++ b/target/linux/rockchip/image/nanopi-r2s.bootscript
+@@ -2,7 +2,6 @@ part uuid mmc ${devnum}:2 uuid
+ 
+ setenv bootargs "console=ttyS2,1500000 earlycon=uart8250,mmio32,0xff130000 root=PARTUUID=${uuid} rw rootwait"
+ 
+-load mmc ${devnum}:1 ${fdt_addr_r} rockchip.dtb
+ load mmc ${devnum}:1 ${kernel_addr_r} kernel.img
+ 
+-booti ${kernel_addr_r} - ${fdt_addr_r}
++bootm ${kernel_addr_r}
+diff --git a/target/linux/rockchip/image/nanopi-r4s.bootscript b/target/linux/rockchip/image/nanopi-r4s.bootscript
+index abe9c24ee3..1e53200027 100644
+--- a/target/linux/rockchip/image/nanopi-r4s.bootscript
++++ b/target/linux/rockchip/image/nanopi-r4s.bootscript
+@@ -2,7 +2,6 @@ part uuid mmc ${devnum}:2 uuid
+ 
+ setenv bootargs "console=ttyS2,1500000 earlycon=uart8250,mmio32,0xff1a0000 root=PARTUUID=${uuid} rw rootwait"
+ 
+-load mmc ${devnum}:1 ${fdt_addr_r} rockchip.dtb
+ load mmc ${devnum}:1 ${kernel_addr_r} kernel.img
+ 
+-booti ${kernel_addr_r} - ${fdt_addr_r}
++bootm ${kernel_addr_r}
+-- 
+2.34.1
+

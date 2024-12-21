@@ -6,15 +6,19 @@
 #=================================================
 
 autosetver() {
-version=22.03
+version=IstoreOS-22.03
 sed -i "52i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-meson
-sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-mediatek
+sed -i "58i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-mediatek
+sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-ramips
+sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-ath79
 sed -i "52i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-rockchip
 sed -i "51i\echo \"DISTRIB_DESCRIPTION='OpenWrt $version Compiled by 2U4U'\" >> /etc/openwrt_release" package/kochiya/autoset/files/zzz-autoset-rockchip-siderouter
 
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-mediatek
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-meson
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-rockchip
+grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-ramips
+grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-ath79
 grep DISTRIB_DESCRIPTION package/kochiya/autoset/files/zzz-autoset-rockchip-siderouter
         }
 
@@ -77,9 +81,10 @@ function remove_error_package_not_install() {
 
 packages=(
     "luci-app-dockerman"
+    "luci-app-smartdns"
     "rtl8821cu"
     "xray-core"
-    "rust"
+    "smartdns"
 )
 
 for package in "${packages[@]}"; do
@@ -90,8 +95,21 @@ done
 
 directories=(
     "feeds/luci/applications/luci-app-dockerman"
+    "feeds/luci/applications/luci-app-smartdns"
     "feeds/lunatic7/rtl8821cu"
+    "feeds/lunatic7/shortcut-fe"
+    "feeds/lunatic7/fullconenat-nft"
+    "feeds/lunatic7/luci-app-turboacc"
     "feeds/packages/net/xray-core"
+    "feeds/packages/net/smartdns"
+    "feeds/lunatic7/accel-ppp"
+    "feeds/lunatic7/luci-app-keepalived"
+    "feeds/lunatic7/luci-app-lorawan-basicstation"
+    "feeds/lunatic7/luci-theme-routerich"
+    "feeds/lunatic7/openwrt-einat-ebpf"
+    "feeds/lunatic7/ykdl"
+    "feeds/lunatic7/you-get"
+    "feeds/lunatic7/lux"
 )
 
 for directory in "${directories[@]}"; do
@@ -173,6 +191,16 @@ echo "$(cat package-configs/mpc1917-istoreos.config)" >> package-configs/.config
 mv -f package-configs/.config .config
 }
 
+function add_rockchip_ipt_packages() {
+echo "$(cat package-configs/rockchip-ipt-2203.config)" >> package-configs/.config
+mv -f package-configs/.config .config
+}
+
+function add_rockchip_nft_packages() {
+echo "$(cat package-configs/rockchip-nft-2203.config)" >> package-configs/.config
+mv -f package-configs/.config .config
+}
+
 if [ "$1" == "mt798x" ]; then
 autosetver
 remove_error_package_not_install
@@ -187,16 +215,13 @@ remove_error_package_not_install
 add_mpc1917_packages
 elif [ "$1" == "rockchip-ipt" ]; then
 autosetver
-patch_package
 patch_luci
-remove_error_package
-add_mpc1917_packages_istoreos
+remove_error_package_not_install
+add_rockchip_ipt_packages
 elif [ "$1" == "rockchip-nft" ]; then
 autosetver
-remove_error_package_not_install
-patch_package
 patch_luci
-patch_lunatic7
+remove_error_package_not_install
 add_rockchip_nft_packages
 elif [ "$1" == "rockpatch" ]; then
 patch_rockchip

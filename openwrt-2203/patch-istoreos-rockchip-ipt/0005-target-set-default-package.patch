@@ -1,3 +1,12 @@
+From a10312cac96be0a3fd820c95b72ddfc53f337fc8 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Fri, 20 Dec 2024 22:00:35 +0800
+Subject: [PATCH 5/9] target:set default package
+
+---
+ include/target.mk | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
 diff --git a/include/target.mk b/include/target.mk
 index f8dae3a273..905bbd17ee 100644
 --- a/include/target.mk
@@ -25,3 +34,6 @@ index f8dae3a273..905bbd17ee 100644
  	odhcp6c \
  	odhcpd-ipv6only \
  	ppp \
+-- 
+2.34.1
+

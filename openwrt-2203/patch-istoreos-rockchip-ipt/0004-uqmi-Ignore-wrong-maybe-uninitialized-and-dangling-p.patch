@@ -1,8 +1,8 @@
-From dc12c76dc52028b24cddba6a32141f9dbff64d0f Mon Sep 17 00:00:00 2001
+From 6df1c459d48d845ec641b58984a7b02ef157293c Mon Sep 17 00:00:00 2001
 From: Hauke Mehrtens <hauke@hauke-m.de>
 Date: Mon, 19 Dec 2022 01:19:32 +0100
-Subject: [PATCH] uqmi: Ignore wrong maybe-uninitialized and dangling-pointer
- error
+Subject: [PATCH 4/9] uqmi: Ignore wrong maybe-uninitialized and
+ dangling-pointer error
 
 GCC 12.2.0 shows this false positive error message:
 ````
@@ -39,7 +39,7 @@ Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/package/network/utils/uqmi/Makefile b/package/network/utils/uqmi/Makefile
-index c4ca98012a0fb..02265d400c1db 100644
+index c4ca98012a..02265d400c 100644
 --- a/package/network/utils/uqmi/Makefile
 +++ b/package/network/utils/uqmi/Makefile
 @@ -32,7 +32,11 @@ define Package/uqmi/description
@@ -55,3 +55,6 @@ index c4ca98012a0fb..02265d400c1db 100644
  
  TARGET_LDFLAGS += -Wl,--gc-sections
  
+-- 
+2.34.1
+

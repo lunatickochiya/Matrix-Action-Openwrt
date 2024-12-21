@@ -1,0 +1,12 @@
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -134,6 +134,8 @@
+ 	rk3399-nanopi-m4b.dtb \
+ 	rk3399-nanopi-neo4.dtb \
+ 	rk3399-nanopi-r4s.dtb \
++	rk3399-r08.dtb \
++	rk3399-chiptrip-fmx1-pro.dtb \
+ 	rk3399-orangepi.dtb \
+ 	rk3399-pinebook-pro.dtb \
+ 	rk3399-puma-haikou.dtb \
+
