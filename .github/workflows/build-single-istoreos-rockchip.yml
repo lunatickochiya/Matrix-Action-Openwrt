@@ -210,6 +210,7 @@ jobs:
         [ -d openwrt-2203/patch-istoreos-${{matrix.target}} ] && mv -f openwrt-2203/patch-istoreos-${{matrix.target}} openwrt/patch-istoreos
         cd openwrt
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
+        sed -i 's|https://github.com/jjm2473/packages.git|https://github.com/lunatickochiya/istoreos-packages-2203.git|' feeds.conf.default
         $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
         echo "status=success" >> $GITHUB_OUTPUT
 
