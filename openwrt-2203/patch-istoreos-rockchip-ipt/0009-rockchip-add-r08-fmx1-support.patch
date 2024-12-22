@@ -1,17 +1,21 @@
-From 3c6d0fab650fb5b0a7f867c714a02ba9a0edbce7 Mon Sep 17 00:00:00 2001
+From 36239c09f7185a86a259767bda4d69c0f4a3b8c9 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
-Date: Sat, 21 Dec 2024 13:24:36 +0800
-Subject: [PATCH 9/9] rockchip:add r08 fmx1 support
+Date: Sun, 22 Dec 2024 09:50:32 +0800
+Subject: [PATCH 9/9] rockchip:add r08 fmx1 support Revert "Auxiliary commit to
+ revert individual files from a75624c6019c86dbfe823275c7717c67394cefca"
 
+This reverts commit d8caccf815fe07e567d9d353b3c6d256fdf1f93a.
+
+vendor:add rk3399 rk3328 support
 ---
  package/boot/uboot-rockchip/Makefile          | 29 +++++++++++++++++++
  .../armv8/base-files/etc/board.d/02_network   |  2 ++
  target/linux/rockchip/image/Makefile          | 20 +++++++++++++
- target/linux/rockchip/image/armv8.mk          | 20 +++++++++++++
- 4 files changed, 71 insertions(+)
+ target/linux/rockchip/image/armv8.mk          | 22 ++++++++++++++
+ 4 files changed, 73 insertions(+)
 
 diff --git a/package/boot/uboot-rockchip/Makefile b/package/boot/uboot-rockchip/Makefile
-index 8f60b4754d..af7d68b722 100644
+index 8f60b4754d..ef0b6afa24 100644
 --- a/package/boot/uboot-rockchip/Makefile
 +++ b/package/boot/uboot-rockchip/Makefile
 @@ -104,12 +104,36 @@ define U-Boot/rockpro64-rk3399
@@ -19,24 +23,24 @@ index 8f60b4754d..af7d68b722 100644
  endef
  
 +define U-Boot/r08-rk3399
-+  $(U-Boot/rk3399/Default)
++  BUILD_SUBTARGET:=armv8
 +  NAME:=Rockchip R08
 +  BUILD_DEVICES:= \
 +    r08
-+  DEPENDS:=+PACKAGE_u-boot-r08-rk3399:arm-trusted-firmware-rk3399
++  DEPENDS:=+PACKAGE_u-boot-r08-rk3399:trusted-firmware-a-rk3399
 +  PKG_BUILD_DEPENDS:=arm-trusted-firmware-rockchip-vendor
-+  ATF:=rk3399_bl31_v1.36.elf
++  ATF:=$(RK3399_ATF)
 +  USE_RKBIN:=1
 +endef
 +
 +define U-Boot/chiptrip-fmx1-pro-rk3399
-+  $(U-Boot/rk3399/Default)
++  BUILD_SUBTARGET:=armv8
 +  NAME:=FMX1 PRO V10
 +  BUILD_DEVICES:= \
 +    chiptrip-fmx1-pro
-+  DEPENDS:=+PACKAGE_u-boot-chiptrip-fmx1-pro-rk3399:arm-trusted-firmware-rk3399
++  DEPENDS:=+PACKAGE_u-boot-chiptrip-fmx1-pro-rk3399:trusted-firmware-a-rk3399
 +  PKG_BUILD_DEPENDS:=arm-trusted-firmware-rockchip-vendor
-+  ATF:=rk3399_bl31_v1.36.elf
++  ATF:=$(RK3399_ATF)
 +  USE_RKBIN:=1
 +endef
 +
@@ -110,10 +114,10 @@ index 111bde43ab..3f0df1fe31 100644
  define Device/Default
    PROFILES := Default
 diff --git a/target/linux/rockchip/image/armv8.mk b/target/linux/rockchip/image/armv8.mk
-index 36b7cedea1..9554cee610 100644
+index 36b7cedea1..3298bc2da5 100644
 --- a/target/linux/rockchip/image/armv8.mk
 +++ b/target/linux/rockchip/image/armv8.mk
-@@ -76,3 +76,23 @@ define Device/armsom_p2-pro
+@@ -76,3 +76,25 @@ define Device/armsom_p2-pro
    DEVICE_PACKAGES := kmod-usb-net-rtl8152 ethtool kmod-rkwifi-bcmdhd rkwifi-firmware-ap6256 kmod-sound-soc-rk3308
  endef
  TARGET_DEVICES += armsom_p2-pro
@@ -122,6 +126,7 @@ index 36b7cedea1..9554cee610 100644
 +  DEVICE_VENDOR := Rockchip
 +  DEVICE_MODEL := R08
 +  SOC := rk3399
++  UBOOT_DEVICE_NAME := r08-rk3399
 +  IMAGE/sysupgrade.img.gz := boot-common | boot-script | pine64-bin | gzip | append-metadata
 +  DEVICE_PACKAGES := -urngd kmod-usb-net-rtl8152 rtl8821ce-firmware kmod-rtw88-8821c kmod-rtw88-8821ce kmod-rtw88-pci wpad-mesh-openssl
 +endef
@@ -133,6 +138,7 @@ index 36b7cedea1..9554cee610 100644
 +  SOC := rk3399
 +  DEVICE_VARIANT := 4GB LPDDR3
 +  SUPPORTED_DEVICES := chiptrip,fmx1-pro
++  UBOOT_DEVICE_NAME := chiptrip-fmx1-pro-rk3399
 +  IMAGE/sysupgrade.img.gz := boot-common | boot-script | pine64-bin | gzip | append-metadata
 +  DEVICE_PACKAGES := -urngd kmod-usb-net-rtl8152 wpad-mesh-openssl kmod-brcmfmac brcmfmac-nvram-4356-sdio cypress-firmware-4356-sdio
 +endef

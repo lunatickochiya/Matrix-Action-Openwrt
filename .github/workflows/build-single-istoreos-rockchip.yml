@@ -28,7 +28,7 @@ on:
       MACH:
         description: 'Choose machine'
         required: true
-        default: 'mpc1917'
+        default: 'fmx1'
         type: choice
         options:
         - 'tpm312'
@@ -171,16 +171,10 @@ jobs:
         echo "UPLOAD_ALLKMOD=${UPLOAD_ALLKMOD}" >> $GITHUB_ENV
         echo "UPLOAD_SYSUPGRADE=${UPLOAD_SYSUPGRADE}" >> $GITHUB_ENV
         echo "USE_Cache=${USE_Cache}" >> $GITHUB_ENV
-        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
-        echo "Kernel_Test=_Kernel_Test_Ver" >> $GITHUB_ENV
-        fi
         chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh add-test-packages.sh
 
     - name: 导入机器及安装包config
       run: |
-        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
-        $GITHUB_WORKSPACE/$DIY_SH add-test-config
-        fi
         if [ ${{matrix.target}} == 'rockchip-nft' ]; then
         bash $GITHUB_WORKSPACE/add-test-packages.sh nft
         echo "----${{matrix.target}}-----NFT-test---"
@@ -193,7 +187,7 @@ jobs:
                 echo "----${{matrix.target}}-----NFT-Machine--------"
         fi
         if [ ${{matrix.target}} == 'rockchip-ipt' ]; then
-                mv -f package-configs/single/${{github.event.inputs.MACH}}-ipt.config package-configs/rockchip-ipt-2203.config
+                mv -f package-configs/single/${{github.event.inputs.MACH}}-ipt-istore.config package-configs/rockchip-ipt-2203.config
                 echo "----${{matrix.target}}-----IPT-Package-Config----"
         elif [ ${{matrix.target}} == 'rockchip-nft' ]; then
                 mv -f package-configs/single/${{github.event.inputs.MACH}}-nft.config package-configs/rockchip-nft-2203.config
@@ -207,13 +201,9 @@ jobs:
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
-        [ -d openwrt-2203/target ] && mv -f openwrt-2203/target openwrt/target
-        [ -d openwrt-2203/package ] && mv -f openwrt-2203/package openwrt/package
-        [ -d openwrt-2203/patch-istoreos-${{matrix.target}} ] && mv -f openwrt-2203/patch-istoreos-${{matrix.target}} openwrt/patch-istoreos
         cd openwrt
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
         sed -i 's|https://github.com/jjm2473/packages.git|https://github.com/lunatickochiya/istoreos-packages-2203.git|' feeds.conf.default
-        $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 增加磁盘空间
@@ -232,12 +222,15 @@ jobs:
       if: steps.clone.outputs.status == 'success'
       id: files
       run: |
-        [ -d package ] && mv -f package/* openwrt/package
         mkdir openwrt/feeds-bump
+        mkdir openwrt/patch-istoreos
+        [ -d package ] && mv -f package/* openwrt/package
+        [ -d openwrt-2203/package-for-istoreos ] && mv -f openwrt-2203/package-for-istoreos/* openwrt/package
         [ -d feeds-packages ] && mv -f feeds-packages/openwrt-23.05/feeds/* openwrt/feeds-bump
-        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
-        rm -rf openwrt-2203/mypatch-2203-${{matrix.target}}/0004-fix.patch
-        fi
+        [ -d openwrt-2203/target ] && mv -f openwrt-2203/target openwrt/target
+        [ -d openwrt-2203/patch-istoreos-${{matrix.target}} ] && mv -f openwrt-2203/patch-istoreos-${{matrix.target}}/* openwrt/patch-istoreos
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 设置 IP 地址
@@ -264,10 +257,6 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
-        mv -f openwrt-2203/K61/tele openwrt/feeds/telephony
-        mv -f openwrt-2203/K61/packages/* openwrt-2203/feeds-package-patch-2203
-        fi
         if [ "${{ matrix.repo }}" == "istoreos-22.03" ]; then
         [ -d openwrt-2203/istoreos-luci-patch ] && mv -f openwrt-2203/istoreos-luci-patch openwrt/feeds/luci/istoreos-luci-patch
         elif [ "${{ matrix.repo }}" == "main" ]; then
@@ -343,6 +332,8 @@ jobs:
         awk '/syncthing/ { print }' .config
         echo "------------------------"
         awk '/shadowsocks-rust/ { print }' .config
+        echo "------------------------"
+        awk '/rust/ { print }' .config
         echo "------------------------"
         awk '/GCC_VERSION/ { print }' .config
         echo "------------------------"

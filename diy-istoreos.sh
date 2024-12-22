@@ -135,20 +135,20 @@ done
 function patch_openwrt() {
         for i in $( ls mypatch ); do
             echo Applying mypatch $i
-            patch -p1 --no-backup-if-mismatch < mypatch/$i
+            patch -p1 --no-backup-if-mismatch --quiet< mypatch/$i
         done
         }
 function patch_istoreos() {
         for is in $( ls patch-istoreos ); do
             echo Applying patch-istoreos $is
-            patch -p1 --no-backup-if-mismatch < patch-istoreos/$is
+            patch -p1 --no-backup-if-mismatch --quiet< patch-istoreos/$is
         done
         }
 function patch_package() {
         for packagepatch in $( ls feeds/packages/istoreos-package-patch ); do
             cd feeds/packages/
             echo Applying istoreos-package-patch $packagepatch
-            patch -p1 --no-backup-if-mismatch < istoreos-package-patch/$packagepatch
+            patch -p1 --no-backup-if-mismatch --quiet< istoreos-package-patch/$packagepatch
             cd ../..
         done
         }
@@ -156,7 +156,7 @@ function patch_luci() {
         for lucipatch in $( ls feeds/luci/istoreos-luci-patch ); do
             cd feeds/luci/
             echo Applying istoreos-luci-patch $lucipatch
-            patch -p1 --no-backup-if-mismatch < istoreos-luci-patch/$lucipatch
+            patch -p1 --no-backup-if-mismatch --quiet< istoreos-luci-patch/$lucipatch
             cd ../..
         done
         }
@@ -164,7 +164,7 @@ function patch_luci() {
 function patch_rockchip() {
         for rockpatch in $( ls tpm312/core-istoreos ); do
             echo Applying tpm312 $rockpatch
-            patch -p1 --no-backup-if-mismatch < tpm312/core-istoreos/$rockpatch
+            patch -p1 --no-backup-if-mismatch --quiet< tpm312/core-istoreos/$rockpatch
         done
         rm -rf tpm312
         }
