@@ -1,0 +1,108 @@
+From cb9254866f40db6cd8eb05a1f6cd9a96bdef5700 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Wed, 2 Nov 2022 16:18:34 +0100
+Subject: [PATCH 12/15] elfutils: update to 1.88
+
+Release Notes:
+https://sourceware.org/pipermail/elfutils-devel/2022q4/005561.html
+
+Refresh patches:
+- 003-libintl-compatibility.patch
+- 100-musl-compat.patch
+- 101-no-fts.patch
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+ package/libs/elfutils/Makefile                              | 4 ++--
+ .../libs/elfutils/patches/003-libintl-compatibility.patch   | 2 +-
+ package/libs/elfutils/patches/100-musl-compat.patch         | 4 ++--
+ package/libs/elfutils/patches/101-no-fts.patch              | 6 +++---
+ 4 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/package/libs/elfutils/Makefile b/package/libs/elfutils/Makefile
+index 4ca37d3b06..d4e5d994e8 100644
+--- a/package/libs/elfutils/Makefile
++++ b/package/libs/elfutils/Makefile
+@@ -7,12 +7,12 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=elfutils
+-PKG_VERSION:=0.187
++PKG_VERSION:=0.188
+ PKG_RELEASE:=1
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+ PKG_SOURCE_URL:=https://sourceware.org/$(PKG_NAME)/ftp/$(PKG_VERSION)
+-PKG_HASH:=e70b0dfbe610f90c4d1fe0d71af142a4e25c3c4ef9ebab8d2d72b65159d454c8
++PKG_HASH:=fb8b0e8d0802005b9a309c60c1d8de32dd2951b56f0c3a3cb56d21ce01595dff
+ 
+ PKG_MAINTAINER:=Luiz Angelo Daros de Luca <luizluca@gmail.com>
+ PKG_LICENSE:=GPL-3.0-or-later
+diff --git a/package/libs/elfutils/patches/003-libintl-compatibility.patch b/package/libs/elfutils/patches/003-libintl-compatibility.patch
+index 3254dcffb2..ce71602d77 100644
+--- a/package/libs/elfutils/patches/003-libintl-compatibility.patch
++++ b/package/libs/elfutils/patches/003-libintl-compatibility.patch
+@@ -11,7 +11,7 @@
+  Requires.private: zlib
+ --- a/configure.ac
+ +++ b/configure.ac
+-@@ -610,6 +610,9 @@ dnl AM_GNU_GETTEXT_REQUIRE_VERSION suppo
++@@ -652,6 +652,9 @@ dnl AM_GNU_GETTEXT_REQUIRE_VERSION suppo
+  AM_GNU_GETTEXT_VERSION([0.19.6])
+  AM_GNU_GETTEXT_REQUIRE_VERSION([0.19.6])
+  
+diff --git a/package/libs/elfutils/patches/100-musl-compat.patch b/package/libs/elfutils/patches/100-musl-compat.patch
+index 52b9f2c43b..3fa095bd74 100644
+--- a/package/libs/elfutils/patches/100-musl-compat.patch
++++ b/package/libs/elfutils/patches/100-musl-compat.patch
+@@ -9,7 +9,7 @@
+  }
+ --- a/libdwfl/dwfl_error.c
+ +++ b/libdwfl/dwfl_error.c
+-@@ -140,6 +140,7 @@ __libdwfl_seterrno (Dwfl_Error error)
++@@ -139,6 +139,7 @@ __libdwfl_seterrno (Dwfl_Error error)
+  static const char *
+  errnomsg(int error)
+  {
+@@ -17,7 +17,7 @@
+    /* Won't be changed by strerror_r, but not const so compiler doesn't throw warning */
+    static char unknown[] = "unknown error";
+  
+-@@ -150,6 +151,9 @@ errnomsg(int error)
++@@ -149,6 +150,9 @@ errnomsg(int error)
+    static __thread char msg[128];
+    return strerror_r (error, msg, sizeof (msg)) ? unknown : msg;
+  #endif
+diff --git a/package/libs/elfutils/patches/101-no-fts.patch b/package/libs/elfutils/patches/101-no-fts.patch
+index c4f0b88233..29a6c4b36c 100644
+--- a/package/libs/elfutils/patches/101-no-fts.patch
++++ b/package/libs/elfutils/patches/101-no-fts.patch
+@@ -1,6 +1,6 @@
+ --- a/libdwfl/argp-std.c
+ +++ b/libdwfl/argp-std.c
+-@@ -53,9 +53,6 @@ static const struct argp_option options[
++@@ -51,9 +51,6 @@ static const struct argp_option options[
+    { "linux-process-map", 'M', "FILE", 0,
+      N_("Find addresses in files mapped as read from FILE"
+         " in Linux /proc/PID/maps format"), 0 },
+@@ -10,7 +10,7 @@
+    { "debuginfo-path", OPT_DEBUGINFO, "PATH", 0,
+      N_("Search path for separate debuginfo files"), 0 },
+    { NULL, 0, NULL, 0, NULL, 0 }
+-@@ -82,15 +79,6 @@ static const Dwfl_Callbacks proc_callbac
++@@ -80,15 +77,6 @@ static const Dwfl_Callbacks proc_callbac
+      .find_elf = INTUSE(dwfl_linux_proc_find_elf),
+    };
+  
+@@ -26,7 +26,7 @@
+  /* Structure held at state->HOOK.  */
+  struct parse_opt
+  {
+-@@ -223,43 +211,6 @@ parse_opt (int key, char *arg, struct ar
++@@ -221,43 +209,6 @@ parse_opt (int key, char *arg, struct ar
+        }
+        break;
+  
+-- 
+2.34.1
+

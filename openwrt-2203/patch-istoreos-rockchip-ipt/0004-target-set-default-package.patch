@@ -1,7 +1,7 @@
-From a10312cac96be0a3fd820c95b72ddfc53f337fc8 Mon Sep 17 00:00:00 2001
+From 545fd8a3d7037a9949e3463d56ffe1db7c87afb2 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Fri, 20 Dec 2024 22:00:35 +0800
-Subject: [PATCH 5/9] target:set default package
+Subject: [PATCH 04/11] target:set default package
 
 ---
  include/target.mk | 8 ++++----

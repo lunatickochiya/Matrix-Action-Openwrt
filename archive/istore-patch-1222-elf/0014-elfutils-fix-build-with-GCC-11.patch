@@ -1,0 +1,38 @@
+From f3501a59aa4acd4650be50d77f6318f2f4482e80 Mon Sep 17 00:00:00 2001
+From: Andre Heider <a.heider@gmail.com>
+Date: Tue, 7 Feb 2023 20:23:06 +0100
+Subject: [PATCH 14/15] elfutils: fix build with GCC 11
+
+GCC 11 doesn't know about -Wno-error=use-after-free and aborts
+compilation.
+
+Fixes: 2748c45d "elfutils: Ignore wrong use-after-free error"
+Signed-off-by: Andre Heider <a.heider@gmail.com>
+---
+ package/libs/elfutils/Makefile | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/package/libs/elfutils/Makefile b/package/libs/elfutils/Makefile
+index 1e41e296b3..717403c124 100644
+--- a/package/libs/elfutils/Makefile
++++ b/package/libs/elfutils/Makefile
+@@ -81,7 +81,15 @@ HOST_CONFIGURE_VARS += \
+ CONFIGURE_VARS += \
+ 	ac_cv_search__obstack_free=yes
+ 
+-TARGET_CFLAGS += -D_GNU_SOURCE -Wno-unused-result -Wno-format-nonliteral -Wno-error=use-after-free
++TARGET_CFLAGS += \
++	-D_GNU_SOURCE \
++	-Wno-unused-result \
++	-Wno-format-nonliteral
++
++ifneq ($(CONFIG_GCC_USE_VERSION_11),y)
++TARGET_CFLAGS += \
++	-Wno-error=use-after-free
++endif
+ 
+ define Build/InstallDev
+ 	$(INSTALL_DIR) $(1)/usr/include
+-- 
+2.34.1
+

@@ -1,0 +1,61 @@
+From 6a3f49588caff1f4bbfdf001ea70663e1211b1ef Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sun, 22 Dec 2024 09:50:32 +0800
+Subject: [PATCH 07/15] Trusted-Firmware-A:add RK3399
+
+---
+ .../boot/arm-trusted-firmware-rockchip-vendor/Makefile | 10 +++++++++-
+ .../atf-version.mk                                     |  4 ++++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/package/boot/arm-trusted-firmware-rockchip-vendor/Makefile b/package/boot/arm-trusted-firmware-rockchip-vendor/Makefile
+index 17585ba44e..b170533134 100644
+--- a/package/boot/arm-trusted-firmware-rockchip-vendor/Makefile
++++ b/package/boot/arm-trusted-firmware-rockchip-vendor/Makefile
+@@ -30,6 +30,13 @@ define Trusted-Firmware-A/rk3308
+   DDR1:=rk33/$(RK3308_DDR_UART2)
+ endef
+ 
++define Trusted-Firmware-A/rk3399
++  BUILD_SUBTARGET:=armv8
++  ATF:=rk33/$(RK3399_ATF)
++  DDR:=rk33/$(RK3399_DDR)
++  LOADER:=rk33/$(RK3399_LOADER)
++endef
++
+ define Trusted-Firmware-A/rk3528
+   BUILD_SUBTARGET:=rk35xx
+   ATF:=rk35/$(RK3528_ATF)
+@@ -51,6 +58,7 @@ endef
+ 
+ TFA_TARGETS:= \
+ 	rk3308 \
++	rk3399 \
+ 	rk3528 \
+ 	rk3568 \
+ 	rk3588
+@@ -87,4 +95,4 @@ endif
+ endif
+ endef
+ 
+-$(eval $(call BuildPackage/Trusted-Firmware-A))
+\ No newline at end of file
++$(eval $(call BuildPackage/Trusted-Firmware-A))
+diff --git a/package/boot/arm-trusted-firmware-rockchip-vendor/atf-version.mk b/package/boot/arm-trusted-firmware-rockchip-vendor/atf-version.mk
+index 18f3543c63..983cc0fe38 100644
+--- a/package/boot/arm-trusted-firmware-rockchip-vendor/atf-version.mk
++++ b/package/boot/arm-trusted-firmware-rockchip-vendor/atf-version.mk
+@@ -2,6 +2,10 @@ RK3308_ATF:=rk3308_bl31_v2.26.elf
+ RK3308_DDR:=rk3308_ddr_589MHz_uart4_m0_v2.07.bin
+ RK3308_DDR_UART2:=rk3308_ddr_589MHz_uart2_m0_v2.07.bin
+ 
++RK3399_ATF:=rk3399_bl31_v1.36.elf
++RK3399_DDR:=rk3399_ddr_800MHz_v1.30.bin
++RK3399_LOADER:=rk3399_miniloader_v1.26.bin
++
+ RK3528_ATF:=rk3528_bl31_v1.13.elf
+ RK3528_DDR:=rk3528_ddr_1056MHz_v1.05.bin
+ 
+-- 
+2.34.1
+

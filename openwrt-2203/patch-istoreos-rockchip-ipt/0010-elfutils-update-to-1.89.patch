@@ -1,0 +1,200 @@
+From 5e4a4c72780b659be5f1493de302c07ada132482 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Sat, 4 Mar 2023 23:19:37 +0100
+Subject: [PATCH 10/11] elfutils: update to 1.89
+
+Release Notes:
+https://sourceware.org/pipermail/elfutils-devel/2023q1/006023.html
+
+Refresh patch:
+- 003-libintl-compatibility.patch
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+elfutils: fix build with GCC 11
+
+GCC 11 doesn't know about -Wno-error=use-after-free and aborts
+compilation.
+
+Fixes: 2748c45d "elfutils: Ignore wrong use-after-free error"
+Signed-off-by: Andre Heider <a.heider@gmail.com>
+elfutils: Ignore wrong use-after-free error
+
+GCC 12.2.0 shows this false positive error message:
+````
+In function 'bigger_buffer',
+    inlined from '__libdw_gunzip' at gzip.c:374:12:
+gzip.c:96:9: error: pointer may be used after 'realloc' [-Werror=use-after-free]
+   96 |     b = realloc (state->buffer, more -= 1024);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+gzip.c:94:13: note: call to 'realloc' here
+   94 |   char *b = realloc (state->buffer, more);
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cc1: all warnings being treated as errors
+````
+
+GCC bug report: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=104069
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+elfutils: update to 1.88
+
+Release Notes:
+https://sourceware.org/pipermail/elfutils-devel/2022q4/005561.html
+
+Refresh patches:
+- 003-libintl-compatibility.patch
+- 100-musl-compat.patch
+- 101-no-fts.patch
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+elfutils: update to 0.187
+
+Changes:
+debuginfod: Support -C option for connection thread pooling.
+
+debuginfod-client: Negative cache file are now zero sized instead of
+                   no-permission files.
+
+addr2line: The -A, --absolute option, which shows file names including
+           the full compilation directory is now the default.  To get the
+           old behavior use the new option --relative.
+
+readelf, elflint: Recognize FDO Packaging Metadata ELF notes
+
+libdw, debuginfo-client: Load libcurl lazily only when files need to
+                         be fetched remotely. libcurl is now never
+                         loaded when DEBUGINFOD_URLS is unset. And when
+                         DEBUGINFOD_URLS is set, libcurl is only loaded
+                         when the debuginfod_begin function is called.
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+ package/libs/elfutils/Makefile                   | 16 +++++++++++++---
+ .../patches/003-libintl-compatibility.patch      |  4 ++--
+ .../libs/elfutils/patches/100-musl-compat.patch  |  4 ++--
+ package/libs/elfutils/patches/101-no-fts.patch   |  6 +++---
+ 4 files changed, 20 insertions(+), 10 deletions(-)
+
+diff --git a/package/libs/elfutils/Makefile b/package/libs/elfutils/Makefile
+index 2a7b5c50e2..2c68a94ba0 100644
+--- a/package/libs/elfutils/Makefile
++++ b/package/libs/elfutils/Makefile
+@@ -7,12 +7,12 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=elfutils
+-PKG_VERSION:=0.186
++PKG_VERSION:=0.189
+ PKG_RELEASE:=1
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+ PKG_SOURCE_URL:=https://sourceware.org/$(PKG_NAME)/ftp/$(PKG_VERSION)
+-PKG_HASH:=7f6fb9149b1673d38d9178a0d3e0fb8a1ec4f53a9f4c2ff89469609879641177
++PKG_HASH:=39bd8f1a338e2b7cd4abc3ff11a0eddc6e690f69578a57478d8179b4148708c8
+ 
+ PKG_MAINTAINER:=Luiz Angelo Daros de Luca <luizluca@gmail.com>
+ PKG_LICENSE:=GPL-3.0-or-later
+@@ -65,6 +65,7 @@ HOST_CONFIGURE_ARGS += \
+ 	--disable-nls \
+ 	--disable-debuginfod \
+ 	--disable-libdebuginfod \
++	--without-bzlib \
+ 	--without-lzma \
+ 	--without-zstd
+ 
+@@ -72,6 +73,7 @@ CONFIGURE_ARGS += \
+ 	--program-prefix=eu- \
+ 	--disable-debuginfod \
+ 	--disable-libdebuginfod \
++	--without-bzlib \
+ 	--without-lzma \
+ 	--without-zstd
+ 
+@@ -81,7 +83,15 @@ HOST_CONFIGURE_VARS += \
+ CONFIGURE_VARS += \
+ 	ac_cv_search__obstack_free=yes
+ 
+-TARGET_CFLAGS += -D_GNU_SOURCE -Wno-unused-result -Wno-format-nonliteral
++TARGET_CFLAGS += \
++	-D_GNU_SOURCE \
++	-Wno-unused-result \
++	-Wno-format-nonliteral
++
++ifneq ($(CONFIG_GCC_USE_VERSION_11),y)
++TARGET_CFLAGS += \
++	-Wno-error=use-after-free
++endif
+ 
+ define Build/InstallDev
+ 	$(INSTALL_DIR) $(1)/usr/include
+diff --git a/package/libs/elfutils/patches/003-libintl-compatibility.patch b/package/libs/elfutils/patches/003-libintl-compatibility.patch
+index 3254dcffb2..1271796af5 100644
+--- a/package/libs/elfutils/patches/003-libintl-compatibility.patch
++++ b/package/libs/elfutils/patches/003-libintl-compatibility.patch
+@@ -8,10 +8,10 @@
+ +Libs: -L${libdir} -lelf @intl_LDFLAGS@
+  Cflags: -I${includedir}
+  
+- Requires.private: zlib
++ Requires.private: zlib @LIBZSTD@
+ --- a/configure.ac
+ +++ b/configure.ac
+-@@ -610,6 +610,9 @@ dnl AM_GNU_GETTEXT_REQUIRE_VERSION suppo
++@@ -717,6 +717,9 @@ dnl AM_GNU_GETTEXT_REQUIRE_VERSION suppo
+  AM_GNU_GETTEXT_VERSION([0.19.6])
+  AM_GNU_GETTEXT_REQUIRE_VERSION([0.19.6])
+  
+diff --git a/package/libs/elfutils/patches/100-musl-compat.patch b/package/libs/elfutils/patches/100-musl-compat.patch
+index 52b9f2c43b..3fa095bd74 100644
+--- a/package/libs/elfutils/patches/100-musl-compat.patch
++++ b/package/libs/elfutils/patches/100-musl-compat.patch
+@@ -9,7 +9,7 @@
+  }
+ --- a/libdwfl/dwfl_error.c
+ +++ b/libdwfl/dwfl_error.c
+-@@ -140,6 +140,7 @@ __libdwfl_seterrno (Dwfl_Error error)
++@@ -139,6 +139,7 @@ __libdwfl_seterrno (Dwfl_Error error)
+  static const char *
+  errnomsg(int error)
+  {
+@@ -17,7 +17,7 @@
+    /* Won't be changed by strerror_r, but not const so compiler doesn't throw warning */
+    static char unknown[] = "unknown error";
+  
+-@@ -150,6 +151,9 @@ errnomsg(int error)
++@@ -149,6 +150,9 @@ errnomsg(int error)
+    static __thread char msg[128];
+    return strerror_r (error, msg, sizeof (msg)) ? unknown : msg;
+  #endif
+diff --git a/package/libs/elfutils/patches/101-no-fts.patch b/package/libs/elfutils/patches/101-no-fts.patch
+index c4f0b88233..29a6c4b36c 100644
+--- a/package/libs/elfutils/patches/101-no-fts.patch
++++ b/package/libs/elfutils/patches/101-no-fts.patch
+@@ -1,6 +1,6 @@
+ --- a/libdwfl/argp-std.c
+ +++ b/libdwfl/argp-std.c
+-@@ -53,9 +53,6 @@ static const struct argp_option options[
++@@ -51,9 +51,6 @@ static const struct argp_option options[
+    { "linux-process-map", 'M', "FILE", 0,
+      N_("Find addresses in files mapped as read from FILE"
+         " in Linux /proc/PID/maps format"), 0 },
+@@ -10,7 +10,7 @@
+    { "debuginfo-path", OPT_DEBUGINFO, "PATH", 0,
+      N_("Search path for separate debuginfo files"), 0 },
+    { NULL, 0, NULL, 0, NULL, 0 }
+-@@ -82,15 +79,6 @@ static const Dwfl_Callbacks proc_callbac
++@@ -80,15 +77,6 @@ static const Dwfl_Callbacks proc_callbac
+      .find_elf = INTUSE(dwfl_linux_proc_find_elf),
+    };
+  
+@@ -26,7 +26,7 @@
+  /* Structure held at state->HOOK.  */
+  struct parse_opt
+  {
+-@@ -223,43 +211,6 @@ parse_opt (int key, char *arg, struct ar
++@@ -221,43 +209,6 @@ parse_opt (int key, char *arg, struct ar
+        }
+        break;
+  
+-- 
+2.34.1
+

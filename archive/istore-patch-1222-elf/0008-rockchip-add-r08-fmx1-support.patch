@@ -1,8 +1,8 @@
-From 36239c09f7185a86a259767bda4d69c0f4a3b8c9 Mon Sep 17 00:00:00 2001
+From 55a81cd056170707bb62b8aa809031bb223a53c1 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Sun, 22 Dec 2024 09:50:32 +0800
-Subject: [PATCH 9/9] rockchip:add r08 fmx1 support Revert "Auxiliary commit to
- revert individual files from a75624c6019c86dbfe823275c7717c67394cefca"
+Subject: [PATCH 08/15] rockchip:add r08 fmx1 support Revert "Auxiliary commit
+ to revert individual files from a75624c6019c86dbfe823275c7717c67394cefca"
 
 This reverts commit d8caccf815fe07e567d9d353b3c6d256fdf1f93a.
 

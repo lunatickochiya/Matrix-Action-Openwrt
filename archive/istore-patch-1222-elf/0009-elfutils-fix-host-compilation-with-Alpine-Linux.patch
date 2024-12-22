@@ -1,0 +1,44 @@
+From d512e9e01e3edaa38819a81671cf77340fdf1c67 Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Sat, 19 Mar 2022 16:51:43 -0700
+Subject: [PATCH 09/15] elfutils: fix host compilation with Alpine Linux
+
+intl is not included in libc, disable it as is done with the target
+package.
+
+argp is also not included. Add build depends for argp-standalone.
+
+fts is also not included. Add build depends for musl-fts.
+
+Disable shared libraries to avoid having to manually add rpath.
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ package/libs/elfutils/Makefile | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/package/libs/elfutils/Makefile b/package/libs/elfutils/Makefile
+index 9aa78d8352..07b3ea66c6 100644
+--- a/package/libs/elfutils/Makefile
++++ b/package/libs/elfutils/Makefile
+@@ -24,6 +24,8 @@ PKG_INSTALL:=1
+ PKG_USE_MIPS16:=1
+ PKG_BUILD_DEPENDS:=!USE_GLIBC:argp-standalone
+ 
++HOST_BUILD_DEPENDS:=argp-standalone/host musl-fts/host
++
+ include $(INCLUDE_DIR)/package.mk
+ include $(INCLUDE_DIR)/nls.mk
+ include $(INCLUDE_DIR)/host-build.mk
+@@ -62,6 +64,8 @@ CONFIGURE_ARGS += --disable-nls
+ endif
+ 
+ HOST_CONFIGURE_ARGS += \
++	--disable-shared \
++	--disable-nls \
+ 	--disable-debuginfod \
+ 	--disable-libdebuginfod \
+ 	--without-lzma \
+-- 
+2.34.1
+

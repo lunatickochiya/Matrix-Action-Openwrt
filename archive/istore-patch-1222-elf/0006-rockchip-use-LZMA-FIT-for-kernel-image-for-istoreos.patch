@@ -1,7 +1,7 @@
-From 3d4e87b48eb63e4459c0eba8b528ae1eb51a8294 Mon Sep 17 00:00:00 2001
+From bd456d51527ad8ac61cf9e86987de33cb580e422 Mon Sep 17 00:00:00 2001
 From: Chuanhong Guo <gch981213@gmail.com>
 Date: Sun, 13 Nov 2022 21:29:26 +0800
-Subject: [PATCH 7/9] rockchip: use LZMA FIT for kernel image for istoreos
+Subject: [PATCH 06/15] rockchip: use LZMA FIT for kernel image for istoreos
 
 Use LZMA compressed kernel to save some space in boot partition.
 

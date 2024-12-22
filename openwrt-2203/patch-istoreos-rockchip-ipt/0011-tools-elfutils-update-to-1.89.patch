@@ -1,0 +1,92 @@
+From c12f6ec81bc6af2d92f4bfacac772afba51a7e66 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Sat, 4 Mar 2023 23:12:31 +0100
+Subject: [PATCH 11/11] tools/elfutils: update to 1.89
+
+Release Notes:
+https://sourceware.org/pipermail/elfutils-devel/2023q1/006023.html
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+tools/elfutils: update to 1.88
+
+Release Notes:
+https://sourceware.org/pipermail/elfutils-devel/2022q4/005561.html
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+tools: elfutils: Update to version 0.187
+
+Update to most recent version of elfutils and sync with version from
+package folder.
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+tools/elfutils: drop HOST_BUILD_DEPENDS
+
+This is only effective for host build of normal packages, not tools.
+
+Fixes: ad79b9271949 ("elfutils: move host build to tools")
+Reported-by: Rosen Penev <rosenp@gmail.com>
+Signed-off-by: Stijn Tintel <stijn@linux-ipv6.be>
+tools/elfutils: only build required components
+
+Building all of the components results in strip being installed in
+staging_dir/host/bin. This strip binary will take precedence over
+binutils strip that is installed in the toolchain directory.
+
+This will not work on host systems that do not have libdw installed, as
+we do not set HOST_LDFLAGS to override rpath to staging_dir/host/lib.
+However, rather than overriding rpath, we should just avoid using
+elfutils strip entirely.
+
+Override the SUBDIRS variable in the Makefile to only build and install
+the libraries we require for dwarves and frr.
+
+Fixes the following build failure in toolchain/gdb:
+strip: error while loading shared libraries: libdw.so.1: cannot open shared object file: No such file or directory
+
+Fixes: ad79b9271949 ("elfutils: move host build to tools")
+Reported-by: Dominick Grift <dominick.grift@defensec.nl>
+Reported-by: Lucian Cristian <lucian.cristian@gmail.com>
+Signed-off-by: Stijn Tintel <stijn@linux-ipv6.be>
+---
+ tools/elfutils/Makefile | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/tools/elfutils/Makefile b/tools/elfutils/Makefile
+index 98694beb0e..bc80dddeec 100644
+--- a/tools/elfutils/Makefile
++++ b/tools/elfutils/Makefile
+@@ -3,12 +3,12 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=elfutils
+-PKG_VERSION:=0.186
++PKG_VERSION:=0.189
+ PKG_RELEASE:=1
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+ PKG_SOURCE_URL:=https://sourceware.org/$(PKG_NAME)/ftp/$(PKG_VERSION)
+-PKG_HASH:=7f6fb9149b1673d38d9178a0d3e0fb8a1ec4f53a9f4c2ff89469609879641177
++PKG_HASH:=39bd8f1a338e2b7cd4abc3ff11a0eddc6e690f69578a57478d8179b4148708c8
+ 
+ PKG_LICENSE:=GPL-3.0-or-later
+ PKG_LICENSE_FILES:=COPYING COPYING-GPLV2 COPYING-LGPLV3
+@@ -17,8 +17,6 @@ PKG_CPE_ID:=cpe:/a:elfutils_project:elfutils
+ PKG_FIXUP:=autoreconf
+ PKG_INSTALL:=1
+ 
+-HOST_BUILD_DEPENDS:=argp-standalone/host musl-fts/host
+-
+ include $(INCLUDE_DIR)/host-build.mk
+ 
+ HOST_CONFIGURE_ARGS += \
+@@ -29,4 +27,7 @@ HOST_CONFIGURE_ARGS += \
+ 	--without-lzma \
+ 	--without-zstd
+ 
++HOST_MAKE_FLAGS += \
++	SUBDIRS="lib libelf libcpu backends libebl libdwelf libdwfl libdw"
++
+ $(eval $(call HostBuild))
+-- 
+2.34.1
+

@@ -1,0 +1,24 @@
+From 8600697169aa96a1e0c8f8c4a98fa99b952f1f26 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Fri, 20 Dec 2024 22:02:06 +0800
+Subject: [PATCH 05/11] remove default uboot-rk35xx
+
+---
+ package/boot/uboot-rk35xx/Makefile | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/package/boot/uboot-rk35xx/Makefile b/package/boot/uboot-rk35xx/Makefile
+index 9de0d65618..9c1067cbd7 100644
+--- a/package/boot/uboot-rk35xx/Makefile
++++ b/package/boot/uboot-rk35xx/Makefile
+@@ -29,7 +29,6 @@ define U-Boot/Default
+   UENV:=default
+   HIDDEN:=1
+   BUILD_SUBTARGET:=rk35xx
+-  DEFAULT:=y
+   PKG_BUILD_DEPENDS:=arm-trusted-firmware-rockchip-vendor
+ endef
+ 
+-- 
+2.34.1
+

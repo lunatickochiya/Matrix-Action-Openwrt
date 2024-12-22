@@ -1,7 +1,7 @@
-From 9b8ba992ae647bec86689eaa603d9929b2b6cf4c Mon Sep 17 00:00:00 2001
+From 1036c51264b484b444fe7cab8654ac3b8d4b2967 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Fri, 20 Dec 2024 22:02:06 +0800
-Subject: [PATCH 6/9] remove default uboot-rk35xx
+Subject: [PATCH 05/15] remove default uboot-rk35xx
 
 ---
  package/boot/uboot-rk35xx/Makefile | 1 -

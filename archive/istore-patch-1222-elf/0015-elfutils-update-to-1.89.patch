@@ -1,0 +1,72 @@
+From 6700f62c7550aac22766622b5c8035e9771c85c9 Mon Sep 17 00:00:00 2001
+From: Nick Hainke <vincent@systemli.org>
+Date: Sat, 4 Mar 2023 23:19:37 +0100
+Subject: [PATCH 15/15] elfutils: update to 1.89
+
+Release Notes:
+https://sourceware.org/pipermail/elfutils-devel/2023q1/006023.html
+
+Refresh patch:
+- 003-libintl-compatibility.patch
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+---
+ package/libs/elfutils/Makefile                              | 6 ++++--
+ .../libs/elfutils/patches/003-libintl-compatibility.patch   | 4 ++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/package/libs/elfutils/Makefile b/package/libs/elfutils/Makefile
+index 717403c124..2c68a94ba0 100644
+--- a/package/libs/elfutils/Makefile
++++ b/package/libs/elfutils/Makefile
+@@ -7,12 +7,12 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=elfutils
+-PKG_VERSION:=0.188
++PKG_VERSION:=0.189
+ PKG_RELEASE:=1
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+ PKG_SOURCE_URL:=https://sourceware.org/$(PKG_NAME)/ftp/$(PKG_VERSION)
+-PKG_HASH:=fb8b0e8d0802005b9a309c60c1d8de32dd2951b56f0c3a3cb56d21ce01595dff
++PKG_HASH:=39bd8f1a338e2b7cd4abc3ff11a0eddc6e690f69578a57478d8179b4148708c8
+ 
+ PKG_MAINTAINER:=Luiz Angelo Daros de Luca <luizluca@gmail.com>
+ PKG_LICENSE:=GPL-3.0-or-later
+@@ -65,6 +65,7 @@ HOST_CONFIGURE_ARGS += \
+ 	--disable-nls \
+ 	--disable-debuginfod \
+ 	--disable-libdebuginfod \
++	--without-bzlib \
+ 	--without-lzma \
+ 	--without-zstd
+ 
+@@ -72,6 +73,7 @@ CONFIGURE_ARGS += \
+ 	--program-prefix=eu- \
+ 	--disable-debuginfod \
+ 	--disable-libdebuginfod \
++	--without-bzlib \
+ 	--without-lzma \
+ 	--without-zstd
+ 
+diff --git a/package/libs/elfutils/patches/003-libintl-compatibility.patch b/package/libs/elfutils/patches/003-libintl-compatibility.patch
+index ce71602d77..1271796af5 100644
+--- a/package/libs/elfutils/patches/003-libintl-compatibility.patch
++++ b/package/libs/elfutils/patches/003-libintl-compatibility.patch
+@@ -8,10 +8,10 @@
+ +Libs: -L${libdir} -lelf @intl_LDFLAGS@
+  Cflags: -I${includedir}
+  
+- Requires.private: zlib
++ Requires.private: zlib @LIBZSTD@
+ --- a/configure.ac
+ +++ b/configure.ac
+-@@ -652,6 +652,9 @@ dnl AM_GNU_GETTEXT_REQUIRE_VERSION suppo
++@@ -717,6 +717,9 @@ dnl AM_GNU_GETTEXT_REQUIRE_VERSION suppo
+  AM_GNU_GETTEXT_VERSION([0.19.6])
+  AM_GNU_GETTEXT_REQUIRE_VERSION([0.19.6])
+  
+-- 
+2.34.1
+

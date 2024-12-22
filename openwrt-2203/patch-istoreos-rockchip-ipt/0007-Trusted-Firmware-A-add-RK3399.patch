@@ -1,7 +1,7 @@
-From e10c41a87a7f1b35c7d81aace49d99eecb35ce60 Mon Sep 17 00:00:00 2001
+From 2f2b2dbcd727a7cb575447994a9d08131a5c63b1 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Sun, 22 Dec 2024 09:50:32 +0800
-Subject: [PATCH 8/9] Trusted-Firmware-A:add RK3399
+Subject: [PATCH 07/11] Trusted-Firmware-A:add RK3399
 
 ---
  .../boot/arm-trusted-firmware-rockchip-vendor/Makefile | 10 +++++++++-

@@ -1,0 +1,148 @@
+From cf654d263ee695036d0349c3292aebc6e3ba4a5c Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sun, 22 Dec 2024 09:50:32 +0800
+Subject: [PATCH 08/11] rockchip:add r08 fmx1 support Revert "Auxiliary commit
+ to revert individual files from a75624c6019c86dbfe823275c7717c67394cefca"
+
+This reverts commit d8caccf815fe07e567d9d353b3c6d256fdf1f93a.
+
+vendor:add rk3399 rk3328 support
+---
+ package/boot/uboot-rockchip/Makefile          | 29 +++++++++++++++++++
+ .../armv8/base-files/etc/board.d/02_network   |  2 ++
+ target/linux/rockchip/image/Makefile          | 20 +++++++++++++
+ target/linux/rockchip/image/armv8.mk          | 22 ++++++++++++++
+ 4 files changed, 73 insertions(+)
+
+diff --git a/package/boot/uboot-rockchip/Makefile b/package/boot/uboot-rockchip/Makefile
+index 8f60b4754d..ef0b6afa24 100644
+--- a/package/boot/uboot-rockchip/Makefile
++++ b/package/boot/uboot-rockchip/Makefile
+@@ -104,12 +104,36 @@ define U-Boot/rockpro64-rk3399
+   ATF:=rk3399_bl31.elf
+ endef
+ 
++define U-Boot/r08-rk3399
++  BUILD_SUBTARGET:=armv8
++  NAME:=Rockchip R08
++  BUILD_DEVICES:= \
++    r08
++  DEPENDS:=+PACKAGE_u-boot-r08-rk3399:trusted-firmware-a-rk3399
++  PKG_BUILD_DEPENDS:=arm-trusted-firmware-rockchip-vendor
++  ATF:=$(RK3399_ATF)
++  USE_RKBIN:=1
++endef
++
++define U-Boot/chiptrip-fmx1-pro-rk3399
++  BUILD_SUBTARGET:=armv8
++  NAME:=FMX1 PRO V10
++  BUILD_DEVICES:= \
++    chiptrip-fmx1-pro
++  DEPENDS:=+PACKAGE_u-boot-chiptrip-fmx1-pro-rk3399:trusted-firmware-a-rk3399
++  PKG_BUILD_DEPENDS:=arm-trusted-firmware-rockchip-vendor
++  ATF:=$(RK3399_ATF)
++  USE_RKBIN:=1
++endef
++
+ UBOOT_TARGETS := \
+   evb-rk3308 \
+   nanopi-r4s-rk3399 \
+   nanopi-r4se-rk3399 \
+   rock-pi-4-rk3399 \
+   rockpro64-rk3399 \
++  r08-rk3399 \
++  chiptrip-fmx1-pro-rk3399 \
+   nanopi-r2s-rk3328
+ 
+ UBOOT_CONFIGURE_VARS += USE_PRIVATE_LIBGCC=yes
+@@ -138,8 +162,13 @@ endef
+ 
+ define Build/InstallDev
+ 	$(INSTALL_DIR) $(STAGING_DIR_IMAGE)
++ifneq ($(USE_RKBIN),)
++	$(STAGING_DIR_IMAGE)/loaderimage --pack --uboot $(PKG_BUILD_DIR)/u-boot-dtb.bin $(PKG_BUILD_DIR)/uboot.img 0x200000
++	$(CP) $(PKG_BUILD_DIR)/uboot.img $(STAGING_DIR_IMAGE)/$(BUILD_VARIANT)-uboot.img
++else
+ 	$(CP) $(PKG_BUILD_DIR)/idbloader.img $(STAGING_DIR_IMAGE)/$(BUILD_VARIANT)-idbloader.img
+ 	$(CP) $(PKG_BUILD_DIR)/u-boot.itb $(STAGING_DIR_IMAGE)/$(BUILD_VARIANT)-u-boot.itb
++endif
+ endef
+ 
+ define Package/u-boot/install/default
+diff --git a/target/linux/rockchip/armv8/base-files/etc/board.d/02_network b/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
+index c7476defa3..4045d3efe4 100755
+--- a/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
++++ b/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
+@@ -10,6 +10,8 @@ rockchip_setup_interfaces()
+ 	case "$board" in
+ 	friendlyarm,nanopi-r2s|\
+ 	friendlyarm,nanopi-r4s|\
++	rk3399,r08|\
++	chiptrip,fmx1-pro|\
+ 	friendlyarm,nanopi-r4se)
+ 		ucidef_set_interfaces_lan_wan 'eth1' 'eth0'
+ 		;;
+diff --git a/target/linux/rockchip/image/Makefile b/target/linux/rockchip/image/Makefile
+index 111bde43ab..3f0df1fe31 100644
+--- a/target/linux/rockchip/image/Makefile
++++ b/target/linux/rockchip/image/Makefile
+@@ -59,6 +59,26 @@ define Build/pine64-img
+ 	dd if="$(STAGING_DIR_IMAGE)"/$(UBOOT_DEVICE_NAME)-u-boot.itb of="$@" seek=16384 conv=notrunc
+ endef
+ 
++define Build/pine64-bin
++	# Typical Rockchip boot flow with Rockchip miniloader
++	# Rockchp idbLoader which is combinded by Rockchip ddr init bin
++	# and miniloader bin from Rockchip rkbin project
++
++	# Generate a new partition table in $@ with 32 MiB of alignment
++	# padding for the idbloader, uboot and trust image to fit:
++	# http://opensource.rock-chips.com/wiki_Boot_option#Boot_flow
++	PADDING=1 $(SCRIPT_DIR)/gen_image_generic.sh \
++		$@ \
++		$(CONFIG_TARGET_KERNEL_PARTSIZE) $@.boot \
++		$(CONFIG_TARGET_ROOTFS_PARTSIZE) $(IMAGE_ROOTFS) \
++		32768
++
++	# Copy the idbloader, uboot and trust image to the image at sector 0x40, 0x4000 and 0x6000
++	dd if="$(STAGING_DIR_IMAGE)"/$(SOC)-idbloader.bin of="$@" seek=64 conv=notrunc
++	dd if="$(STAGING_DIR_IMAGE)"/$(UBOOT_DEVICE_NAME)-uboot.img of="$@" seek=16384 conv=notrunc
++	dd if="$(STAGING_DIR_IMAGE)"/$(SOC)-trust.bin of="$@" seek=24576 conv=notrunc
++endef
++
+ ### Devices ###
+ define Device/Default
+   PROFILES := Default
+diff --git a/target/linux/rockchip/image/armv8.mk b/target/linux/rockchip/image/armv8.mk
+index 36b7cedea1..3298bc2da5 100644
+--- a/target/linux/rockchip/image/armv8.mk
++++ b/target/linux/rockchip/image/armv8.mk
+@@ -76,3 +76,25 @@ define Device/armsom_p2-pro
+   DEVICE_PACKAGES := kmod-usb-net-rtl8152 ethtool kmod-rkwifi-bcmdhd rkwifi-firmware-ap6256 kmod-sound-soc-rk3308
+ endef
+ TARGET_DEVICES += armsom_p2-pro
++
++define Device/r08
++  DEVICE_VENDOR := Rockchip
++  DEVICE_MODEL := R08
++  SOC := rk3399
++  UBOOT_DEVICE_NAME := r08-rk3399
++  IMAGE/sysupgrade.img.gz := boot-common | boot-script | pine64-bin | gzip | append-metadata
++  DEVICE_PACKAGES := -urngd kmod-usb-net-rtl8152 rtl8821ce-firmware kmod-rtw88-8821c kmod-rtw88-8821ce kmod-rtw88-pci wpad-mesh-openssl
++endef
++TARGET_DEVICES += r08
++
++define Device/chiptrip-fmx1-pro
++  DEVICE_VENDOR := ChipTrip
++  DEVICE_MODEL := FMX1 Pro
++  SOC := rk3399
++  DEVICE_VARIANT := 4GB LPDDR3
++  SUPPORTED_DEVICES := chiptrip,fmx1-pro
++  UBOOT_DEVICE_NAME := chiptrip-fmx1-pro-rk3399
++  IMAGE/sysupgrade.img.gz := boot-common | boot-script | pine64-bin | gzip | append-metadata
++  DEVICE_PACKAGES := -urngd kmod-usb-net-rtl8152 wpad-mesh-openssl kmod-brcmfmac brcmfmac-nvram-4356-sdio cypress-firmware-4356-sdio
++endef
++TARGET_DEVICES += chiptrip-fmx1-pro
+-- 
+2.34.1
+

@@ -1,0 +1,99 @@
+From 894607549254e9aa18f2eeb09f169828054601db Mon Sep 17 00:00:00 2001
+From: Stijn Tintel <stijn@linux-ipv6.be>
+Date: Mon, 28 Mar 2022 18:40:30 +0300
+Subject: [PATCH 10/15] elfutils: move host build to tools
+
+The upcoming dwarves host package requires elfutils. As dependencies for
+tools must exist in tools, we need to move elfutils host build there.
+
+As there is at least one package that depends on this, and there is no
+proper way to create such dependency in the build system, build it
+unconditionally when not building on macOS.
+
+Signed-off-by: Stijn Tintel <stijn@linux-ipv6.be>
+---
+ package/libs/elfutils/Makefile |  4 ----
+ tools/Makefile                 |  3 +++
+ tools/elfutils/Makefile        | 32 ++++++++++++++++++++++++++++++++
+ 3 files changed, 35 insertions(+), 4 deletions(-)
+ create mode 100644 tools/elfutils/Makefile
+
+diff --git a/package/libs/elfutils/Makefile b/package/libs/elfutils/Makefile
+index 07b3ea66c6..2a7b5c50e2 100644
+--- a/package/libs/elfutils/Makefile
++++ b/package/libs/elfutils/Makefile
+@@ -24,11 +24,8 @@ PKG_INSTALL:=1
+ PKG_USE_MIPS16:=1
+ PKG_BUILD_DEPENDS:=!USE_GLIBC:argp-standalone
+ 
+-HOST_BUILD_DEPENDS:=argp-standalone/host musl-fts/host
+-
+ include $(INCLUDE_DIR)/package.mk
+ include $(INCLUDE_DIR)/nls.mk
+-include $(INCLUDE_DIR)/host-build.mk
+ 
+ define Package/elfutils/Default
+   SECTION:=libs
+@@ -114,7 +111,6 @@ define Package/libelf/install
+ endef
+ 
+ # these lines need to be ordered by dependency because of ABI versioning
+-$(eval $(call HostBuild))
+ $(eval $(call BuildPackage,libelf))
+ $(eval $(call BuildPackage,libdw))
+ $(eval $(call BuildPackage,libasm))
+diff --git a/tools/Makefile b/tools/Makefile
+index e1c4291356..c5cd39040d 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -81,6 +81,9 @@ ifneq ($(HOST_OS),Linux)
+ endif
+ ifeq ($(HOST_OS),Darwin)
+   tools-y += bash
++else
++  $(curdir)/elfutils/compile := $(curdir)/zlib/compile
++  tools-y += elfutils
+ endif
+ 
+ ifneq ($(CONFIG_CCACHE)$(CONFIG_SDK),)
+diff --git a/tools/elfutils/Makefile b/tools/elfutils/Makefile
+new file mode 100644
+index 0000000000..98694beb0e
+--- /dev/null
++++ b/tools/elfutils/Makefile
+@@ -0,0 +1,32 @@
++# SPDX-License-Identifier: GPL-2.0-only
++
++include $(TOPDIR)/rules.mk
++
++PKG_NAME:=elfutils
++PKG_VERSION:=0.186
++PKG_RELEASE:=1
++
++PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
++PKG_SOURCE_URL:=https://sourceware.org/$(PKG_NAME)/ftp/$(PKG_VERSION)
++PKG_HASH:=7f6fb9149b1673d38d9178a0d3e0fb8a1ec4f53a9f4c2ff89469609879641177
++
++PKG_LICENSE:=GPL-3.0-or-later
++PKG_LICENSE_FILES:=COPYING COPYING-GPLV2 COPYING-LGPLV3
++PKG_CPE_ID:=cpe:/a:elfutils_project:elfutils
++
++PKG_FIXUP:=autoreconf
++PKG_INSTALL:=1
++
++HOST_BUILD_DEPENDS:=argp-standalone/host musl-fts/host
++
++include $(INCLUDE_DIR)/host-build.mk
++
++HOST_CONFIGURE_ARGS += \
++	--disable-debuginfod \
++	--disable-libdebuginfod \
++	--disable-nls \
++	--disable-shared \
++	--without-lzma \
++	--without-zstd
++
++$(eval $(call HostBuild))
+-- 
+2.34.1
+

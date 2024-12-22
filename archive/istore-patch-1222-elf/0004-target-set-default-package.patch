@@ -1,0 +1,39 @@
+From fc332c28e183a44faed09fa64477818913d91509 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Fri, 20 Dec 2024 22:00:35 +0800
+Subject: [PATCH 04/15] target:set default package
+
+---
+ include/target.mk | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/include/target.mk b/include/target.mk
+index f8dae3a273..905bbd17ee 100644
+--- a/include/target.mk
++++ b/include/target.mk
+@@ -17,7 +17,7 @@ DEFAULT_PACKAGES:=\
+ 	fstools \
+ 	libc \
+ 	libgcc \
+-	libustream-wolfssl \
++	libustream-openssl \
+ 	logd \
+ 	mtd \
+ 	netifd \
+@@ -54,10 +54,10 @@ DEFAULT_PACKAGES.nas:=\
+ 	mdadm
+ # For router targets
+ DEFAULT_PACKAGES.router:=\
+-	dnsmasq \
++	dnsmasq-full \
+ 	firewall \
+-	ip6tables \
+-	iptables \
++	iptables-zz-legacy \
++	ip6tables-zz-legacy \
+ 	odhcp6c \
+ 	odhcpd-ipv6only \
+ 	ppp \
+-- 
+2.34.1
+

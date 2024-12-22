@@ -1,0 +1,41 @@
+From ae6e0d71159a2267a52b1cf75fa760197b7855fe Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Mon, 19 Dec 2022 01:07:38 +0100
+Subject: [PATCH 13/15] elfutils: Ignore wrong use-after-free error
+
+GCC 12.2.0 shows this false positive error message:
+````
+In function 'bigger_buffer',
+    inlined from '__libdw_gunzip' at gzip.c:374:12:
+gzip.c:96:9: error: pointer may be used after 'realloc' [-Werror=use-after-free]
+   96 |     b = realloc (state->buffer, more -= 1024);
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+gzip.c:94:13: note: call to 'realloc' here
+   94 |   char *b = realloc (state->buffer, more);
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cc1: all warnings being treated as errors
+````
+
+GCC bug report: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=104069
+
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ package/libs/elfutils/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/package/libs/elfutils/Makefile b/package/libs/elfutils/Makefile
+index d4e5d994e8..1e41e296b3 100644
+--- a/package/libs/elfutils/Makefile
++++ b/package/libs/elfutils/Makefile
+@@ -81,7 +81,7 @@ HOST_CONFIGURE_VARS += \
+ CONFIGURE_VARS += \
+ 	ac_cv_search__obstack_free=yes
+ 
+-TARGET_CFLAGS += -D_GNU_SOURCE -Wno-unused-result -Wno-format-nonliteral
++TARGET_CFLAGS += -D_GNU_SOURCE -Wno-unused-result -Wno-format-nonliteral -Wno-error=use-after-free
+ 
+ define Build/InstallDev
+ 	$(INSTALL_DIR) $(1)/usr/include
+-- 
+2.34.1
+
