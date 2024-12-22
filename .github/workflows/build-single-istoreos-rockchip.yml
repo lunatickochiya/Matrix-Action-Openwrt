@@ -224,7 +224,9 @@ jobs:
       run: |
         mkdir openwrt/feeds-bump
         mkdir openwrt/patch-istoreos
+        [ -d openwrt/package/diy/ntfs3-mount ] && rm -rf openwrt/package/diy/ntfs3-mount
         [ -d package ] && mv -f package/* openwrt/package
+        [ -d openwrt-2203/files-for-istoreos ] && cp -r openwrt-2203/files-for-istoreos/. openwrt/
         [ -d openwrt-2203/package-for-istoreos ] && mv -f openwrt-2203/package-for-istoreos/* openwrt/package
         [ -d feeds-packages ] && mv -f feeds-packages/openwrt-23.05/feeds/* openwrt/feeds-bump
         [ -d openwrt-2203/target ] && mv -f openwrt-2203/target openwrt/target
@@ -269,14 +271,8 @@ jobs:
         [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH ${{matrix.target}}
-        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
-        $GITHUB_WORKSPACE/$DIY_SH patchtele
-        fi
         make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
-        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
-        $GITHUB_WORKSPACE/$DIY_SH feeds-replace
-        fi
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 添加kmod
@@ -284,21 +280,12 @@ jobs:
       id: config2
       run: |
         cd openwrt
-        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-istoreos
         make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-istoreos
         make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-istoreos
         make defconfig
-        else
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
-        make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
-        make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
-        make defconfig
-        fi
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
         echo "status=success" >> $GITHUB_OUTPUT
 
