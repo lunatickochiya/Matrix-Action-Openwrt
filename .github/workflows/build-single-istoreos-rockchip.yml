@@ -231,6 +231,7 @@ jobs:
         [ -d feeds-packages ] && mv -f feeds-packages/openwrt-23.05/feeds/* openwrt/feeds-bump
         [ -d openwrt-2203/target ] && mv -f openwrt-2203/target openwrt/target
         [ -d openwrt-2203/patch-istoreos-${{matrix.target}} ] && mv -f openwrt-2203/patch-istoreos-${{matrix.target}}/* openwrt/patch-istoreos
+        git clone https://github.com/Ljzkirito/shadowsocks-rust openwrt/package/shadowsocks-rust
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
         echo "status=success" >> $GITHUB_OUTPUT
