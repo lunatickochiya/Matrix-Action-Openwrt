@@ -128,7 +128,7 @@ index 36b7cedea1..3298bc2da5 100644
 +  SOC := rk3399
 +  UBOOT_DEVICE_NAME := r08-rk3399
 +  IMAGE/sysupgrade.img.gz := boot-common | boot-script | pine64-bin | gzip | append-metadata
-+  DEVICE_PACKAGES := -urngd kmod-usb-net-rtl8152 rtl8821ce-firmware kmod-rtw88-8821c kmod-rtw88-8821ce kmod-rtw88-pci wpad-mesh-openssl
++  DEVICE_PACKAGES := kmod-usb-net-rtl8152 rtl8821ce-firmware kmod-rtw88-8821c kmod-rtw88-8821ce kmod-rtw88-pci wpad-mesh-openssl
 +endef
 +TARGET_DEVICES += r08
 +
@@ -140,7 +140,7 @@ index 36b7cedea1..3298bc2da5 100644
 +  SUPPORTED_DEVICES := chiptrip,fmx1-pro
 +  UBOOT_DEVICE_NAME := chiptrip-fmx1-pro-rk3399
 +  IMAGE/sysupgrade.img.gz := boot-common | boot-script | pine64-bin | gzip | append-metadata
-+  DEVICE_PACKAGES := -urngd kmod-usb-net-rtl8152 wpad-mesh-openssl kmod-brcmfmac brcmfmac-nvram-4356-sdio cypress-firmware-4356-sdio
++  DEVICE_PACKAGES := kmod-usb-net-rtl8152 wpad-mesh-openssl kmod-rkwifi-bcmdhd rkwifi-firmware-ap6356 cypress-firmware-4356-sdio
 +endef
 +TARGET_DEVICES += chiptrip-fmx1-pro
 -- 

@@ -110,6 +110,7 @@ directories=(
     "feeds/lunatic7/ykdl"
     "feeds/lunatic7/you-get"
     "feeds/lunatic7/lux"
+    "feeds/lunatic7/mmdvm-luci"
 )
 
 for directory in "${directories[@]}"; do

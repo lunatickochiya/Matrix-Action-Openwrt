@@ -1,0 +1,75 @@
+From 10400d336e16296d13deb7017738445ea1dca379 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Tue, 24 Dec 2024 15:15:57 +0800
+Subject: [PATCH] rockchip:add support tpm312
+
+---
+ package/boot/uboot-rockchip/Makefile                 | 12 ++++++++++++
+ .../rockchip/armv8/base-files/etc/board.d/02_network |  1 +
+ target/linux/rockchip/image/armv8.mk                 | 11 +++++++++++
+ 3 files changed, 24 insertions(+)
+
+diff --git a/package/boot/uboot-rockchip/Makefile b/package/boot/uboot-rockchip/Makefile
+index ef0b6afa24..9e2318ab7d 100644
+--- a/package/boot/uboot-rockchip/Makefile
++++ b/package/boot/uboot-rockchip/Makefile
+@@ -126,6 +126,17 @@ define U-Boot/chiptrip-fmx1-pro-rk3399
+   USE_RKBIN:=1
+ endef
+ 
++define U-Boot/wesine-tpm312-rk3399
++  BUILD_SUBTARGET:=armv8
++  NAME:=Wesine TPM312
++  BUILD_DEVICES:= \
++    wesine-tpm312
++  DEPENDS:=+PACKAGE_u-boot-wesine-tpm312-rk3399:trusted-firmware-a-rk3399
++  PKG_BUILD_DEPENDS:=arm-trusted-firmware-rockchip-vendor
++  ATF:=$(RK3399_ATF)
++  USE_RKBIN:=1
++endef
++
+ UBOOT_TARGETS := \
+   evb-rk3308 \
+   nanopi-r4s-rk3399 \
+@@ -134,6 +145,7 @@ UBOOT_TARGETS := \
+   rockpro64-rk3399 \
+   r08-rk3399 \
+   chiptrip-fmx1-pro-rk3399 \
++  wesine-tpm312-rk3399 \
+   nanopi-r2s-rk3328
+ 
+ UBOOT_CONFIGURE_VARS += USE_PRIVATE_LIBGCC=yes
+diff --git a/target/linux/rockchip/armv8/base-files/etc/board.d/02_network b/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
+index 4045d3efe4..ee83e9e588 100755
+--- a/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
++++ b/target/linux/rockchip/armv8/base-files/etc/board.d/02_network
+@@ -12,6 +12,7 @@ rockchip_setup_interfaces()
+ 	friendlyarm,nanopi-r4s|\
+ 	rk3399,r08|\
+ 	chiptrip,fmx1-pro|\
++	wesine,tpm312|\
+ 	friendlyarm,nanopi-r4se)
+ 		ucidef_set_interfaces_lan_wan 'eth1' 'eth0'
+ 		;;
+diff --git a/target/linux/rockchip/image/armv8.mk b/target/linux/rockchip/image/armv8.mk
+index 3298bc2da5..81894391cc 100644
+--- a/target/linux/rockchip/image/armv8.mk
++++ b/target/linux/rockchip/image/armv8.mk
+@@ -98,3 +98,14 @@ define Device/chiptrip-fmx1-pro
+   DEVICE_PACKAGES := -urngd kmod-usb-net-rtl8152 wpad-mesh-openssl kmod-brcmfmac brcmfmac-nvram-4356-sdio cypress-firmware-4356-sdio
+ endef
+ TARGET_DEVICES += chiptrip-fmx1-pro
++
++define Device/wesine-tpm312
++  DEVICE_VENDOR := Wesine
++  DEVICE_MODEL := TPM312
++  SOC := rk3399
++  SUPPORTED_DEVICES := wesine,tpm312
++  UBOOT_DEVICE_NAME := wesine-tpm312-rk3399
++  IMAGE/sysupgrade.img.gz := boot-common | boot-script | pine64-bin | gzip | append-metadata
++  DEVICE_PACKAGES := kmod-usb-net-rtl8152 rtl8821ce-firmware kmod-rtw88-oot wpad-mesh-openssl
++endef
++TARGET_DEVICES += wesine-tpm312
+-- 
+2.34.1
+

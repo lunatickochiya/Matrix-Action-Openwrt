@@ -1,11 +1,12 @@
 --- a/arch/arm64/boot/dts/rockchip/Makefile
 +++ b/arch/arm64/boot/dts/rockchip/Makefile
-@@ -49,6 +49,8 @@
+@@ -49,6 +49,9 @@
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-rock960.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-rockpro64-v2.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-rockpro64.dtb
 +dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-chiptrip-fmx1-pro.dtb
 +dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-r08.dtb
++dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-wesine-tpm312.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-sapphire.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399-sapphire-excavator.dtb
  dtb-$(CONFIG_ARCH_ROCKCHIP) += rk3399pro-rock-pi-n10.dtb
