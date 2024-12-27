@@ -45,14 +45,19 @@ on:
         - 'main'
       SETIP:
         description: 'Set ip address'
-        default: '192.168.66.1'
+        default: '192.168.6.1'
         required: false
         type: choice
         options:
+        - '192.168.6.1'
         - '192.168.66.1'
+        - '192.168.7.1'
+        - '192.168.77.1'
         - '192.168.8.1'
+        - '192.168.88.1'
         - '192.168.16.1'
-        - '192.168.19.1'
+        - '192.168.17.1'
+        - '192.168.18.1'
         - '192.168.9.1'
         - '192.168.99.1'
         - '192.168.166.1'
@@ -114,7 +119,7 @@ jobs:
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
   build:
-    runs-on: Ubuntu-latest
+    runs-on: Ubuntu-22.04
     needs: prepare
     strategy:
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
