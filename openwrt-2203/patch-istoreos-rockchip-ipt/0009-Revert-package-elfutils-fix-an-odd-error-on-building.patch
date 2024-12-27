@@ -1,0 +1,56 @@
+From 6c0502daa76e3e17b72e135547b67aac37dbbf73 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Fri, 27 Dec 2024 16:16:22 +0800
+Subject: [PATCH 09/13] Revert "package/elfutils: fix an odd error on building
+ OOT kmods on ubuntu"
+
+This reverts commit 82095637a11db1cf7633a7d6727d7db9c9b64a20.
+---
+ package/libs/elfutils/Makefile                |  2 +-
+ .../999-fix-odd-build-oot-kmod-fail.patch     | 21 -------------------
+ 2 files changed, 1 insertion(+), 22 deletions(-)
+ delete mode 100644 package/libs/elfutils/patches/999-fix-odd-build-oot-kmod-fail.patch
+
+diff --git a/package/libs/elfutils/Makefile b/package/libs/elfutils/Makefile
+index 8eecfb5042..9aa78d8352 100644
+--- a/package/libs/elfutils/Makefile
++++ b/package/libs/elfutils/Makefile
+@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=elfutils
+ PKG_VERSION:=0.186
+-PKG_RELEASE:=2
++PKG_RELEASE:=1
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+ PKG_SOURCE_URL:=https://sourceware.org/$(PKG_NAME)/ftp/$(PKG_VERSION)
+diff --git a/package/libs/elfutils/patches/999-fix-odd-build-oot-kmod-fail.patch b/package/libs/elfutils/patches/999-fix-odd-build-oot-kmod-fail.patch
+deleted file mode 100644
+index 2fa898edbc..0000000000
+--- a/package/libs/elfutils/patches/999-fix-odd-build-oot-kmod-fail.patch
++++ /dev/null
+@@ -1,21 +0,0 @@
+-Fix odd error when build OOT kernel modules
+-
+-```
+-make[3]: Entering directory '/mnt/sata1-1/istoreos-build/x86_64/openwrt/build_dir/target-x86_64_musl/linux-x86_64/linux-5.10.221'
+-make[4]: *** No rule to make target '/mnt/sata1-1/istoreos-build/x86_64/openwrt/build_dir/target-x86_64_musl/linux-x86_64/r8168-8.052.01/src/r8168_n.o', needed by '/mnt/sata1-1/istoreos-build/x86_64/openwrt/build_dir/target-x86_64_musl/linux-x86_64/r8168-8.052.01/src/r8168.o'.  Stop.
+-make[3]: *** [Makefile:1832: /mnt/sata1-1/istoreos-build/x86_64/openwrt/build_dir/target-x86_64_musl/linux-x86_64/r8168-8.052.01/src] Error 2
+-make[3]: Leaving directory '/mnt/sata1-1/istoreos-build/x86_64/openwrt/build_dir/target-x86_64_musl/linux-x86_64/linux-5.10.221'
+-make[2]: *** [Makefile:49: /mnt/sata1-1/istoreos-build/x86_64/openwrt/build_dir/target-x86_64_musl/linux-x86_64/r8168-8.052.01/.built] Error 2
+-make[2]: Leaving directory '/mnt/sata1-1/istoreos-build/x86_64/openwrt/package/kernel/r8168'
+-```
+-
+---- a/config/libelf.pc.in
+-+++ b/config/libelf.pc.in
+-@@ -4,7 +4,6 @@ libdir=@libdir@
+- includedir=@includedir@
+- 
+- Name: libelf
+--Description: elfutils libelf library to read and write ELF files
+- Version: @VERSION@
+- URL: http://elfutils.org/
+- 
+-- 
+2.34.1
+

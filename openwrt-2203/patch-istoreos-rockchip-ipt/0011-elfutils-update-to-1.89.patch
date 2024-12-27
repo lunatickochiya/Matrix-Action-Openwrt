@@ -1,7 +1,7 @@
-From 5e4a4c72780b659be5f1493de302c07ada132482 Mon Sep 17 00:00:00 2001
-From: Nick Hainke <vincent@systemli.org>
-Date: Sat, 4 Mar 2023 23:19:37 +0100
-Subject: [PATCH 10/11] elfutils: update to 1.89
+From f78d685d6e5b2c5efbe6f0867274fa4b3b68d87b Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Thu, 26 Dec 2024 21:26:07 +0800
+Subject: [PATCH 11/13] elfutils: update to 1.89
 
 Release Notes:
 https://sourceware.org/pipermail/elfutils-devel/2023q1/006023.html

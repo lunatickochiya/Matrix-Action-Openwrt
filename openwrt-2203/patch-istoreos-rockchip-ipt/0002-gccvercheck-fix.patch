@@ -1,7 +1,7 @@
-From 2aeb46380771a386a2821d7077182a49449a1318 Mon Sep 17 00:00:00 2001
+From b841fd68e619a720831e302c0187b57f775243b6 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Fri, 20 Dec 2024 21:59:11 +0800
-Subject: [PATCH 02/11] gccvercheck fix
+Subject: [PATCH 02/13] gccvercheck fix
 
 ---
  toolchain/gcc/common.mk | 5 +++--

@@ -1,7 +1,7 @@
-From 9656492bbcb892e701598b605913b7ebacbb98cd Mon Sep 17 00:00:00 2001
+From 82e4853d9d0ea95544a3b11e96aa21524ef45c44 Mon Sep 17 00:00:00 2001
 From: Hauke Mehrtens <hauke@hauke-m.de>
 Date: Mon, 19 Dec 2022 01:19:32 +0100
-Subject: [PATCH 03/11] uqmi: Ignore wrong maybe-uninitialized and
+Subject: [PATCH 03/13] uqmi: Ignore wrong maybe-uninitialized and
  dangling-pointer error
 
 GCC 12.2.0 shows this false positive error message:

@@ -1,7 +1,7 @@
-From 3194673b5a11d762d326cea9823ec875a5f5b775 Mon Sep 17 00:00:00 2001
-From: Stijn Tintel <stijn@linux-ipv6.be>
-Date: Mon, 28 Mar 2022 18:40:30 +0300
-Subject: [PATCH 09/11] elfutils: move host build to tools
+From bf5373a84f20364d3b3925bac62ddc7fb94e6470 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Fri, 27 Dec 2024 16:17:05 +0800
+Subject: [PATCH 10/13] elfutils: move host build to tools
 
 The upcoming dwarves host package requires elfutils. As dependencies for
 tools must exist in tools, we need to move elfutils host build there.

@@ -1,7 +1,7 @@
-From 10400d336e16296d13deb7017738445ea1dca379 Mon Sep 17 00:00:00 2001
+From e87b7b08683613ef0c171be9c31cc3b04950b705 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Tue, 24 Dec 2024 15:15:57 +0800
-Subject: [PATCH] rockchip:add support tpm312
+Subject: [PATCH 13/13] rockchip:add support tpm312
 
 ---
  package/boot/uboot-rockchip/Makefile                 | 12 ++++++++++++

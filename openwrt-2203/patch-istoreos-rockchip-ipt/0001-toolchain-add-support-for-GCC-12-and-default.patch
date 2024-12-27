@@ -1,7 +1,7 @@
-From a00bde613296eefb265ee6ede533f6d2b5d4afe0 Mon Sep 17 00:00:00 2001
+From 426f16ce3e30b19431f606ada44b1fe719bdd7a8 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Sun, 18 Feb 2024 14:43:27 +0800
-Subject: [PATCH 01/11] toolchain: add support for GCC 12 and default
+Subject: [PATCH 01/13] toolchain: add support for GCC 12 and default
 
 ---
  toolchain/gcc/Config.in                       |   5 +-
