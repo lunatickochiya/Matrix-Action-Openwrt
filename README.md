@@ -42,15 +42,16 @@
 
 
 
-
-
 当前版本支持情况：
-20240307
+# 20240307
 - rockchip mpc1917 （不可定制）
 - ws1508 （可定制）
 - onecloud（可定制）
 
-
+# 20241227
+- rockchip mpc1917(不可定制） r08 fxm1-pro tpm312 （istoreos可定制 openwrt-23.05不可定制）
+- ws1508 （可定制）
+- onecloud（可定制）
 
 
 ## 源码更新交流学习：
