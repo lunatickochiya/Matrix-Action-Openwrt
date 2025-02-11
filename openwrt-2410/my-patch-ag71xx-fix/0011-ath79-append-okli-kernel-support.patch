@@ -1,0 +1,27 @@
+From 1588cde95c475084642053e618773f7fcee163f7 Mon Sep 17 00:00:00 2001
+From: Chen Minqiang <ptpt52@gmail.com>
+Date: Sun, 6 Dec 2020 18:37:15 +0800
+Subject: [PATCH 1/4] ath79: append okli kernel support
+
+---
+ target/linux/ath79/image/Makefile | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/target/linux/ath79/image/Makefile b/target/linux/ath79/image/Makefile
+index 1918a8a431..d2e9c92369 100644
+--- a/target/linux/ath79/image/Makefile
++++ b/target/linux/ath79/image/Makefile
+@@ -63,6 +63,10 @@ define Build/relocate-kernel
+ endef
+ 
+ 
++define Build/append-okli-kernel
++	dd if="$(KDIR)/loader-$(word 1,$(1)).uImage" >> "$@"
++endef
++
+ define Device/Default
+   DEVICE_DTS_DIR := ../dts
+   DEVICE_DTS = $$(SOC)_$(1)
+-- 
+2.34.1
+

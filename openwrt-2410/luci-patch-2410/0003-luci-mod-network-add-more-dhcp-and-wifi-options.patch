@@ -1,0 +1,52 @@
+From d6719428de2c1d2df896d36207d27e934275c410 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sun, 26 Jan 2025 18:04:32 +0800
+Subject: [PATCH 3/5] luci-mod-network:add more dhcp and wifi options
+
+---
+ .../htdocs/luci-static/resources/view/network/dhcp.js       | 4 ++++
+ .../htdocs/luci-static/resources/view/network/wireless.js   | 6 ++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js
+index afe2125..0c341df 100644
+--- a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js
++++ b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/dhcp.js
+@@ -419,6 +419,10 @@ return view.extend({
+ 			_('Authoritative'),
+ 			_('This is the only DHCP server in the local network.'));
+ 
++		s.taboption('general', form.Flag, 'dns_redirect',
++			_('DNS redirect'),
++			_('Force redirect all local DNS queries to DNSMasq, a.k.a. DNS Hijacking.'));
++
+ 		o = s.taboption('general', form.Value, 'local',
+ 			_('Resolve these locally'),
+ 			_('Never forward these matching domains or subdomains; resolve from DHCP or hosts files only.'));
+diff --git a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
+index 4b12042..ed2879f 100644
+--- a/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
++++ b/modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js
+@@ -1017,6 +1017,9 @@ return view.extend({
+ 					o.value('2', _('High'));
+ 					o.value('3', _('Very High'));
+ 
++					o = ss.taboption('advanced', form.Flag, 'mu_beamformer', _('MU-MIMO'));
++					o.default = o.enabled;
++
+ 					o = ss.taboption('advanced', form.Value, 'distance', _('Distance Optimization'), _('Distance to farthest network member in meters. Set only for distances above one kilometer; otherwise it is harmful.'));
+ 					o.datatype = 'or(range(0,114750),"auto")';
+ 					o.placeholder = 'auto';
+@@ -1036,6 +1039,9 @@ return view.extend({
+ 					o.datatype = 'range(15,65535)';
+ 					o.placeholder = 100;
+ 					o.rmempty = true;
++
++					o = ss.taboption('advanced', form.Flag, 'vendor_vht', _('Enable 256-QAM'), _('Enable 256QAM modulation. May not supported by some hardware!'));
++					o.rmempty = true;
+ 				}
+ 
+ 
+-- 
+2.34.1
+

@@ -1,0 +1,106 @@
+From 47ea3baeadbcfe5bad2906cb7d25d238862d6dd7 Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Sat, 3 Dec 2022 23:32:20 +0300
+Subject: [PATCH 12/23] ath79: rearrange ag71xx structs to remove holes
+
+Remove ____cacheline_aligned attribute to ring structs. This actually causes
+holes in the ag71xx struct as well as lower performance.
+
+Rearrange struct members to fall within respective cachelines. The RX ring
+struct now does not share a cacheline with the TX ring. The NAPI struct now
+takes up its own cachelines and does not share.
+
+According to pahole -C ag71xx -c 32
+
+Before:
+
+struct ag71xx {
+	/* size: 384, cachelines: 12, members: 22 */
+	/* sum members: 375, holes: 2, sum holes: 9 */
+
+After:
+
+struct ag71xx {
+	/* size: 376, cachelines: 12, members: 22 */
+	/* last cacheline: 24 bytes */
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+[Reword and fix typos in the patch description]
+Signed-off-by: Rui Salvaterra <rsalvaterra@gmail.com>
+---
+ .../net/ethernet/atheros/ag71xx/ag71xx.h      | 32 ++++++++++---------
+ 1 file changed, 17 insertions(+), 15 deletions(-)
+
+diff --git a/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx.h b/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx.h
+index da716d94c3..c3a85a8736 100644
+--- a/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx.h
++++ b/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx.h
+@@ -107,13 +107,16 @@ struct ag71xx_buf {
+ };
+ 
+ struct ag71xx_ring {
+-	struct ag71xx_buf	*buf;
+-	u8			*descs_cpu;
+-	dma_addr_t		descs_dma;
+-	u16			desc_split;
+-	u16			order;
++	/* "Hot" fields in the data path. */
+ 	unsigned int		curr;
+ 	unsigned int		dirty;
++
++	/* "Cold" fields - not used in the data path. */
++	struct ag71xx_buf	*buf;
++	u16			order;
++	u16			desc_split;
++	dma_addr_t		descs_dma;
++	u8			*descs_cpu;
+ };
+ 
+ struct ag71xx_int_stats {
+@@ -151,21 +154,20 @@ struct ag71xx {
+ 	 * Critical data related to the per-packet data path are clustered
+ 	 * early in this structure to help improve the D-cache footprint.
+ 	 */
+-	struct ag71xx_ring	rx_ring ____cacheline_aligned;
+-	struct ag71xx_ring	tx_ring ____cacheline_aligned;
++	struct ag71xx_ring	rx_ring;
++	u16			rx_buf_size;
++	u16			rx_buf_offset;
++	u32			msg_enable;
+ 
++	struct ag71xx_ring	tx_ring;
+ 	int			mac_idx;
+-
+ 	u16			desc_pktlen_mask;
+-	u16			rx_buf_size;
+-	u8			rx_buf_offset;
+ 	u8			tx_hang_workaround:1;
+ 
++	struct napi_struct	napi;
+ 	struct net_device	*dev;
+ 	struct platform_device  *pdev;
+ 	spinlock_t		lock;
+-	struct napi_struct	napi;
+-	u32			msg_enable;
+ 
+ 	/*
+ 	 * From this point onwards we're not looking at per-packet fields.
+@@ -184,12 +186,12 @@ struct ag71xx {
+ 	unsigned int		speed;
+ 	int			duplex;
+ 
+-	struct delayed_work	restart_work;
+-	struct timer_list	oom_timer;
+-
+ 	struct reset_control *mac_reset;
+ 	struct reset_control *mdio_reset;
+ 
++	struct delayed_work	restart_work;
++	struct timer_list	oom_timer;
++
+ 	u32			fifodata[3];
+ 	u32			plldata[3];
+ 	u32			pllreg[3];
+-- 
+2.34.1
+

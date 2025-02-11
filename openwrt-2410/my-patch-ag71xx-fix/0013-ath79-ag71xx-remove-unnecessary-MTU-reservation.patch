@@ -1,0 +1,40 @@
+From acd8a1985a477aa5991ceb3aac0e1e2ce48f2e9a Mon Sep 17 00:00:00 2001
+From: Konstantin Demin <rockdrilla@gmail.com>
+Date: Sat, 3 Dec 2022 23:32:20 +0300
+Subject: [PATCH 13/23] ath79/ag71xx: remove unnecessary MTU reservation
+
+2 bytes of the MTU are reserved for Atheros DSA tag, but DSA core
+has already handled that since commit dc0fe7d47f9f.
+Remove the unnecessary reservation.
+
+Fixes: d51b6ce441d3 ("net: ethernet: add ag71xx driver")
+Signed-off-by: DENG Qingfang <dqfext@gmail.com>
+Reviewed-by: Oleksij Rempel <o.rempel@pengutronix.de>
+Link: https://lore.kernel.org/r/20210218034514.3421-1-dqfext@gmail.com
+Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+---
+ .../files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c   | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c b/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
+index c6fcea1abd..e8122dbaba 100644
+--- a/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
++++ b/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
+@@ -32,13 +32,11 @@ static int ag71xx_msg_level = -1;
+ module_param_named(msg_level, ag71xx_msg_level, int, 0);
+ MODULE_PARM_DESC(msg_level, "Message level (-1=defaults,0=none,...,16=all)");
+ 
+-#define ETH_SWITCH_HEADER_LEN	2
+-
+ static int ag71xx_tx_packets(struct ag71xx *ag, bool flush, int budget);
+ 
+ static inline unsigned int ag71xx_max_frame_len(unsigned int mtu)
+ {
+-	return ETH_SWITCH_HEADER_LEN + ETH_HLEN + VLAN_HLEN + mtu + ETH_FCS_LEN;
++	return ETH_HLEN + VLAN_HLEN + mtu + ETH_FCS_LEN;
+ }
+ 
+ static void ag71xx_dump_dma_regs(struct ag71xx *ag)
+-- 
+2.34.1
+

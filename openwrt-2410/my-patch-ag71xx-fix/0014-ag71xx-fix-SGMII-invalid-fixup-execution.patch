@@ -1,0 +1,37 @@
+From b5347ce80bc727e998c46c52a6bc9b69e011cfda Mon Sep 17 00:00:00 2001
+From: Koen Vandeputte <koen.vandeputte@ncentric.com>
+Date: Sat, 3 Dec 2022 23:32:20 +0300
+Subject: [PATCH 14/23] ag71xx: fix SGMII invalid fixup execution
+
+Above this code section, follow comment is present:
+
+* Across resets SGMII link status goes to weird state.
+* If SGMII_DEBUG register reads other than 0x1f or 0x10,
+* we are for sure in a bad  state.
+
+Fix the loop check to we actually check for these 2 values.
+
+Currently this results in the devices being resetted 20 times
+and giving up printing an error .. while it still works nicely afterwards.
+
+Signed-off-by: Koen Vandeputte <koen.vandeputte@ncentric.com>
+---
+ .../files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c     | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c b/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
+index e8122dbaba..cbaa31a373 100644
+--- a/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
++++ b/target/linux/ath79/files/drivers/net/ethernet/atheros/ag71xx/ag71xx_main.c
+@@ -729,7 +729,7 @@ static void ag71xx_sgmii_init_qca955x(struct device_node *np)
+ 			pr_err("ag71xx: max retries for SGMII fixup exceeded\n");
+ 			break;
+ 		}
+-	} while (!(sgmii_status == 0xf || sgmii_status == 0x10));
++	} while (!(sgmii_status == 0x1f || sgmii_status == 0x10));
+ 
+ sgmii_out:
+ 	iounmap(gmac_base);
+-- 
+2.34.1
+

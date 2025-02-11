@@ -1,0 +1,56 @@
+From 482410bca282f362d0e468ee78b19fd839d2acd5 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sun, 9 Feb 2025 13:15:19 +0800
+Subject: [PATCH 4/5] Revert "luci-app-firewall:add fullcone"
+
+This reverts commit 770e0b9c2cc951a26143c3ac538b60be7b10ea24.
+---
+ .../resources/view/firewall/zones.js           |  5 -----
+ .../luci-app-firewall/po/zh_Hans/firewall.po   | 18 ------------------
+ 2 files changed, 23 deletions(-)
+
+diff --git a/applications/luci-app-firewall/htdocs/luci-static/resources/view/firewall/zones.js b/applications/luci-app-firewall/htdocs/luci-static/resources/view/firewall/zones.js
+index efa2fe8..47b31cf 100644
+--- a/applications/luci-app-firewall/htdocs/luci-static/resources/view/firewall/zones.js
++++ b/applications/luci-app-firewall/htdocs/luci-static/resources/view/firewall/zones.js
+@@ -58,11 +58,6 @@ return view.extend({
+ 
+ 		o = s.option(form.Flag, 'drop_invalid', _('Drop invalid packets'));
+ 
+-		o = s.option(form.ListValue, 'fullcone', _('Enable FullCone NAT'));
+-		o.value('0', _('Disable'));
+-		o.value('1', _('Compatible Mode'));
+-		o.value('2', _('High Performing Mode'));
+-
+ 		var p = [
+ 			s.option(form.ListValue, 'input', _('Input')),
+ 			s.option(form.ListValue, 'output', _('Output')),
+diff --git a/applications/luci-app-firewall/po/zh_Hans/firewall.po b/applications/luci-app-firewall/po/zh_Hans/firewall.po
+index df82404..f1656ae 100644
+--- a/applications/luci-app-firewall/po/zh_Hans/firewall.po
++++ b/applications/luci-app-firewall/po/zh_Hans/firewall.po
+@@ -1532,21 +1532,3 @@ msgstr "最多 65536 个条目。"
+ #: applications/luci-app-firewall/htdocs/luci-static/resources/tools/firewall.js:339
+ msgid "valid firewall mark"
+ msgstr "有效的防火墙标记"
+-
+-msgid "Enable FullCone NAT"
+-msgstr "启用 FullCone NAT"
+-
+-msgid "Using FullCone NAT can improve gaming performance effectively"
+-msgstr "使用 FullCone NAT 加速可以有效提升游戏体验"
+-
+-msgid "Enable FullCone NAT6"
+-msgstr "启用 FullCone NAT6"
+-
+-msgid "Disable"
+-msgstr "禁用"
+-
+-msgid "Compatible Mode"
+-msgstr "兼容模式"
+-
+-msgid "High Performing Mode"
+-msgstr "高性能模式"
+-- 
+2.34.1
+

@@ -1,0 +1,157 @@
+From 337e2a9f57e8213d22f339db481cf0ac5c106d06 Mon Sep 17 00:00:00 2001
+From: sfiction <sfiction.r@gmail.com>
+Date: Wed, 5 Feb 2025 23:11:05 +0800
+Subject: [PATCH 1/3] chore(libart): remove trailing whitespace
+
+---
+ src/lib/art.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/lib/art.c b/src/lib/art.c
+index 327a8a526d..379e0acd4d 100644
+--- a/src/lib/art.c
++++ b/src/lib/art.c
+@@ -124,8 +124,8 @@ static void destroy_node(art_node *n) {
+         case NODE48:
+             p.p3 = (art_node48*)n;
+             for (i=0;i<256;i++) {
+-                idx = ((art_node48*)n)->keys[i]; 
+-                if (!idx) continue; 
++                idx = p.p3->keys[i];
++                if (!idx) continue;
+                 destroy_node(p.p3->children[idx-1]);
+             }
+             break;
+@@ -194,7 +194,7 @@ static art_node** find_child(art_node *n, unsigned char c) {
+             //     __m128i cmp;
+             //     cmp = _mm_cmpeq_epi8(_mm_set1_epi8(c),
+             //             _mm_loadu_si128((__m128i*)p.p2->keys));
+-                
++
+             //     // Use a mask to ignore children that don't exist
+             //     mask = (1 << n->num_children) - 1;
+             //     bitfield = _mm_movemask_epi8(cmp) & mask;
+@@ -393,7 +393,7 @@ static art_leaf* make_leaf(const unsigned char *key, int key_len, void *value) {
+     if (l == NULL) {
+ 		return NULL;
+ 	}
+-    
++
+     l->value = value;
+     l->key_len = key_len;
+     memcpy(l->key, key, key_len);
+@@ -447,7 +447,7 @@ static void add_child48(art_node48 *n, art_node **ref, unsigned char c, void *ch
+ static void add_child16(art_node16 *n, art_node **ref, unsigned char c, void *child) {
+     if (n->n.num_children < 16) {
+         unsigned mask = (1 << n->n.num_children) - 1;
+-        
++
+         // support non-x86 architectures
+         // #ifdef __i386__
+         //     __m128i cmp;
+@@ -478,7 +478,7 @@ static void add_child16(art_node16 *n, art_node **ref, unsigned char c, void *ch
+             }
+ 
+             // Use a mask to ignore children that don't exist
+-            bitfield &= mask;    
++            bitfield &= mask;
+         #endif
+         // #endif
+ 
+@@ -1025,7 +1025,7 @@ void *art_substring(const art_tree *t, const unsigned char *str, int str_len, un
+ {
+     art_node **child;
+     art_node *n = t->root;
+-    art_node *m;    
++    art_node *m;
+     art_leaf *found = NULL;
+     int prefix_len, depth = 0;
+ 
+@@ -1078,7 +1078,7 @@ void art_substring_walk(const art_tree *t, const unsigned char *str, int str_len
+ {
+     art_node **child;
+     art_node *n = t->root;
+-    art_node *m;    
++    art_node *m;
+     art_leaf *found = NULL;
+     int prefix_len, depth = 0;
+ 	int stop_search = 0;
+
+From a9e00aa47272c0f254cc5ebdcecee8d3fdf4aca4 Mon Sep 17 00:00:00 2001
+From: sfiction <sfiction.r@gmail.com>
+Date: Thu, 6 Feb 2025 18:02:37 +0800
+Subject: [PATCH 2/3] fix(libart): fix art_iter_prefix enter deeper
+
+In the old version of `art_iter_prefix`, if the `partial` matches the first
+character, `partial_len` will always be added to `depth`, even when `partial`
+is not fully matched.
+
+See also https://github.com/armon/libart/issues/40.
+---
+ src/lib/art.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/src/lib/art.c b/src/lib/art.c
+index 379e0acd4d..36640149a3 100644
+--- a/src/lib/art.c
++++ b/src/lib/art.c
+@@ -979,13 +979,12 @@ int art_iter_prefix(art_tree *t, const unsigned char *key, int key_len, art_call
+                 prefix_len = n->partial_len;
+             }
+ 
+-            // If there is no match, search is terminated
+-            if (!prefix_len) {
+-                return 0;
+-
+             // If we've matched the prefix, iterate on this node
+-            } else if (depth + prefix_len == key_len) {
++            if (depth + prefix_len == key_len) {
+                 return recursive_iter(n, cb, data);
++            // If there is a mismatch, search is terminated
++            } else if ((uint32_t)prefix_len < n->partial_len) {
++                return 0;
+             }
+ 
+             // if there is a full match, go deeper
+
+From 59d2d5bcb99d726c04742a3b08b85d9264c3fa65 Mon Sep 17 00:00:00 2001
+From: sfiction <sfiction.r@gmail.com>
+Date: Thu, 6 Feb 2025 00:35:57 +0800
+Subject: [PATCH 3/3] perf(libart): modify struct layout
+
+1. Reorder art_node fields to reudce struct size.
+2. Apply 4-byte packing to art_leaf struct, thus the offset of art_leaf->key
+   is equal to the size of art_leaf.
+---
+ src/include/art.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/include/art.h b/src/include/art.h
+index 4bcbeb02d6..08e4f3d3f8 100644
+--- a/src/include/art.h
++++ b/src/include/art.h
+@@ -57,9 +57,9 @@ typedef int(*art_callback)(void *data, const unsigned char *key, uint32_t key_le
+  * of all the various node sizes
+  */
+ typedef struct {
++    uint32_t partial_len;
+     uint8_t type;
+     uint8_t num_children;
+-    uint32_t partial_len;
+     unsigned char partial[MAX_PREFIX_LEN];
+ } art_node;
+ 
+@@ -103,11 +103,13 @@ typedef struct {
+  * Represents a leaf. These are
+  * of arbitrary size, as they include the key.
+  */
++#pragma pack(push, 4)
+ typedef struct {
+     void *value;
+     uint32_t key_len;
+     unsigned char key[0];
+ } art_leaf;
++#pragma pack(pop)
+ 
+ /**
+  * Main struct, points to root.

@@ -1,0 +1,55 @@
+From a0863ec211f2675ec6f4003fc482d91902b4c399 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Tue, 11 Feb 2025 17:46:30 +0800
+Subject: [PATCH 5/5] luci-app-upnp:add force directing
+
+---
+ .../htdocs/luci-static/resources/view/upnp/upnp.js          | 3 +++
+ applications/luci-app-upnp/po/zh_Hans/upnp.po               | 6 ++++++
+ .../luci-app-upnp/root/usr/share/rpcd/ucode/luci.upnp       | 2 +-
+ 3 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/applications/luci-app-upnp/htdocs/luci-static/resources/view/upnp/upnp.js b/applications/luci-app-upnp/htdocs/luci-static/resources/view/upnp/upnp.js
+index 4657113..23d2661 100644
+--- a/applications/luci-app-upnp/htdocs/luci-static/resources/view/upnp/upnp.js
++++ b/applications/luci-app-upnp/htdocs/luci-static/resources/view/upnp/upnp.js
+@@ -212,6 +212,9 @@ return view.extend({
+ 		o = s.taboption('advanced', form.Value, 'upnp_lease_file', _('Service lease file'));
+ 		o.placeholder = '/var/run/miniupnpd.leases';
+ 
++		s.taboption('advanced', form.Flag, 'force_forwarding', _('Force Forwarding'),
++			_('Force forwarding even there is no public IP (please try STUN first)'))
++
+ 		s = m.section(form.GridSection, 'perm_rule', _('Service Access Control List'),
+ 			_('ACL specify which client addresses and ports can be mapped, IPv6 always allowed.'));
+ 		s.sortable = true;
+diff --git a/applications/luci-app-upnp/po/zh_Hans/upnp.po b/applications/luci-app-upnp/po/zh_Hans/upnp.po
+index af63871..5ff48d3 100644
+--- a/applications/luci-app-upnp/po/zh_Hans/upnp.po
++++ b/applications/luci-app-upnp/po/zh_Hans/upnp.po
+@@ -258,3 +258,9 @@ msgstr "上传速度"
+ msgctxt "Use %s (%s = STUN)"
+ msgid "Use %s"
+ msgstr "使用 %s"
++
++msgid "Force Forwarding"
++msgstr "强制转发"
++
++msgid "Force forwarding even there is no public IP (please try STUN first)"
++msgstr "就算没有公网IP也进行转发（请先尝试STUN）"
+diff --git a/applications/luci-app-upnp/root/usr/share/rpcd/ucode/luci.upnp b/applications/luci-app-upnp/root/usr/share/rpcd/ucode/luci.upnp
+index f72b57b..18feb21 100644
+--- a/applications/luci-app-upnp/root/usr/share/rpcd/ucode/luci.upnp
++++ b/applications/luci-app-upnp/root/usr/share/rpcd/ucode/luci.upnp
+@@ -46,7 +46,7 @@ const methods = {
+ 
+ 			if (ipt) {
+ 				for (let line = ipt.read('line'); length(line); line = ipt.read('line')) {
+-					let m = match(line, /^([0-9]+)\s+([a-z]+).+dpt:([0-9]+) to:(\S+):([0-9]+)/);
++					let m = match(line, /^([0-9]+).*\s+([a-z]+).+dpt:([0-9]+) to:(\S+):([0-9]+)/);
+ 
+ 					if (m) {
+ 						push(rules, {
+-- 
+2.34.1
+
