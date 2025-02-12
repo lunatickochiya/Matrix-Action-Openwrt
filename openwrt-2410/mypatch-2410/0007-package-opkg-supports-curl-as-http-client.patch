@@ -1,0 +1,110 @@
+From d31ab57d4ed0f13a0555d0e5b5a6a62de27cd0b1 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Mon, 21 Aug 2023 20:32:35 +0800
+Subject: [PATCH 7/7] package/opkg: supports curl as http client
+
+pick from https://github.com/istoreos/istoreos/commit/6ce3e5079a9f4f4bdac3b9799b5578852db2cb37
+---
+ package/system/opkg/Makefile                  |  2 +-
+ package/system/opkg/files/opkg.conf           |  2 +
+ .../opkg/patches/001-opkg-add-curl.patch      | 65 +++++++++++++++++++
+ 3 files changed, 68 insertions(+), 1 deletion(-)
+ create mode 100644 package/system/opkg/patches/001-opkg-add-curl.patch
+
+diff --git a/package/system/opkg/Makefile b/package/system/opkg/Makefile
+index e7c45e3523..59470b1257 100644
+--- a/package/system/opkg/Makefile
++++ b/package/system/opkg/Makefile
+@@ -38,7 +38,7 @@ define Package/opkg
+   SECTION:=base
+   CATEGORY:=Base system
+   TITLE:=opkg package manager
+-  DEPENDS:=+uclient-fetch +libpthread +libubox
++  DEPENDS:=+uclient-fetch +libpthread +libubox +curl
+   DEFAULT:=y if !USE_APK
+   URL:=$(PKG_SOURCE_URL)
+   MENU:=1
+diff --git a/package/system/opkg/files/opkg.conf b/package/system/opkg/files/opkg.conf
+index d8d3a2d693..b3c0deff0c 100644
+--- a/package/system/opkg/files/opkg.conf
++++ b/package/system/opkg/files/opkg.conf
+@@ -2,3 +2,5 @@ dest root /
+ dest ram /tmp
+ lists_dir ext /var/opkg-lists
+ option overlay_root /overlay
++option http_timeout 10
++option use_curl 1
+diff --git a/package/system/opkg/patches/001-opkg-add-curl.patch b/package/system/opkg/patches/001-opkg-add-curl.patch
+new file mode 100644
+index 0000000000..6e76d9e931
+--- /dev/null
++++ b/package/system/opkg/patches/001-opkg-add-curl.patch
+@@ -0,0 +1,65 @@
++--- a/libopkg/opkg_conf.c	2021-06-14 05:27:37.000000000 +0800
+++++ b/libopkg/opkg_conf.c	2022-06-20 20:31:26.564320326 +0800
++@@ -59,6 +59,7 @@
++ 	{"http_proxy", OPKG_OPT_TYPE_STRING, &_conf.http_proxy},
++ 	{"http_timeout", OPKG_OPT_TYPE_STRING, &_conf.http_timeout},
++ 	{"no_proxy", OPKG_OPT_TYPE_STRING, &_conf.no_proxy},
+++	{"use_curl", OPKG_OPT_TYPE_BOOL, &_conf.use_curl},
++ 	{"test", OPKG_OPT_TYPE_BOOL, &_conf.noaction},
++ 	{"noaction", OPKG_OPT_TYPE_BOOL, &_conf.noaction},
++ 	{"download_only", OPKG_OPT_TYPE_BOOL, &_conf.download_only},
++--- a/libopkg/opkg_conf.h	2021-06-14 05:27:37.000000000 +0800
+++++ b/libopkg/opkg_conf.h	2022-06-20 20:31:45.964434623 +0800
++@@ -100,6 +100,7 @@
++ 	char *no_proxy;
++ 	char *proxy_user;
++ 	char *proxy_passwd;
+++	int  use_curl;
++
++ 	char *signature_ca_file;
++ 	char *signature_ca_path;
++--- a/libopkg/opkg_download.c	2021-06-14 05:27:37.000000000 +0800
+++++ b/libopkg/opkg_download.c	2022-06-20 20:33:40.769112117 +0800
++@@ -146,8 +146,41 @@
++ 			 conf->no_proxy);
++ 		setenv("no_proxy", conf->no_proxy, 1);
++ 	}
++
++-	{
+++    if (conf->use_curl) {
+++		int res;
+++		const char *argv[14];
+++		int i = 0;
+++
+++		argv[i++] = "curl";
+++		argv[i++] = "-s";
+++		argv[i++] = "--fail";
+++		argv[i++] = "--show-error";
+++		argv[i++] = "-L";
+++		if (conf->no_check_certificate) {
+++			argv[i++] = "-k";
+++		}
+++		if (conf->http_timeout) {
+++			argv[i++] = "--connect-timeout";
+++			argv[i++] = conf->http_timeout;
+++		}
+++		argv[i++] = src;
+++		argv[i++] = "-o";
+++		argv[i++] = tmp_file_location;
+++		argv[i++] = NULL;
+++		res = xsystem(argv);
+++		if (res) {
+++				opkg_msg(ERROR,
+++						"Failed to download %s, curl returned %d.\n",
+++						src, res);
+++                       if (28 == res || 6 == res) {
+++                               opkg_msg(ERROR,
+++                                        "Check your network settings and connectivity.\n\n");
+++                       }
+++				free(tmp_file_location);
+++				return -1;
+++		}
+++    } else {
++ 		int res;
++ 		const char *argv[11];
++ 		int i = 0;
+-- 
+2.34.1
+

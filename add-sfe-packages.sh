@@ -7,27 +7,32 @@
 function add_nft_config() {
 for file in package-configs/single/*-nftables.config; do     echo "# ADD TURBOACC
 CONFIG_PACKAGE_luci-app-turboacc=y
+CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_PDNSD=n
+
+#offload
+CONFIG_PACKAGE_kmod-nft-offload=y
 
 # sfe
 CONFIG_PACKAGE_kmod-fast-classifier=y
 CONFIG_PACKAGE_kmod-shortcut-fe=y
 CONFIG_PACKAGE_kmod-shortcut-fe-cm=n
 CONFIG_PACKAGE_kmod-nft-fullcone=y
+
 " >> "$file"; done
 }
 
 function add_ipt_config() {
 for file in package-configs/single/*-iptables.config; do     echo "# ADD TURBOACC
 CONFIG_PACKAGE_luci-app-turboacc=y
+CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_PDNSD=n
+CONFIG_PACKAGE_luci-app-fullconenat=y
 
-# iptable legacy in nft
-CONFIG_PACKAGE_ip6tables-zz-legacy=y
-CONFIG_PACKAGE_iptables-zz-legacy=y
-
+#offload
+CONFIG_PACKAGE_kmod-ipt-offload=y
 # sfe
-CONFIG_PACKAGE_kmod-fast-classifier=m
-CONFIG_PACKAGE_kmod-shortcut-fe=m
-CONFIG_PACKAGE_kmod-shortcut-fe-cm=m
+CONFIG_PACKAGE_kmod-fast-classifier=y
+CONFIG_PACKAGE_kmod-shortcut-fe=y
+CONFIG_PACKAGE_kmod-shortcut-fe-cm=n
 " >> "$file"; done
 }
 

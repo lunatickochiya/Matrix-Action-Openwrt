@@ -1,0 +1,111 @@
+From 2602d299d7a5c817362d30ccadbbbc5623f3b340 Mon Sep 17 00:00:00 2001
+From: Lienol <23146169+Lienol@users.noreply.github.com>
+Date: Sun, 29 Dec 2019 03:39:12 +0800
+Subject: [PATCH] fullconenat-ipt: add package
+
+---
+ package/network/config/firewall/Makefile      |   2 +-
+ .../config/firewall/files/firewall.config     |   1 +
+ .../config/firewall/patches/fullconenat.patch |  58 +++
+ package/network/utils/fullconenat/Makefile    |  68 ++++
+ .../network/utils/fullconenat/files/Makefile  |  11 +
+ .../001-fix-init-Repeat-definition.patch      |  20 +
+ .../patches/001-linux-6.1-support.patch       |  26 ++
+ ...k-events-support-multiple-registrant.patch | 352 ++++++++++++++++++
+ 8 files changed, 537 insertions(+), 1 deletion(-)
+ create mode 100644 package/network/config/firewall/patches/fullconenat.patch
+ create mode 100644 package/network/utils/fullconenat/Makefile
+ create mode 100644 package/network/utils/fullconenat/files/Makefile
+ create mode 100644 package/network/utils/fullconenat/patches/001-fix-init-Repeat-definition.patch
+ create mode 100644 package/network/utils/fullconenat/patches/001-linux-6.1-support.patch
+ create mode 100644 target/linux/generic/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch
+
+diff --git a/package/network/config/firewall/Makefile b/package/network/config/firewall/Makefile
+index a4b17f0b531..d3fc787027e 100644
+--- a/package/network/config/firewall/Makefile
++++ b/package/network/config/firewall/Makefile
+@@ -30,7 +30,7 @@ define Package/firewall
+   SECTION:=net
+   CATEGORY:=Base system
+   TITLE:=OpenWrt C Firewall
+-  DEPENDS:=+libubox +libubus +libuci +libip4tc +IPV6:libip6tc +libiptext +IPV6:libiptext6 +libxtables +kmod-ipt-core +kmod-ipt-conntrack +IPV6:kmod-nf-conntrack6 +kmod-ipt-nat
++  DEPENDS:=+libubox +libubus +libuci +libip4tc +IPV6:libip6tc +libiptext +IPV6:libiptext6 +libxtables +kmod-ipt-core +kmod-ipt-conntrack +IPV6:kmod-nf-conntrack6 +kmod-ipt-nat +iptables-mod-fullconenat
+   PROVIDES:=uci-firewall
+   CONFLICTS:=firewall4
+ endef
+diff --git a/package/network/config/firewall/files/firewall.config b/package/network/config/firewall/files/firewall.config
+index b90ac7af0a3..8746b9fa169 100644
+--- a/package/network/config/firewall/files/firewall.config
++++ b/package/network/config/firewall/files/firewall.config
+@@ -3,6 +3,7 @@ config defaults
+ 	option input		REJECT
+ 	option output		ACCEPT
+ 	option forward		REJECT
++	option fullcone		0
+ # Uncomment this line to disable ipv6 rules
+ #	option disable_ipv6	1
+
+diff --git a/package/network/config/firewall/patches/fullconenat.patch b/package/network/config/firewall/patches/fullconenat.patch
+new file mode 100644
+index 00000000000..cfc96b2410f
+--- /dev/null
++++ b/package/network/config/firewall/patches/fullconenat.patch
+@@ -0,0 +1,58 @@
++--- a/defaults.c
+++++ b/defaults.c
++@@ -48,6 +48,8 @@
++ 	FW3_OPT("synflood_protect",    bool,     defaults, syn_flood),
++ 	FW3_OPT("synflood_rate",       limit,    defaults, syn_flood_rate),
++ 	FW3_OPT("synflood_burst",      int,      defaults, syn_flood_rate.burst),
+++
+++	FW3_OPT("fullcone",            bool,     defaults, fullcone),
++
++ 	FW3_OPT("tcp_syncookies",      bool,     defaults, tcp_syncookies),
++ 	FW3_OPT("tcp_ecn",             int,      defaults, tcp_ecn),
++diff --git a/options.h b/options.h
++--- a/options.h
+++++ b/options.h
++@@ -297,6 +297,7 @@
++ 	enum fw3_reject_code any_reject_code;
++
++ 	bool syn_flood;
+++	bool fullcone;
++ 	struct fw3_limit syn_flood_rate;
++
++ 	bool tcp_syncookies;
++diff --git a/zones.c b/zones.c
++--- a/zones.c
+++++ b/zones.c
++@@ -627,6 +627,7 @@
++ 	struct fw3_address *msrc;
++ 	struct fw3_address *mdest;
++ 	struct fw3_ipt_rule *r;
+++	struct fw3_defaults *defs = &state->defaults;
++
++ 	if (!fw3_is_family(zone, handle->family))
++ 		return;
++@@ -712,8 +713,22 @@
++ 				{
++ 					r = fw3_ipt_rule_new(handle);
++ 					fw3_ipt_rule_src_dest(r, msrc, mdest);
++-					fw3_ipt_rule_target(r, "MASQUERADE");
++-					fw3_ipt_rule_append(r, "zone_%s_postrouting", zone->name);
+++					/*FIXME: Workaround for FULLCONE-NAT*/
+++					if(defs->fullcone)
+++					{
+++						warn("%s will enable FULLCONE-NAT", zone->name);
+++						fw3_ipt_rule_target(r, "FULLCONENAT");
+++						fw3_ipt_rule_append(r, "zone_%s_postrouting", zone->name);
+++						r = fw3_ipt_rule_new(handle);
+++						fw3_ipt_rule_src_dest(r, msrc, mdest);
+++						fw3_ipt_rule_target(r, "FULLCONENAT");
+++						fw3_ipt_rule_append(r, "zone_%s_prerouting", zone->name);
+++					}
+++					else
+++					{
+++						fw3_ipt_rule_target(r, "MASQUERADE");
+++						fw3_ipt_rule_append(r, "zone_%s_postrouting", zone->name);
+++					}
++ 				}
++ 			}
++ 		}

@@ -73,16 +73,37 @@ on:
         options:
         - 'true'
         - 'false'
-      TEST-KERNEL:
-        description: 'OpenWrt-24.10 use testing kernel'
+#      TEST-KERNEL:
+#        description: 'OpenWrt-24.10 use testing kernel'
+#        default: 'false'
+#        type: choice
+#        options:
+#        - 'true'
+#        - 'false'
+#      KERNEL66:
+#        description: 'OpenWrt-24.10 use 6.6 kernel'
+#        default: 'false'
+#        type: choice
+#        options:
+#        - 'true'
+#        - 'false'
+      TRY_BBR_V3:
+        description: 'Update BBR TO V3'
         default: 'false'
         type: choice
         options:
         - 'true'
         - 'false'
-      KERNEL66:
-        description: 'OpenWrt-24.10 use 6.6 kernel'
+      AG71XX_FIX:
+        description: 'Fix ag71xx'
         default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+      SFE_BUILDIN:
+        description: 'Build sfe'
+        default: 'true'
         type: choice
         options:
         - 'true'
@@ -193,7 +214,7 @@ jobs:
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         echo "Kernel_Test=_Kernel_Test_Ver" >> $GITHUB_ENV
         fi
-        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh add-test-packages.sh
+        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh add-test-packages.sh add-sfe-packages.sh
 
     - name: 导入机器及安装包config
       run: |
@@ -229,6 +250,7 @@ jobs:
         cd openwrt
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
+        bash tpm312/cus.sh
         $GITHUB_WORKSPACE/$DIY_SH rockpatch
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
@@ -258,6 +280,41 @@ jobs:
         df -hT
         ls /mnt/openwrt
 
+    - name: Patch 自定义
+      id: patch
+      run: |
+        if [ ${{github.event.inputs.TRY_BBR_V3}} = true ]; then
+        [ -d openwrt-2410/mypatch-bbr-v3 ] && cp -r openwrt-2410/mypatch-bbr-v3/* openwrt-2410/mypatch-2410-${{matrix.target}}
+        fi
+        if [ ${{github.event.inputs.AG71XX_FIX}} = true ]; then
+        [ -d openwrt-2410/my-patch-ag71xx-fix ] && cp -r openwrt-2410/my-patch-ag71xx-fix/* openwrt-2410/mypatch-2410-${{matrix.target}}
+        fi
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: 添加 SFE
+      if: github.event.inputs.SFE_BUILDIN == 'true'
+      id: sfe
+      run: |
+        if [ ${{matrix.target}} == 'mt798x-iptables' ] || [ ${{ matrix.target }} == 'mt798x-nousb-iptables' ] || [ ${{ matrix.target }} == 'ramips-iptables' ] || [ ${{ matrix.target }} == 'ath79-iptables' ]; then
+                bash $GITHUB_WORKSPACE/add-sfe-packages.sh ipt
+                echo "----${{matrix.target}}-----ipt-sfe---"
+                cd openwrt
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/pending-6.6/613-netfilter_optional_tcp_window_check.patch -P target/linux/generic/pending-6.6/
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch -P target/linux/generic/hack-6.6/
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-6.6/953-net-patch-linux-kernel-to-support-shortcut-fe.patch -P target/linux/generic/hack-6.6/
+                echo "# CONFIG_NF_CONNTRACK_CHAIN_EVENTS is not set" >> "./target/linux/generic/config-6.6"
+                echo "# CONFIG_SHORTCUT_FE is not set" >> "./target/linux/generic/config-6.6"
+                git clone https://github.com/lunatickochiya/luci-app-turboacc-js package/luci-app-turboacc-js
+                rm -rf package/luci-app-turboacc-js/.git/
+                git clone --depth=1 --single-branch --branch "package" https://github.com/chenmozhijin/turboacc  && mv -n turboacc/shortcut-fe ./package ; rm -rf turboacc
+                cd ../
+
+        fi
+        sed -i 's/kmod-shortcut-fe-cm,kmod-shortcut-fe,kmod-fast-classifier,kmod-fast-classifier-noload,kmod-shortcut-fe-drv,//g' package-configs/kmod_exclude_list*
+        # sed -i 's/"feeds\/lunatic7\/shortcut-fe"//g' diy-2410.sh
+        # sed -i 's/"feeds\/lunatic7\/luci-app-turboacc"//g' diy-2410.sh
+        echo "status=success" >> $GITHUB_OUTPUT
+
     - name: 自定义安装包(优先于feeds)
       if: steps.clone.outputs.status == 'success'
       id: files
@@ -273,6 +330,7 @@ jobs:
         elif [ "${{ matrix.repo }}" == "main" ]; then
         [ -d openwrt-main/mypatch-main-${{matrix.target}} ] && mv -f openwrt-main/mypatch-main-${{matrix.target}} openwrt/mypatch
         fi
+        [ -d openwrt-2410/mypatch-2410 ] && mv -f openwrt-2410/mypatch-2410 openwrt/mypatch-2410
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
         cd ../
@@ -335,21 +393,12 @@ jobs:
       id: config2
       run: |
         cd openwrt
-        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
         $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
         make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
         make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
         make defconfig
-        else
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
-        make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
-        make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
-        make defconfig
-        fi
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
         echo "status=success" >> $GITHUB_OUTPUT
 

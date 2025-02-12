@@ -68,6 +68,8 @@ packages=(
     "rtl8821cu"
     "xray-core"
     "smartdns"
+    "luci-app-filebrowser"
+    "luci-app-filemanager"
 )
 
 for package in "${packages[@]}"; do
@@ -79,6 +81,8 @@ done
 directories=(
     "feeds/luci/applications/luci-app-dockerman"
     "feeds/luci/applications/luci-app-smartdns"
+    "feeds/luci/applications/luci-app-filebrowser"
+    "feeds/luci/applications/luci-app-filemanager"
     "feeds/lunatic7/rtl8821cu"
     "feeds/lunatic7/shortcut-fe"
     "feeds/lunatic7/fullconenat-nft"
@@ -114,6 +118,13 @@ function patch_openwrt() {
         done
         }
 
+function patch_openwrt_2410() {
+        for i in $( ls mypatch-2410 ); do
+            echo Applying mypatch-2410 $i
+            patch -p1 --no-backup-if-mismatch --quiet < mypatch-2410/$i
+        done
+        }
+
 function patch_package() {
         for packagepatch in $( ls feeds/packages/feeds-package-patch-2410 ); do
             cd feeds/packages/
@@ -141,9 +152,9 @@ function patch_lunatic7() {
         }
 
 function patch_rockchip() {
-        for rockpatch in $( ls tpm312/core ); do
+        for rockpatch in $( ls tpm312/core-2410 ); do
             echo Applying tpm312 $rockpatch
-            patch -p1 --no-backup-if-mismatch --quiet < tpm312/core/$rockpatch
+            patch -p1 --no-backup-if-mismatch --quiet < tpm312/core-2410/$rockpatch
         done
         rm -rf tpm312
         }
@@ -556,6 +567,7 @@ patch_luci
 patch_lunatic7
 add_rockchip_nft_packages
 elif [ "$1" == "patch-openwrt" ]; then
+patch_openwrt_2410
 patch_openwrt
 elif [ "$1" == "rockpatch" ]; then
 patch_rockchip
