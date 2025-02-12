@@ -321,7 +321,7 @@ jobs:
       run: |
         [ -d package ] && mv -f package/* openwrt/package
         mkdir openwrt/feeds-bump
-        [ -d feeds-packages ] && mv -f feeds-packages/openwrt-24.10/feeds/* openwrt/feeds-bump
+        [ -d feeds-packages/openwrt-24.10/feeds/ ] && mv -f feeds-packages/openwrt-24.10/feeds/* openwrt/feeds-bump
         if [ ${{github.event.inputs.KERNEL66}} = true ]; then
         rm -rf openwrt-2410/mypatch-2410-${{matrix.target}}/0004-fix.patch
         fi
