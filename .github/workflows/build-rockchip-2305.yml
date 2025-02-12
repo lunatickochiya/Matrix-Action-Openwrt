@@ -1,4 +1,4 @@
-name: Build Rockchip
+name: Build Rockchip 23.05
 
 # Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
