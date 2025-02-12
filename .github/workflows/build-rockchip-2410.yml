@@ -319,7 +319,6 @@ jobs:
       if: steps.clone.outputs.status == 'success'
       id: files
       run: |
-        [ -d package ] && mv -f package/* openwrt/package
         mkdir openwrt/feeds-bump
         [ -d feeds-packages/openwrt-24.10/feeds/ ] && mv -f feeds-packages/openwrt-24.10/feeds/* openwrt/feeds-bump
         if [ ${{github.event.inputs.KERNEL66}} = true ]; then
@@ -330,7 +329,9 @@ jobs:
         elif [ "${{ matrix.repo }}" == "main" ]; then
         [ -d openwrt-main/mypatch-main-${{matrix.target}} ] && mv -f openwrt-main/mypatch-main-${{matrix.target}} openwrt/mypatch
         fi
+        [ -d package ] && mv -f package/* openwrt/package
         [ -d openwrt-2410/mypatch-2410 ] && mv -f openwrt-2410/mypatch-2410 openwrt/mypatch-2410
+        [ -d openwrt-2410/package-for-2410 ] && cp -r openwrt-2410/package-for-2410/* openwrt/package
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
         cd ../
