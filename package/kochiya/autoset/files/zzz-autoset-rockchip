@@ -44,7 +44,7 @@ uci -q batch <<-EOF >/dev/null
 	commit
 EOF
 
-sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/openwrt#g' /etc/opkg/distfeeds.conf
+# sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/openwrt#g' /etc/opkg/distfeeds.conf
 
 #sed -i '/DISTRIB_REVISION/d' /etc/openwrt_release
 

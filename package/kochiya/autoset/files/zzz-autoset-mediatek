@@ -52,7 +52,7 @@ sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
 /etc/init.d/advancedplus disable
 /etc/init.d/tailscale stop
 /etc/init.d/tailscale disable
-sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/openwrt#g' /etc/opkg/distfeeds.conf
+#sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/openwrt#g' /etc/opkg/distfeeds.conf
 
 
 
