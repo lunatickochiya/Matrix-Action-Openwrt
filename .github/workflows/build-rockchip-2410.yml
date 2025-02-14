@@ -304,7 +304,7 @@ jobs:
                 wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-6.6/953-net-patch-linux-kernel-to-support-shortcut-fe.patch -P target/linux/generic/hack-6.6/
                 echo "# CONFIG_NF_CONNTRACK_CHAIN_EVENTS is not set" >> "./target/linux/generic/config-6.6"
                 echo "# CONFIG_SHORTCUT_FE is not set" >> "./target/linux/generic/config-6.6"
-                git clone https://github.com/lunatickochiya/luci-app-turboacc-js package/luci-app-turboacc-js && sed -i 's?\.\./\.\./luci.mk?$(TOPDIR)/feeds/luci/luci.mk?' ./package/luci-app-turboacc-js/Makefile ; rm -rf ./package/luci-app-turboacc-js/.git/
+                # git clone https://github.com/lunatickochiya/luci-app-turboacc-js package/luci-app-turboacc-js && sed -i 's?\.\./\.\./luci.mk?$(TOPDIR)/feeds/luci/luci.mk?' ./package/luci-app-turboacc-js/Makefile ; rm -rf ./package/luci-app-turboacc-js/.git/
                 git clone --depth=1 --single-branch --branch "package" https://github.com/chenmozhijin/turboacc && mv -n turboacc/shortcut-fe ./package ; rm -rf turboacc
                 cd ../
 
