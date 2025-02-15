@@ -23,7 +23,7 @@ CONFIG_PACKAGE_kmod-nft-fullcone=y
 
 function add_ipt_config() {
 for file in package-configs/*-iptables.config; do     echo "# ADD TURBOACC
-CONFIG_PACKAGE_luci-app-turboacc=y
+CONFIG_PACKAGE_luci-app-turboacc-ipt=y
 CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_PDNSD=n
 CONFIG_PACKAGE_luci-app-fullconenat=y
 

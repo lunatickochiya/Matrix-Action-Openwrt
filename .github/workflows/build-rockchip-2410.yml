@@ -311,7 +311,7 @@ jobs:
         fi
         sed -i 's/kmod-shortcut-fe-cm,kmod-shortcut-fe,kmod-fast-classifier,kmod-fast-classifier-noload,kmod-shortcut-fe-drv,//g' package-configs/kmod_exclude_list*
         # sed -i 's/"feeds\/lunatic7\/shortcut-fe"//g' diy-2410.sh
-        sed -i 's/"feeds\/lunatic7\/luci-app-turboacc"//g' diy-2410.sh
+        # sed -i 's/"feeds\/lunatic7\/luci-app-turboacc"//g' diy-2410.sh
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 自定义安装包(优先于feeds)
