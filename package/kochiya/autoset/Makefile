@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/target.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=4.0
-PKG_RELEASE:=10
+PKG_RELEASE:=11
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -30,6 +30,7 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_meson \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ramips \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ath79 \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ipq \
 	CONFIG_PACKAGE_$(PKG_NAME)_SIDE_ROUTER_rockchip
 
 define Package/autoset/default
@@ -217,6 +218,7 @@ choice
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_mediatek if TARGET_mediatek=y
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ramips if TARGET_ramips=y
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ath79 if TARGET_ath79=y
+	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ipq if TARGET_qualcommax=y
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci
 	bool "Common UCI"
@@ -245,6 +247,11 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_uci_ramips
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci_ath79
 	bool "ATH79 SUPPORT"
 	select PACKAGE_autoset-uci-ath79
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_uci_ipq
+	bool "IPQ SUPPORT"
+	select PACKAGE_autoset-uci-ipq
+
 endchoice
 
 choice
@@ -300,6 +307,11 @@ define Package/autoset-uci-ath79/install
 	$(INSTALL_BIN) ./files/zzz-autoset-ath79 $(1)/etc/uci-defaults/zz99-autoset
 endef
 
+define Package/autoset-uci-ipq/install
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./files/zzz-autoset-ipq $(1)/etc/uci-defaults/zz99-autoset
+endef
+
 define Package/autoset-uci/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/zzz-autoset $(1)/etc/uci-defaults/zz99-autoset
@@ -343,6 +355,7 @@ $(eval $(call BuildPackage,autoset-uci-rockchip))
 $(eval $(call BuildPackage,autoset-uci-mediatek))
 $(eval $(call BuildPackage,autoset-uci-ramips))
 $(eval $(call BuildPackage,autoset-uci-ath79))
+$(eval $(call BuildPackage,autoset-uci-ipq))
 $(eval $(call BuildPackage,autoset-uci-meson))
 $(eval $(call BuildPackage,autoset-resize-rootfs-script))
 $(eval $(call BuildPackage,luci-temperature-script))
