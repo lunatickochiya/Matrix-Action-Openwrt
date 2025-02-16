@@ -18,14 +18,14 @@ Content-Transfer-Encoding: 8bit
  .../root/etc/init.d/advancedplus              |  65 ++++++++-
  .../root/usr/bin/advancedplusipk              | 138 ++++++++++++++++++
  9 files changed, 467 insertions(+), 21 deletions(-)
- create mode 100644 luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedipk.lua
- create mode 100644 luci-app-advancedplus/luasrc/view/advancedplus/advanced.htm
- create mode 100644 luci-app-advancedplus/root/usr/bin/advancedplusipk
+ create mode 100644 luci-app-advancedplus-mod/luasrc/model/cbi/advancedplus/advancedipk.lua
+ create mode 100644 luci-app-advancedplus-mod/luasrc/view/advancedplus/advanced.htm
+ create mode 100644 luci-app-advancedplus-mod/root/usr/bin/advancedplusipk
 
-diff --git a/luci-app-advancedplus/luasrc/controller/advancedplus.lua b/luci-app-advancedplus/luasrc/controller/advancedplus.lua
+diff --git a/luci-app-advancedplus-mod/luasrc/controller/advancedplus.lua b/luci-app-advancedplus-mod/luasrc/controller/advancedplus.lua
 index e05911332..a9021bb71 100644
---- a/luci-app-advancedplus/luasrc/controller/advancedplus.lua
-+++ b/luci-app-advancedplus/luasrc/controller/advancedplus.lua
+--- a/luci-app-advancedplus-mod/luasrc/controller/advancedplus.lua
++++ b/luci-app-advancedplus-mod/luasrc/controller/advancedplus.lua
 @@ -1,6 +1,12 @@
 --- Copyright 2023-2024 sirpdboy team <herboy2008@gmail.com>
 --- Licensed to the public under the Apache License 2.0.
@@ -97,11 +97,11 @@ index e05911332..a9021bb71 100644
 +	http.write('')
 +	luci.sys.exec(string.format("bash /usr/bin/advancedplusipk " ..selectipk.. " > /tmp/advancedplus.log 2>&1 &" ))
  end
-diff --git a/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedipk.lua b/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedipk.lua
+diff --git a/luci-app-advancedplus-mod/luasrc/model/cbi/advancedplus/advancedipk.lua b/luci-app-advancedplus-mod/luasrc/model/cbi/advancedplus/advancedipk.lua
 new file mode 100644
 index 000000000..0328fff76
 --- /dev/null
-+++ b/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedipk.lua
++++ b/luci-app-advancedplus-mod/luasrc/model/cbi/advancedplus/advancedipk.lua
 @@ -0,0 +1,29 @@
 +--[[
 +LuCI - Lua Configuration Interface
@@ -132,10 +132,10 @@ index 000000000..0328fff76
 +e.template ='advancedplus/advanced'
 +
 +return m
-diff --git a/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedset.lua b/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedset.lua
+diff --git a/luci-app-advancedplus-mod/luasrc/model/cbi/advancedplus/advancedset.lua b/luci-app-advancedplus-mod/luasrc/model/cbi/advancedplus/advancedset.lua
 index bff23f748..3139f91e2 100644
---- a/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedset.lua
-+++ b/luci-app-advancedplus/luasrc/model/cbi/advancedplus/advancedset.lua
+--- a/luci-app-advancedplus-mod/luasrc/model/cbi/advancedplus/advancedset.lua
++++ b/luci-app-advancedplus-mod/luasrc/model/cbi/advancedplus/advancedset.lua
 @@ -4,7 +4,7 @@ local uci=luci.model.uci.cursor()
  local a, t, e
  a = Map("advancedplus")
@@ -143,7 +143,7 @@ index bff23f748..3139f91e2 100644
 -a.description = translate("The enhanced version of the original advanced settings allows for unified setting and management of background images for kucat, Agron, and Opentopd themes, without the need to upload them separately. Color schemes for kucat and Agron themes can be set.<br>")..
 +a.description = translate("The enhanced version of the original advanced settings allows for unified setting and management of background images for kucat/Agron/Opentopd themes, without the need to upload them separately. Color schemes for kucat/Agron/design themes can be set.<br>")..
  translate("At the same time, important plugin parameters can be compiled. At the same time, some system parameters can also be set, such as display and hide settings.")..
- translate("</br>For specific usage, see:")..translate("<a href=\'https://github.com/sirpdboy/luci-app-advancedplus.git' target=\'_blank\'>GitHub @sirpdboy/luci-app-advancedplus </a>")
+ translate("</br>For specific usage, see:")..translate("<a href=\'https://github.com/sirpdboy/luci-app-advancedplus-mod.git' target=\'_blank\'>GitHub @sirpdboy/luci-app-advancedplus-mod </a>")
  
 @@ -30,5 +30,17 @@ e = t:option(Flag, "wizard",translate('Hide Wizard'), translate('Show or hide th
  e.default = "0"
@@ -163,11 +163,11 @@ index bff23f748..3139f91e2 100644
 +e.default = "0"
  
  return a
-diff --git a/luci-app-advancedplus/luasrc/view/advancedplus/advanced.htm b/luci-app-advancedplus/luasrc/view/advancedplus/advanced.htm
+diff --git a/luci-app-advancedplus-mod/luasrc/view/advancedplus/advanced.htm b/luci-app-advancedplus-mod/luasrc/view/advancedplus/advanced.htm
 new file mode 100644
 index 000000000..81d679a3f
 --- /dev/null
-+++ b/luci-app-advancedplus/luasrc/view/advancedplus/advanced.htm
++++ b/luci-app-advancedplus-mod/luasrc/view/advancedplus/advanced.htm
 @@ -0,0 +1,89 @@
 +<%#
 +Copyright (C)  2022-2024  sirpdboy  <herboy2008@gmail.com> 
@@ -258,10 +258,10 @@ index 000000000..81d679a3f
 +//]]>
 +</script>
 +<%+cbi/valuefooter%>
-diff --git a/luci-app-advancedplus/po/zh-cn/advancedplus.po b/luci-app-advancedplus/po/zh-cn/advancedplus.po
+diff --git a/luci-app-advancedplus-mod/po/zh-cn/advancedplus.po b/luci-app-advancedplus-mod/po/zh-cn/advancedplus.po
 index f1e614f30..49d9aebb6 100644
---- a/luci-app-advancedplus/po/zh-cn/advancedplus.po
-+++ b/luci-app-advancedplus/po/zh-cn/advancedplus.po
+--- a/luci-app-advancedplus-mod/po/zh-cn/advancedplus.po
++++ b/luci-app-advancedplus-mod/po/zh-cn/advancedplus.po
 @@ -30,8 +30,8 @@ msgstr "进阶参数编辑"
  msgid "Built-in"
  msgstr "内建"
@@ -318,10 +318,10 @@ index f1e614f30..49d9aebb6 100644
 +
 +msgid "Resolve the issue of Android native TV not being able to connect to WiFi for the first time"
 +msgstr "解决安卓原生TV首次连不上wifi的问题"
-diff --git a/luci-app-advancedplus/po/zh_Hans/advancedplus.po b/luci-app-advancedplus/po/zh_Hans/advancedplus.po
+diff --git a/luci-app-advancedplus-mod/po/zh_Hans/advancedplus.po b/luci-app-advancedplus-mod/po/zh_Hans/advancedplus.po
 index bf85288e0..49d9aebb6 100644
---- a/luci-app-advancedplus/po/zh_Hans/advancedplus.po
-+++ b/luci-app-advancedplus/po/zh_Hans/advancedplus.po
+--- a/luci-app-advancedplus-mod/po/zh_Hans/advancedplus.po
++++ b/luci-app-advancedplus-mod/po/zh_Hans/advancedplus.po
 @@ -14,6 +14,7 @@ msgstr "Argon主题设置"
  msgid "Design Config"
  msgstr "Design主题设置"
@@ -386,10 +386,10 @@ index bf85288e0..49d9aebb6 100644
 +
 +msgid "Resolve the issue of Android native TV not being able to connect to WiFi for the first time"
 +msgstr "解决安卓原生TV首次连不上wifi的问题"
-diff --git a/luci-app-advancedplus/root/etc/config/advancedplus b/luci-app-advancedplus/root/etc/config/advancedplus
+diff --git a/luci-app-advancedplus-mod/root/etc/config/advancedplus b/luci-app-advancedplus-mod/root/etc/config/advancedplus
 index e7e7133bd..295aaf64c 100644
---- a/luci-app-advancedplus/root/etc/config/advancedplus
-+++ b/luci-app-advancedplus/root/etc/config/advancedplus
+--- a/luci-app-advancedplus-mod/root/etc/config/advancedplus
++++ b/luci-app-advancedplus-mod/root/etc/config/advancedplus
 @@ -9,7 +9,7 @@ config basic
  	option font_x '0.875rem'
  	option bklock '1'
@@ -431,10 +431,10 @@ index e7e7133bd..295aaf64c 100644
  	option use '1'
  	option primary_opacity '4'
 -
-diff --git a/luci-app-advancedplus/root/etc/init.d/advancedplus b/luci-app-advancedplus/root/etc/init.d/advancedplus
+diff --git a/luci-app-advancedplus-mod/root/etc/init.d/advancedplus b/luci-app-advancedplus-mod/root/etc/init.d/advancedplus
 index e76ed6857..e4dd2c908 100644
---- a/luci-app-advancedplus/root/etc/init.d/advancedplus
-+++ b/luci-app-advancedplus/root/etc/init.d/advancedplus
+--- a/luci-app-advancedplus-mod/root/etc/init.d/advancedplus
++++ b/luci-app-advancedplus-mod/root/etc/init.d/advancedplus
 @@ -115,18 +115,28 @@ config theme
  	option use '1'
  	option primary_opacity '4'
@@ -529,11 +529,11 @@ index e76ed6857..e4dd2c908 100644
      [ "x$(uci -q get advancedplus.@basic[0].qos)" = "x1" ] && \usr\bin\qoshome
      if [ "x$(uci -q get advancedplus.@basic[0].ttl)" = "x1" ] ; then
          $ipt -t mangle -A PREROUTING -p tcp --tcp-flags RST RST -i $dev -j DROP
-diff --git a/luci-app-advancedplus/root/usr/bin/advancedplusipk b/luci-app-advancedplus/root/usr/bin/advancedplusipk
+diff --git a/luci-app-advancedplus-mod/root/usr/bin/advancedplusipk b/luci-app-advancedplus-mod/root/usr/bin/advancedplusipk
 new file mode 100644
 index 000000000..c93a6ef27
 --- /dev/null
-+++ b/luci-app-advancedplus/root/usr/bin/advancedplusipk
++++ b/luci-app-advancedplus-mod/root/usr/bin/advancedplusipk
 @@ -0,0 +1,138 @@
 +#!/bin/sh
 +
