@@ -98,6 +98,13 @@ define Package/autoset-uci-ath79
   HIDDEN:=1
 endef
 
+define Package/autoset-uci-ipq
+  $(Package/autoset/default)
+  TITLE:=Support Packages for ipq router uci
+  DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
+  HIDDEN:=1
+endef
+
 define Package/autoset-resize-rootfs-script
   $(Package/autoset/default)
   TITLE:=auto resize rootfs script
