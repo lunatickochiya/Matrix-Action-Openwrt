@@ -25,7 +25,7 @@ function add_ipt_config() {
 for file in package-configs/*-iptables.config; do     echo "# ADD TURBOACC
 CONFIG_PACKAGE_luci-app-turboacc-ipt=y
 CONFIG_PACKAGE_luci-app-turboacc_INCLUDE_PDNSD=n
-CONFIG_PACKAGE_luci-app-fullconenat=y
+# CONFIG_PACKAGE_luci-app-fullconenat=y
 
 #offload
 CONFIG_PACKAGE_kmod-ipt-offload=y
