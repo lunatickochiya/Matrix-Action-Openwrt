@@ -1,0 +1,152 @@
+From 3a40f82db207375f8683a24740f45e219b13281e Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sun, 23 Feb 2025 14:21:23 +0800
+Subject: [PATCH 02/10] ipq807x: add support for Aliyun AP8220 mod for 24.10
+ ipq807x: add support for Aliyun AP8220 mod for 24.10 Revert "Auxiliary commit
+ to revert individual files from 5e3046cb221a1b7cef554a147c22307c7ff109f8"
+
+This reverts commit b0b4368a2c22e613f5532bcf20398ffd4f3f5291.
+ipq807x: add support for Aliyun AP8220 mod for 24.10
+---
+ .../boot/uboot-envtools/files/qualcommax_ipq807x    |  1 +
+ package/firmware/ipq-wifi/Makefile                  |  8 +++++---
+ target/linux/qualcommax/image/ipq807x.mk            | 13 +++++++++++++
+ .../ipq807x/base-files/etc/board.d/02_network       |  6 ++++++
+ .../etc/hotplug.d/firmware/11-ath11k-caldata        |  7 +++++++
+ .../ipq807x/base-files/lib/upgrade/platform.sh      |  9 +++++++++
+ 6 files changed, 41 insertions(+), 3 deletions(-)
+
+diff --git a/package/boot/uboot-envtools/files/qualcommax_ipq807x b/package/boot/uboot-envtools/files/qualcommax_ipq807x
+index 2d76045c66..26f7d64c54 100644
+--- a/package/boot/uboot-envtools/files/qualcommax_ipq807x
++++ b/package/boot/uboot-envtools/files/qualcommax_ipq807x
+@@ -17,6 +17,7 @@ netgear,wax630)
+ 	[ -n "$idx" ] && \
+ 		ubootenv_add_uci_config "/dev/mtd$idx" "0x0" "0x40000" "0x20000" "2"
+ 	;;
++aliyun,ap8220|\
+ compex,wpq873|\
+ edgecore,eap102|\
+ zyxel,nbg7815)
+diff --git a/package/firmware/ipq-wifi/Makefile b/package/firmware/ipq-wifi/Makefile
+index 4732a14b1b..d71ee94bb3 100644
+--- a/package/firmware/ipq-wifi/Makefile
++++ b/package/firmware/ipq-wifi/Makefile
+@@ -6,9 +6,9 @@ PKG_RELEASE:=1
+ 
+ PKG_SOURCE_PROTO:=git
+ PKG_SOURCE_URL=$(PROJECT_GIT)/project/firmware/qca-wireless.git
+-PKG_SOURCE_DATE:=2024-10-08
+-PKG_SOURCE_VERSION:=dcbab62272bf5cab2ed857bc655d240970e14f2a
+-PKG_MIRROR_HASH:=e53a3872abf5e35db6baaceb56e6ffa289f8dd9b6226cf8a4d5b87b541179175
++PKG_SOURCE_DATE:=2025-02-16
++PKG_SOURCE_VERSION:=331dd0ead646f0d3fe38cb4bf83cce4b448343e8
++PKG_MIRROR_HASH:=f49b3acd56a1cf4a0d52413b060d6adbd65c2754b44cabe096fed69172febbb5
+ PKG_FLAGS:=nonshared
+ 
+ include $(INCLUDE_DIR)/package.mk
+@@ -28,6 +28,7 @@ endef
+ 
+ ALLWIFIBOARDS:= \
+ 	8devices_mango \
++	aliyun_ap8220 \
+ 	arcadyan_aw1000 \
+ 	asus_rt-ax89x \
+ 	buffalo_wxr-5950ax12 \
+@@ -155,6 +156,7 @@ endef
+ #   board-<devicename>.<qca4019|qca9888|qca9889|qca9984|qca99x0|ipq8074>
+ 
+ $(eval $(call generate-ipq-wifi-package,8devices_mango,8devices Mango))
++$(eval $(call generate-ipq-wifi-package,aliyun_ap8220,Aliyun AP8220))
+ $(eval $(call generate-ipq-wifi-package,arcadyan_aw1000,Arcadyan AW1000))
+ $(eval $(call generate-ipq-wifi-package,asus_rt-ax89x,Asus RT-AX89X))
+ $(eval $(call generate-ipq-wifi-package,buffalo_wxr-5950ax12,Buffalo WXR-5950AX12))
+diff --git a/target/linux/qualcommax/image/ipq807x.mk b/target/linux/qualcommax/image/ipq807x.mk
+index bdf7dcc82c..3cbfc4480a 100644
+--- a/target/linux/qualcommax/image/ipq807x.mk
++++ b/target/linux/qualcommax/image/ipq807x.mk
+@@ -33,6 +33,19 @@ define Build/wax6xx-netgear-tar
+ 	rm -rf $@.tmp
+ endef
+ 
++define Device/aliyun_ap8220
++	$(call Device/FitImage)
++	$(call Device/UbiFit)
++	DEVICE_VENDOR := Aliyun
++	DEVICE_MODEL := AP8220
++	BLOCKSIZE := 128k
++	PAGESIZE := 2048
++	DEVICE_DTS_CONFIG := config@ac02
++	SOC := ipq8071
++	DEVICE_PACKAGES := ipq-wifi-aliyun_ap8220
++endef
++TARGET_DEVICES += aliyun_ap8220
++
+ define Device/arcadyan_aw1000
+ 	$(call Device/FitImage)
+ 	$(call Device/UbiFit)
+diff --git a/target/linux/qualcommax/ipq807x/base-files/etc/board.d/02_network b/target/linux/qualcommax/ipq807x/base-files/etc/board.d/02_network
+index edb1ae9557..93e9f48ce5 100644
+--- a/target/linux/qualcommax/ipq807x/base-files/etc/board.d/02_network
++++ b/target/linux/qualcommax/ipq807x/base-files/etc/board.d/02_network
+@@ -36,6 +36,7 @@ ipq807x_setup_interfaces()
+ 	xiaomi,ax3600)
+ 		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3" "wan"
+ 		;;
++	aliyun,ap8220|\
+ 	edgecore,eap102|\
+ 	yuncore,ax880|\
+ 	zte,mf269)
+@@ -81,6 +82,11 @@ ipq807x_setup_macs()
+ 	local label_mac=""
+ 
+ 	case "$board" in
++		aliyun,ap8220)
++		wan_mac=$(mtd_get_mac_text product_info 0x4b)
++		lan_mac=$(macaddr_add "$wan_mac" 1)
++		label_mac="$wan_mac"
++		;;
+ 		linksys,mx4200v2|\
+ 		linksys,mx4300)
+ 			label_mac=$(mtd_get_mac_ascii devinfo hw_mac_addr)
+diff --git a/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/firmware/11-ath11k-caldata b/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/firmware/11-ath11k-caldata
+index 34c0a476d3..a0337da882 100644
+--- a/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/firmware/11-ath11k-caldata
++++ b/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/firmware/11-ath11k-caldata
+@@ -9,6 +9,13 @@ board=$(board_name)
+ case "$FIRMWARE" in
+ "ath11k/IPQ8074/hw2.0/cal-ahb-c000000.wifi.bin")
+ 	case "$board" in
++	aliyun,ap8220)
++		caldata_extract "0:art" 0x1000 0x20000
++		addr=$(mtd_get_mac_text product_info 0x4b)
++		ath11k_patch_mac $addr 0
++		ath11k_patch_mac $(macaddr_add $addr 8) 1
++		ath11k_set_macflag
++		;;
+ 	asus,rt-ax89x)
+ 		CI_UBIPART="UBI_DEV"
+ 		caldata_extract_ubi "Factory" 0x1000 0x20000
+diff --git a/target/linux/qualcommax/ipq807x/base-files/lib/upgrade/platform.sh b/target/linux/qualcommax/ipq807x/base-files/lib/upgrade/platform.sh
+index 0691c92184..d67306254c 100644
+--- a/target/linux/qualcommax/ipq807x/base-files/lib/upgrade/platform.sh
++++ b/target/linux/qualcommax/ipq807x/base-files/lib/upgrade/platform.sh
+@@ -127,6 +127,15 @@ platform_pre_upgrade() {
+ 
+ platform_do_upgrade() {
+ 	case "$(board_name)" in
++	aliyun,ap8220)
++		active="$(fw_printenv -n active)"
++		if [ "$active" -eq "1" ]; then
++			CI_UBIPART="rootfs1"
++		else
++			CI_UBIPART="rootfs2"
++		fi
++		nand_do_upgrade "$1"
++		;;
+ 	arcadyan,aw1000|\
+ 	cmcc,rm2-6|\
+ 	compex,wpq873|\
+-- 
+2.34.1
+

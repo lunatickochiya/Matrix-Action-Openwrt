@@ -1,0 +1,202 @@
+From b0ce4c5c52eac09a8d9ff37d2b5bc278957b9d1b Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Thu, 27 Feb 2025 20:27:09 +0800
+Subject: [PATCH 10/10] ap8220:fix wifi init issue
+
+---
+ .../arm64/boot/dts/qcom/ipq8071-ap8220.dts    | 56 ++++++-------------
+ .../ipq807x/base-files/etc/board.d/02_network |  5 +-
+ .../etc/hotplug.d/firmware/11-ath11k-caldata  |  8 +--
+ .../etc/hotplug.d/ieee80211/11_fix_wifi_mac   |  5 ++
+ 4 files changed, 26 insertions(+), 48 deletions(-)
+
+diff --git a/target/linux/qualcommax/files/arch/arm64/boot/dts/qcom/ipq8071-ap8220.dts b/target/linux/qualcommax/files/arch/arm64/boot/dts/qcom/ipq8071-ap8220.dts
+index 75977afa15..f49e377002 100644
+--- a/target/linux/qualcommax/files/arch/arm64/boot/dts/qcom/ipq8071-ap8220.dts
++++ b/target/linux/qualcommax/files/arch/arm64/boot/dts/qcom/ipq8071-ap8220.dts
+@@ -8,7 +8,6 @@
+ #include "ipq8074-nss.dtsi"
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/input/input.h>
+-#include <dt-bindings/leds/common.h>
+ 
+ / {
+ 	model = "Aliyun AP8220";
+@@ -43,41 +42,27 @@
+ 		compatible = "gpio-leds";
+ 
+ 		led_power: power {
+-			color = <LED_COLOR_ID_GREEN>;
+-			function = LED_FUNCTION_POWER;
++			label = "green:power";
+ 			gpios = <&tlmm 46 GPIO_ACTIVE_HIGH>;
+ 		};
+ 
+ 		wlan2g {
+-			color = <LED_COLOR_ID_GREEN>;
+-			function = LED_FUNCTION_WLAN_2GHZ;
++			label = "green:wlan2g";
+ 			gpios = <&tlmm 47 GPIO_ACTIVE_HIGH>;
+ 			linux,default-trigger = "phy1radio";
+ 		};
+ 
+ 		wlan5g {
+-			color = <LED_COLOR_ID_GREEN>;
+-			function = LED_FUNCTION_WLAN_5GHZ;
++			label = "green:wlan5g";
+ 			gpios = <&tlmm 48 GPIO_ACTIVE_HIGH>;
+ 			linux,default-trigger = "phy0radio";
+ 		};
+ 
+ 		bluetooth {
+-			color = <LED_COLOR_ID_GREEN>;
+-			function = LED_FUNCTION_BLUETOOTH;
++			label = "green:bluetooth";
+ 			gpios = <&tlmm 50 GPIO_ACTIVE_HIGH>;
+ 		};
+ 	};
+-
+-	gpio-export {
+-		compatible = "gpio-export";
+-
+-		ble-power {
+-			gpio-export,name = "ble_power";
+-			gpio-export,output = <1>;
+-			gpios = <&tlmm 54 GPIO_ACTIVE_HIGH>;
+-		};
+-	};
+ };
+ 
+ &tlmm {
+@@ -242,6 +227,10 @@
+ &qpic_nand {
+ 	status = "okay";
+ 
++	partitions {
++		status = "disabled";
++	};
++
+ 	nand@0 {
+ 		reg = <0>;
+ 		nand-ecc-strength = <4>;
+@@ -254,18 +243,8 @@
+ 			#size-cells = <1>;
+ 
+ 			partition@0 {
+-				label = "rootfs1";
+-				reg = <0x0000000 0x3000000>;
+-			};
+-
+-			partition@3000000 {
+-				label = "rootfs2";
+-				reg = <0x3000000 0x3000000>;
+-			};
+-
+-			partition@6000000 {
+-				label = "usrdata";
+-				reg = <0x6000000 0x2000000>;
++				label = "rootfs";
++				reg = <0x0000000 0x8000000>;
+ 			};
+ 		};
+ 	};
+@@ -280,14 +259,12 @@
+ 	qca8081_24: ethernet-phy@24 {
+ 		compatible = "ethernet-phy-id004d.d101";
+ 		reg = <24>;
+-		reset-deassert-us = <10000>;
+ 		reset-gpios = <&tlmm 33 GPIO_ACTIVE_LOW>;
+ 	};
+ 
+ 	qca8081_28: ethernet-phy@28 {
+ 		compatible = "ethernet-phy-id004d.d101";
+ 		reg = <28>;
+-		reset-deassert-us = <10000>;
+ 		reset-gpios = <&tlmm 44 GPIO_ACTIVE_LOW>;
+ 	};
+ };
+@@ -295,10 +272,14 @@
+ &switch {
+ 	status = "okay";
+ 
+-	switch_lan_bmp = <ESS_PORT5>;
+-	switch_wan_bmp = <ESS_PORT6>;
+-	switch_mac_mode1 = <MAC_MODE_SGMII_PLUS>;
+-	switch_mac_mode2 = <MAC_MODE_SGMII_PLUS>;
++	switch_cpu_bmp = <0x1>;  /* cpu port bitmap */
++	switch_lan_bmp = <0x20>; /* lan port bitmap */
++	switch_wan_bmp = <0x40>; /* wan port bitmap */
++	switch_mac_mode = <0xff>; /* mac mode for uniphy instance0*/
++	switch_mac_mode1 = <0xf>; /* mac mode for uniphy instance1*/
++	switch_mac_mode2 = <0xf>; /* mac mode for uniphy instance2*/
++	bm_tick_mode = <0>; /* bm tick mode */
++	tm_tick_mode = <0>; /* tm tick mode */
+ 
+ 	qcom,port_phyinfo {
+ 		port@5 {
+@@ -320,7 +301,6 @@
+ 
+ &dp5 {
+ 	status = "okay";
+-	phy-mode = "sgmii";
+ 	phy-handle = <&qca8081_24>;
+ 	label = "wan";
+ };
+diff --git a/target/linux/qualcommax/ipq807x/base-files/etc/board.d/02_network b/target/linux/qualcommax/ipq807x/base-files/etc/board.d/02_network
+index 93e9f48ce5..6fcb3d4eb1 100644
+--- a/target/linux/qualcommax/ipq807x/base-files/etc/board.d/02_network
++++ b/target/linux/qualcommax/ipq807x/base-files/etc/board.d/02_network
+@@ -83,9 +83,8 @@ ipq807x_setup_macs()
+ 
+ 	case "$board" in
+ 		aliyun,ap8220)
+-		wan_mac=$(mtd_get_mac_text product_info 0x4b)
+-		lan_mac=$(macaddr_add "$wan_mac" 1)
+-		label_mac="$wan_mac"
++			wan_mac=$(cat /dev/mtd12 | head -n 4 | grep "product.mac" | awk -F " " '{print $2}')
++			lan_mac=$(macaddr_add $wan_mac 1)
+ 		;;
+ 		linksys,mx4200v2|\
+ 		linksys,mx4300)
+diff --git a/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/firmware/11-ath11k-caldata b/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/firmware/11-ath11k-caldata
+index a0337da882..e3ec902510 100644
+--- a/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/firmware/11-ath11k-caldata
++++ b/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/firmware/11-ath11k-caldata
+@@ -9,17 +9,11 @@ board=$(board_name)
+ case "$FIRMWARE" in
+ "ath11k/IPQ8074/hw2.0/cal-ahb-c000000.wifi.bin")
+ 	case "$board" in
+-	aliyun,ap8220)
+-		caldata_extract "0:art" 0x1000 0x20000
+-		addr=$(mtd_get_mac_text product_info 0x4b)
+-		ath11k_patch_mac $addr 0
+-		ath11k_patch_mac $(macaddr_add $addr 8) 1
+-		ath11k_set_macflag
+-		;;
+ 	asus,rt-ax89x)
+ 		CI_UBIPART="UBI_DEV"
+ 		caldata_extract_ubi "Factory" 0x1000 0x20000
+ 		;;
++	aliyun,ap8220|\
+ 	arcadyan,aw1000|\
+ 	buffalo,wxr-5950ax12|\
+ 	cmcc,rm2-6|\
+diff --git a/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac b/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac
+index 80c07b8542..3cc120265f 100644
+--- a/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac
++++ b/target/linux/qualcommax/ipq807x/base-files/etc/hotplug.d/ieee80211/11_fix_wifi_mac
+@@ -10,6 +10,11 @@ PHYNBR=${DEVPATH##*/phy}
+ board=$(board_name)
+ 
+ case "$board" in
++	aliyun,ap8220)
++		wan_mac=$(cat /dev/mtd12 | head -n 4 | grep "product.mac" | awk -F " " '{print $2}')
++		[ "$PHYNBR" = "0" ] && macaddr_add $wan_mac 2 > /sys${DEVPATH}/macaddress
++		[ "$PHYNBR" = "1" ] && macaddr_add $wan_mac 3 > /sys${DEVPATH}/macaddress
++		;;
+ 	arcadyan,aw1000)
+ 		[ "$PHYNBR" = "0" ] && macaddr_add $(get_mac_label) 1 > /sys${DEVPATH}/macaddress
+ 		[ "$PHYNBR" = "1" ] && macaddr_add $(get_mac_label) 2 > /sys${DEVPATH}/macaddress
+-- 
+2.34.1
+

@@ -1,0 +1,34 @@
+From b6f477a873c7f0e1df0e89aba5b28cc2a1a50ac2 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Thu, 27 Feb 2025 14:25:39 +0800
+Subject: [PATCH 07/10] adjust
+
+---
+ .gitignore         | 4 ++++
+ feeds.conf.default | 1 +
+ 2 files changed, 5 insertions(+)
+
+diff --git a/.gitignore b/.gitignore
+index ad04755919..6a8df8152f 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -35,3 +35,7 @@ git-src
+ .cproject
+ .ccache
+ .vscode*
++package/kochiya/*
++/feeds.conf.default
++/compile.log
++.config-*
+diff --git a/feeds.conf.default b/feeds.conf.default
+index 5dac9fa682..e0718ba113 100644
+--- a/feeds.conf.default
++++ b/feeds.conf.default
+@@ -4,3 +4,4 @@ src-git routing https://git.openwrt.org/feed/routing.git;openwrt-24.10
+ src-git telephony https://git.openwrt.org/feed/telephony.git;openwrt-24.10
+ src-git nss_packages https://github.com/qosmio/nss-packages.git;NSS-12.5-K6.x
+ src-git sqm_scripts_nss https://github.com/qosmio/sqm-scripts-nss.git
++src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git
+-- 
+2.34.1
+

@@ -1,0 +1,54 @@
+From 5b053ea6156834e82c1d43021f61967c5a16532b Mon Sep 17 00:00:00 2001
+From: Sean Khan <datapronix@protonmail.com>
+Date: Mon, 10 Feb 2025 16:46:09 -0500
+Subject: [PATCH 04/10] qualcommax: fix qca-mcs build error
+ 'atomic64_t'/'uint64_t' for 6.6.76
+
+Addresses the following build error when applying qca-mcs patch on 6.6.76:
+```
+net/ipv6/ip6mr.c: In function 'ip6mr_mfc_stats_update':
+net/ipv6/ip6mr.c:925:34: error: invalid operands to binary + (have 'atomic_long_t' {aka 'atomic64_t'} and 'uint64_t' {aka 'long long unsigned int'})
+  925 |         cache->_c.mfc_un.res.pkt += pkts_out;
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~ ^~
+      |                             |
+      |                             atomic_long_t {aka atomic64_t}
+net/ipv6/ip6mr.c:926:36: error: invalid operands to binary + (have 'atomic_long_t' {aka 'atomic64_t'} and 'u64' {aka 'long long unsigned int'})
+  926 |         cache->_c.mfc_un.res.bytes += bytes_out;
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~~~ ^~
+      |                             |
+      |                             atomic_long_t {aka atomic64_t}
+```
+Signed-off-by: Sean Khan <datapronix@protonmail.com>
+---
+ .../patches-6.6/0604-1-qca-add-mcs-support.patch          | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/target/linux/qualcommax/patches-6.6/0604-1-qca-add-mcs-support.patch b/target/linux/qualcommax/patches-6.6/0604-1-qca-add-mcs-support.patch
+index d741794b8a..e243245dcd 100644
+--- a/target/linux/qualcommax/patches-6.6/0604-1-qca-add-mcs-support.patch
++++ b/target/linux/qualcommax/patches-6.6/0604-1-qca-add-mcs-support.patch
+@@ -519,8 +519,8 @@
+ +
+ +	mrt->vif_table[vif].pkt_in += pkts_in;
+ +	mrt->vif_table[vif].bytes_in += bytes_in;
+-+	cache->_c.mfc_un.res.pkt  += pkts_out;
+-+	cache->_c.mfc_un.res.bytes += bytes_out;
+++	atomic_long_add(pkts_out, &cache->_c.mfc_un.res.pkt);
+++	atomic_long_add(bytes_out, &cache->_c.mfc_un.res.bytes);
+ +
+ +	for (vifi = cache->_c.mfc_un.res.minvif;
+ +			vifi < cache->_c.mfc_un.res.maxvif; vifi++) {
+@@ -806,8 +806,8 @@
+ +
+ +	mrt->vif_table[vif].pkt_in += pkts_in;
+ +	mrt->vif_table[vif].bytes_in += bytes_in;
+-+	cache->_c.mfc_un.res.pkt += pkts_out;
+-+	cache->_c.mfc_un.res.bytes += bytes_out;
+++	atomic_long_add(pkts_out, &cache->_c.mfc_un.res.pkt);
+++	atomic_long_add(bytes_out, &cache->_c.mfc_un.res.bytes);
+ +
+ +	for (vifi = cache->_c.mfc_un.res.minvif;
+ +			vifi < cache->_c.mfc_un.res.maxvif; vifi++) {
+-- 
+2.34.1
+
