@@ -1,0 +1,35 @@
+From 2acce9369a965279ced4cd7ae89933f422c4077a Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 1 Mar 2025 12:44:08 +0800
+Subject: [PATCH] colect:fix configure.ac
+
+---
+ .../952-collectd-configure.ac-lccversion.patch   | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+ create mode 100644 utils/collectd/patches/952-collectd-configure.ac-lccversion.patch
+
+diff --git a/utils/collectd/patches/952-collectd-configure.ac-lccversion.patch b/utils/collectd/patches/952-collectd-configure.ac-lccversion.patch
+new file mode 100644
+index 0000000..9bdb05d
+--- /dev/null
++++ b/utils/collectd/patches/952-collectd-configure.ac-lccversion.patch
+@@ -0,0 +1,16 @@
++# 952-collectd-configure.ac-lccversion.patch
++# egc remove release from VERSION_PATCH otherwise the arithmetic in src/libcollectdclient/collectd/lcc_features.h.in will generate an error
++# copy this patch to /<buildroot>/feeds/packages/utils/collectd/patches/952-collectd-configure.ac-lccversion.patch
++--- a/configure.ac	2025-02-05 16:54:19.439246249 +0100
+++++ b/configure.ac	2025-02-05 17:00:51.381177485 +0100
++@@ -7436,9 +7436,9 @@
++ dnl libcollectdclient
++ LCC_VERSION_MAJOR=`echo $PACKAGE_VERSION | cut -d'.' -f1`
++ LCC_VERSION_MINOR=`echo $PACKAGE_VERSION | cut -d'.' -f2`
++-LCC_VERSION_PATCH=`echo $PACKAGE_VERSION | cut -d'.' -f3`
+++LCC_VERSION_PATCH=`echo $PACKAGE_VERSION | cut -d'.' -f3 | cut -d'-' -f1`
++
++-LCC_VERSION_EXTRA=`echo $PACKAGE_VERSION | cut -d'.' -f4-`
+++LCC_VERSION_EXTRA=`echo $PACKAGE_VERSION | cut -d'-' -f2-`
++
++ LCC_VERSION_STRING="$LCC_VERSION_MAJOR.$LCC_VERSION_MINOR.$LCC_VERSION_PATCH"
+-- 
+2.34.1
+
