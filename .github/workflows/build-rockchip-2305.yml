@@ -43,6 +43,13 @@ on:
         options:
         - 'openwrt-23.05'
         - 'main'
+      SFE_BUILDIN:
+        description: 'Build sfe'
+        default: 'true'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
       SETIP:
         description: 'Set ip address'
         default: '192.168.6.1'
@@ -193,7 +200,7 @@ jobs:
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         echo "Kernel_Test=_Kernel_Test_Ver" >> $GITHUB_ENV
         fi
-        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh add-test-packages.sh
+        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh add-test-packages.sh add-sfe-packages.sh
 
     - name: 导入机器及安装包config
       run: |
@@ -240,10 +247,6 @@ jobs:
         bash tpm312/cus.sh
         $GITHUB_WORKSPACE/$DIY_SH kernel66
         fi
-        if [ ${{matrix.target}} == 'rockchip-nft' ]; then
-        curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh && bash add_turboacc.sh
-        echo "----${{matrix.target}}-----NFT-acc----"
-        fi
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 增加磁盘空间
@@ -257,6 +260,50 @@ jobs:
         ln -sf /mnt/openwrt/build_dir openwrt/build_dir
         df -hT
         ls /mnt/openwrt
+
+    - name: 添加 SFE
+      if: github.event.inputs.SFE_BUILDIN == 'true'
+      id: sfe
+      run: |
+        if [ ${{matrix.target}} == 'rockchip-nft' ]; then
+        cd openwrt
+        curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh && bash add_turboacc.sh
+        echo "----${{matrix.target}}-----NFT-acc----"
+        cd ../
+        elif [ ${{matrix.target}} == 'rockchip-ipt' ]; then
+                bash $GITHUB_WORKSPACE/add-sfe-packages.sh ipt
+                echo "----${{matrix.target}}-----ipt-sfe---"
+                cd openwrt
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/pending-5.15/613-netfilter_optional_tcp_window_check.patch -P target/linux/generic/pending-5.15/
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-5.15/952-add-net-conntrack-events-support-multiple-registrant.patch -P target/linux/generic/hack-5.15/
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-5.15/953-net-patch-linux-kernel-to-support-shortcut-fe.patch -P target/linux/generic/hack-5.15/
+                echo "# CONFIG_NF_CONNTRACK_CHAIN_EVENTS is not set" >> "./target/linux/generic/config-5.15"
+                echo "# CONFIG_SHORTCUT_FE is not set" >> "./target/linux/generic/config-5.15"
+                # git clone https://github.com/lunatickochiya/luci-app-turboacc-js package/luci-app-turboacc-js && sed -i 's?\.\./\.\./luci.mk?$(TOPDIR)/feeds/luci/luci.mk?' ./package/luci-app-turboacc-js/Makefile ; rm -rf ./package/luci-app-turboacc-js/.git/
+                git clone --depth=1 --single-branch --branch "package" https://github.com/chenmozhijin/turboacc && mv -n turboacc/shortcut-fe ./package ; rm -rf turboacc
+                cd ../
+        fi
+        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
+                cd openwrt
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/pending-6.1/613-netfilter_optional_tcp_window_check.patch -P target/linux/generic/pending-6.1/
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-6.1/952-add-net-conntrack-events-support-multiple-registrant.patch -P target/linux/generic/hack-6.1/
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-6.1/953-net-patch-linux-kernel-to-support-shortcut-fe.patch -P target/linux/generic/hack-6.1/
+                echo "# CONFIG_NF_CONNTRACK_CHAIN_EVENTS is not set" >> "./target/linux/generic/config-6.1"
+                echo "# CONFIG_SHORTCUT_FE is not set" >> "./target/linux/generic/config-6.1"
+                cd ../
+        fi
+        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
+                cd openwrt
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/pending-6.6/613-netfilter_optional_tcp_window_check.patch -P target/linux/generic/pending-6.6/
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch -P target/linux/generic/hack-6.6/
+                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-6.6/953-net-patch-linux-kernel-to-support-shortcut-fe.patch -P target/linux/generic/hack-6.6/
+                echo "# CONFIG_NF_CONNTRACK_CHAIN_EVENTS is not set" >> "./target/linux/generic/config-6.6"
+                echo "# CONFIG_SHORTCUT_FE is not set" >> "./target/linux/generic/config-6.6"
+                cd ../
+        fi
+
+        sed -i 's/kmod-shortcut-fe-cm,kmod-shortcut-fe,kmod-fast-classifier,kmod-fast-classifier-noload,kmod-shortcut-fe-drv,//g' package-configs/kmod_exclude_list*
+        echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 自定义安装包(优先于feeds)
       if: steps.clone.outputs.status == 'success'
