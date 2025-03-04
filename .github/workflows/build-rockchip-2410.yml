@@ -252,20 +252,6 @@ jobs:
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
         bash tpm312/cus.sh
         $GITHUB_WORKSPACE/$DIY_SH rockpatch
-        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
-        git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
-        bash tpm312/cus.sh
-        $GITHUB_WORKSPACE/$DIY_SH kernel61
-        fi
-        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
-        git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
-        bash tpm312/cus.sh
-        $GITHUB_WORKSPACE/$DIY_SH kernel66
-        fi
-        if [ ${{matrix.target}} == 'rockchip-nft' ]; then
-        curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh && bash add_turboacc.sh
-        echo "----${{matrix.target}}-----NFT-acc----"
-        fi
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 增加磁盘空间
@@ -298,7 +284,12 @@ jobs:
       if: github.event.inputs.SFE_BUILDIN == 'true'
       id: sfe
       run: |
-        if [ ${{matrix.target}} == 'mt798x-iptables' ] || [ ${{ matrix.target }} == 'mt798x-nousb-iptables' ] || [ ${{ matrix.target }} == 'ramips-iptables' ] || [ ${{ matrix.target }} == 'ath79-iptables' ]; then
+        if [ ${{matrix.target}} == 'rockchip-nft' ]; then
+        cd openwrt
+        curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh && bash add_turboacc.sh
+        echo "----${{matrix.target}}-----NFT-acc----"
+        cd ../
+        elif [ ${{matrix.target}} == 'rockchip-ipt' ]; then
                 bash $GITHUB_WORKSPACE/add-sfe-packages.sh ipt
                 echo "----${{matrix.target}}-----ipt-sfe---"
                 cd openwrt
@@ -310,7 +301,7 @@ jobs:
                 # git clone https://github.com/lunatickochiya/luci-app-turboacc-js package/luci-app-turboacc-js && sed -i 's?\.\./\.\./luci.mk?$(TOPDIR)/feeds/luci/luci.mk?' ./package/luci-app-turboacc-js/Makefile ; rm -rf ./package/luci-app-turboacc-js/.git/
                 git clone --depth=1 --single-branch --branch "package" https://github.com/chenmozhijin/turboacc && mv -n turboacc/shortcut-fe ./package ; rm -rf turboacc
                 cd ../
-
+        echo "----${{matrix.target}}-----IPT-acc----"
         fi
         sed -i 's/kmod-shortcut-fe-cm,kmod-shortcut-fe,kmod-fast-classifier,kmod-fast-classifier-noload,kmod-shortcut-fe-drv,//g' package-configs/kmod_exclude_list*
         # sed -i 's/"feeds\/lunatic7\/shortcut-fe"//g' diy-2410.sh
