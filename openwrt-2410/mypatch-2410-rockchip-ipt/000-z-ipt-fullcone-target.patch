@@ -45,27 +45,32 @@ index b90ac7af0a3..8746b9fa169 100644
  # Uncomment this line to disable ipv6 rules
  #	option disable_ipv6	1
 
-diff --git a/package/network/config/firewall/patches/fullconenat.patch b/package/network/config/firewall/patches/fullconenat.patch
+diff --git a/package/network/config/firewall/patches/100-fullconenat.patch b/package/network/config/firewall/patches/100-fullconenat.patch
 new file mode 100644
-index 00000000000..cfc96b2410f
+index 0000000000..cc51193ae5
 --- /dev/null
-+++ b/package/network/config/firewall/patches/fullconenat.patch
-@@ -0,0 +1,58 @@
++++ b/package/network/config/firewall/patches/100-fullconenat.patch
+@@ -0,0 +1,64 @@
++diff --git a/defaults.c b/defaults.c
++index 85a3750..9fac9b1 100644
 +--- a/defaults.c
 ++++ b/defaults.c
-+@@ -48,6 +48,8 @@
++@@ -48,7 +48,9 @@ const struct fw3_option fw3_flag_opts[]
 + 	FW3_OPT("synflood_protect",    bool,     defaults, syn_flood),
 + 	FW3_OPT("synflood_rate",       limit,    defaults, syn_flood_rate),
 + 	FW3_OPT("synflood_burst",      int,      defaults, syn_flood_rate.burst),
++-
 ++
-++	FW3_OPT("fullcone",            bool,     defaults, fullcone),
-+
+++	FW3_OPT("fullcone",           bool,     defaults, fullcone),
+++
 + 	FW3_OPT("tcp_syncookies",      bool,     defaults, tcp_syncookies),
 + 	FW3_OPT("tcp_ecn",             int,      defaults, tcp_ecn),
++ 	FW3_OPT("tcp_window_scaling",  bool,     defaults, tcp_window_scaling),
 +diff --git a/options.h b/options.h
++index 6edd174..c02eb97 100644
 +--- a/options.h
 ++++ b/options.h
-+@@ -297,6 +297,7 @@
++@@ -297,6 +297,7 @@ struct fw3_defaults
 + 	enum fw3_reject_code any_reject_code;
 +
 + 	bool syn_flood;
@@ -74,9 +79,10 @@ index 00000000000..cfc96b2410f
 +
 + 	bool tcp_syncookies;
 +diff --git a/zones.c b/zones.c
++index 2aa7473..57eead0 100644
 +--- a/zones.c
 ++++ b/zones.c
-+@@ -627,6 +627,7 @@
++@@ -670,6 +670,7 @@ print_zone_rule(struct fw3_ipt_handle *h
 + 	struct fw3_address *msrc;
 + 	struct fw3_address *mdest;
 + 	struct fw3_ipt_rule *r;
@@ -84,7 +90,7 @@ index 00000000000..cfc96b2410f
 +
 + 	if (!fw3_is_family(zone, handle->family))
 + 		return;
-+@@ -712,8 +713,22 @@
++@@ -755,8 +756,22 @@ print_zone_rule(struct fw3_ipt_handle *h
 + 				{
 + 					r = fw3_ipt_rule_new(handle);
 + 					fw3_ipt_rule_src_dest(r, msrc, mdest);

@@ -1,0 +1,1798 @@
+From b5399390d1a3feab0270a2e71ca77ff8578adcc6 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Mon, 3 Mar 2025 21:58:35 +0800
+Subject: [PATCH] Revert "iptables: update to 1.8.10"
+
+This reverts commit e1d60139350daed88dbb6657d940af5ecfd11825.
+---
+ include/netfilter.mk                          |    2 +-
+ package/network/utils/iptables/Makefile       |    8 +-
+ .../010-add-set-dscpmark-support.patch        |    4 +-
+ ...0-treewide-use-uint-instead-of-u_int.patch |  144 +++
+ ...uild-for-missing-ETH_ALEN-definition.patch |   60 +
+ ...Fix-build-for-Werror-format-security.patch |   23 +
+ ...d-fix-error-during-out-of-tree-build.patch |   28 +
+ ...nexport-init_extensions-declarations.patch |   82 ++
+ ...-string-Review-parse_string-function.patch |   40 +
+ .../patches/101-remove-check-already.patch    |    4 +-
+ .../102-iptables-disable-modprobe.patch       |    6 +-
+ .../iptables/patches/103-optional-xml.patch   |    2 +-
+ ...nft-track-each-register-individually.patch | 1054 +++++++++++++++++
+ .../patches/200-configurable_builtin.patch    |    6 +-
+ .../iptables/patches/600-shared-libext.patch  |   66 +-
+ .../700-disable-legacy-revisions.patch        |   10 +-
+ 16 files changed, 1486 insertions(+), 53 deletions(-)
+ create mode 100644 package/network/utils/iptables/patches/020-treewide-use-uint-instead-of-u_int.patch
+ create mode 100644 package/network/utils/iptables/patches/030-revert-fix-build-for-missing-ETH_ALEN-definition.patch
+ create mode 100644 package/network/utils/iptables/patches/040-xshared-Fix-build-for-Werror-format-security.patch
+ create mode 100644 package/network/utils/iptables/patches/050-build-fix-error-during-out-of-tree-build.patch
+ create mode 100644 package/network/utils/iptables/patches/060-libxtables-unexport-init_extensions-declarations.patch
+ create mode 100644 package/network/utils/iptables/patches/070-extensions-string-Review-parse_string-function.patch
+ create mode 100644 package/network/utils/iptables/patches/104-nft-track-each-register-individually.patch
+
+diff --git a/include/netfilter.mk b/include/netfilter.mk
+index 255e478b68..a6d6dd75b8 100644
+--- a/include/netfilter.mk
++++ b/include/netfilter.mk
+@@ -183,7 +183,7 @@ $(eval $(if $(NF_KMOD),$(call nf_add,IPT_NAT6,CONFIG_IP6_NF_NAT, $(P_V6)ip6table
+ $(eval $(if $(NF_KMOD),$(call nf_add,IPT_NAT6,CONFIG_IP6_NF_TARGET_NPT, $(P_V6)ip6t_NPT),))
+ 
+ # userland only
+-$(eval $(if $(NF_KMOD),,$(call nf_add,IPT_NAT,CONFIG_NF_NAT, ipt_NAT)))
++$(eval $(if $(NF_KMOD),,$(call nf_add,IPT_NAT,CONFIG_NF_NAT, ipt_SNAT ipt_DNAT)))
+ $(eval $(if $(NF_KMOD),,$(call nf_add,IPT_NAT6,CONFIG_IP6_NF_TARGET_NPT, ip6t_DNPT ip6t_SNPT)))
+ 
+ $(eval $(call nf_add,IPT_NAT,CONFIG_NETFILTER_XT_TARGET_MASQUERADE, $(P_XT)xt_MASQUERADE))
+diff --git a/package/network/utils/iptables/Makefile b/package/network/utils/iptables/Makefile
+index c0c23a8074..0d5bbb1c5d 100644
+--- a/package/network/utils/iptables/Makefile
++++ b/package/network/utils/iptables/Makefile
+@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
+ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=iptables
+-PKG_VERSION:=1.8.10
+-PKG_RELEASE:=1
++PKG_VERSION:=1.8.8
++PKG_RELEASE:=3
+ 
+ PKG_SOURCE_URL:=https://netfilter.org/projects/iptables/files
+-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+-PKG_HASH:=5cc255c189356e317d070755ce9371eb63a1b783c34498fb8c30264f3cc59c9c
++PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
++PKG_HASH:=71c75889dc710676631553eb1511da0177bbaaf1b551265b912d236c3f51859f
+ 
+ PKG_FIXUP:=autoreconf
+ PKG_FLAGS:=nonshared
+diff --git a/package/network/utils/iptables/patches/010-add-set-dscpmark-support.patch b/package/network/utils/iptables/patches/010-add-set-dscpmark-support.patch
+index 1bf28e3ce7..9a5de639aa 100644
+--- a/package/network/utils/iptables/patches/010-add-set-dscpmark-support.patch
++++ b/package/network/utils/iptables/patches/010-add-set-dscpmark-support.patch
+@@ -334,7 +334,7 @@ Signed-off-by: Kevin Darbyshire-Bryant <ldir@darbyshire-bryant.me.uk>
+  static int connmark_tg_xlate(struct xt_xlate *xl,
+  			     const struct xt_xlate_tg_params *params)
+  {
+-@@ -644,6 +881,66 @@ static int connmark_tg_xlate_v2(struct x
++@@ -639,6 +876,66 @@ static int connmark_tg_xlate_v2(struct x
+  
+  	return 1;
+  }
+@@ -401,7 +401,7 @@ Signed-off-by: Kevin Darbyshire-Bryant <ldir@darbyshire-bryant.me.uk>
+  static struct xtables_target connmark_tg_reg[] = {
+  	{
+  		.family        = NFPROTO_UNSPEC,
+-@@ -692,6 +989,22 @@ static struct xtables_target connmark_tg
++@@ -687,6 +984,22 @@ static struct xtables_target connmark_tg
+  		.x6_options    = connmark_tg_opts_v2,
+  		.xlate         = connmark_tg_xlate_v2,
+  	},
+diff --git a/package/network/utils/iptables/patches/020-treewide-use-uint-instead-of-u_int.patch b/package/network/utils/iptables/patches/020-treewide-use-uint-instead-of-u_int.patch
+new file mode 100644
+index 0000000000..e4b0cd92de
+--- /dev/null
++++ b/package/network/utils/iptables/patches/020-treewide-use-uint-instead-of-u_int.patch
+@@ -0,0 +1,144 @@
++From f319389525b066b7dc6d389c88f16a0df3b8f189 Mon Sep 17 00:00:00 2001
++From: Nick Hainke <vincent@systemli.org>
++Date: Mon, 16 May 2022 18:16:41 +0200
++Subject: treewide: use uint* instead of u_int*
++
++Gcc complains about missing types. Some commits introduced u_int* instead
++of uint*. Use uint treewide.
++
++Fixes errors in the form of:
++In file included from xtables-legacy-multi.c:5:
++xshared.h:83:56: error: unknown type name 'u_int16_t'; did you mean 'uint16_t'?
++    83 | set_option(unsigned int *options, unsigned int option, u_int16_t *invflg,
++        |                                                        ^~~~~~~~~
++        |                                                        uint16_t
++make[6]: *** [Makefile:712: xtables_legacy_multi-xtables-legacy-multi.o] Error 1
++
++Avoid libipq API breakage by adjusting libipq.h include accordingly. For
++arpt_mangle.h kernel uAPI header, apply same change as in kernel commit
++e91ded8db5747 ("uapi: netfilter_arp: use __u8 instead of u_int8_t").
++
++Signed-off-by: Nick Hainke <vincent@systemli.org>
++Signed-off-by: Phil Sutter <phil@nwl.cc>
++---
++ extensions/libxt_conntrack.c              | 2 +-
++ include/libipq/libipq.h                   | 8 ++++----
++ include/libiptc/libxtc.h                  | 2 +-
++ include/linux/netfilter_arp/arpt_mangle.h | 2 +-
++ iptables/xshared.c                        | 2 +-
++ iptables/xshared.h                        | 2 +-
++ libipq/ipq_create_handle.3                | 2 +-
++ libipq/ipq_set_mode.3                     | 2 +-
++ 8 files changed, 11 insertions(+), 11 deletions(-)
++
++--- a/extensions/libxt_conntrack.c
+++++ b/extensions/libxt_conntrack.c
++@@ -778,7 +778,7 @@ matchinfo_print(const void *ip, const st
++ 
++ static void
++ conntrack_dump_ports(const char *prefix, const char *opt,
++-		     u_int16_t port_low, u_int16_t port_high)
+++		     uint16_t port_low, uint16_t port_high)
++ {
++ 	if (port_high == 0 || port_low == port_high)
++ 		printf(" %s%s %u", prefix, opt, port_low);
++--- a/include/libipq/libipq.h
+++++ b/include/libipq/libipq.h
++@@ -24,7 +24,7 @@
++ #include <errno.h>
++ #include <unistd.h>
++ #include <fcntl.h>
++-#include <sys/types.h>
+++#include <stdint.h>
++ #include <sys/socket.h>
++ #include <sys/uio.h>
++ #include <asm/types.h>
++@@ -48,19 +48,19 @@ typedef unsigned long ipq_id_t;
++ struct ipq_handle
++ {
++ 	int fd;
++-	u_int8_t blocking;
+++	uint8_t blocking;
++ 	struct sockaddr_nl local;
++ 	struct sockaddr_nl peer;
++ };
++ 
++-struct ipq_handle *ipq_create_handle(u_int32_t flags, u_int32_t protocol);
+++struct ipq_handle *ipq_create_handle(uint32_t flags, uint32_t protocol);
++ 
++ int ipq_destroy_handle(struct ipq_handle *h);
++ 
++ ssize_t ipq_read(const struct ipq_handle *h,
++                 unsigned char *buf, size_t len, int timeout);
++ 
++-int ipq_set_mode(const struct ipq_handle *h, u_int8_t mode, size_t len);
+++int ipq_set_mode(const struct ipq_handle *h, uint8_t mode, size_t len);
++ 
++ ipq_packet_msg_t *ipq_get_packet(const unsigned char *buf);
++ 
++--- a/include/libiptc/libxtc.h
+++++ b/include/libiptc/libxtc.h
++@@ -10,7 +10,7 @@ extern "C" {
++ #endif
++ 
++ #ifndef XT_MIN_ALIGN
++-/* xt_entry has pointers and u_int64_t's in it, so if you align to
+++/* xt_entry has pointers and uint64_t's in it, so if you align to
++    it, you'll also align to any crazy matches and targets someone
++    might write */
++ #define XT_MIN_ALIGN (__alignof__(struct xt_entry))
++--- a/include/linux/netfilter_arp/arpt_mangle.h
+++++ b/include/linux/netfilter_arp/arpt_mangle.h
++@@ -13,7 +13,7 @@ struct arpt_mangle
++ 	union {
++ 		struct in_addr tgt_ip;
++ 	} u_t;
++-	u_int8_t flags;
+++	__u8 flags;
++ 	int target;
++ };
++ 
++--- a/iptables/xshared.c
+++++ b/iptables/xshared.c
++@@ -1025,7 +1025,7 @@ static const int inverse_for_options[NUM
++ };
++ 
++ void
++-set_option(unsigned int *options, unsigned int option, u_int16_t *invflg,
+++set_option(unsigned int *options, unsigned int option, uint16_t *invflg,
++ 	   bool invert)
++ {
++ 	if (*options & option)
++--- a/iptables/xshared.h
+++++ b/iptables/xshared.h
++@@ -80,7 +80,7 @@ struct xtables_target;
++ #define IPT_INV_ARPHRD		0x0800
++ 
++ void
++-set_option(unsigned int *options, unsigned int option, u_int16_t *invflg,
+++set_option(unsigned int *options, unsigned int option, uint16_t *invflg,
++ 	   bool invert);
++ 
++ /**
++--- a/libipq/ipq_create_handle.3
+++++ b/libipq/ipq_create_handle.3
++@@ -24,7 +24,7 @@ ipq_create_handle, ipq_destroy_handle \(
++ .br
++ .B #include <libipq.h>
++ .sp
++-.BI "struct ipq_handle *ipq_create_handle(u_int32_t " flags ", u_int32_t " protocol ");"
+++.BI "struct ipq_handle *ipq_create_handle(uint32_t " flags ", uint32_t " protocol ");"
++ .br
++ .BI "int ipq_destroy_handle(struct ipq_handle *" h );
++ .SH DESCRIPTION
++--- a/libipq/ipq_set_mode.3
+++++ b/libipq/ipq_set_mode.3
++@@ -24,7 +24,7 @@ ipq_set_mode \(em set the ip_queue queui
++ .br
++ .B #include <libipq.h>
++ .sp
++-.BI "int ipq_set_mode(const struct ipq_handle *" h ", u_int8_t " mode ", size_t " range );
+++.BI "int ipq_set_mode(const struct ipq_handle *" h ", uint8_t " mode ", size_t " range );
++ .SH DESCRIPTION
++ The
++ .B ipq_set_mode
+diff --git a/package/network/utils/iptables/patches/030-revert-fix-build-for-missing-ETH_ALEN-definition.patch b/package/network/utils/iptables/patches/030-revert-fix-build-for-missing-ETH_ALEN-definition.patch
+new file mode 100644
+index 0000000000..6c8e3deb5c
+--- /dev/null
++++ b/package/network/utils/iptables/patches/030-revert-fix-build-for-missing-ETH_ALEN-definition.patch
+@@ -0,0 +1,60 @@
++From 0e7cf0ad306cdf95dc3c28d15a254532206a888e Mon Sep 17 00:00:00 2001
++From: Phil Sutter <phil@nwl.cc>
++Date: Wed, 18 May 2022 16:04:09 +0200
++Subject: Revert "fix build for missing ETH_ALEN definition"
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++This reverts commit c5d9a723b5159a28f547b577711787295a14fd84 as it broke
++compiling against musl libc. Might be a bug in the latter, but for the
++time being try to please both by avoiding the include and instead
++defining ETH_ALEN if unset.
++
++While being at it, move netinet/ether.h include up.
++
++Fixes: 1bdb5535f561a ("libxtables: Extend MAC address printing/parsing support")
++Signed-off-by: Phil Sutter <phil@nwl.cc>
++Reviewed-by: Maciej Żenczykowski <maze@google.com>
++---
++ libxtables/xtables.c | 8 +++++---
++ 1 file changed, 5 insertions(+), 3 deletions(-)
++
++--- a/libxtables/xtables.c
+++++ b/libxtables/xtables.c
++@@ -28,6 +28,7 @@
++ #include <stdlib.h>
++ #include <string.h>
++ #include <unistd.h>
+++#include <netinet/ether.h>
++ #include <sys/socket.h>
++ #include <sys/stat.h>
++ #include <sys/statfs.h>
++@@ -45,7 +46,6 @@
++ 
++ #include <xtables.h>
++ #include <limits.h> /* INT_MAX in ip_tables.h/ip6_tables.h */
++-#include <linux/if_ether.h> /* ETH_ALEN */
++ #include <linux/netfilter_ipv4/ip_tables.h>
++ #include <linux/netfilter_ipv6/ip6_tables.h>
++ #include <libiptc/libxtc.h>
++@@ -72,6 +72,10 @@
++ #define PROC_SYS_MODPROBE "/proc/sys/kernel/modprobe"
++ #endif
++ 
+++#ifndef ETH_ALEN
+++#define ETH_ALEN 6
+++#endif
+++
++ /* we need this for ip6?tables-restore.  ip6?tables-restore.c sets line to the
++  * current line of the input file, in order  to give a more precise error
++  * message.  ip6?tables itself doesn't need this, so it is initialized to the
++@@ -2245,8 +2249,6 @@ void xtables_print_num(uint64_t number,
++ 	printf(FMT("%4lluT ","%lluT "), (unsigned long long)number);
++ }
++ 
++-#include <netinet/ether.h>
++-
++ static const unsigned char mac_type_unicast[ETH_ALEN] =   {};
++ static const unsigned char msk_type_unicast[ETH_ALEN] =   {1};
++ static const unsigned char mac_type_multicast[ETH_ALEN] = {1};
+diff --git a/package/network/utils/iptables/patches/040-xshared-Fix-build-for-Werror-format-security.patch b/package/network/utils/iptables/patches/040-xshared-Fix-build-for-Werror-format-security.patch
+new file mode 100644
+index 0000000000..f7e5e34c73
+--- /dev/null
++++ b/package/network/utils/iptables/patches/040-xshared-Fix-build-for-Werror-format-security.patch
+@@ -0,0 +1,23 @@
++From b72eb12ea5a61df0655ad99d5048994e916be83a Mon Sep 17 00:00:00 2001
++From: Phil Sutter <phil@nwl.cc>
++Date: Fri, 13 May 2022 16:51:58 +0200
++Subject: [PATCH] xshared: Fix build for -Werror=format-security
++
++Gcc complains about the omitted format string.
++
++Signed-off-by: Phil Sutter <phil@nwl.cc>
++---
++ iptables/xshared.c | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/iptables/xshared.c
+++++ b/iptables/xshared.c
++@@ -1307,7 +1307,7 @@ static void check_empty_interface(struct
++ 		return;
++ 
++ 	if (args->family != NFPROTO_ARP)
++-		xtables_error(PARAMETER_PROBLEM, msg);
+++		xtables_error(PARAMETER_PROBLEM, "%s", msg);
++ 
++ 	fprintf(stderr, "%s", msg);
++ }
+diff --git a/package/network/utils/iptables/patches/050-build-fix-error-during-out-of-tree-build.patch b/package/network/utils/iptables/patches/050-build-fix-error-during-out-of-tree-build.patch
+new file mode 100644
+index 0000000000..acfca96e0f
+--- /dev/null
++++ b/package/network/utils/iptables/patches/050-build-fix-error-during-out-of-tree-build.patch
+@@ -0,0 +1,28 @@
++From 0ebf52fc951b2a4d98a166afb34af4f364bbeece Mon Sep 17 00:00:00 2001
++From: Ben Brown <ben@demerara.io>
++Date: Wed, 25 May 2022 16:26:13 +0100
++Subject: build: Fix error during out of tree build
++
++Fixes the following error:
++
++    ../../libxtables/xtables.c:52:10: fatal error: libiptc/linux_list.h: No such file or directory
++       52 | #include <libiptc/linux_list.h>
++
++Fixes: f58b0d7406451 ("libxtables: Implement notargets hash table")
++Signed-off-by: Ben Brown <ben@demerara.io>
++Signed-off-by: Phil Sutter <phil@nwl.cc>
++---
++ libxtables/Makefile.am | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/libxtables/Makefile.am
+++++ b/libxtables/Makefile.am
++@@ -1,7 +1,7 @@
++ # -*- Makefile -*-
++ 
++ AM_CFLAGS   = ${regular_CFLAGS}
++-AM_CPPFLAGS = ${regular_CPPFLAGS} -I${top_builddir}/include -I${top_srcdir}/include -I${top_srcdir}/iptables ${kinclude_CPPFLAGS}
+++AM_CPPFLAGS = ${regular_CPPFLAGS} -I${top_builddir}/include -I${top_srcdir}/include -I${top_srcdir}/iptables -I${top_srcdir} ${kinclude_CPPFLAGS}
++ 
++ lib_LTLIBRARIES       = libxtables.la
++ libxtables_la_SOURCES = xtables.c xtoptions.c getethertype.c
+diff --git a/package/network/utils/iptables/patches/060-libxtables-unexport-init_extensions-declarations.patch b/package/network/utils/iptables/patches/060-libxtables-unexport-init_extensions-declarations.patch
+new file mode 100644
+index 0000000000..559b93eea4
+--- /dev/null
++++ b/package/network/utils/iptables/patches/060-libxtables-unexport-init_extensions-declarations.patch
+@@ -0,0 +1,82 @@
++From ef108943f69a6e20533d58823740d3f0534ea8ec Mon Sep 17 00:00:00 2001
++From: Phil Sutter <phil@nwl.cc>
++Date: Wed, 1 Jun 2022 19:15:06 +0200
++Subject: libxtables: Unexport init_extensions*() declarations
++
++The functions are used for static builds to initialize extensions after
++libxtables init. Regular library users should not need them, but the
++empty declarations introduced in #else case (and therefore present in
++user's env) may clash with existing symbol names.
++
++Avoid problems and guard the whole block declaring the function
++prototypes and mangling extensions' _init functions by XTABLES_INTERNAL.
++
++Reported-by: Nick Hainke <vincent@systemli.org>
++Fixes: 6c689b639cf8e ("Simplify static build extension loading")
++Signed-off-by: Phil Sutter <phil@nwl.cc>
++---
++ include/xtables.h | 44 ++++++++++++++++++++++----------------------
++ 1 file changed, 22 insertions(+), 22 deletions(-)
++
++--- a/include/xtables.h
+++++ b/include/xtables.h
++@@ -585,27 +585,6 @@ static inline void xtables_print_mark_ma
++ 	xtables_print_val_mask(mark, mask, NULL);
++ }
++ 
++-#if defined(ALL_INCLUSIVE) || defined(NO_SHARED_LIBS)
++-#	ifdef _INIT
++-#		undef _init
++-#		define _init _INIT
++-#	endif
++-	extern void init_extensions(void);
++-	extern void init_extensions4(void);
++-	extern void init_extensions6(void);
++-	extern void init_extensionsa(void);
++-	extern void init_extensionsb(void);
++-#else
++-#	define _init __attribute__((constructor)) _INIT
++-#	define EMPTY_FUNC_DEF(x) static inline void x(void) {}
++-	EMPTY_FUNC_DEF(init_extensions)
++-	EMPTY_FUNC_DEF(init_extensions4)
++-	EMPTY_FUNC_DEF(init_extensions6)
++-	EMPTY_FUNC_DEF(init_extensionsa)
++-	EMPTY_FUNC_DEF(init_extensionsb)
++-#	undef EMPTY_FUNC_DEF
++-#endif
++-
++ extern const struct xtables_pprot xtables_chain_protos[];
++ extern uint16_t xtables_parse_protocol(const char *s);
++ 
++@@ -663,9 +642,30 @@ void xtables_announce_chain(const char *
++ #		define ARRAY_SIZE(x) (sizeof(x) / sizeof(*(x)))
++ #	endif
++ 
+++#if defined(ALL_INCLUSIVE) || defined(NO_SHARED_LIBS)
+++#	ifdef _INIT
+++#		undef _init
+++#		define _init _INIT
+++#	endif
+++	extern void init_extensions(void);
+++	extern void init_extensions4(void);
+++	extern void init_extensions6(void);
+++	extern void init_extensionsa(void);
+++	extern void init_extensionsb(void);
+++#else
+++#	define _init __attribute__((constructor)) _INIT
+++#	define EMPTY_FUNC_DEF(x) static inline void x(void) {}
+++	EMPTY_FUNC_DEF(init_extensions)
+++	EMPTY_FUNC_DEF(init_extensions4)
+++	EMPTY_FUNC_DEF(init_extensions6)
+++	EMPTY_FUNC_DEF(init_extensionsa)
+++	EMPTY_FUNC_DEF(init_extensionsb)
+++#	undef EMPTY_FUNC_DEF
+++#endif
+++
++ extern void _init(void);
++ 
++-#endif
+++#endif /* XTABLES_INTERNAL */
++ 
++ #ifdef __cplusplus
++ } /* extern "C" */
+diff --git a/package/network/utils/iptables/patches/070-extensions-string-Review-parse_string-function.patch b/package/network/utils/iptables/patches/070-extensions-string-Review-parse_string-function.patch
+new file mode 100644
+index 0000000000..cfcb6c77f3
+--- /dev/null
++++ b/package/network/utils/iptables/patches/070-extensions-string-Review-parse_string-function.patch
+@@ -0,0 +1,40 @@
++From da5b32fb4656ab69fe1156eb7e36c7c961839e8a Mon Sep 17 00:00:00 2001
++From: Phil Sutter <phil@nwl.cc>
++Date: Wed, 8 Jun 2022 13:45:13 +0200
++Subject: [PATCH] extensions: string: Review parse_string() function
++
++* Compare against sizeof(info->pattern) which is more clear than having
++  to know that this buffer is of size XT_STRING_MAX_PATTERN_SIZE
++
++* Invert the check and error early to reduce indenting
++
++* Pass info->patlen to memcpy() to avoid reading past end of 's'
++
++Signed-off-by: Phil Sutter <phil@nwl.cc>
++---
++ extensions/libxt_string.c | 13 ++++++-------
++ 1 file changed, 6 insertions(+), 7 deletions(-)
++
++--- a/extensions/libxt_string.c
+++++ b/extensions/libxt_string.c
++@@ -78,14 +78,13 @@ static void string_init(struct xt_entry_
++ 
++ static void
++ parse_string(const char *s, struct xt_string_info *info)
++-{	
+++{
++ 	/* xt_string does not need \0 at the end of the pattern */
++-	if (strlen(s) <= XT_STRING_MAX_PATTERN_SIZE) {
++-		memcpy(info->pattern, s, XT_STRING_MAX_PATTERN_SIZE);
++-		info->patlen = strnlen(s, XT_STRING_MAX_PATTERN_SIZE);
++-		return;
++-	}
++-	xtables_error(PARAMETER_PROBLEM, "STRING too long \"%s\"", s);
+++	if (strlen(s) > sizeof(info->pattern))
+++		xtables_error(PARAMETER_PROBLEM, "STRING too long \"%s\"", s);
+++
+++	info->patlen = strnlen(s, sizeof(info->pattern));
+++	memcpy(info->pattern, s, info->patlen);
++ }
++ 
++ static void
+diff --git a/package/network/utils/iptables/patches/101-remove-check-already.patch b/package/network/utils/iptables/patches/101-remove-check-already.patch
+index d748e5d92f..bd49224c70 100644
+--- a/package/network/utils/iptables/patches/101-remove-check-already.patch
++++ b/package/network/utils/iptables/patches/101-remove-check-already.patch
+@@ -1,6 +1,6 @@
+ --- a/libxtables/xtables.c
+ +++ b/libxtables/xtables.c
+-@@ -1095,12 +1095,6 @@ void xtables_register_match(struct xtabl
++@@ -1093,12 +1093,6 @@ void xtables_register_match(struct xtabl
+  	struct xtables_match **pos;
+  	bool seen_myself = false;
+  
+@@ -13,7 +13,7 @@
+  	if (me->version == NULL) {
+  		fprintf(stderr, "%s: match %s<%u> is missing a version\n",
+  		        xt_params->program_name, me->name, me->revision);
+-@@ -1279,12 +1273,6 @@ void xtables_register_target(struct xtab
++@@ -1277,12 +1271,6 @@ void xtables_register_target(struct xtab
+  	struct xtables_target **pos;
+  	bool seen_myself = false;
+  
+diff --git a/package/network/utils/iptables/patches/102-iptables-disable-modprobe.patch b/package/network/utils/iptables/patches/102-iptables-disable-modprobe.patch
+index fbca0c27c2..710f481cac 100644
+--- a/package/network/utils/iptables/patches/102-iptables-disable-modprobe.patch
++++ b/package/network/utils/iptables/patches/102-iptables-disable-modprobe.patch
+@@ -1,6 +1,6 @@
+ --- a/libxtables/xtables.c
+ +++ b/libxtables/xtables.c
+-@@ -475,7 +475,7 @@ char *xtables_strdup(const char *s)
++@@ -476,7 +476,7 @@ char *xtables_strdup(const char *s)
+  	return dup;
+  }
+  
+@@ -9,7 +9,7 @@
+  {
+  	int procfile;
+  	char *ret;
+-@@ -505,6 +505,7 @@ static char *get_modprobe(void)
++@@ -511,6 +511,7 @@ static char *get_modprobe(void)
+  
+  int xtables_insmod(const char *modname, const char *modprobe, bool quiet)
+  {
+@@ -17,7 +17,7 @@
+  	char *buf = NULL;
+  	char *argv[4];
+  	int status;
+-@@ -539,6 +540,7 @@ int xtables_insmod(const char *modname,
++@@ -545,6 +546,7 @@ int xtables_insmod(const char *modname,
+  	free(buf);
+  	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+  		return 0;
+diff --git a/package/network/utils/iptables/patches/103-optional-xml.patch b/package/network/utils/iptables/patches/103-optional-xml.patch
+index 8043c65a3c..342808a395 100644
+--- a/package/network/utils/iptables/patches/103-optional-xml.patch
++++ b/package/network/utils/iptables/patches/103-optional-xml.patch
+@@ -1,6 +1,6 @@
+ --- a/iptables/xtables-legacy-multi.c
+ +++ b/iptables/xtables-legacy-multi.c
+-@@ -28,8 +28,10 @@ static const struct subcommand multi_sub
++@@ -32,8 +32,10 @@ static const struct subcommand multi_sub
+  
+  
+  #endif
+diff --git a/package/network/utils/iptables/patches/104-nft-track-each-register-individually.patch b/package/network/utils/iptables/patches/104-nft-track-each-register-individually.patch
+new file mode 100644
+index 0000000000..166dc86fa1
+--- /dev/null
++++ b/package/network/utils/iptables/patches/104-nft-track-each-register-individually.patch
+@@ -0,0 +1,1054 @@
++From f315af1cf88714702dcc51dc00b109df3d52e9e9 Mon Sep 17 00:00:00 2001
++From: Florian Westphal <fw@strlen.de>
++Date: Fri, 23 Sep 2022 14:17:08 +0200
++Subject: nft: track each register individually
++
++Instead of assuming only one register is used, track all 16 regs
++individually.
++
++This avoids need for the 'PREV_PAYLOAD' hack and also avoids the need to
++clear out old flags:
++
++When we see that register 'x' will be written to, that register state is
++reset automatically.
++
++Existing dissector decodes
++ip saddr 1.2.3.4 meta l4proto tcp
++... as
++-s 6.0.0.0 -p tcp
++
++iptables-nft -s 1.2.3.4 -p tcp is decoded correctly because the expressions
++are ordered like:
++
++meta l4proto tcp ip saddr 1.2.3.4
++                                                                                                                                                                                                                   |
++... and 'meta l4proto' did clear the PAYLOAD flag.
++
++The simpler fix is:
++		ctx->flags &= ~NFT_XT_CTX_PAYLOAD;
++
++in nft_parse_cmp(), but that breaks dissection of '1-42', because
++the second compare ('cmp lte 42') will not find the
++payload expression anymore.
++
++Link: https://lore.kernel.org/netfilter-devel/20220922143544.GA22541@breakpoint.cc/T/#t
++Signed-off-by: Florian Westphal <fw@strlen.de>
++Reviewed-by: Phil Sutter <phil@nwl.cc>
++---
++ iptables/nft-arp.c    |  57 +++++++-------
++ iptables/nft-bridge.c | 102 +++++++++++++++----------
++ iptables/nft-ipv4.c   |  49 ++++++------
++ iptables/nft-ipv6.c   |  36 ++++-----
++ iptables/nft-shared.c | 205 +++++++++++++++++++++++++++++++++++---------------
++ iptables/nft-shared.h | 110 ++++++++++++++++++++-------
++ 6 files changed, 360 insertions(+), 199 deletions(-)
++
++--- a/iptables/nft-arp.c
+++++ b/iptables/nft-arp.c
++@@ -160,25 +160,27 @@ static int nft_arp_add(struct nft_handle
++ 	return ret;
++ }
++ 
++-static void nft_arp_parse_meta(struct nft_xt_ctx *ctx, struct nftnl_expr *e,
+++static void nft_arp_parse_meta(struct nft_xt_ctx *ctx,
+++			       const struct nft_xt_ctx_reg *reg,
+++			       struct nftnl_expr *e,
++ 			       struct iptables_command_state *cs)
++ {
++ 	struct arpt_entry *fw = &cs->arp;
++ 	uint8_t flags = 0;
++ 
++-	parse_meta(ctx, e, ctx->meta.key, fw->arp.iniface, fw->arp.iniface_mask,
+++	parse_meta(ctx, e, reg->meta_dreg.key, fw->arp.iniface, fw->arp.iniface_mask,
++ 		   fw->arp.outiface, fw->arp.outiface_mask,
++ 		   &flags);
++ 
++ 	fw->arp.invflags |= flags;
++ }
++ 
++-static void parse_mask_ipv4(struct nft_xt_ctx *ctx, struct in_addr *mask)
+++static void parse_mask_ipv4(const struct nft_xt_ctx_reg *reg, struct in_addr *mask)
++ {
++-	mask->s_addr = ctx->bitwise.mask[0];
+++	mask->s_addr = reg->bitwise.mask[0];
++ }
++ 
++-static bool nft_arp_parse_devaddr(struct nft_xt_ctx *ctx,
+++static bool nft_arp_parse_devaddr(const struct nft_xt_ctx_reg *reg,
++ 				  struct nftnl_expr *e,
++ 				  struct arpt_devaddr_info *info)
++ {
++@@ -192,18 +194,17 @@ static bool nft_arp_parse_devaddr(struct
++ 
++ 	get_cmp_data(e, info->addr, ETH_ALEN, &inv);
++ 
++-	if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-		memcpy(info->mask, ctx->bitwise.mask, ETH_ALEN);
++-		ctx->flags &= ~NFT_XT_CTX_BITWISE;
++-	} else {
+++	if (reg->bitwise.set)
+++		memcpy(info->mask, reg->bitwise.mask, ETH_ALEN);
+++	else
++ 		memset(info->mask, 0xff,
++-		       min(ctx->payload.len, ETH_ALEN));
++-	}
+++		       min(reg->payload.len, ETH_ALEN));
++ 
++ 	return inv;
++ }
++ 
++ static void nft_arp_parse_payload(struct nft_xt_ctx *ctx,
+++				  const struct nft_xt_ctx_reg *reg,
++ 				  struct nftnl_expr *e,
++ 				  struct iptables_command_state *cs)
++ {
++@@ -213,7 +214,7 @@ static void nft_arp_parse_payload(struct
++ 	uint8_t ar_hln;
++ 	bool inv;
++ 
++-	switch (ctx->payload.offset) {
+++	switch (reg->payload.offset) {
++ 	case offsetof(struct arphdr, ar_hrd):
++ 		get_cmp_data(e, &ar_hrd, sizeof(ar_hrd), &inv);
++ 		fw->arp.arhrd = ar_hrd;
++@@ -243,43 +244,39 @@ static void nft_arp_parse_payload(struct
++ 			fw->arp.invflags |= IPT_INV_ARPOP;
++ 		break;
++ 	default:
++-		if (ctx->payload.offset == sizeof(struct arphdr)) {
++-			if (nft_arp_parse_devaddr(ctx, e, &fw->arp.src_devaddr))
+++		if (reg->payload.offset == sizeof(struct arphdr)) {
+++			if (nft_arp_parse_devaddr(reg, e, &fw->arp.src_devaddr))
++ 				fw->arp.invflags |= IPT_INV_SRCDEVADDR;
++-		} else if (ctx->payload.offset == sizeof(struct arphdr) +
+++		} else if (reg->payload.offset == sizeof(struct arphdr) +
++ 					   fw->arp.arhln) {
++ 			get_cmp_data(e, &addr, sizeof(addr), &inv);
++ 			fw->arp.src.s_addr = addr.s_addr;
++-			if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-				parse_mask_ipv4(ctx, &fw->arp.smsk);
++-				ctx->flags &= ~NFT_XT_CTX_BITWISE;
++-			} else {
+++			if (reg->bitwise.set)
+++				parse_mask_ipv4(reg, &fw->arp.smsk);
+++			else
++ 				memset(&fw->arp.smsk, 0xff,
++-				       min(ctx->payload.len,
+++				       min(reg->payload.len,
++ 					   sizeof(struct in_addr)));
++-			}
++ 
++ 			if (inv)
++ 				fw->arp.invflags |= IPT_INV_SRCIP;
++-		} else if (ctx->payload.offset == sizeof(struct arphdr) +
+++		} else if (reg->payload.offset == sizeof(struct arphdr) +
++ 						  fw->arp.arhln +
++ 						  sizeof(struct in_addr)) {
++-			if (nft_arp_parse_devaddr(ctx, e, &fw->arp.tgt_devaddr))
+++			if (nft_arp_parse_devaddr(reg, e, &fw->arp.tgt_devaddr))
++ 				fw->arp.invflags |= IPT_INV_TGTDEVADDR;
++-		} else if (ctx->payload.offset == sizeof(struct arphdr) +
+++		} else if (reg->payload.offset == sizeof(struct arphdr) +
++ 						  fw->arp.arhln +
++ 						  sizeof(struct in_addr) +
++ 						  fw->arp.arhln) {
++ 			get_cmp_data(e, &addr, sizeof(addr), &inv);
++ 			fw->arp.tgt.s_addr = addr.s_addr;
++-			if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-				parse_mask_ipv4(ctx, &fw->arp.tmsk);
++-				ctx->flags &= ~NFT_XT_CTX_BITWISE;
++-			} else {
+++			if (reg->bitwise.set)
+++				parse_mask_ipv4(reg, &fw->arp.tmsk);
+++			else
++ 				memset(&fw->arp.tmsk, 0xff,
++-				       min(ctx->payload.len,
+++				       min(reg->payload.len,
++ 					   sizeof(struct in_addr)));
++-			}
++ 
++ 			if (inv)
++ 				fw->arp.invflags |= IPT_INV_DSTIP;
++--- a/iptables/nft-bridge.c
+++++ b/iptables/nft-bridge.c
++@@ -170,6 +170,7 @@ static int nft_bridge_add(struct nft_han
++ }
++ 
++ static void nft_bridge_parse_meta(struct nft_xt_ctx *ctx,
+++				  const struct nft_xt_ctx_reg *reg,
++ 				  struct nftnl_expr *e,
++ 				  struct iptables_command_state *cs)
++ {
++@@ -177,9 +178,9 @@ static void nft_bridge_parse_meta(struct
++ 	uint8_t invflags = 0;
++ 	char iifname[IFNAMSIZ] = {}, oifname[IFNAMSIZ] = {};
++ 
++-	parse_meta(ctx, e, ctx->meta.key, iifname, NULL, oifname, NULL, &invflags);
+++	parse_meta(ctx, e, reg->meta_dreg.key, iifname, NULL, oifname, NULL, &invflags);
++ 
++-	switch (ctx->meta.key) {
+++	switch (reg->meta_dreg.key) {
++ 	case NFT_META_BRI_IIFNAME:
++ 		if (invflags & IPT_INV_VIA_IN)
++ 			cs->eb.invflags |= EBT_ILOGICALIN;
++@@ -206,6 +207,7 @@ static void nft_bridge_parse_meta(struct
++ }
++ 
++ static void nft_bridge_parse_payload(struct nft_xt_ctx *ctx,
+++				     const struct nft_xt_ctx_reg *reg,
++ 				     struct nftnl_expr *e,
++ 				     struct iptables_command_state *cs)
++ {
++@@ -215,7 +217,7 @@ static void nft_bridge_parse_payload(str
++ 	bool inv;
++ 	int i;
++ 
++-	switch (ctx->payload.offset) {
+++	switch (reg->payload.offset) {
++ 	case offsetof(struct ethhdr, h_dest):
++ 		get_cmp_data(e, addr, sizeof(addr), &inv);
++ 		for (i = 0; i < ETH_ALEN; i++)
++@@ -223,13 +225,11 @@ static void nft_bridge_parse_payload(str
++ 		if (inv)
++ 			fw->invflags |= EBT_IDEST;
++ 
++-		if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-                        memcpy(fw->destmsk, ctx->bitwise.mask, ETH_ALEN);
++-                        ctx->flags &= ~NFT_XT_CTX_BITWISE;
++-                } else {
+++		if (reg->bitwise.set)
+++                        memcpy(fw->destmsk, reg->bitwise.mask, ETH_ALEN);
+++                else
++ 			memset(&fw->destmsk, 0xff,
++-			       min(ctx->payload.len, ETH_ALEN));
++-                }
+++			       min(reg->payload.len, ETH_ALEN));
++ 		fw->bitmask |= EBT_IDEST;
++ 		break;
++ 	case offsetof(struct ethhdr, h_source):
++@@ -238,13 +238,11 @@ static void nft_bridge_parse_payload(str
++ 			fw->sourcemac[i] = addr[i];
++ 		if (inv)
++ 			fw->invflags |= EBT_ISOURCE;
++-		if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-                        memcpy(fw->sourcemsk, ctx->bitwise.mask, ETH_ALEN);
++-                        ctx->flags &= ~NFT_XT_CTX_BITWISE;
++-                } else {
+++		if (reg->bitwise.set)
+++                        memcpy(fw->sourcemsk, reg->bitwise.mask, ETH_ALEN);
+++                else
++ 			memset(&fw->sourcemsk, 0xff,
++-			       min(ctx->payload.len, ETH_ALEN));
++-                }
+++			       min(reg->payload.len, ETH_ALEN));
++ 		fw->bitmask |= EBT_ISOURCE;
++ 		break;
++ 	case offsetof(struct ethhdr, h_proto):
++@@ -294,28 +292,53 @@ lookup_check_iphdr_payload(uint32_t base
++ /* Make sure previous payload expression(s) is/are consistent and extract if
++  * matching on source or destination address and if matching on MAC and IP or
++  * only MAC address. */
++-static int lookup_analyze_payloads(const struct nft_xt_ctx *ctx,
+++static int lookup_analyze_payloads(struct nft_xt_ctx *ctx,
+++				   enum nft_registers sreg,
+++				   uint32_t key_len,
++ 				   bool *dst, bool *ip)
++ {
+++	const struct nft_xt_ctx_reg *reg;
+++	uint32_t sreg_count;
++ 	int val, val2 = -1;
++ 
++-	if (ctx->flags & NFT_XT_CTX_PREV_PAYLOAD) {
++-		val = lookup_check_ether_payload(ctx->prev_payload.base,
++-						 ctx->prev_payload.offset,
++-						 ctx->prev_payload.len);
+++	reg = nft_xt_ctx_get_sreg(ctx, sreg);
+++	if (!reg)
+++		return -1;
+++
+++	if (reg->type != NFT_XT_REG_PAYLOAD) {
+++		ctx->errmsg = "lookup reg is not payload type";
+++		return -1;
+++	}
+++
+++	sreg_count = sreg;
+++	switch (key_len) {
+++	case 12: /* ether + ipv4addr */
+++		val = lookup_check_ether_payload(reg->payload.base,
+++						 reg->payload.offset,
+++						 reg->payload.len);
++ 		if (val < 0) {
++ 			DEBUGP("unknown payload base/offset/len %d/%d/%d\n",
++-			       ctx->prev_payload.base, ctx->prev_payload.offset,
++-			       ctx->prev_payload.len);
+++			       reg->payload.base, reg->payload.offset,
+++			       reg->payload.len);
++ 			return -1;
++ 		}
++-		if (!(ctx->flags & NFT_XT_CTX_PAYLOAD)) {
++-			DEBUGP("Previous but no current payload?\n");
+++
+++		sreg_count += 2;
+++
+++		reg = nft_xt_ctx_get_sreg(ctx, sreg_count);
+++		if (!reg) {
+++			ctx->errmsg = "next lookup register is invalid";
+++			return -1;
+++		}
+++
+++		if (reg->type != NFT_XT_REG_PAYLOAD) {
+++			ctx->errmsg = "next lookup reg is not payload type";
++ 			return -1;
++ 		}
++-		val2 = lookup_check_iphdr_payload(ctx->payload.base,
++-						  ctx->payload.offset,
++-						  ctx->payload.len);
+++
+++		val2 = lookup_check_iphdr_payload(reg->payload.base,
+++						  reg->payload.offset,
+++						  reg->payload.len);
++ 		if (val2 < 0) {
++ 			DEBUGP("unknown payload base/offset/len %d/%d/%d\n",
++ 			       ctx->payload.base, ctx->payload.offset,
++@@ -325,18 +348,20 @@ static int lookup_analyze_payloads(const
++ 			DEBUGP("mismatching payload match offsets\n");
++ 			return -1;
++ 		}
++-	} else if (ctx->flags & NFT_XT_CTX_PAYLOAD) {
++-		val = lookup_check_ether_payload(ctx->payload.base,
++-						 ctx->payload.offset,
++-						 ctx->payload.len);
+++		break;
+++	case 4: /* ipv4addr */
+++		val = lookup_check_ether_payload(reg->payload.base,
+++						 reg->payload.offset,
+++						 reg->payload.len);
++ 		if (val < 0) {
++ 			DEBUGP("unknown payload base/offset/len %d/%d/%d\n",
++ 			       ctx->payload.base, ctx->payload.offset,
++ 			       ctx->payload.len);
++ 			return -1;
++ 		}
++-	} else {
++-		DEBUGP("unknown LHS of lookup expression\n");
+++		break;
+++	default:
+++		ctx->errmsg = "unsupported lookup key length";
++ 		return -1;
++ 	}
++ 
++@@ -413,14 +438,17 @@ static void nft_bridge_parse_lookup(stru
++ 	size_t poff, size;
++ 	uint32_t cnt;
++ 
++-	if (lookup_analyze_payloads(ctx, &is_dst, &have_ip))
++-		return;
++-
++ 	s = set_from_lookup_expr(ctx, e);
++ 	if (!s)
++ 		xtables_error(OTHER_PROBLEM,
++ 			      "BUG: lookup expression references unknown set");
++ 
+++	if (lookup_analyze_payloads(ctx,
+++				    nftnl_expr_get_u32(e, NFTNL_EXPR_LOOKUP_SREG),
+++				    nftnl_set_get_u32(s, NFTNL_SET_KEY_LEN),
+++				    &is_dst, &have_ip))
+++		return;
+++
++ 	cnt = nftnl_set_get_u32(s, NFTNL_SET_DESC_SIZE);
++ 
++ 	for (ematch = ctx->cs->match_list; ematch; ematch = ematch->next) {
++@@ -468,8 +496,6 @@ static void nft_bridge_parse_lookup(stru
++ 	if (set_elems_to_among_pairs(among_data->pairs + poff, s, cnt))
++ 		xtables_error(OTHER_PROBLEM,
++ 			      "ebtables among pair parsing failed");
++-
++-	ctx->flags &= ~(NFT_XT_CTX_PAYLOAD | NFT_XT_CTX_PREV_PAYLOAD);
++ }
++ 
++ static void parse_watcher(void *object, struct ebt_match **match_list,
++--- a/iptables/nft-ipv4.c
+++++ b/iptables/nft-ipv4.c
++@@ -115,28 +115,28 @@ static bool nft_ipv4_is_same(const struc
++ 				  b->fw.ip.iniface_mask, b->fw.ip.outiface_mask);
++ }
++ 
++-static void get_frag(struct nft_xt_ctx *ctx, struct nftnl_expr *e, bool *inv)
+++static bool get_frag(const struct nft_xt_ctx_reg *reg, struct nftnl_expr *e)
++ {
++ 	uint8_t op;
++ 
++ 	/* we assume correct mask and xor */
++-	if (!(ctx->flags & NFT_XT_CTX_BITWISE))
++-		return;
+++	if (!reg->bitwise.set)
+++		return false;
++ 
++ 	/* we assume correct data */
++ 	op = nftnl_expr_get_u32(e, NFTNL_EXPR_CMP_OP);
++ 	if (op == NFT_CMP_EQ)
++-		*inv = true;
++-	else
++-		*inv = false;
+++		return true;
++ 
++-	ctx->flags &= ~NFT_XT_CTX_BITWISE;
+++	return false;
++ }
++ 
++-static void nft_ipv4_parse_meta(struct nft_xt_ctx *ctx, struct nftnl_expr *e,
+++static void nft_ipv4_parse_meta(struct nft_xt_ctx *ctx,
+++				const struct nft_xt_ctx_reg *reg,
+++				struct nftnl_expr *e,
++ 				struct iptables_command_state *cs)
++ {
++-	switch (ctx->meta.key) {
+++	switch (reg->meta_dreg.key) {
++ 	case NFT_META_L4PROTO:
++ 		cs->fw.ip.proto = nftnl_expr_get_u8(e, NFTNL_EXPR_CMP_DATA);
++ 		if (nftnl_expr_get_u32(e, NFTNL_EXPR_CMP_OP) == NFT_CMP_NEQ)
++@@ -146,17 +146,18 @@ static void nft_ipv4_parse_meta(struct n
++ 		break;
++ 	}
++ 
++-	parse_meta(ctx, e, ctx->meta.key, cs->fw.ip.iniface, cs->fw.ip.iniface_mask,
+++	parse_meta(ctx, e, reg->meta_dreg.key, cs->fw.ip.iniface, cs->fw.ip.iniface_mask,
++ 		   cs->fw.ip.outiface, cs->fw.ip.outiface_mask,
++ 		   &cs->fw.ip.invflags);
++ }
++ 
++-static void parse_mask_ipv4(struct nft_xt_ctx *ctx, struct in_addr *mask)
+++static void parse_mask_ipv4(const struct nft_xt_ctx_reg *sreg, struct in_addr *mask)
++ {
++-	mask->s_addr = ctx->bitwise.mask[0];
+++	mask->s_addr = sreg->bitwise.mask[0];
++ }
++ 
++ static void nft_ipv4_parse_payload(struct nft_xt_ctx *ctx,
+++				   const struct nft_xt_ctx_reg *sreg,
++ 				   struct nftnl_expr *e,
++ 				   struct iptables_command_state *cs)
++ {
++@@ -164,16 +165,15 @@ static void nft_ipv4_parse_payload(struc
++ 	uint8_t proto;
++ 	bool inv;
++ 
++-	switch(ctx->payload.offset) {
+++	switch (sreg->payload.offset) {
++ 	case offsetof(struct iphdr, saddr):
++ 		get_cmp_data(e, &addr, sizeof(addr), &inv);
++ 		cs->fw.ip.src.s_addr = addr.s_addr;
++-		if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-			parse_mask_ipv4(ctx, &cs->fw.ip.smsk);
++-			ctx->flags &= ~NFT_XT_CTX_BITWISE;
+++		if (sreg->bitwise.set) {
+++			parse_mask_ipv4(sreg, &cs->fw.ip.smsk);
++ 		} else {
++ 			memset(&cs->fw.ip.smsk, 0xff,
++-			       min(ctx->payload.len, sizeof(struct in_addr)));
+++			       min(sreg->payload.len, sizeof(struct in_addr)));
++ 		}
++ 
++ 		if (inv)
++@@ -182,13 +182,11 @@ static void nft_ipv4_parse_payload(struc
++ 	case offsetof(struct iphdr, daddr):
++ 		get_cmp_data(e, &addr, sizeof(addr), &inv);
++ 		cs->fw.ip.dst.s_addr = addr.s_addr;
++-		if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-			parse_mask_ipv4(ctx, &cs->fw.ip.dmsk);
++-			ctx->flags &= ~NFT_XT_CTX_BITWISE;
++-		} else {
+++		if (sreg->bitwise.set)
+++			parse_mask_ipv4(sreg, &cs->fw.ip.dmsk);
+++		else
++ 			memset(&cs->fw.ip.dmsk, 0xff,
++-			       min(ctx->payload.len, sizeof(struct in_addr)));
++-		}
+++			       min(sreg->payload.len, sizeof(struct in_addr)));
++ 
++ 		if (inv)
++ 			cs->fw.ip.invflags |= IPT_INV_DSTIP;
++@@ -201,13 +199,12 @@ static void nft_ipv4_parse_payload(struc
++ 		break;
++ 	case offsetof(struct iphdr, frag_off):
++ 		cs->fw.ip.flags |= IPT_F_FRAG;
++-		inv = false;
++-		get_frag(ctx, e, &inv);
+++		inv = get_frag(sreg, e);
++ 		if (inv)
++ 			cs->fw.ip.invflags |= IPT_INV_FRAG;
++ 		break;
++ 	default:
++-		DEBUGP("unknown payload offset %d\n", ctx->payload.offset);
+++		DEBUGP("unknown payload offset %d\n", sreg->payload.offset);
++ 		break;
++ 	}
++ }
++--- a/iptables/nft-ipv6.c
+++++ b/iptables/nft-ipv6.c
++@@ -104,10 +104,12 @@ static bool nft_ipv6_is_same(const struc
++ 				  b->fw6.ipv6.outiface_mask);
++ }
++ 
++-static void nft_ipv6_parse_meta(struct nft_xt_ctx *ctx, struct nftnl_expr *e,
+++static void nft_ipv6_parse_meta(struct nft_xt_ctx *ctx,
+++				const struct nft_xt_ctx_reg *reg,
+++				struct nftnl_expr *e,
++ 				struct iptables_command_state *cs)
++ {
++-	switch (ctx->meta.key) {
+++	switch (reg->meta_dreg.key) {
++ 	case NFT_META_L4PROTO:
++ 		cs->fw6.ipv6.proto = nftnl_expr_get_u8(e, NFTNL_EXPR_CMP_DATA);
++ 		if (nftnl_expr_get_u32(e, NFTNL_EXPR_CMP_OP) == NFT_CMP_NEQ)
++@@ -117,17 +119,19 @@ static void nft_ipv6_parse_meta(struct n
++ 		break;
++ 	}
++ 
++-	parse_meta(ctx, e, ctx->meta.key, cs->fw6.ipv6.iniface,
+++	parse_meta(ctx, e, reg->meta_dreg.key, cs->fw6.ipv6.iniface,
++ 		   cs->fw6.ipv6.iniface_mask, cs->fw6.ipv6.outiface,
++ 		   cs->fw6.ipv6.outiface_mask, &cs->fw6.ipv6.invflags);
++ }
++ 
++-static void parse_mask_ipv6(struct nft_xt_ctx *ctx, struct in6_addr *mask)
+++static void parse_mask_ipv6(const struct nft_xt_ctx_reg *reg,
+++			    struct in6_addr *mask)
++ {
++-	memcpy(mask, ctx->bitwise.mask, sizeof(struct in6_addr));
+++	memcpy(mask, reg->bitwise.mask, sizeof(struct in6_addr));
++ }
++ 
++ static void nft_ipv6_parse_payload(struct nft_xt_ctx *ctx,
+++				   const struct nft_xt_ctx_reg *reg,
++ 				   struct nftnl_expr *e,
++ 				   struct iptables_command_state *cs)
++ {
++@@ -135,17 +139,15 @@ static void nft_ipv6_parse_payload(struc
++ 	uint8_t proto;
++ 	bool inv;
++ 
++-	switch (ctx->payload.offset) {
+++	switch (reg->payload.offset) {
++ 	case offsetof(struct ip6_hdr, ip6_src):
++ 		get_cmp_data(e, &addr, sizeof(addr), &inv);
++ 		memcpy(cs->fw6.ipv6.src.s6_addr, &addr, sizeof(addr));
++-		if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-			parse_mask_ipv6(ctx, &cs->fw6.ipv6.smsk);
++-			ctx->flags &= ~NFT_XT_CTX_BITWISE;
++-		} else {
+++		if (reg->bitwise.set)
+++			parse_mask_ipv6(reg, &cs->fw6.ipv6.smsk);
+++		else
++ 			memset(&cs->fw6.ipv6.smsk, 0xff,
++-			       min(ctx->payload.len, sizeof(struct in6_addr)));
++-		}
+++			       min(reg->payload.len, sizeof(struct in6_addr)));
++ 
++ 		if (inv)
++ 			cs->fw6.ipv6.invflags |= IP6T_INV_SRCIP;
++@@ -153,13 +155,11 @@ static void nft_ipv6_parse_payload(struc
++ 	case offsetof(struct ip6_hdr, ip6_dst):
++ 		get_cmp_data(e, &addr, sizeof(addr), &inv);
++ 		memcpy(cs->fw6.ipv6.dst.s6_addr, &addr, sizeof(addr));
++-		if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-			parse_mask_ipv6(ctx, &cs->fw6.ipv6.dmsk);
++-			ctx->flags &= ~NFT_XT_CTX_BITWISE;
++-		} else {
+++		if (reg->bitwise.set)
+++			parse_mask_ipv6(reg, &cs->fw6.ipv6.dmsk);
+++		else
++ 			memset(&cs->fw6.ipv6.dmsk, 0xff,
++-			       min(ctx->payload.len, sizeof(struct in6_addr)));
++-		}
+++			       min(reg->payload.len, sizeof(struct in6_addr)));
++ 
++ 		if (inv)
++ 			cs->fw6.ipv6.invflags |= IP6T_INV_DSTIP;
++--- a/iptables/nft-shared.c
+++++ b/iptables/nft-shared.c
++@@ -295,6 +295,16 @@ nft_create_match(struct nft_xt_ctx *ctx,
++ 		 struct iptables_command_state *cs,
++ 		 const char *name);
++ 
+++static uint32_t get_meta_mask(struct nft_xt_ctx *ctx, enum nft_registers sreg)
+++{
+++	struct nft_xt_ctx_reg *reg = nft_xt_ctx_get_sreg(ctx, sreg);
+++
+++	if (reg->bitwise.set)
+++		return reg->bitwise.mask[0];
+++
+++	return ~0u;
+++}
+++
++ static int parse_meta_mark(struct nft_xt_ctx *ctx, struct nftnl_expr *e)
++ {
++ 	struct xt_mark_mtinfo1 *mark;
++@@ -312,12 +322,7 @@ static int parse_meta_mark(struct nft_xt
++ 
++ 	value = nftnl_expr_get_u32(e, NFTNL_EXPR_CMP_DATA);
++ 	mark->mark = value;
++-	if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-		memcpy(&mark->mask, &ctx->bitwise.mask, sizeof(mark->mask));
++-		ctx->flags &= ~NFT_XT_CTX_BITWISE;
++-	} else {
++-		mark->mask = 0xffffffff;
++-	}
+++	mark->mask = get_meta_mask(ctx, nftnl_expr_get_u32(e, NFTNL_EXPR_CMP_SREG));
++ 
++ 	return 0;
++ }
++@@ -451,20 +456,40 @@ void get_cmp_data(struct nftnl_expr *e,
++ 		*inv = false;
++ }
++ 
++-static void nft_meta_set_to_target(struct nft_xt_ctx *ctx)
+++static void nft_meta_set_to_target(struct nft_xt_ctx *ctx,
+++				   struct nftnl_expr *e)
++ {
++ 	struct xtables_target *target;
+++	struct nft_xt_ctx_reg *sreg;
+++	enum nft_registers sregnum;
++ 	struct xt_entry_target *t;
++ 	unsigned int size;
++ 	const char *targname;
++ 
++-	switch (ctx->meta.key) {
+++	sregnum = nftnl_expr_get_u32(e, NFTNL_EXPR_META_SREG);
+++	sreg = nft_xt_ctx_get_sreg(ctx, sregnum);
+++	if (!sreg)
+++		return;
+++
+++	if (sreg->meta_sreg.set == 0)
+++		return;
+++
+++	switch (sreg->meta_sreg.key) {
++ 	case NFT_META_NFTRACE:
++-		if (ctx->immediate.data[0] == 0)
+++		if ((sreg->type != NFT_XT_REG_IMMEDIATE)) {
+++			ctx->errmsg = "meta nftrace but reg not immediate";
++ 			return;
+++		}
+++
+++		if (sreg->immediate.data[0] == 0) {
+++			ctx->errmsg = "trace is cleared";
+++			return;
+++		}
+++
++ 		targname = "TRACE";
++ 		break;
++ 	default:
+++		ctx->errmsg = "meta sreg key not supported";
++ 		return;
++ 	}
++ 
++@@ -486,51 +511,74 @@ static void nft_meta_set_to_target(struc
++ 
++ static void nft_parse_meta(struct nft_xt_ctx *ctx, struct nftnl_expr *e)
++ {
++-	ctx->meta.key = nftnl_expr_get_u32(e, NFTNL_EXPR_META_KEY);
+++        struct nft_xt_ctx_reg *reg;
++ 
++-	if (nftnl_expr_is_set(e, NFTNL_EXPR_META_SREG) &&
++-	    (ctx->flags & NFT_XT_CTX_IMMEDIATE) &&
++-	     nftnl_expr_get_u32(e, NFTNL_EXPR_META_SREG) == ctx->immediate.reg) {
++-		ctx->flags &= ~NFT_XT_CTX_IMMEDIATE;
++-		nft_meta_set_to_target(ctx);
+++	if (nftnl_expr_is_set(e, NFTNL_EXPR_META_SREG)) {
+++		nft_meta_set_to_target(ctx, e);
++ 		return;
++ 	}
++ 
++-	ctx->reg = nftnl_expr_get_u32(e, NFTNL_EXPR_META_DREG);
++-	ctx->flags |= NFT_XT_CTX_META;
+++	reg = nft_xt_ctx_get_dreg(ctx, nftnl_expr_get_u32(e, NFTNL_EXPR_META_DREG));
+++	if (!reg)
+++		return;
+++
+++	reg->meta_dreg.key = nftnl_expr_get_u32(e, NFTNL_EXPR_META_KEY);
+++	reg->type = NFT_XT_REG_META_DREG;
++ }
++ 
++ static void nft_parse_payload(struct nft_xt_ctx *ctx, struct nftnl_expr *e)
++ {
++-	if (ctx->flags & NFT_XT_CTX_PAYLOAD) {
++-		memcpy(&ctx->prev_payload, &ctx->payload,
++-		       sizeof(ctx->prev_payload));
++-		ctx->flags |= NFT_XT_CTX_PREV_PAYLOAD;
++-	}
+++	enum nft_registers regnum = nftnl_expr_get_u32(e, NFTNL_EXPR_PAYLOAD_DREG);
+++	struct nft_xt_ctx_reg *reg = nft_xt_ctx_get_dreg(ctx, regnum);
++ 
++-	ctx->reg = nftnl_expr_get_u32(e, NFTNL_EXPR_PAYLOAD_DREG);
++-	ctx->payload.base = nftnl_expr_get_u32(e, NFTNL_EXPR_PAYLOAD_BASE);
++-	ctx->payload.offset = nftnl_expr_get_u32(e, NFTNL_EXPR_PAYLOAD_OFFSET);
++-	ctx->payload.len = nftnl_expr_get_u32(e, NFTNL_EXPR_PAYLOAD_LEN);
++-	ctx->flags |= NFT_XT_CTX_PAYLOAD;
+++	if (!reg)
+++		return;
+++
+++	reg->type = NFT_XT_REG_PAYLOAD;
+++	reg->payload.base = nftnl_expr_get_u32(e, NFTNL_EXPR_PAYLOAD_BASE);
+++	reg->payload.offset = nftnl_expr_get_u32(e, NFTNL_EXPR_PAYLOAD_OFFSET);
+++	reg->payload.len = nftnl_expr_get_u32(e, NFTNL_EXPR_PAYLOAD_LEN);
++ }
++ 
++ static void nft_parse_bitwise(struct nft_xt_ctx *ctx, struct nftnl_expr *e)
++ {
++-	uint32_t reg, len;
+++	enum nft_registers sregnum = nftnl_expr_get_u32(e, NFTNL_EXPR_BITWISE_SREG);
+++	enum nft_registers dregnum = nftnl_expr_get_u32(e, NFTNL_EXPR_BITWISE_DREG);
+++	struct nft_xt_ctx_reg *sreg = nft_xt_ctx_get_sreg(ctx, sregnum);
+++	struct nft_xt_ctx_reg *dreg = sreg;
++ 	const void *data;
+++	uint32_t len;
++ 
++-	reg = nftnl_expr_get_u32(e, NFTNL_EXPR_BITWISE_SREG);
++-	if (ctx->reg && reg != ctx->reg)
+++	if (!sreg)
++ 		return;
++ 
++-	reg = nftnl_expr_get_u32(e, NFTNL_EXPR_BITWISE_DREG);
++-	ctx->reg = reg;
+++	if (sregnum != dregnum) {
+++		dreg = nft_xt_ctx_get_sreg(ctx, dregnum); /* sreg, do NOT clear ... */
+++		if (!dreg)
+++			return;
+++
+++		*dreg = *sreg;  /* .. and copy content instead */
+++	}
+++
++ 	data = nftnl_expr_get(e, NFTNL_EXPR_BITWISE_XOR, &len);
++-	memcpy(ctx->bitwise.xor, data, len);
+++
+++	if (len > sizeof(dreg->bitwise.xor)) {
+++		ctx->errmsg = "bitwise xor too large";
+++		return;
+++	}
+++
+++	memcpy(dreg->bitwise.xor, data, len);
+++
++ 	data = nftnl_expr_get(e, NFTNL_EXPR_BITWISE_MASK, &len);
++-	memcpy(ctx->bitwise.mask, data, len);
++-	ctx->flags |= NFT_XT_CTX_BITWISE;
+++
+++	if (len > sizeof(dreg->bitwise.mask)) {
+++		ctx->errmsg = "bitwise mask too large";
+++		return;
+++	}
+++
+++	memcpy(dreg->bitwise.mask, data, len);
+++
+++	dreg->bitwise.set = true;
++ }
++ 
++ static struct xtables_match *
++@@ -835,6 +883,8 @@ static void nft_parse_transport(struct n
++ 				struct nftnl_expr *e,
++ 				struct iptables_command_state *cs)
++ {
+++	struct nft_xt_ctx_reg *sreg;
+++	enum nft_registers reg;
++ 	uint32_t sdport;
++ 	uint16_t port;
++ 	uint8_t proto, op;
++@@ -855,7 +905,17 @@ static void nft_parse_transport(struct n
++ 	nftnl_expr_get(e, NFTNL_EXPR_CMP_DATA, &len);
++ 	op = nftnl_expr_get_u32(e, NFTNL_EXPR_CMP_OP);
++ 
++-	switch(ctx->payload.offset) {
+++	reg = nftnl_expr_get_u32(e, NFTNL_EXPR_CMP_SREG);
+++	sreg = nft_xt_ctx_get_sreg(ctx, reg);
+++	if (!sreg)
+++		return;
+++
+++	if (sreg->type != NFT_XT_REG_PAYLOAD) {
+++		ctx->errmsg = "sgreg not payload";
+++		return;
+++	}
+++
+++	switch(sreg->payload.offset) {
++ 	case 0: /* th->sport */
++ 		switch (len) {
++ 		case 2: /* load sport only */
++@@ -881,10 +941,9 @@ static void nft_parse_transport(struct n
++ 			uint8_t flags = nftnl_expr_get_u8(e, NFTNL_EXPR_CMP_DATA);
++ 			uint8_t mask = ~0;
++ 
++-			if (ctx->flags & NFT_XT_CTX_BITWISE) {
++-				memcpy(&mask, &ctx->bitwise.mask, sizeof(mask));
++-				ctx->flags &= ~NFT_XT_CTX_BITWISE;
++-			}
+++			if (sreg->bitwise.set)
+++				memcpy(&mask, &sreg->bitwise.mask, sizeof(mask));
+++
++ 			nft_parse_tcp_flags(ctx, cs, op, flags, mask);
++ 		}
++ 		return;
++@@ -892,6 +951,7 @@ static void nft_parse_transport(struct n
++ }
++ 
++ static void nft_parse_transport_range(struct nft_xt_ctx *ctx,
+++				      const struct nft_xt_ctx_reg *sreg,
++ 				      struct nftnl_expr *e,
++ 				      struct iptables_command_state *cs)
++ {
++@@ -921,7 +981,7 @@ static void nft_parse_transport_range(st
++ 	from = ntohs(nftnl_expr_get_u16(e, NFTNL_EXPR_RANGE_FROM_DATA));
++ 	to = ntohs(nftnl_expr_get_u16(e, NFTNL_EXPR_RANGE_TO_DATA));
++ 
++-	switch(ctx->payload.offset) {
+++	switch (sreg->payload.offset) {
++ 	case 0:
++ 		nft_parse_th_port_range(ctx, cs, proto, from, to, -1, -1, op);
++ 		return;
++@@ -934,30 +994,40 @@ static void nft_parse_transport_range(st
++ 
++ static void nft_parse_cmp(struct nft_xt_ctx *ctx, struct nftnl_expr *e)
++ {
+++	struct nft_xt_ctx_reg *sreg;
++ 	uint32_t reg;
++ 
++ 	reg = nftnl_expr_get_u32(e, NFTNL_EXPR_CMP_SREG);
++-	if (ctx->reg && reg != ctx->reg)
+++
+++	sreg = nft_xt_ctx_get_sreg(ctx, reg);
+++	if (!sreg)
++ 		return;
++ 
++-	if (ctx->flags & NFT_XT_CTX_META) {
++-		ctx->h->ops->parse_meta(ctx, e, ctx->cs);
++-		ctx->flags &= ~NFT_XT_CTX_META;
++-	}
++-	/* bitwise context is interpreted from payload */
++-	if (ctx->flags & NFT_XT_CTX_PAYLOAD) {
++-		switch (ctx->payload.base) {
+++	switch (sreg->type) {
+++	case NFT_XT_REG_UNDEF:
+++		ctx->errmsg = "cmp sreg undef";
+++		break;
+++	case NFT_XT_REG_META_DREG:
+++		ctx->h->ops->parse_meta(ctx, sreg, e, ctx->cs);
+++		break;
+++	case NFT_XT_REG_PAYLOAD:
+++		switch (sreg->payload.base) {
++ 		case NFT_PAYLOAD_LL_HEADER:
++ 			if (ctx->h->family == NFPROTO_BRIDGE)
++-				ctx->h->ops->parse_payload(ctx, e, ctx->cs);
+++				ctx->h->ops->parse_payload(ctx, sreg, e, ctx->cs);
++ 			break;
++ 		case NFT_PAYLOAD_NETWORK_HEADER:
++-			ctx->h->ops->parse_payload(ctx, e, ctx->cs);
+++			ctx->h->ops->parse_payload(ctx, sreg, e, ctx->cs);
++ 			break;
++ 		case NFT_PAYLOAD_TRANSPORT_HEADER:
++ 			nft_parse_transport(ctx, e, ctx->cs);
++ 			break;
++ 		}
+++
+++		break;
+++	default:
+++		ctx->errmsg = "cmp sreg has unknown type";
+++		break;
++ 	}
++ }
++ 
++@@ -976,18 +1046,22 @@ static void nft_parse_immediate(struct n
++ 	int verdict;
++ 
++ 	if (nftnl_expr_is_set(e, NFTNL_EXPR_IMM_DATA)) {
+++		struct nft_xt_ctx_reg *dreg;
++ 		const void *imm_data;
++ 		uint32_t len;
++ 
++ 		imm_data = nftnl_expr_get_data(e, NFTNL_EXPR_IMM_DATA, &len);
+++		dreg = nft_xt_ctx_get_dreg(ctx, nftnl_expr_get_u32(e, NFTNL_EXPR_IMM_DREG));
+++		if (!dreg)
+++			return;
++ 
++-		if (len > sizeof(ctx->immediate.data))
+++		if (len > sizeof(dreg->immediate.data))
++ 			return;
++ 
++-		memcpy(ctx->immediate.data, imm_data, len);
++-		ctx->immediate.len = len;
++-		ctx->immediate.reg = nftnl_expr_get_u32(e, NFTNL_EXPR_IMM_DREG);
++-		ctx->flags |= NFT_XT_CTX_IMMEDIATE;
+++		memcpy(dreg->immediate.data, imm_data, len);
+++		dreg->immediate.len = len;
+++		dreg->type = NFT_XT_REG_IMMEDIATE;
+++
++ 		return;
++ 	}
++ 
++@@ -1124,20 +1198,29 @@ static void nft_parse_lookup(struct nft_
++ 
++ static void nft_parse_range(struct nft_xt_ctx *ctx, struct nftnl_expr *e)
++ {
+++	struct nft_xt_ctx_reg *sreg;
++ 	uint32_t reg;
++ 
++ 	reg = nftnl_expr_get_u32(e, NFTNL_EXPR_RANGE_SREG);
++-	if (reg != ctx->reg)
++-		return;
+++	sreg = nft_xt_ctx_get_sreg(ctx, reg);
++ 
++-	if (ctx->flags & NFT_XT_CTX_PAYLOAD) {
++-		switch (ctx->payload.base) {
+++	switch (sreg->type) {
+++	case NFT_XT_REG_UNDEF:
+++		ctx->errmsg = "range sreg undef";
+++		break;
+++	case NFT_XT_REG_PAYLOAD:
+++		switch (sreg->payload.base) {
++ 		case NFT_PAYLOAD_TRANSPORT_HEADER:
++-			nft_parse_transport_range(ctx, e, ctx->cs);
+++			nft_parse_transport_range(ctx, sreg, e, ctx->cs);
++ 			break;
++ 		default:
+++			ctx->errmsg = "range with unknown payload base";
++ 			break;
++ 		}
+++		break;
+++	default:
+++		ctx->errmsg = "range sreg type unsupported";
+++		break;
++ 	}
++ }
++ 
++--- a/iptables/nft-shared.h
+++++ b/iptables/nft-shared.h
++@@ -38,13 +38,41 @@ struct xtables_args;
++ struct nft_handle;
++ struct xt_xlate;
++ 
++-enum {
++-	NFT_XT_CTX_PAYLOAD	= (1 << 0),
++-	NFT_XT_CTX_META		= (1 << 1),
++-	NFT_XT_CTX_BITWISE	= (1 << 2),
++-	NFT_XT_CTX_IMMEDIATE	= (1 << 3),
++-	NFT_XT_CTX_PREV_PAYLOAD	= (1 << 4),
++-	NFT_XT_CTX_RANGE	= (1 << 5),
+++enum nft_ctx_reg_type {
+++	NFT_XT_REG_UNDEF,
+++	NFT_XT_REG_PAYLOAD,
+++	NFT_XT_REG_IMMEDIATE,
+++	NFT_XT_REG_META_DREG,
+++};
+++
+++struct nft_xt_ctx_reg {
+++	enum nft_ctx_reg_type type:8;
+++
+++	union {
+++		struct {
+++			uint32_t base;
+++			uint32_t offset;
+++			uint32_t len;
+++		} payload;
+++		struct {
+++			uint32_t data[4];
+++			uint8_t len;
+++		} immediate;
+++		struct {
+++			uint32_t key;
+++		} meta_dreg;
+++	};
+++
+++	struct {
+++		uint32_t mask[4];
+++		uint32_t xor[4];
+++		bool set;
+++	} bitwise;
+++
+++	struct {
+++		uint32_t key;
+++		bool set;
+++	} meta_sreg;
++ };
++ 
++ struct nft_xt_ctx {
++@@ -58,25 +86,51 @@ struct nft_xt_ctx {
++ 		struct xt_udp *udp;
++ 	} tcpudp;
++ 
++-	uint32_t reg;
++-	struct {
++-		uint32_t base;
++-		uint32_t offset;
++-		uint32_t len;
++-	} payload, prev_payload;
++-	struct {
++-		uint32_t key;
++-	} meta;
++-	struct {
++-		uint32_t data[4];
++-		uint32_t len, reg;
++-	} immediate;
++-	struct {
++-		uint32_t mask[4];
++-		uint32_t xor[4];
++-	} bitwise;
+++	struct nft_xt_ctx_reg regs[1 + 16];
+++
+++	const char *errmsg;
++ };
++ 
+++static inline struct nft_xt_ctx_reg *nft_xt_ctx_get_sreg(struct nft_xt_ctx *ctx, enum nft_registers reg)
+++{
+++	switch (reg) {
+++	case NFT_REG_VERDICT:
+++		return &ctx->regs[0];
+++	case NFT_REG_1:
+++		return &ctx->regs[1];
+++	case NFT_REG_2:
+++		return &ctx->regs[5];
+++	case NFT_REG_3:
+++		return &ctx->regs[9];
+++	case NFT_REG_4:
+++		return &ctx->regs[13];
+++	case NFT_REG32_00...NFT_REG32_15:
+++		return &ctx->regs[reg - NFT_REG32_00];
+++	default:
+++		ctx->errmsg = "Unknown register requested";
+++		break;
+++	}
+++
+++	return NULL;
+++}
+++
+++static inline void nft_xt_reg_clear(struct nft_xt_ctx_reg *r)
+++{
+++	r->type = 0;
+++	r->bitwise.set = false;
+++	r->meta_sreg.set = false;
+++}
+++
+++static inline struct nft_xt_ctx_reg *nft_xt_ctx_get_dreg(struct nft_xt_ctx *ctx, enum nft_registers reg)
+++{
+++	struct nft_xt_ctx_reg *r = nft_xt_ctx_get_sreg(ctx, reg);
+++
+++	if (r)
+++		nft_xt_reg_clear(r);
+++
+++	return r;
+++}
+++
++ struct nft_family_ops {
++ 	int (*add)(struct nft_handle *h, struct nftnl_rule *r,
++ 		   struct iptables_command_state *cs);
++@@ -84,9 +138,13 @@ struct nft_family_ops {
++ 			const struct iptables_command_state *cs_b);
++ 	void (*print_payload)(struct nftnl_expr *e,
++ 			      struct nftnl_expr_iter *iter);
++-	void (*parse_meta)(struct nft_xt_ctx *ctx, struct nftnl_expr *e,
+++	void (*parse_meta)(struct nft_xt_ctx *ctx,
+++			   const struct nft_xt_ctx_reg *sreg,
+++			   struct nftnl_expr *e,
++ 			   struct iptables_command_state *cs);
++-	void (*parse_payload)(struct nft_xt_ctx *ctx, struct nftnl_expr *e,
+++	void (*parse_payload)(struct nft_xt_ctx *ctx,
+++			      const struct nft_xt_ctx_reg *sreg,
+++			      struct nftnl_expr *e,
++ 			      struct iptables_command_state *cs);
++ 	void (*parse_lookup)(struct nft_xt_ctx *ctx, struct nftnl_expr *e);
++ 	void (*set_goto_flag)(struct iptables_command_state *cs);
+diff --git a/package/network/utils/iptables/patches/200-configurable_builtin.patch b/package/network/utils/iptables/patches/200-configurable_builtin.patch
+index d3f4f82869..75c29e1e9c 100644
+--- a/package/network/utils/iptables/patches/200-configurable_builtin.patch
++++ b/package/network/utils/iptables/patches/200-configurable_builtin.patch
+@@ -60,7 +60,7 @@
+  
+  .SECONDARY:
+  
+-@@ -170,11 +190,11 @@ libext4.a: initext4.o ${libext4_objs}
++@@ -163,11 +183,11 @@ libext4.a: initext4.o ${libext4_objs}
+  libext6.a: initext6.o ${libext6_objs}
+  	${AM_VERBOSE_AR} ${AR} crs $@ $^;
+  
+@@ -75,5 +75,5 @@
+ +initext4_func := $(addprefix ipt_,${pf4_build_static})
+ +initext6_func := $(addprefix ip6t_,${pf6_build_static})
+  
+- initexts := ext exta extb ext4 ext6
+- initext_depfiles = $(patsubst %,.init%.dd,${initexts})
++ .initext.dd: FORCE
++ 	@echo "${initext_func}" >$@.tmp; \
+diff --git a/package/network/utils/iptables/patches/600-shared-libext.patch b/package/network/utils/iptables/patches/600-shared-libext.patch
+index 694a85c05c..838b1ffa66 100644
+--- a/package/network/utils/iptables/patches/600-shared-libext.patch
++++ b/package/network/utils/iptables/patches/600-shared-libext.patch
+@@ -9,7 +9,7 @@
+  targets_install :=
+  libext_objs := ${pfx_objs}
+  libext_ebt_objs := ${pfb_objs}
+-@@ -133,7 +133,7 @@ clean:
++@@ -132,7 +132,7 @@ clean:
+  distclean: clean
+  
+  init%.o: init%.c
+@@ -18,7 +18,7 @@
+  
+  -include .*.d
+  
+-@@ -173,22 +173,22 @@ xt_connlabel_LIBADD = @libnetfilter_conn
++@@ -166,22 +166,22 @@ xt_connlabel_LIBADD = @libnetfilter_conn
+  #	handling code in the Makefiles.
+  #
+  lib%.o: ${srcdir}/lib%.c
+@@ -54,47 +54,49 @@
+  initextb_func := $(addprefix ebt_,${pfb_build_static})
+ --- a/iptables/Makefile.am
+ +++ b/iptables/Makefile.am
+-@@ -7,7 +7,7 @@ AM_LDFLAGS       = ${regular_LDFLAGS}
+- BUILT_SOURCES =
++@@ -7,19 +7,22 @@ BUILT_SOURCES =
+  
+- common_sources = iptables-xml.c xtables-multi.h xshared.c xshared.h
+--common_ldadd   = ../extensions/libext.a ../libxtables/libxtables.la -lm
+-+common_ldadd   = ../libxtables/libxtables.la -lm
+- common_cflags  = ${AM_CFLAGS}
+- if ENABLE_STATIC
+- common_cflags += -DALL_INCLUSIVE
+-@@ -17,15 +17,18 @@ xtables_legacy_multi_SOURCES  = ${common
+- 				iptables-restore.c iptables-save.c
+- xtables_legacy_multi_CFLAGS   = ${common_cflags}
+- xtables_legacy_multi_LDADD    = ${common_ldadd}
++ xtables_legacy_multi_SOURCES  = xtables-legacy-multi.c iptables-xml.c
++ xtables_legacy_multi_CFLAGS   = ${AM_CFLAGS}
++-xtables_legacy_multi_LDADD    = ../extensions/libext.a
+++xtables_legacy_multi_LDADD    =
+ +xtables_legacy_multi_LDFLAGS  = -L../extensions/ -liptext
++ if ENABLE_STATIC
++ xtables_legacy_multi_CFLAGS  += -DALL_INCLUSIVE
++ endif
+  if ENABLE_IPV4
+- xtables_legacy_multi_SOURCES += iptables-standalone.c iptables.c iptables-multi.h
++ xtables_legacy_multi_SOURCES += iptables-standalone.c iptables.c
+  xtables_legacy_multi_CFLAGS  += -DENABLE_IPV4
+ -xtables_legacy_multi_LDADD   += ../libiptc/libip4tc.la ../extensions/libext4.a
+ +xtables_legacy_multi_LDADD   += ../libiptc/libip4tc.la
+ +xtables_legacy_multi_LDFLAGS += -liptext4
+  endif
+  if ENABLE_IPV6
+- xtables_legacy_multi_SOURCES += ip6tables-standalone.c ip6tables.c ip6tables-multi.h
++ xtables_legacy_multi_SOURCES += ip6tables-standalone.c ip6tables.c
+  xtables_legacy_multi_CFLAGS  += -DENABLE_IPV6
+ -xtables_legacy_multi_LDADD   += ../libiptc/libip6tc.la ../extensions/libext6.a
+ +xtables_legacy_multi_LDADD   += ../libiptc/libip6tc.la
+ +xtables_legacy_multi_LDFLAGS += -liptext6
+  endif
+- 
+- # iptables using nf_tables api
+-@@ -33,12 +36,9 @@ if ENABLE_NFTABLES
+- xtables_nft_multi_SOURCES  = ${common_sources} xtables-nft-multi.c
+- xtables_nft_multi_CFLAGS   = ${common_cflags}
+- xtables_nft_multi_LDADD    = ${common_ldadd} \
+--			     ../extensions/libext_arpt.a \
+--			     ../extensions/libext_ebt.a \
+--			     ../extensions/libext4.a \
+--			     ../extensions/libext6.a \
+- 			     ${libmnl_LIBS} ${libnftnl_LIBS} \
+- 			     ${libnetfilter_conntrack_LIBS}
+-+xtables_nft_multi_LDFLAGS  = -L../extensions/ -liptext -liptext_arpt -liptext_ebt -liptext4 -liptext6
+- xtables_nft_multi_CFLAGS  += -DENABLE_NFTABLES -DENABLE_IPV4 -DENABLE_IPV6
+- xtables_nft_multi_SOURCES += nft.c nft.h \
+- 			     nft-arp.c nft-ipv4.c nft-ipv6.c \
++ xtables_legacy_multi_SOURCES += xshared.c iptables-restore.c iptables-save.c
++ xtables_legacy_multi_LDADD   += ../libxtables/libxtables.la -lm
++@@ -28,7 +31,8 @@ xtables_legacy_multi_LDADD   += ../libxt
++ if ENABLE_NFTABLES
++ xtables_nft_multi_SOURCES  = xtables-nft-multi.c iptables-xml.c
++ xtables_nft_multi_CFLAGS   = ${AM_CFLAGS}
++-xtables_nft_multi_LDADD    = ../extensions/libext.a ../extensions/libext_ebt.a
+++xtables_nft_multi_LDADD    =
+++xtables_nft_multi_LDFLAGS  = -L../extensions/ -liptext -liptext_ebt
++ if ENABLE_STATIC
++ xtables_nft_multi_CFLAGS  += -DALL_INCLUSIVE
++ endif
++@@ -42,7 +46,8 @@ xtables_nft_multi_SOURCES += xtables-sav
++ 				xtables-eb-standalone.c xtables-eb.c \
++ 				xtables-eb-translate.c \
++ 				xtables-translate.c
++-xtables_nft_multi_LDADD   += ${libmnl_LIBS} ${libnftnl_LIBS} ${libnetfilter_conntrack_LIBS} ../extensions/libext4.a ../extensions/libext6.a ../extensions/libext_ebt.a ../extensions/libext_arpt.a
+++xtables_nft_multi_LDADD   += ${libmnl_LIBS} ${libnftnl_LIBS} ${libnetfilter_conntrack_LIBS}
+++xtables_nft_multi_LDFLAGS += -liptext4 -liptext6 -liptext_arpt
++ xtables_nft_multi_SOURCES += xshared.c
++ xtables_nft_multi_LDADD   += ../libxtables/libxtables.la -lm
++ endif
+diff --git a/package/network/utils/iptables/patches/700-disable-legacy-revisions.patch b/package/network/utils/iptables/patches/700-disable-legacy-revisions.patch
+index b9352cc6dd..09db390006 100644
+--- a/package/network/utils/iptables/patches/700-disable-legacy-revisions.patch
++++ b/package/network/utils/iptables/patches/700-disable-legacy-revisions.patch
+@@ -1,6 +1,6 @@
+ --- a/extensions/libxt_conntrack.c
+ +++ b/extensions/libxt_conntrack.c
+-@@ -1385,6 +1385,7 @@ static int conntrack3_mt6_xlate(struct x
++@@ -1399,6 +1399,7 @@ static int conntrack3_mt6_xlate(struct x
+  }
+  
+  static struct xtables_match conntrack_mt_reg[] = {
+@@ -8,7 +8,7 @@
+  	{
+  		.version       = XTABLES_VERSION,
+  		.name          = "conntrack",
+-@@ -1460,6 +1461,7 @@ static struct xtables_match conntrack_mt
++@@ -1474,6 +1475,7 @@ static struct xtables_match conntrack_mt
+  		.alias	       = conntrack_print_name_alias,
+  		.x6_options    = conntrack2_mt_opts,
+  	},
+@@ -16,7 +16,7 @@
+  	{
+  		.version       = XTABLES_VERSION,
+  		.name          = "conntrack",
+-@@ -1492,6 +1494,7 @@ static struct xtables_match conntrack_mt
++@@ -1506,6 +1508,7 @@ static struct xtables_match conntrack_mt
+  		.x6_options    = conntrack3_mt_opts,
+  		.xlate	       = conntrack3_mt6_xlate,
+  	},
+@@ -24,7 +24,7 @@
+  	{
+  		.family        = NFPROTO_UNSPEC,
+  		.name          = "state",
+-@@ -1522,6 +1525,8 @@ static struct xtables_match conntrack_mt
++@@ -1536,6 +1539,8 @@ static struct xtables_match conntrack_mt
+  		.x6_parse      = state_ct23_parse,
+  		.x6_options    = state_opts,
+  	},
+@@ -33,7 +33,7 @@
+  	{
+  		.family        = NFPROTO_UNSPEC,
+  		.name          = "state",
+-@@ -1551,6 +1556,7 @@ static struct xtables_match conntrack_mt
++@@ -1565,6 +1570,7 @@ static struct xtables_match conntrack_mt
+  		.x6_parse      = state_parse,
+  		.x6_options    = state_opts,
+  	},
+-- 
+2.34.1
+

@@ -94,8 +94,8 @@ on:
         options:
         - 'true'
         - 'false'
-      AG71XX_FIX:
-        description: 'Fix ag71xx'
+      BCM_FULLCONE:
+        description: 'bcm fullcone'
         default: 'false'
         type: choice
         options:
@@ -286,8 +286,11 @@ jobs:
         if [ ${{github.event.inputs.TRY_BBR_V3}} = true ]; then
         [ -d openwrt-2410/mypatch-bbr-v3 ] && cp -r openwrt-2410/mypatch-bbr-v3/* openwrt-2410/mypatch-2410-${{matrix.target}}
         fi
-        if [ ${{github.event.inputs.AG71XX_FIX}} = true ]; then
-        [ -d openwrt-2410/my-patch-ag71xx-fix ] && cp -r openwrt-2410/my-patch-ag71xx-fix/* openwrt-2410/mypatch-2410-${{matrix.target}}
+        if [ ${{github.event.inputs.BCM_FULLCONE}} = true ] && [ ${{matrix.target}} == 'rockchip-ipt' ]; then
+        [ -d openwrt-2410/bcmfullcone ] && cp -r openwrt-2410/bcmfullcone/* openwrt-2410/mypatch-2410-rockchip-ipt
+        rm -rf openwrt-2410/luci-patch-2410/0004-Revert-luci-app-firewall-add-fullcone.patch
+        echo "----${{matrix.target}}-----ipt-bcm---"
+        echo "BCM_FULLCONE=_BCM_FULLCONE" >> $GITHUB_ENV
         fi
         echo "status=success" >> $GITHUB_OUTPUT
 
@@ -313,6 +316,7 @@ jobs:
         # sed -i 's/"feeds\/lunatic7\/shortcut-fe"//g' diy-2410.sh
         # sed -i 's/"feeds\/lunatic7\/luci-app-turboacc"//g' diy-2410.sh
         echo "status=success" >> $GITHUB_OUTPUT
+        echo "SFE=_SFE" >> $GITHUB_ENV
 
     - name: 自定义安装包(优先于feeds)
       if: steps.clone.outputs.status == 'success'
@@ -507,7 +511,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE }}${{ env.SFE }}
         path: |
           firmware
 
@@ -516,7 +520,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_IPK_DIR == 'true' && steps.afb.outputs.status == 'success'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE }}${{ env.SFE }}
         path: |
           ipks
 
@@ -547,6 +551,7 @@ jobs:
         echo "# 当前固件IP地址："${{ github.event.inputs.SETIP }}" " >> release.txt
         [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
         [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
+        echo "🔗 ${{ env.BCM_FULLCONE }}${{ env.SFE }}" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件发布

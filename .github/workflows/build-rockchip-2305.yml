@@ -94,6 +94,13 @@ on:
         options:
         - 'true'
         - 'false'
+      BCM_FULLCONE:
+        description: 'bcm fullcone'
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
 env:
   TZ: Asia/Shanghai
 
@@ -261,6 +268,17 @@ jobs:
         df -hT
         ls /mnt/openwrt
 
+    - name: Patch 自定义
+      id: patch
+      run: |
+        if [ ${{github.event.inputs.BCM_FULLCONE}} = true ] && [ ${{matrix.target}} == 'rockchip-ipt' ]; then
+        [ -d openwrt-2305/bcmfullcone ] && cp -r openwrt-2305/bcmfullcone/* openwrt-2305/mypatch-2305-rockchip-ipt
+        rm -rf openwrt-2305/luci-patch-2305/0004-Revert-luci-app-firewall-add-fullcone.patch
+        echo "----${{matrix.target}}-----ipt-bcm---"
+        echo "BCM_FULLCONE=_BCM_FULLCONE" >> $GITHUB_ENV
+        fi
+        echo "status=success" >> $GITHUB_OUTPUT
+
     - name: 添加 SFE
       if: github.event.inputs.SFE_BUILDIN == 'true'
       id: sfe
@@ -304,6 +322,7 @@ jobs:
 
         sed -i 's/kmod-shortcut-fe-cm,kmod-shortcut-fe,kmod-fast-classifier,kmod-fast-classifier-noload,kmod-shortcut-fe-drv,//g' package-configs/kmod_exclude_list*
         echo "status=success" >> $GITHUB_OUTPUT
+        echo "SFE=_SFE" >> $GITHUB_ENV
 
     - name: 自定义安装包(优先于feeds)
       if: steps.clone.outputs.status == 'success'
@@ -505,7 +524,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE }}${{ env.SFE }}
         path: |
           firmware
 
@@ -514,7 +533,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_IPK_DIR == 'true' && steps.afb.outputs.status == 'success'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE }}${{ env.SFE }}
         path: |
           ipks
 
@@ -545,6 +564,7 @@ jobs:
         echo "# 当前固件IP地址："${{ github.event.inputs.SETIP }}" " >> release.txt
         [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
         [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
+        echo "🔗 ${{ env.BCM_FULLCONE }}${{ env.SFE }}" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件发布

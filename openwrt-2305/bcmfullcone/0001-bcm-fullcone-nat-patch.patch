@@ -18,7 +18,7 @@ Subject: [PATCH] bcm fullcone nat patch
 
 diff --git a/package/network/config/firewall/patches/101-bcm-fullconenat.patch b/package/network/config/firewall/patches/101-bcm-fullconenat.patch
 new file mode 100644
-index 0000000000..9cea4a57bf
+index 0000000000..a8de4cbe05
 --- /dev/null
 +++ b/package/network/config/firewall/patches/101-bcm-fullconenat.patch
 @@ -0,0 +1,60 @@
@@ -27,10 +27,10 @@ index 0000000000..9cea4a57bf
 +@@ -49,7 +49,7 @@ const struct fw3_option fw3_flag_opts[]
 + 	FW3_OPT("synflood_rate",       limit,    defaults, syn_flood_rate),
 + 	FW3_OPT("synflood_burst",      int,      defaults, syn_flood_rate.burst),
-+ 	
++
 +-	FW3_OPT("fullcone",           bool,     defaults, fullcone),
 ++	FW3_OPT("fullcone",           int,     defaults, fullcone),
-+ 	
++
 + 	FW3_OPT("tcp_syncookies",      bool,     defaults, tcp_syncookies),
 + 	FW3_OPT("tcp_ecn",             int,      defaults, tcp_ecn),
 +--- a/options.h
@@ -38,7 +38,7 @@ index 0000000000..9cea4a57bf
 +@@ -98,6 +98,13 @@ enum fw3_reject_code
 + 	__FW3_REJECT_CODE_MAX
 + };
-+ 
++
 ++enum fullcone_code
 ++{
 ++	FULLCONE_DISABLED = 0,
@@ -47,16 +47,16 @@ index 0000000000..9cea4a57bf
 ++};
 ++
 + extern const char *fw3_flag_names[__FW3_FLAG_MAX];
-+ 
-+ 
++
++
 +@@ -297,7 +304,7 @@ struct fw3_defaults
 + 	enum fw3_reject_code any_reject_code;
-+ 
++
 + 	bool syn_flood;
 +-	bool fullcone;
 ++	int fullcone;
 + 	struct fw3_limit syn_flood_rate;
-+ 
++
 + 	bool tcp_syncookies;
 +--- a/zones.c
 ++++ b/zones.c
