@@ -1,0 +1,82 @@
+From ac07b3531d858247f9f018e316ce3288a433ac51 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Wed, 5 Mar 2025 16:49:00 +0800
+Subject: [PATCH] toolchain: gcc: switch default to 13
+
+Use GCC 13 instead of GCC 12 by default.
+
+All target kernels are building with GCC 13.
+Most packages from the feed are building fine.
+
+The root file systems is getting a little bit smaller for MIPS 32 BE
+and aarch64.
+
+With GCC 12 I got these sizes for lantiq/xrx200:
+7,005,867 openwrt-lantiq-xrx200-tplink_tdw8970-initramfs-kernel.bin
+
+With GCC 13 I got these sizes for lantiq/xrx200:
+6,989,754 openwrt-lantiq-xrx200-tplink_tdw8970-initramfs-kernel.bin
+
+With GCC 12 I got these sizes for armsr/armv8:
+13,083,836 openwrt-armsr-armv8-generic-ext4-combined.img.gz
+ 4,900,240 openwrt-armsr-armv8-generic-ext4-rootfs.img.gz
+20,142,592 openwrt-armsr-armv8-generic-kernel.bin
+
+With GCC 13 I got these sizes for armsr/armv8:
+13,068,966 openwrt-armsr-armv8-generic-ext4-combined.img.gz
+ 4,893,078 openwrt-armsr-armv8-generic-ext4-rootfs.img.gz
+20,142,592 openwrt-armsr-armv8-generic-kernel.bin
+
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+
+# Conflicts:
+#	toolchain/gcc/Config.version
+---
+ toolchain/gcc/Config.in      |  2 +-
+ toolchain/gcc/Config.version | 10 +++++-----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/toolchain/gcc/Config.in b/toolchain/gcc/Config.in
+index 9156f9c263..85abbdabb7 100644
+--- a/toolchain/gcc/Config.in
++++ b/toolchain/gcc/Config.in
+@@ -2,7 +2,7 @@
+ 
+ choice
+ 	prompt "GCC compiler Version" if TOOLCHAINOPTS
+-	default GCC_USE_VERSION_12
++	default GCC_USE_VERSION_13
+ 	help
+ 	  Select the version of gcc you wish to use.
+ 
+diff --git a/toolchain/gcc/Config.version b/toolchain/gcc/Config.version
+index e40d6b2df3..02a3981d68 100644
+--- a/toolchain/gcc/Config.version
++++ b/toolchain/gcc/Config.version
+@@ -2,17 +2,17 @@ config GCC_VERSION_11
+ 	default y if GCC_USE_VERSION_11
+ 	bool
+ 
+-config GCC_VERSION_13
+-	default y if GCC_USE_VERSION_13
++config GCC_VERSION_12
++	default y if GCC_USE_VERSION_12
+ 	bool
+ 
+ config GCC_VERSION
+ 	string
+ 	default "11.3.0"	if GCC_VERSION_11
+-	default "13.1.0"	if GCC_VERSION_13
+-	default "12.3.0"
++	default "13.1.0"
++	default "12.3.0"	if GCC_VERSION_12
+ 
+ config GCC_USE_DEFAULT_VERSION
+ 	bool
+-	default y if !TOOLCHAINOPTS || GCC_USE_VERSION_12
++	default y if !TOOLCHAINOPTS || GCC_USE_VERSION_13
+ 	imply KERNEL_WERROR
+-- 
+2.34.1
+
