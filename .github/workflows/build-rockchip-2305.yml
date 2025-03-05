@@ -35,14 +35,6 @@ on:
         - 'mpc1917'
         - 'r08'
         - 'fmx1'
-      REPO:
-        description: 'Choose repo'
-        required: true
-        default: 'openwrt-23.05'
-        type: choice
-        options:
-        - 'openwrt-23.05'
-        - 'main'
       SFE_BUILDIN:
         description: 'Build sfe'
         default: 'true'
@@ -131,11 +123,7 @@ jobs:
       - name: 生成矩阵配置
         id: set-matrix
         run: |
-          if [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "openwrt-23.05" ]; then
             matrix={\"include\":[{\"target\":\"rockchip-ipt\",\"repo\":\"openwrt-23.05\"},{\"target\":\"rockchip-nft\",\"repo\":\"openwrt-23.05\"}]}
-          elif [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "main" ]; then
-            matrix={\"include\":[{\"target\":\"rockchip-ipt\",\"repo\":\"main\"},{\"target\":\"rockchip-nft\",\"repo\":\"main\"}]}
-          fi
           echo "Generated matrix: "$matrix""
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
