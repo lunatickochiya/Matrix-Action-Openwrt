@@ -93,13 +93,6 @@ on:
         options:
         - 'true'
         - 'false'
-      GCC13:
-        description: 'gcc13'
-        default: 'true'
-        type: choice
-        options:
-        - 'true'
-        - 'false'
 env:
   TZ: Asia/Shanghai
 
@@ -271,10 +264,6 @@ jobs:
         rm -rf openwrt-2305/luci-patch-2305/0004-Revert-luci-app-firewall-add-fullcone.patch
         echo "----${{matrix.target}}-----ipt-bcm---"
         echo "BCM_FULLCONE=_BCM_FULLCONE" >> $GITHUB_ENV
-        fi
-        if [ ${{github.event.inputs.GCC13}} = true ]; then
-        [ -d openwrt-2305/gcc13 ] && cp -r openwrt-2305/gcc13/* openwrt-2305/mypatch-2305-${{matrix.target}}
-        echo "----${{matrix.target}}-----gcc13---"
         fi
         echo "status=success" >> $GITHUB_OUTPUT
 
