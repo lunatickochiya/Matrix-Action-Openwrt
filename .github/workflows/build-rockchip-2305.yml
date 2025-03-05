@@ -17,10 +17,9 @@ on:
         options:
         - 'true'
         - 'false'
-      UPLOAD_RELEASE:
-        description: 'UPLOAD To RELEASE'
-        required: true
-        default: 'true'
+      TRY_BBR_V3:
+        description: 'TRY BBR V3'
+        default: 'false'
         type: choice
         options:
         - 'true'
@@ -275,6 +274,9 @@ jobs:
         [ -d openwrt-2305/gcc13 ] && cp -r openwrt-2305/gcc13/packages-feeds/* openwrt-2305/feeds-package-patch-2305
         echo "----${{matrix.target}}-----gcc13---"
         fi
+        if [ ${{github.event.inputs.TRY_BBR_V3}} = true ]; then
+        [ -d openwrt-2305/mypatch-bbr-v3 ] && cp -r openwrt-2305/mypatch-bbr-v3/* openwrt-2305/mypatch-2305-${{matrix.target}}
+        fi
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 添加 SFE
@@ -504,8 +506,8 @@ jobs:
         mkdir firmware ipks
         cp -u -f openwrt/kernelipks.zip ipks
         cp -u -f openwrt/ipks.zip ipks
-        [ ${{github.event.inputs.UPLOAD_RELEASE}} = true ] && cp -u -f openwrt/kernelipks.zip firmware
-        [ ${{github.event.inputs.UPLOAD_RELEASE}} = true ] && cp -u -f openwrt/ipks.zip firmware
+        [ $UPLOAD_RELEASE = true ] && cp -u -f openwrt/kernelipks.zip firmware
+        [ $UPLOAD_RELEASE = true ] && cp -u -f openwrt/ipks.zip firmware
         cp openwrt/.config  ./firmware/${{matrix.target}}.config
         cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
         mv -f openwrt/bin/targets/*/*/{*combined*,*ext4*,*sdk*,*imagebuilder*,*buildinfo*,*manifest*,*json*,*sha256sums*} ./firmware/ 2>/dev/null || true
@@ -555,7 +557,7 @@ jobs:
 
     - name: 生成发布标签
       id: tag
-      if: steps.organize.outputs.status == 'success' && github.event.inputs.UPLOAD_RELEASE == 'true' && !cancelled()
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
         touch release.txt
         $GITHUB_WORKSPACE/gen-sha256sum.sh
