@@ -275,6 +275,9 @@ jobs:
         [ -d openwrt-2305/gcc13 ] && cp -r openwrt-2305/gcc13/packages-feeds/* openwrt-2305/feeds-package-patch-2305
         echo "----${{matrix.target}}-----gcc13---"
         fi
+        if [ ${{github.event.inputs.TRY_BBR_V3}} = true ]; then
+        [ -d openwrt-2305/mypatch-bbr-v3 ] && cp -r openwrt-2305/mypatch-bbr-v3/* openwrt-2305/mypatch-2305-${{matrix.target}}
+        fi
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 添加 SFE
