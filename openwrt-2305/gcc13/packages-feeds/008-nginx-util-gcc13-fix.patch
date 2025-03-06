@@ -1,0 +1,25 @@
+From d71e28de375edc17ae0e0c6f735a870759c9a3e8 Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Sat, 1 Jul 2023 16:44:54 -0700
+Subject: [PATCH] nginx-util: fix compilation with GCC13
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+---
+ net/nginx-util/Makefile         | 2 +-
+ net/nginx-util/src/ubus-cxx.hpp | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+
+diff --git a/net/nginx-util/src/ubus-cxx.hpp b/net/nginx-util/src/ubus-cxx.hpp
+index 6c193cfc312aa..42d2d21aaa137 100644
+--- a/net/nginx-util/src/ubus-cxx.hpp
++++ b/net/nginx-util/src/ubus-cxx.hpp
+@@ -159,7 +159,7 @@ class message {
+             both = keys;
+         }
+         both = concat(std::move(both), std::move(key_filter)...);
+-        return std::move(message{msg, std::move(both)});
++        return message{msg, std::move(both)};
+     }
+ 
+     inline ~message() = default;
