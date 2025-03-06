@@ -35,14 +35,6 @@ on:
         - 'mpc1917'
         - 'r08'
         - 'fmx1'
-      REPO:
-        description: 'Choose repo'
-        required: true
-        default: 'openwrt-23.05'
-        type: choice
-        options:
-        - 'openwrt-23.05'
-        - 'main'
       SFE_BUILDIN:
         description: 'Build sfe'
         default: 'true'
@@ -101,6 +93,13 @@ on:
         options:
         - 'true'
         - 'false'
+      TRY_BBR_V3:
+        description: 'TRY BBR V3'
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
 env:
   TZ: Asia/Shanghai
 
@@ -124,10 +123,8 @@ jobs:
       - name: 生成矩阵配置
         id: set-matrix
         run: |
-          if [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "openwrt-23.05" ]; then
+          if [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ]; then
             matrix={\"include\":[{\"target\":\"rockchip-ipt\",\"repo\":\"openwrt-23.05\"},{\"target\":\"rockchip-nft\",\"repo\":\"openwrt-23.05\"}]}
-          elif [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "main" ]; then
-            matrix={\"include\":[{\"target\":\"rockchip-ipt\",\"repo\":\"main\"},{\"target\":\"rockchip-nft\",\"repo\":\"main\"}]}
           fi
           echo "Generated matrix: "$matrix""
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
@@ -183,11 +180,7 @@ jobs:
         [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
         echo ${{matrix.target}}
         source "${GITHUB_WORKSPACE}/env/common-rk3399.txt"
-        if [ "${{ matrix.repo }}" == "openwrt-23.05" ]; then
         source "${GITHUB_WORKSPACE}/env/openwrt-23.05.repo"
-        elif [ "${{ matrix.repo }}" == "main" ]; then
-        source "${GITHUB_WORKSPACE}/env/openwrt-main.repo"
-        fi
         echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
         echo "BURN_UBOOT_IMG_URL=${BURN_UBOOT_IMG_URL}" >> $GITHUB_ENV
         echo "AMLIMG_TOOL_URL=${AMLIMG_TOOL_URL}" >> $GITHUB_ENV
@@ -276,6 +269,11 @@ jobs:
         rm -rf openwrt-2305/luci-patch-2305/0004-Revert-luci-app-firewall-add-fullcone.patch
         echo "----${{matrix.target}}-----ipt-bcm---"
         echo "BCM_FULLCONE=_BCM_FULLCONE" >> $GITHUB_ENV
+        fi
+        if [ ${{github.event.inputs.GCC13}} = true ]; then
+        [ -d openwrt-2305/gcc13 ] && cp -r openwrt-2305/gcc13/core/* openwrt-2305/mypatch-2305-${{matrix.target}}
+        [ -d openwrt-2305/gcc13 ] && cp -r openwrt-2305/gcc13/packages-feeds/* openwrt-2305/feeds-package-patch-2305
+        echo "----${{matrix.target}}-----gcc13---"
         fi
         echo "status=success" >> $GITHUB_OUTPUT
 
@@ -588,7 +586,7 @@ jobs:
     - name: 删除旧版本
       uses: dev-drprasad/delete-older-releases@master
       continue-on-error: true
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      if: github.event.inputs.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
         keep_latest: 24
         delete_tags: true

@@ -1,0 +1,78 @@
+From 6a897e22b0cd6d06fe99f9e651b6dc4347eb8caf Mon Sep 17 00:00:00 2001
+From: Oskari Rauta <oskari.rauta@gmail.com>
+Date: Sun, 28 May 2023 09:33:08 +0300
+Subject: [PATCH] libwebsockets: Fix -Werror=enum-int-mismatch in
+ lws_tls_server_abort_connection()
+
+with gcc 13 libwebsockets fails with -Werror=enum-int-mismatch with both
+SSL variants. These 2 patches work out that issue. Problem is mentioned
+as a issue in openwrt/packages#20949 and instead of overriding issue
+with appropriate CFLAGS, this approach was suggested for me as it's
+been made as a PR (for openssl) at warmcat/libwebsockets#2824
+
+Second patch for mbedtls, was made by me using same approach
+as was used of openssl.
+
+Eventually these propably will be merged into libwebsockets mainstream.
+
+Signed-off-by: Oskari Rauta <oskari.rauta@gmail.com>
+---
+ libs/libwebsockets/Makefile                   |  2 +-
+ .../010-fix-enum-int-mismatch-openssl.patch   | 26 +++++++++++++++++++
+ .../011-fix-enum-int-mismatch-mbedtls.patch   | 14 ++++++++++
+ 3 files changed, 41 insertions(+), 1 deletion(-)
+ create mode 100644 libs/libwebsockets/patches/010-fix-enum-int-mismatch-openssl.patch
+ create mode 100644 libs/libwebsockets/patches/011-fix-enum-int-mismatch-mbedtls.patch
+
+diff --git a/libs/libwebsockets/patches/010-fix-enum-int-mismatch-openssl.patch b/libs/libwebsockets/patches/010-fix-enum-int-mismatch-openssl.patch
+new file mode 100644
+index 0000000000000..5f2ee86e0be3d
+--- /dev/null
++++ b/libs/libwebsockets/patches/010-fix-enum-int-mismatch-openssl.patch
+@@ -0,0 +1,26 @@
++From 722e44cb5b74cae206f47a6dc0d985eba8ed1b2e Mon Sep 17 00:00:00 2001
++From: Khem Raj <raj.khem@gmail.com>
++Date: Thu, 26 Jan 2023 17:17:49 -0800
++Subject: [PATCH] Fix -Werror=enum-int-mismatch in
++ lws_tls_server_abort_connection()
++
++GCC 13 is findinf this function signature mismatch.
++
++../git/lib/tls/openssl/openssl-server.c:713:1: error: conflicting types for 'lws_tls_server_abort_connection' due to enum/integer mismatch; have 'int(struct lws *)' [-Werror=enum-int-mismatch]
++
++Signed-off-by: Khem Raj <raj.khem@gmail.com>
++---
++ lib/tls/openssl/openssl-server.c | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/lib/tls/openssl/openssl-server.c
+++++ b/lib/tls/openssl/openssl-server.c
++@@ -709,7 +709,7 @@ lws_tls_server_new_nonblocking(struct lw
++ 	return 0;
++ }
++ 
++-int
+++enum lws_ssl_capable_status
++ lws_tls_server_abort_connection(struct lws *wsi)
++ {
++ 	if (wsi->tls.use_ssl)
+diff --git a/libs/libwebsockets/patches/011-fix-enum-int-mismatch-mbedtls.patch b/libs/libwebsockets/patches/011-fix-enum-int-mismatch-mbedtls.patch
+new file mode 100644
+index 0000000000000..ce4d44a379726
+--- /dev/null
++++ b/libs/libwebsockets/patches/011-fix-enum-int-mismatch-mbedtls.patch
+@@ -0,0 +1,14 @@
++--- a/lib/tls/mbedtls/mbedtls-server.c
+++++ b/lib/tls/mbedtls/mbedtls-server.c
++@@ -264,11 +264,7 @@ lws_tls_server_new_nonblocking(struct lw
++ 	return 0;
++ }
++ 
++-#if defined(LWS_AMAZON_RTOS)
++ enum lws_ssl_capable_status
++-#else
++-int
++-#endif
++ lws_tls_server_abort_connection(struct lws *wsi)
++ {
++ 	if (wsi->tls.use_ssl)
