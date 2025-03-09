@@ -192,7 +192,7 @@ jobs:
                 echo "----${{matrix.target}}-----NFT-Machine--------"
         fi
         if [ ${{matrix.target}} == 'rockchip-ipt' ]; then
-                mv -f package-configs/single/${{github.event.inputs.MACH}}-ipt-istore.config package-configs/rockchip-ipt-2203.config
+                mv -f package-configs/single/${{github.event.inputs.MACH}}-istore-ipt.config package-configs/rockchip-ipt-2203.config
                 echo "----${{matrix.target}}-----IPT-Package-Config----"
         elif [ ${{matrix.target}} == 'rockchip-nft' ]; then
                 mv -f package-configs/single/${{github.event.inputs.MACH}}-nft.config package-configs/rockchip-nft-2203.config

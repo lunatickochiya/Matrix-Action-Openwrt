@@ -50,4 +50,10 @@ sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
 /etc/init.d/advancedplus disable
 
 
+
+
+
+
+
+
 exit 0
