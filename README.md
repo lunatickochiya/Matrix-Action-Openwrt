@@ -54,9 +54,16 @@
 - onecloud（可定制）
 
 
+# 20250309
+- rockchip mpc1917(不可定制) fxm1-pro tpm312 （istoreos可定制 openwrt-23.05不可定制） 完善tpm312支持
+- ws1508 （可定制）
+- onecloud（可定制）
+- 全面升级到24.10 后期可能会移除23.05  因为r08机器手上没了故后期可能移除 目前全系列支持bcmfullcone 完善了SFE支持
+
+
 ## 源码更新交流学习：
  - 点击链接加入群聊 ：https://jq.qq.com/?_wv=1027&k=5QgVYsC  
  - 群号： 286754582
-
+ - 部分功能和补丁提取自 https://github.com/chenmozhijin/turboacc 感谢
 
 
