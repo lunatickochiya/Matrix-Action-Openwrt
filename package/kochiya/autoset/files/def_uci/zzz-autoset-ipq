@@ -1,0 +1,44 @@
+#!/bin/sh
+uci -q batch <<-EOF >/dev/null
+	set luci.main.lang=zh_cn
+	set system.@system[0].hostname=Lunatic_IPQ
+	set system.@system[0].timezone=CST-8
+	set system.@system[0].zonename=Asia/Shanghai
+	set fstab.@global[0].anon_mount=1
+	set dropbear.@dropbear[0].Interface='lan'
+	set network.lan.ipaddr=192.168.10.1
+	add_list umdns.@umdns[0].network='wan'
+	add_list system.ntp.server='ntp.tencent.com'
+	add_list system.ntp.server='ntp1.aliyun.com'
+	del_list uhttpd.main.listen_https='0.0.0.0:443'
+	del_list uhttpd.main.listen_https='[::]:443'
+	set network.@device[0].packet_steering=0
+	set network.@device[0].flow_offloading=0
+	set network.@device[0].flow_offloading_hw=0
+	commit
+EOF
+
+sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
+
+/etc/init.d/advancedplus stop
+/etc/init.d/advancedplus disable
+/etc/init.d/qos_gargoyle disable
+/etc/init.d/umdns stop
+/etc/init.d/umdns disable
+/etc/init.d/dawn stop
+/etc/init.d/dawn disable
+/etc/init.d/https-dns-proxy stop
+/etc/init.d/https-dns-proxy disable
+
+
+
+
+
+
+
+
+
+
+
+
+exit 0

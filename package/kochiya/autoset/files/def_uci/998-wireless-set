@@ -1,0 +1,112 @@
+#!/bin/sh
+
+RADIO_NUM=$(uci show wireless | grep -c "wifi-device")
+BAND_2G=$(uci show wireless | grep "11g" | awk -F'.' '{print $2}' | awk -F'=' '{print $1}')
+BAND_5G=$(uci show wireless | grep "11a" | awk -F'.' '{print $2}' | awk -F'=' '{print $1}')
+BAND_5G_2=$(uci show wireless | grep "11a" | awk -F'.' '{print $2}' | awk -F'=' '{print $1}' | head -n 2 | tail -n 1)
+
+# 如果为空，则尝试检测
+[ -z "$BAND_2G" ] && BAND_2G=$(uci show wireless | grep "2g" | awk -F'.' '{print $2}' | awk -F'=' '{print $1}')
+[ -z "$BAND_5G" ] && BAND_5G=$(uci show wireless | grep "5g" | awk -F'.' '{print $2}' | awk -F'=' '{print $1}')
+[ -z "$BAND_5G_2" ] && BAND_5G_2=$(uci show wireless | grep "5g" | awk -F'.' '{print $2}' | awk -F'=' '{print $1}' | head -n 2 | tail -n 1)
+
+# 设置 2G SSID
+function set_2g_name() {
+    local iface=$1
+    local phy=$2
+    if [ -f "/sys/class/ieee80211/$phy/macaddress" ]; then
+        uci set wireless."$iface".ssid="Lunatic_2.4G_$(cat /sys/class/ieee80211/$phy/macaddress | sed 's/.[0-9A-Fa-f]:.[0-9A-Fa-f]:.[0-9A-Fa-f]:\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\)/\1\2\3/g' | tr :[a-z] :[A-Z])"
+    fi
+}
+
+# 设置 5G SSID
+function set_5g_name() {
+    local iface=$1
+    local phy=$2
+    if [ -f "/sys/class/ieee80211/$phy/macaddress" ]; then
+        uci set wireless."$iface".ssid="Lunatic_5G_$(cat /sys/class/ieee80211/$phy/macaddress | sed 's/.[0-9A-Fa-f]:.[0-9A-Fa-f]:.[0-9A-Fa-f]:\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\)/\1\2\3/g' | tr :[a-z] :[A-Z])"
+    fi
+}
+
+# 设置第二个 5G SSID
+function set_5g_2_name() {
+    local iface=$1
+    local phy=$2
+    if [ -f "/sys/class/ieee80211/$phy/macaddress" ]; then
+        uci set wireless."$iface".ssid="Lunatic_5G_2_$(cat /sys/class/ieee80211/$phy/macaddress | sed 's/.[0-9A-Fa-f]:.[0-9A-Fa-f]:.[0-9A-Fa-f]:\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\)/\1\2\3/g' | tr :[a-z] :[A-Z])"
+    fi
+}
+
+function set_wifi_name() {
+    echo "RADIO_NUM: $RADIO_NUM" >&2
+    echo "BAND_2G: $BAND_2G, BAND_5G: $BAND_5G, BAND_5G_2: $BAND_5G_2" >&2
+
+    if [ "$RADIO_NUM" -eq 1 ]; then
+        if [ "$BAND_2G" = "radio0" ]; then
+            set_2g_name "@wifi-iface[0]" "phy0"
+        elif [ "$BAND_2G" = "radio1" ]; then
+            set_2g_name "@wifi-iface[0]" "phy1"
+        else
+            echo "No valid 2G band detected for RADIO_NUM=1" >&2
+        fi
+    fi
+
+    if [ "$RADIO_NUM" -eq 2 ]; then
+        if [ "$BAND_2G" = "radio0" ] && [ "$BAND_5G" = "radio1" ]; then
+            set_2g_name "@wifi-iface[0]" "phy0"
+            set_5g_name "@wifi-iface[1]" "phy1"
+        elif [ "$BAND_2G" = "radio1" ] && [ "$BAND_5G" = "radio0" ]; then
+            set_2g_name "@wifi-iface[1]" "phy1"
+            set_5g_name "@wifi-iface[0]" "phy0"
+        else
+            echo "No valid 2G/5G band combination for RADIO_NUM=2" >&2
+        fi
+    fi
+
+    if [ "$RADIO_NUM" -eq 3 ]; then
+        if [ "$BAND_2G" = "radio0" ] && [ "$BAND_5G" = "radio1" ] && [ "$BAND_5G_2" = "radio2" ]; then
+            set_2g_name "@wifi-iface[0]" "phy0"
+            set_5g_name "@wifi-iface[1]" "phy1"
+            set_5g_2_name "@wifi-iface[2]" "phy2"
+        elif [ "$BAND_2G" = "radio1" ] && [ "$BAND_5G" = "radio0" ] && [ "$BAND_5G_2" = "radio2" ]; then
+            set_2g_name "@wifi-iface[1]" "phy1"
+            set_5g_name "@wifi-iface[0]" "phy0"
+            set_5g_2_name "@wifi-iface[2]" "phy2"
+        elif [ "$BAND_2G" = "radio2" ] && [ "$BAND_5G" = "radio0" ] && [ "$BAND_5G_2" = "radio1" ]; then
+            set_2g_name "@wifi-iface[2]" "phy2"
+            set_5g_name "@wifi-iface[0]" "phy0"
+            set_5g_2_name "@wifi-iface[1]" "phy1"
+        else
+            echo "No valid 2G/5G band combination for RADIO_NUM=3" >&2
+        fi
+    fi
+}
+
+
+# 设置无线参数
+function set_wireless() {
+    uci -q batch <<-EOF >/dev/null
+        set wireless.radio0.country='CN'
+        set wireless.radio1.country='CN'
+        set wireless.radio2.country='CN'
+        set wireless.@wifi-device[0].disabled='0'
+        set wireless.@wifi-device[1].disabled='0'
+        set wireless.@wifi-device[2].disabled='0'
+        set wireless.@wifi-iface[0].wpa_disable_eapol_key_retries='1'
+        set wireless.@wifi-iface[1].wpa_disable_eapol_key_retries='1'
+        set wireless.@wifi-iface[0].ieee80211k='1'
+        set wireless.@wifi-iface[0].ieee80211v='1'
+        set wireless.@wifi-iface[0].time_advertisement='2'
+        set wireless.@wifi-iface[1].ieee80211k='1'
+        set wireless.@wifi-iface[1].ieee80211v='1'
+        set wireless.@wifi-iface[1].time_advertisement='2'
+EOF
+}
+
+# 执行设置
+set_wireless
+set_wifi_name
+uci commit wireless
+wifi reload
+
+exit 0

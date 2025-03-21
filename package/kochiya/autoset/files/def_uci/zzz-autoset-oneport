@@ -47,9 +47,12 @@ sed -i '202,207d' /www/luci-static/material/js/script.js
 /etc/init.d/umdns disable
 /etc/init.d/dawn stop
 /etc/init.d/dawn disable
+/etc/modechange start
+
+
+
 /etc/init.d/advancedplus stop
 /etc/init.d/advancedplus disable
-/etc/modechange start
 
 exit 0
 

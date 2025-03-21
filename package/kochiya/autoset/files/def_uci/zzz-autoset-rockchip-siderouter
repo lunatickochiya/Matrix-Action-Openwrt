@@ -40,7 +40,6 @@ uci -q batch <<-EOF >/dev/null
 	set wireless.default_radio0.disabled='0'
 	del_list uhttpd.main.listen_https='0.0.0.0:443'
 	del_list uhttpd.main.listen_https='[::]:443'
-	set wireless.@wifi-iface[0].ssid=Lunatic_2.4G_$(cat /sys/class/ieee80211/phy0/macaddress | sed 's/.[0-9A-Fa-f]:.[0-9A-Fa-f]:.[0-9A-Fa-f]:\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\)/\1\2\3/g' | tr :[a-z] :[A-Z])
 	add_list system.ntp.server='ntp.tencent.com'
 	add_list system.ntp.server='ntp1.aliyun.com'
 	commit

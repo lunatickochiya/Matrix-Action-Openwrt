@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/target.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=4.0
-PKG_RELEASE:=11
+PKG_RELEASE:=15
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -30,6 +30,7 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_meson \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ramips \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ath79 \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ar71xx \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ipq \
 	CONFIG_PACKAGE_$(PKG_NAME)_SIDE_ROUTER_rockchip
 
@@ -102,6 +103,13 @@ define Package/autoset-uci-ipq
   $(Package/autoset/default)
   TITLE:=Support Packages for ipq router uci
   DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
+  HIDDEN:=1
+endef
+
+define Package/autoset-uci-ar71xx
+  $(Package/autoset/default)
+  TITLE:=Support Packages for ar71xx router uci
+  DEPENDS:=+@LUCI_LANG_zh-cn +luci +luci-theme-material +luci-compat
   HIDDEN:=1
 endef
 
@@ -226,6 +234,7 @@ choice
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ramips if TARGET_ramips=y
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ath79 if TARGET_ath79=y
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ipq if TARGET_qualcommax=y
+	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ar71xx if TARGET_ar71xx=y
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci
 	bool "Common UCI"
@@ -259,6 +268,10 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_uci_ipq
 	bool "IPQ SUPPORT"
 	select PACKAGE_autoset-uci-ipq
 
+config PACKAGE_$(PKG_NAME)_INCLUDE_uci_ar71xx
+	bool "IPQ SUPPORT"
+	select PACKAGE_autoset-uci-ar71xx
+
 endchoice
 
 choice
@@ -289,45 +302,61 @@ endef
 define Package/autoset-uci-rockchip/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(if $(CONFIG_PACKAGE_autoset_SIDE_ROUTER_rockchip), \
-		$(INSTALL_BIN) ./files/zzz-autoset-rockchip-siderouter $(1)/etc/uci-defaults/zz99-autoset, \
-		$(INSTALL_BIN) ./files/zzz-autoset-rockchip $(1)/etc/uci-defaults/zz99-autoset \
+		$(INSTALL_BIN) ./files/def_uci/zzz-autoset-rockchip-siderouter $(1)/etc/uci-defaults/zz99-autoset, \
+		$(INSTALL_BIN) ./files/def_uci/zzz-autoset-rockchip $(1)/etc/uci-defaults/zz99-autoset \
+		$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
 	)
 endef
 
 define Package/autoset-uci-meson/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/zzz-autoset-meson $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/zzz-autoset-meson $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
 endef
 
 define Package/autoset-uci-mediatek/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/zzz-autoset-mediatek $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/zzz-autoset-mediatek $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
 endef
 
 define Package/autoset-uci-ramips/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/zzz-autoset-ramips $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/zzz-autoset-ramips $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
 endef
 
 define Package/autoset-uci-ath79/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/zzz-autoset-ath79 $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/zzz-autoset-ath79 $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
+endef
+
+define Package/autoset-uci-ar71xx/install
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./files/def_uci/zzz-autoset-ar71xx $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
 endef
 
 define Package/autoset-uci-ipq/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/zzz-autoset-ipq $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/zzz-autoset-ipq $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
+	$(INSTALL_DIR) $(1)/sbin
+	$(INSTALL_BIN) ./files/arm/usage $(1)/sbin/usage
 endef
 
 define Package/autoset-uci/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/zzz-autoset $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/zzz-autoset $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
 
 endef
 
 define Package/autoset-uci-oneport/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./files/zzz-autoset-oneport $(1)/etc/uci-defaults/zz99-autoset-oneport
+	$(INSTALL_BIN) ./files/def_uci/zzz-autoset-oneport $(1)/etc/uci-defaults/zz99-autoset-oneport
+	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
 endef
 
 define Package/autoset-resize-rootfs-script/install
@@ -362,6 +391,7 @@ $(eval $(call BuildPackage,autoset-uci-rockchip))
 $(eval $(call BuildPackage,autoset-uci-mediatek))
 $(eval $(call BuildPackage,autoset-uci-ramips))
 $(eval $(call BuildPackage,autoset-uci-ath79))
+$(eval $(call BuildPackage,autoset-uci-ar71xx))
 $(eval $(call BuildPackage,autoset-uci-ipq))
 $(eval $(call BuildPackage,autoset-uci-meson))
 $(eval $(call BuildPackage,autoset-resize-rootfs-script))
