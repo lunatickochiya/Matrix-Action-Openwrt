@@ -61,6 +61,10 @@ on:
         - '192.168.9.1'
         - '192.168.99.1'
         - '192.168.166.1'
+        - '192.168.177.1'
+        - '192.168.188.1'
+        - '192.168.10.1'
+        - '192.168.67.1'
         - '172.16.0.1'
         - '172.18.0.1'
         - '10.0.0.1'
@@ -336,10 +340,8 @@ jobs:
       id: setip
       run: |
         IPSET_VALUE="${{ github.event.inputs.SETIP }}"
-        sed -i "s/192\.168\.66\.1/$IPSET_VALUE/g" openwrt/package/kochiya/autoset/files/zzz-autoset-rockchip
-        sed -i "s/192\.168\.66\.1/$IPSET_VALUE/g" openwrt/package/kochiya/autoset/files/zzz-autoset-meson
-        grep 'set network.lan.ipaddr=' openwrt/package/kochiya/autoset/files/zzz-autoset-rockchip
-        grep 'set network.lan.ipaddr=' openwrt/package/kochiya/autoset/files/zzz-autoset-meson
+        sed -i "s/192\.168\.66\.1/$IPSET_VALUE/g" openwrt/package/kochiya/autoset/files/def_uci/zzz-autoset*
+        grep 'set network.lan.ipaddr=' openwrt/package/kochiya/autoset/files/def_uci/zzz-autoset*
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 更新 & 安装 feeds
