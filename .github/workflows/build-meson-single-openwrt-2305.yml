@@ -1,9 +1,5 @@
 name: Build 23.05.5 Single Burn
 
-# Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
-env:
-  GITHUB_ACTIONS_RUNNER_EXTRA_BUFFER_SIZE: 8  # 将缓冲区扩展至 8MB‌:ml-citation{ref="2,6" data="citationList"}
-
 permissions:
   contents: write
   actions: write
