@@ -304,8 +304,8 @@ define Package/autoset-uci-rockchip/install
 	$(if $(CONFIG_PACKAGE_autoset_SIDE_ROUTER_rockchip), \
 		$(INSTALL_BIN) ./files/def_uci/zzz-autoset-rockchip-siderouter $(1)/etc/uci-defaults/zz99-autoset, \
 		$(INSTALL_BIN) ./files/def_uci/zzz-autoset-rockchip $(1)/etc/uci-defaults/zz99-autoset \
-		$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
 	)
+	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
 endef
 
 define Package/autoset-uci-meson/install
