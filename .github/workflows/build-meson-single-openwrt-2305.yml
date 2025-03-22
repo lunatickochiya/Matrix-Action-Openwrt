@@ -1,6 +1,5 @@
 name: Build 23.05.5 Single Burn
 
-# Fix for broken build: https://github.com/softprops/action-gh-release/issues/236
 permissions:
   contents: write
   actions: write
