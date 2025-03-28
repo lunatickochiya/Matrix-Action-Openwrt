@@ -24,7 +24,7 @@ index ee99de47cf13e..ff06c6e325c00 100644
 -GO_VERSION_MAJOR_MINOR:=1.21
 -GO_VERSION_PATCH:=13
 +GO_VERSION_MAJOR_MINOR:=1.23
-+GO_VERSION_PATCH:=1
++GO_VERSION_PATCH:=6
 
  PKG_NAME:=golang
  PKG_VERSION:=$(GO_VERSION_MAJOR_MINOR)$(if $(GO_VERSION_PATCH),.$(GO_VERSION_PATCH))
@@ -33,7 +33,7 @@ index ee99de47cf13e..ff06c6e325c00 100644
  PKG_SOURCE:=go$(PKG_VERSION).src.tar.gz
  PKG_SOURCE_URL:=$(GO_SOURCE_URLS)
 -PKG_HASH:=71fb31606a1de48d129d591e8717a63e0c5565ffba09a24ea9f899a13214c34d
-+PKG_HASH:=6ee44e298379d146a5e5aa6b1c5b5d5f5d0a3365eabdd70741e6e21340ec3b0d
++PKG_HASH:=039c5b04e65279daceee8a6f71e70bd05cf5b801782b6f77c6e19e2ed0511222
 
  PKG_MAINTAINER:=Jeffery To <jeffery.to@gmail.com>
  PKG_LICENSE:=BSD-3-Clause
@@ -41,11 +41,11 @@ index ee99de47cf13e..ff06c6e325c00 100644
 
  BOOTSTRAP_1_17_BUILD_DIR:=$(HOST_BUILD_DIR)/.go_bootstrap_1.17
 
-+BOOTSTRAP_1_21_SOURCE:=go1.21.5.src.tar.gz
-+BOOTSTRAP_1_21_SOURCE_URL:=$(GO_SOURCE_URLS)
-+BOOTSTRAP_1_21_HASH:=285cbbdf4b6e6e62ed58f370f3f6d8c30825d6e56c5853c66d3c23bcdb09db19
++BOOTSTRAP_1_20_SOURCE:=go1.20.14.src.tar.gz
++BOOTSTRAP_1_20_SOURCE_URL:=$(GO_SOURCE_URLS)
++BOOTSTRAP_1_20_HASH:=1aef321a0e3e38b7e91d2d7eb64040666cabdcc77d383de3c9522d0d69b67f4e
 +
-+BOOTSTRAP_1_21_BUILD_DIR:=$(HOST_BUILD_DIR)/.go_bootstrap_1.21
++BOOTSTRAP_1_20_BUILD_DIR:=$(HOST_BUILD_DIR)/.go_bootstrap_1.20
 +
  include $(INCLUDE_DIR)/host-build.mk
  include $(INCLUDE_DIR)/package.mk
@@ -54,7 +54,7 @@ index ee99de47cf13e..ff06c6e325c00 100644
  HOST_UNPACK:=$(HOST_TAR) -C "$(HOST_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(PKG_SOURCE)"
  BOOTSTRAP_UNPACK:=$(HOST_TAR) -C "$(BOOTSTRAP_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(BOOTSTRAP_SOURCE)"
  BOOTSTRAP_1_17_UNPACK:=$(HOST_TAR) -C "$(BOOTSTRAP_1_17_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(BOOTSTRAP_1_17_SOURCE)"
-+BOOTSTRAP_1_21_UNPACK:=$(HOST_TAR) -C "$(BOOTSTRAP_1_21_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(BOOTSTRAP_1_21_SOURCE)"
++BOOTSTRAP_1_20_UNPACK:=$(HOST_TAR) -C "$(BOOTSTRAP_1_20_BUILD_DIR)" --strip-components=1 -xzf "$(DL_DIR)/$(BOOTSTRAP_1_20_SOURCE)"
 
  # don't strip ELF executables in test data
  RSTRIP:=:
@@ -62,21 +62,21 @@ index ee99de47cf13e..ff06c6e325c00 100644
  $(eval $(call GoCompiler/AddProfile,Bootstrap-1.17,$(BOOTSTRAP_1_17_BUILD_DIR),,bootstrap-1.17,$(GO_HOST_OS_ARCH)))
 
 
-+# Bootstrap 1.21
++# Bootstrap 1.20
 +
-+define Download/golang-bootstrap-1.21
-+  FILE:=$(BOOTSTRAP_1_21_SOURCE)
-+  URL:=$(BOOTSTRAP_1_21_SOURCE_URL)
-+  HASH:=$(BOOTSTRAP_1_21_HASH)
++define Download/golang-bootstrap-1.20
++  FILE:=$(BOOTSTRAP_1_20_SOURCE)
++  URL:=$(BOOTSTRAP_1_20_SOURCE_URL)
++  HASH:=$(BOOTSTRAP_1_20_HASH)
 +endef
-+$(eval $(call Download,golang-bootstrap-1.21))
++$(eval $(call Download,golang-bootstrap-1.20))
 +
-+define Bootstrap-1.21/Prepare
-+	mkdir -p "$(BOOTSTRAP_1_21_BUILD_DIR)" && $(BOOTSTRAP_1_21_UNPACK) ;
++define Bootstrap-1.20/Prepare
++	mkdir -p "$(BOOTSTRAP_1_20_BUILD_DIR)" && $(BOOTSTRAP_1_20_UNPACK) ;
 +endef
-+Hooks/HostPrepare/Post+=Bootstrap-1.21/Prepare
++Hooks/HostPrepare/Post+=Bootstrap-1.20/Prepare
 +
-+$(eval $(call GoCompiler/AddProfile,Bootstrap-1.21,$(BOOTSTRAP_1_21_BUILD_DIR),,bootstrap-1.21,$(GO_HOST_OS_ARCH)))
++$(eval $(call GoCompiler/AddProfile,Bootstrap-1.20,$(BOOTSTRAP_1_20_BUILD_DIR),,bootstrap-1.20,$(GO_HOST_OS_ARCH)))
 +
  # Host
 
@@ -86,13 +86,14 @@ index ee99de47cf13e..ff06c6e325c00 100644
  	)
 
 -	$(call GoCompiler/Host/Make, \
-+	$(call GoCompiler/Bootstrap-1.21/Make, \
++	$(call GoCompiler/Bootstrap-1.20/Make, \
  		GOROOT_BOOTSTRAP="$(BOOTSTRAP_1_17_BUILD_DIR)" \
 +		$(HOST_GO_VARS) \
 +	)
 +
 +	$(call GoCompiler/Host/Make, \
-+		GOROOT_BOOTSTRAP="$(BOOTSTRAP_1_21_BUILD_DIR)" \
++		GOROOT_BOOTSTRAP="$(BOOTSTRAP_1_20_BUILD_DIR)" \
  		$(if $(HOST_GO_ENABLE_PIE),GO_LDFLAGS="-buildmode pie") \
  		$(HOST_GO_VARS) \
  	)
+
