@@ -109,7 +109,7 @@ endef
 define Package/autoset-uci-ar71xx
   $(Package/autoset/default)
   TITLE:=Support Packages for ar71xx router uci
-  DEPENDS:=+@LUCI_LANG_zh-cn +luci +luci-theme-material +luci-compat
+  DEPENDS:=autoset +@LUCI_LANG_zh-cn +luci +luci-theme-material +luci-compat
   HIDDEN:=1
 endef
 
