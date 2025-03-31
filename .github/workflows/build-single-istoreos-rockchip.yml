@@ -77,6 +77,20 @@ on:
         options:
         - 'true'
         - 'false'
+      SFE_BUILDIN:
+        description: 'Build sfe'
+        default: 'true'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
+      BCM_FULLCONE:
+        description: 'bcm fullcone'
+        default: 'false'
+        type: choice
+        options:
+        - 'true'
+        - 'false'
 env:
   TZ: Asia/Shanghai
 
