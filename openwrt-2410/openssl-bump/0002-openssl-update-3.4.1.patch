@@ -1,0 +1,34 @@
+From 3cb291b114834a70548d665f25e5fe19deebe91f Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Fri, 4 Apr 2025 22:33:21 +0800
+Subject: [PATCH 2/2] openssl:update 3.4.1
+
+---
+ package/libs/openssl/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package/libs/openssl/Makefile b/package/libs/openssl/Makefile
+index 13ed78fe80..59bc6042fd 100644
+--- a/package/libs/openssl/Makefile
++++ b/package/libs/openssl/Makefile
+@@ -8,7 +8,7 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=openssl
+-PKG_VERSION:=3.4.0
++PKG_VERSION:=3.4.1
+ PKG_RELEASE:=1
+ PKG_BUILD_FLAGS:=no-mips16 gc-sections no-lto
+ 
+@@ -23,7 +23,7 @@ PKG_SOURCE_URL:= \
+ 	http://ftp.fi.muni.cz/pub/openssl/source/ \
+ 	http://ftp.fi.muni.cz/pub/openssl/source/old/$(PKG_BASE)/
+ 
+-PKG_HASH:=e15dda82fe2fe8139dc2ac21a36d4ca01d5313c75f99f46c4e8a27709b7294bf
++PKG_HASH:=002a2d6b30b58bf4bea46c43bdd96365aaf8daa6c428782aa4feee06da197df3
+ 
+ PKG_LICENSE:=Apache-2.0
+ PKG_LICENSE_FILES:=LICENSE
+-- 
+2.34.1
+

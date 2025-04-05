@@ -64,6 +64,7 @@ on:
         - '192.168.177.1'
         - '192.168.188.1'
         - '192.168.10.1'
+        - '192.168.12.1'
         - '192.168.67.1'
         - '172.16.0.1'
         - '172.18.0.1'
@@ -91,20 +92,21 @@ on:
 #        options:
 #        - 'true'
 #        - 'false'
-      TRY_BBR_V3:
-        description: 'Update BBR TO V3'
-        default: 'false'
-        type: choice
-        options:
-        - 'true'
-        - 'false'
-      BCM_FULLCONE:
-        description: 'bcm fullcone'
-        default: 'false'
-        type: choice
-        options:
-        - 'true'
-        - 'false'
+#      TRY_BBR_V3:
+#        description: 'Update BBR TO V3'
+#        default: 'false'
+#        type: choice
+#        options:
+#        - 'true'
+#        - 'false'
+#      BCM_FULLCONE:
+#        description: 'bcm fullcone'
+#        default: 'false'
+#        type: choice
+#        options:
+#        - 'true'
+#        - 'false'
+
       SFE_BUILDIN:
         description: 'Build sfe'
         default: 'true'
@@ -112,6 +114,11 @@ on:
         options:
         - 'true'
         - 'false'
+      patch_repo:
+        description: 'Use json patch repo true(1) or false(0) See ReadME'
+        required: true
+        default: '{"OPENSSL_3_4": "1", "BCM_FULLCONE": "1", "TRY_BBR_V3": "1"}'
+
 env:
   TZ: Asia/Shanghai
 
@@ -218,6 +225,13 @@ jobs:
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         echo "Kernel_Test=_Kernel_Test_Ver" >> $GITHUB_ENV
         fi
+        PATCH_JSON_INPUT='${{ github.event.inputs.patch_repo }}'
+        echo -e "OPENSSL_3_4=$(echo $PATCH_JSON_INPUT | jq -r ".OPENSSL_3_4")" >> $GITHUB_ENV
+        echo "OPENSSL_3_4= $OPENSSL_3_4"
+        echo -e "BCM_FULLCONE=$(echo $PATCH_JSON_INPUT | jq -r ".BCM_FULLCONE")" >> $GITHUB_ENV
+        echo "BCM_FULLCONE= $BCM_FULLCONE"
+        echo -e "TRY_BBR_V3=$(echo $PATCH_JSON_INPUT | jq -r ".TRY_BBR_V3")" >> $GITHUB_ENV
+        echo "TRY_BBR_V3= $TRY_BBR_V3"
         chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh add-test-packages.sh add-sfe-packages.sh
 
     - name: 导入机器及安装包config
@@ -273,14 +287,17 @@ jobs:
     - name: Patch 自定义
       id: patch
       run: |
-        if [ ${{github.event.inputs.TRY_BBR_V3}} = true ]; then
+        if [ ${{ env.TRY_BBR_V3 }} = 1 ]; then
         [ -d openwrt-2410/mypatch-bbr-v3 ] && cp -r openwrt-2410/mypatch-bbr-v3/* openwrt-2410/mypatch-2410-${{matrix.target}}
         fi
-        if [ ${{github.event.inputs.BCM_FULLCONE}} = true ] && [ ${{matrix.target}} == 'rockchip-ipt' ]; then
+        if [ ${{ env.BCM_FULLCONE}} = 1 ] && [ ${{matrix.target}} == 'rockchip-ipt' ]; then
         [ -d openwrt-2410/bcmfullcone ] && cp -r openwrt-2410/bcmfullcone/* openwrt-2410/mypatch-2410-rockchip-ipt
         rm -rf openwrt-2410/luci-patch-2410/0004-Revert-luci-app-firewall-add-fullcone.patch
         echo "----${{matrix.target}}-----ipt-bcm---"
         echo "BCM_FULLCONE=_BCM_FULLCONE" >> $GITHUB_ENV
+        fi
+        if [ ${{ env.OPENSSL_3_4}} = 1 ]; then
+        [ -d openwrt-2410/openssl-bump ] && cp -r openwrt-2410/openssl-bump/* openwrt-2410/mypatch-2410-${{matrix.target}}
         fi
         echo "status=success" >> $GITHUB_OUTPUT
 
