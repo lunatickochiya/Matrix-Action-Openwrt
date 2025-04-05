@@ -9,22 +9,22 @@ on:
   repository_dispatch:
   workflow_dispatch:
     inputs:
-      Cache:
-        description: 'Use Cache'
-        required: true
-        default: 'true'
-        type: choice
-        options:
-        - 'true'
-        - 'false'
-      UPLOAD_RELEASE:
-        description: 'UPLOAD To RELEASE'
-        required: true
-        default: 'true'
-        type: choice
-        options:
-        - 'true'
-        - 'false'
+#      Cache:
+#        description: 'Use Cache'
+#        required: true
+#        default: 'true'
+#        type: choice
+#        options:
+#        - 'true'
+#        - 'false'
+#      UPLOAD_RELEASE:
+#        description: 'UPLOAD To RELEASE'
+#        required: true
+#        default: 'true'
+#        type: choice
+#        options:
+#        - 'true'
+#        - 'false'
       MACH:
         description: 'Choose machine'
         required: true
@@ -70,14 +70,14 @@ on:
         - '172.18.0.1'
         - '10.0.0.1'
         - '10.88.0.1'
-      ALLKMOD:
-        description: 'Compile All Kmods'
-        required: true
-        default: 'true'
-        type: choice
-        options:
-        - 'true'
-        - 'false'
+#      ALLKMOD:
+#        description: 'Compile All Kmods'
+#        required: true
+#        default: 'true'
+#        type: choice
+#        options:
+#        - 'true'
+#        - 'false'
 #      TEST-KERNEL:
 #        description: 'OpenWrt-24.10 use testing kernel'
 #        default: 'false'
@@ -119,6 +119,10 @@ on:
         required: true
         default: '{"OPENSSL_3_4": "1", "BCM_FULLCONE": "1", "TRY_BBR_V3": "1"}'
 
+      config_repo:
+        description: 'Use json config repo true(1) or false(0) See ReadME'
+        required: true
+        default: '{"Cache": "1", "UPLOAD_RELEASE": "1", "ALLKMOD": "1"}'
 env:
   TZ: Asia/Shanghai
 
@@ -218,7 +222,6 @@ jobs:
         echo "UPLOAD_FIRMWARE=${UPLOAD_FIRMWARE}" >> $GITHUB_ENV
         echo "UPLOAD_COWTRANSFER=${UPLOAD_COWTRANSFER}" >> $GITHUB_ENV
         echo "UPLOAD_WETRANSFER=${UPLOAD_WETRANSFER}" >> $GITHUB_ENV
-        echo "UPLOAD_RELEASE=${UPLOAD_RELEASE}" >> $GITHUB_ENV
         echo "UPLOAD_ALLKMOD=${UPLOAD_ALLKMOD}" >> $GITHUB_ENV
         echo "UPLOAD_SYSUPGRADE=${UPLOAD_SYSUPGRADE}" >> $GITHUB_ENV
         echo "USE_Cache=${USE_Cache}" >> $GITHUB_ENV
@@ -227,11 +230,12 @@ jobs:
         fi
         PATCH_JSON_INPUT='${{ github.event.inputs.patch_repo }}'
         echo -e "OPENSSL_3_4=$(echo $PATCH_JSON_INPUT | jq -r ".OPENSSL_3_4")" >> $GITHUB_ENV
-        echo "OPENSSL_3_4= $OPENSSL_3_4"
         echo -e "BCM_FULLCONE=$(echo $PATCH_JSON_INPUT | jq -r ".BCM_FULLCONE")" >> $GITHUB_ENV
-        echo "BCM_FULLCONE= $BCM_FULLCONE"
         echo -e "TRY_BBR_V3=$(echo $PATCH_JSON_INPUT | jq -r ".TRY_BBR_V3")" >> $GITHUB_ENV
-        echo "TRY_BBR_V3= $TRY_BBR_V3"
+        CONFIG_JSON_INPUT='${{ github.event.inputs.config_repo }}'
+        echo -e "Cache=$(echo $CONFIG_JSON_INPUT | jq -r ".Cache")" >> $GITHUB_ENV
+        echo -e "UPLOAD_RELEASE=$(echo $CONFIG_JSON_INPUT | jq -r ".UPLOAD_RELEASE")" >> $GITHUB_ENV
+        echo -e "ALLKMOD=$(echo $CONFIG_JSON_INPUT | jq -r ".ALLKMOD")" >> $GITHUB_ENV
         chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh add-test-packages.sh add-sfe-packages.sh
 
     - name: 导入机器及安装包config
@@ -289,15 +293,19 @@ jobs:
       run: |
         if [ ${{ env.TRY_BBR_V3 }} = 1 ]; then
         [ -d openwrt-2410/mypatch-bbr-v3 ] && cp -r openwrt-2410/mypatch-bbr-v3/* openwrt-2410/mypatch-2410-${{matrix.target}}
+        echo "----${{matrix.target}}----bbr-v3---"
+        echo "TRY_BBR_V3_NAME=_BBR_V3" >> $GITHUB_ENV
         fi
         if [ ${{ env.BCM_FULLCONE}} = 1 ] && [ ${{matrix.target}} == 'rockchip-ipt' ]; then
         [ -d openwrt-2410/bcmfullcone ] && cp -r openwrt-2410/bcmfullcone/* openwrt-2410/mypatch-2410-rockchip-ipt
         rm -rf openwrt-2410/luci-patch-2410/0004-Revert-luci-app-firewall-add-fullcone.patch
         echo "----${{matrix.target}}-----ipt-bcm---"
-        echo "BCM_FULLCONE=_BCM_FULLCONE" >> $GITHUB_ENV
+        echo "BCM_FULLCONE_NAME=_BCM_FULLCONE" >> $GITHUB_ENV
         fi
         if [ ${{ env.OPENSSL_3_4}} = 1 ]; then
         [ -d openwrt-2410/openssl-bump ] && cp -r openwrt-2410/openssl-bump/* openwrt-2410/mypatch-2410-${{matrix.target}}
+        echo "----${{matrix.target}}----openssl-3-4---"
+        echo "OPENSSL_3_4_NAME=_OPENSSL_3_4" >> $GITHUB_ENV
         fi
         echo "status=success" >> $GITHUB_OUTPUT
 
@@ -403,7 +411,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 添加kmod
-      if: steps.config.outputs.status == 'success' && github.event.inputs.ALLKMOD == 'true'
+      if: steps.config.outputs.status == 'success' && env.ALLKMOD == '1'
       id: config2
       run: |
         cd openwrt
@@ -460,7 +468,7 @@ jobs:
 
     - name: 缓存
       uses: stupidloud/cachewrtbuild@main
-      if: github.event.inputs.Cache == 'true' && !cancelled()
+      if: env.Cache == '1' && !cancelled()
       with:
         ccache: 'true'
         mixkey: ${{ matrix.target }}
@@ -503,8 +511,8 @@ jobs:
         mkdir firmware ipks
         cp -u -f openwrt/kernelipks.zip ipks
         cp -u -f openwrt/ipks.zip ipks
-        [ ${{github.event.inputs.UPLOAD_RELEASE}} = true ] && cp -u -f openwrt/kernelipks.zip firmware
-        [ ${{github.event.inputs.UPLOAD_RELEASE}} = true ] && cp -u -f openwrt/ipks.zip firmware
+        [ ${{ env.UPLOAD_RELEASE}} = 1 ] && cp -u -f openwrt/kernelipks.zip firmware
+        [ ${{ env.UPLOAD_RELEASE}} = 1 ] && cp -u -f openwrt/ipks.zip firmware
         cp openwrt/.config  ./firmware/${{matrix.target}}.config
         cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
         mv -f openwrt/bin/targets/*/*/{*combined*,*ext4*,*sdk*,*imagebuilder*,*buildinfo*,*manifest*,*json*,*sha256sums*} ./firmware/ 2>/dev/null || true
@@ -521,7 +529,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE }}${{ env.SFE }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_4_NAME }}
         path: |
           firmware
 
@@ -530,7 +538,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_IPK_DIR == 'true' && steps.afb.outputs.status == 'success'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE }}${{ env.SFE }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_4_NAME }}
         path: |
           ipks
 
@@ -554,14 +562,14 @@ jobs:
 
     - name: 生成发布标签
       id: tag
-      if: steps.organize.outputs.status == 'success' && github.event.inputs.UPLOAD_RELEASE == 'true' && !cancelled()
+      if: steps.organize.outputs.status == 'success' && env.UPLOAD_RELEASE == '1' && !cancelled()
       run: |
         touch release.txt
         $GITHUB_WORKSPACE/gen-sha256sum.sh
         echo "# 当前固件IP地址："${{ github.event.inputs.SETIP }}" " >> release.txt
         [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
         [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
-        echo "🔗 ${{ env.BCM_FULLCONE }}${{ env.SFE }}" >> release.txt
+        echo "🔗 ${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_4_NAME }}" >> release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 上传固件发布
@@ -585,7 +593,7 @@ jobs:
     - name: 删除旧版本
       uses: dev-drprasad/delete-older-releases@master
       continue-on-error: true
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
+      if: env.UPLOAD_RELEASE == '1' && !cancelled()
       with:
         keep_latest: 24
         delete_tags: true
