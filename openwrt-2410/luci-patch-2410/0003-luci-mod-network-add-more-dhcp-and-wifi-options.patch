@@ -37,16 +37,13 @@ index 4b12042..ed2879f 100644
  					o = ss.taboption('advanced', form.Value, 'distance', _('Distance Optimization'), _('Distance to farthest network member in meters. Set only for distances above one kilometer; otherwise it is harmful.'));
  					o.datatype = 'or(range(0,114750),"auto")';
  					o.placeholder = 'auto';
-@@ -1036,6 +1039,9 @@ return view.extend({
- 					o.datatype = 'range(15,65535)';
+@@ -1026,6 +1026,9 @@ return view.extend({
  					o.placeholder = 100;
  					o.rmempty = true;
-+
+
 +					o = ss.taboption('advanced', form.Flag, 'vendor_vht', _('Enable 256-QAM'), _('Enable 256QAM modulation. May not supported by some hardware!'));
 +					o.rmempty = true;
- 				}
- 
- 
--- 
-2.34.1
++
+ 					o = ss.taboption('advanced', form.Flag, 'rxldpc', _('Rx LDPC'), _('Low-Density Parity-Check'));
+ 					o.default = '1';
 

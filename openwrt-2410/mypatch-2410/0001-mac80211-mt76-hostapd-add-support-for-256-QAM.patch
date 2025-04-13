@@ -1,0 +1,195 @@
+From ba244cd25dd3372d1fb4d1395bab55287ea38b9c Mon Sep 17 00:00:00 2001
+From: Lienol <23146169+Lienol@users.noreply.github.com>
+Date: Tue, 5 May 2020 02:08:11 +0800
+Subject: [PATCH] mac80211: mt76:hostapd:add support for 256-QAM
+
+---
+ .../ath10k/983-ath10k-allow-vht-on-2g.patch   | 10 ++++
+ .../subsys/600-mac80211-allow-vht-on-2g.patch | 36 +++++++++++
+ .../mt76/patches/001-allow-vht-on-2g.patch    | 59 +++++++++++++++++++
+ .../wifi-scripts/files/lib/netifd/hostapd.sh  |  4 +-
+ .../files/lib/netifd/wireless/mac80211.sh     |  6 +-
+ 5 files changed, 111 insertions(+), 4 deletions(-)
+ create mode 100644 package/kernel/mac80211/patches/ath10k/983-ath10k-allow-vht-on-2g.patch
+ create mode 100644 package/kernel/mac80211/patches/subsys/600-mac80211-allow-vht-on-2g.patch
+ create mode 100644 package/kernel/mt76/patches/001-allow-vht-on-2g.patch
+
+diff --git a/package/kernel/mac80211/patches/ath10k/983-ath10k-allow-vht-on-2g.patch b/package/kernel/mac80211/patches/ath10k/983-ath10k-allow-vht-on-2g.patch
+new file mode 100644
+index 0000000000..78a09b9ae1
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath10k/983-ath10k-allow-vht-on-2g.patch
+@@ -0,0 +1,10 @@
++--- a/drivers/net/wireless/ath/ath10k/mac.c
+++++ b/drivers/net/wireless/ath/ath10k/mac.c
++@@ -4841,6 +4841,7 @@ static void ath10k_mac_setup_ht_vht_cap(
++ 	if (ar->phy_capability & WHAL_WLAN_11G_CAPABILITY) {
++ 		band = &ar->mac.sbands[NL80211_BAND_2GHZ];
++ 		band->ht_cap = ht_cap;
+++		band->vht_cap = vht_cap;
++ 	}
++ 	if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY) {
++ 		band = &ar->mac.sbands[NL80211_BAND_5GHZ];
+diff --git a/package/kernel/mac80211/patches/subsys/600-mac80211-allow-vht-on-2g.patch b/package/kernel/mac80211/patches/subsys/600-mac80211-allow-vht-on-2g.patch
+new file mode 100644
+index 0000000000..c06f4837cf
+--- /dev/null
++++ b/package/kernel/mac80211/patches/subsys/600-mac80211-allow-vht-on-2g.patch
+@@ -0,0 +1,36 @@
++--- a/net/mac80211/vht.c
+++++ b/net/mac80211/vht.c
++@@ -137,7 +137,8 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(stru
++ 	have_80mhz = false;
++ 	for (i = 0; i < sband->n_channels; i++) {
++ 		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
++-						IEEE80211_CHAN_NO_80MHZ))
+++						IEEE80211_CHAN_NO_80MHZ) &&
+++						(sband->band != NL80211_BAND_2GHZ))
++ 			continue;
++ 
++ 		have_80mhz = true;
++--- a/net/mac80211/util.c
+++++ b/net/mac80211/util.c
++@@ -1312,7 +1312,8 @@ static int ieee80211_build_preq_ies_band
++ 	/* Check if any channel in this sband supports at least 80 MHz */
++ 	for (i = 0; i < sband->n_channels; i++) {
++ 		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
++-						IEEE80211_CHAN_NO_80MHZ))
+++						IEEE80211_CHAN_NO_80MHZ) &&
+++						(sband->band != NL80211_BAND_2GHZ))
++ 			continue;
++ 
++ 		have_80mhz = true;
++--- a/net/mac80211/mlme.c
+++++ b/net/mac80211/mlme.c
++@@ -4861,7 +4861,8 @@ ieee80211_determine_our_sta_mode(struct
++ 		/* Allow VHT if at least one channel on the sband supports 80 MHz */
++ 		for (i = 0; i < sband->n_channels; i++) {
++ 			if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
++-							IEEE80211_CHAN_NO_80MHZ))
+++							IEEE80211_CHAN_NO_80MHZ) &&
+++							(sband->band != NL80211_BAND_2GHZ))
++ 				continue;
++ 
++ 			have_80mhz = true;
+diff --git a/package/kernel/mt76/patches/001-allow-vht-on-2g.patch b/package/kernel/mt76/patches/001-allow-vht-on-2g.patch
+new file mode 100644
+index 0000000000..aaa8dd5fab
+--- /dev/null
++++ b/package/kernel/mt76/patches/001-allow-vht-on-2g.patch
+@@ -0,0 +1,59 @@
++From ed0b9c38becdbf9379787ca0b4db557f03a31dd7 Mon Sep 17 00:00:00 2001
++From: DENG Qingfang <dengqf6@mail2.sysu.edu.cn>
++Date: Mon, 23 Nov 2020 10:46:37 +0800
++Subject: [PATCH] mt76: allow VHT rate on 2.4GHz
++
++Allow chips that support 11ac to use 256QAM on 2.4GHz
++
++Signed-off-by: DENG Qingfang <dqfext@gmail.com>
++---
++ mac80211.c | 10 +++++-----
++ 1 file changed, 5 insertions(+), 5 deletions(-)
++
++diff --git a/mac80211.c b/mac80211.c
++index 766681a4..06aa4228 100644
++--- a/mac80211.c
+++++ b/mac80211.c
++@@ -282,7 +282,7 @@ static void mt76_init_stream_cap(struct mt76_phy *phy,
++ void mt76_set_stream_caps(struct mt76_phy *phy, bool vht)
++ {
++ 	if (phy->cap.has_2ghz)
++-		mt76_init_stream_cap(phy, &phy->sband_2g.sband, false);
+++		mt76_init_stream_cap(phy, &phy->sband_2g.sband, vht);
++ 	if (phy->cap.has_5ghz)
++ 		mt76_init_stream_cap(phy, &phy->sband_5g.sband, vht);
++ 	if (phy->cap.has_6ghz)
++@@ -349,13 +349,13 @@ mt76_init_sband(struct mt76_phy *phy, struct mt76_sband *msband,
++ 
++ static int
++ mt76_init_sband_2g(struct mt76_phy *phy, struct ieee80211_rate *rates,
++-		   int n_rates)
+++		   int n_rates, bool vht)
++ {
++ 	phy->hw->wiphy->bands[NL80211_BAND_2GHZ] = &phy->sband_2g.sband;
++ 
++ 	return mt76_init_sband(phy, &phy->sband_2g, mt76_channels_2ghz,
++ 			       ARRAY_SIZE(mt76_channels_2ghz), rates,
++-			       n_rates, true, false);
+++			       n_rates, true, vht);
++ }
++ 
++ static int
++@@ -508,7 +508,7 @@ int mt76_register_phy(struct mt76_phy *phy, bool vht,
++ 		return ret;
++ 
++ 	if (phy->cap.has_2ghz) {
++-		ret = mt76_init_sband_2g(phy, rates, n_rates);
+++		ret = mt76_init_sband_2g(phy, rates, n_rates, vht);
++ 		if (ret)
++ 			return ret;
++ 	}
++@@ -691,7 +691,7 @@ int mt76_register_device(struct mt76_dev *dev, bool vht,
++ 		return ret;
++ 
++ 	if (phy->cap.has_2ghz) {
++-		ret = mt76_init_sband_2g(phy, rates, n_rates);
+++		ret = mt76_init_sband_2g(phy, rates, n_rates, vht);
++ 		if (ret)
++ 			return ret;
++ 	}
+diff --git a/package/network/config/wifi-scripts/files/lib/netifd/hostapd.sh b/package/network/config/wifi-scripts/files/lib/netifd/hostapd.sh
+index d673f5405b..c90d215cbf 100644
+--- a/package/network/config/wifi-scripts/files/lib/netifd/hostapd.sh
++++ b/package/network/config/wifi-scripts/files/lib/netifd/hostapd.sh
+@@ -122,6 +122,7 @@ hostapd_common_add_device_config() {
+ 	config_add_int maxassoc
+ 	config_add_int reg_power_type
+ 	config_add_boolean stationary_ap
++	config_add_boolean vendor_vht
+ 
+ 	config_add_string acs_chan_bias
+ 	config_add_array hostapd_options
+@@ -139,7 +140,7 @@ hostapd_prepare_device_config() {
+ 	local base_cfg=
+ 
+ 	json_get_vars country country3 country_ie beacon_int:100 doth require_mode legacy_rates \
+-		acs_chan_bias local_pwr_constraint spectrum_mgmt_required airtime_mode cell_density \
++		acs_chan_bias local_pwr_constraint spectrum_mgmt_required airtime_mode cell_density vendor_vht \
+ 		rts_threshold beacon_rate rssi_reject_assoc_rssi rssi_ignore_probe_request maxassoc \
+ 		mbssid:0 band reg_power_type stationary_ap
+ 
+@@ -210,6 +211,7 @@ hostapd_prepare_device_config() {
+ 				set_default rate_list "24000 36000 48000 54000"
+ 				set_default basic_rate_list "24000"
+ 			fi
++			[ -n "$vendor_vht" ] && append base_cfg "vendor_vht=$vendor_vht" "$N"
+ 		;;
+ 		a)
+ 			if [ "$cell_density" -eq 1 ]; then
+diff --git a/package/network/config/wifi-scripts/files/lib/netifd/wireless/mac80211.sh b/package/network/config/wifi-scripts/files/lib/netifd/wireless/mac80211.sh
+index b4aa19bf52..102b0bde0a 100755
+--- a/package/network/config/wifi-scripts/files/lib/netifd/wireless/mac80211.sh
++++ b/package/network/config/wifi-scripts/files/lib/netifd/wireless/mac80211.sh
+@@ -144,8 +144,8 @@ mac80211_hostapd_setup_base() {
+ 	[ -n "$acs_exclude_dfs" ] && [ "$acs_exclude_dfs" -gt 0 ] &&
+ 		append base_cfg "acs_exclude_dfs=1" "$N"
+ 
+-	json_get_vars noscan ht_coex min_tx_power:0 tx_burst
+-	json_get_values ht_capab_list ht_capab
++	json_get_vars noscan ht_coex min_tx_power:0 tx_burst vendor_vht
++	json_get_values ht_capab_list ht_capab tx_burst
+ 	json_get_values channel_list channels
+ 
+ 	[ "$auto_channel" = 0 ] && [ -z "$channel_list" ] && \
+@@ -317,7 +317,7 @@ mac80211_hostapd_setup_base() {
+ 	[ "$hwmode" = "a" ] || enable_ac=0
+ 	[ "$band" = "6g" ] && enable_ac=0
+ 
+-	if [ "$enable_ac" != "0" ]; then
++	if [ "$enable_ac" != "0" -o "$vendor_vht" = "1" ]; then
+ 		json_get_vars \
+ 			rxldpc:1 \
+ 			short_gi_80:1 \
+-- 
+2.34.1
+
