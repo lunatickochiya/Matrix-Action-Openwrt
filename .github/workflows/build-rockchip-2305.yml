@@ -341,6 +341,7 @@ jobs:
         fi
         if [ "${{ matrix.repo }}" == "openwrt-23.05" ]; then
         [ -d openwrt-2305/mypatch-2305-${{matrix.target}} ] && mv -f openwrt-2305/mypatch-2305-${{matrix.target}} openwrt/mypatch
+        [ -d openwrt-2305/mypatch-2305 ] && mv -f openwrt-2305/mypatch-2305 openwrt/mypatch-2305
         elif [ "${{ matrix.repo }}" == "main" ]; then
         [ -d openwrt-main/mypatch-main-${{matrix.target}} ] && mv -f openwrt-main/mypatch-main-${{matrix.target}} openwrt/mypatch
         fi
