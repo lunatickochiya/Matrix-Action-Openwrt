@@ -5,13 +5,11 @@ Subject: [PATCH] bcm fullcone nat patch
 
 ---
  .../patches/101-bcm-fullconenat.patch         |  60 +++++
- .../patches/900-bcm-fullconenat.patch         |  73 ++++++
  .../982-add-bcm-fullconenat-support.patch     | 235 ++++++++++++++++++
  .../982-add-bcm-fullconenat-support.patch     | 235 ++++++++++++++++++
  .../982-add-bcm-fullconenat-support.patch     | 235 ++++++++++++++++++
  5 files changed, 838 insertions(+)
  create mode 100644 package/network/config/firewall/patches/101-bcm-fullconenat.patch
- create mode 100644 package/network/utils/iptables/patches/900-bcm-fullconenat.patch
  create mode 100644 target/linux/generic/hack-5.15/982-add-bcm-fullconenat-support.patch
  create mode 100644 target/linux/generic/hack-6.1/982-add-bcm-fullconenat-support.patch
  create mode 100644 target/linux/generic/hack-6.6/982-add-bcm-fullconenat-support.patch
@@ -82,85 +80,6 @@ index 0000000000..a8de4cbe05
 + 					else
 + 					{
 + 						fw3_ipt_rule_target(r, "MASQUERADE");
-diff --git a/package/network/utils/iptables/patches/900-bcm-fullconenat.patch b/package/network/utils/iptables/patches/900-bcm-fullconenat.patch
-new file mode 100644
-index 0000000000..2ff8db06a2
---- /dev/null
-+++ b/package/network/utils/iptables/patches/900-bcm-fullconenat.patch
-@@ -0,0 +1,73 @@
-+--- a/extensions/libipt_MASQUERADE.c
-++++ b/extensions/libipt_MASQUERADE.c
-+@@ -11,6 +11,7 @@
-+ enum {
-+ 	O_TO_PORTS = 0,
-+ 	O_RANDOM,
-++	O_MODE,
-+ 	O_RANDOM_FULLY,
-+ };
-+ 
-+@@ -23,13 +24,16 @@ static void MASQUERADE_help(void)
-+ " --random\n"
-+ "				Randomize source port.\n"
-+ " --random-fully\n"
-+-"				Fully randomize source port.\n");
-++"				Fully randomize source port.\n"
-++" --mode <fullcone|symmetric>\n"
-++"				NAT mode.\n");
-+ }
-+ 
-+ static const struct xt_option_entry MASQUERADE_opts[] = {
-+ 	{.name = "to-ports", .id = O_TO_PORTS, .type = XTTYPE_STRING},
-+ 	{.name = "random", .id = O_RANDOM, .type = XTTYPE_NONE},
-+ 	{.name = "random-fully", .id = O_RANDOM_FULLY, .type = XTTYPE_NONE},
-++	{.name = "mode", .id = O_MODE, .type = XTTYPE_STRING},
-+ 	XTOPT_TABLEEND,
-+ };
-+ 
-+@@ -90,6 +94,8 @@ static void MASQUERADE_parse(struct xt_o
-+ 	else
-+ 		portok = 0;
-+ 
-++	mr->range[0].min_ip = 0;
-++
-+ 	xtables_option_parse(cb);
-+ 	switch (cb->entry->id) {
-+ 	case O_TO_PORTS:
-+@@ -104,6 +110,15 @@ static void MASQUERADE_parse(struct xt_o
-+ 	case O_RANDOM_FULLY:
-+ 		mr->range[0].flags |=  NF_NAT_RANGE_PROTO_RANDOM_FULLY;
-+ 		break;
-++	case O_MODE:
-++		if (strcasecmp(cb->arg, "fullcone") == 0)
-++			mr->range[0].min_ip = 1;
-++		else if (strcasecmp(cb->arg, "symmetric") == 0)
-++			mr->range[0].min_ip = 0;
-++		else
-++			xtables_error(PARAMETER_PROBLEM,
-++				   "Unknown mode %s", cb->arg);
-++		break;
-+ 	}
-+ }
-+ 
-+@@ -126,6 +141,9 @@ MASQUERADE_print(const void *ip, const s
-+ 
-+ 	if (r->flags & NF_NAT_RANGE_PROTO_RANDOM_FULLY)
-+ 		printf(" random-fully");
-++
-++	if (r->min_ip == 1)
-++		printf(" mode: fullcone");
-+ }
-+ 
-+ static void
-+@@ -145,6 +163,9 @@ MASQUERADE_save(const void *ip, const st
-+ 
-+ 	if (r->flags & NF_NAT_RANGE_PROTO_RANDOM_FULLY)
-+ 		printf(" --random-fully");
-++
-++	if (r->min_ip == 1)
-++		printf(" --mode fullcone");
-+ }
-+ 
-+ static int MASQUERADE_xlate(struct xt_xlate *xl,
 diff --git a/target/linux/generic/hack-5.15/982-add-bcm-fullconenat-support.patch b/target/linux/generic/hack-5.15/982-add-bcm-fullconenat-support.patch
 new file mode 100644
 index 0000000000..41b16c36d6

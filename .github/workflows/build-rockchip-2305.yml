@@ -269,9 +269,15 @@ jobs:
       id: patch
       run: |
         if [ ${{github.event.inputs.BCM_FULLCONE}} = true ] && [ ${{matrix.target}} == 'rockchip-ipt' ]; then
-        [ -d openwrt-2305/bcmfullcone ] && cp -r openwrt-2305/bcmfullcone/* openwrt-2305/mypatch-2305-rockchip-ipt
+        [ -d openwrt-2305/bcmfullcone ] && cp -r openwrt-2305/bcmfullcone/a-* openwrt-2305/mypatch-2305-rockchip-ipt
         rm -rf openwrt-2305/luci-patch-2305/0004-Revert-luci-app-firewall-add-fullcone.patch
         echo "----${{matrix.target}}-----ipt-bcm---"
+        echo "BCM_FULLCONE=_BCM_FULLCONE" >> $GITHUB_ENV
+        fi
+        if [ ${{github.event.inputs.BCM_FULLCONE}} = true ] && [ ${{matrix.target}} == 'rockchip-nft' ]; then
+        [ -d openwrt-2305/bcmfullcone ] && cp -r openwrt-2305/bcmfullcone/b-* openwrt-2305/mypatch-2305-rockchip-nft
+        rm -rf openwrt-2305/luci-patch-2305/0004-Revert-luci-app-firewall-add-fullcone.patch
+        echo "----${{matrix.target}}-----nft-bcm---"
         echo "BCM_FULLCONE=_BCM_FULLCONE" >> $GITHUB_ENV
         fi
         if [ ${{github.event.inputs.GCC13}} = true ]; then

@@ -297,9 +297,15 @@ jobs:
         echo "TRY_BBR_V3_NAME=_BBR_V3" >> $GITHUB_ENV
         fi
         if [ ${{ env.BCM_FULLCONE}} = 1 ] && [ ${{matrix.target}} == 'rockchip-ipt' ]; then
-        [ -d openwrt-2410/bcmfullcone ] && cp -r openwrt-2410/bcmfullcone/* openwrt-2410/mypatch-2410-rockchip-ipt
+        [ -d openwrt-2410/bcmfullcone ] && cp -r openwrt-2410/bcmfullcone/a-* openwrt-2410/mypatch-2410-rockchip-ipt
         rm -rf openwrt-2410/luci-patch-2410/0004-Revert-luci-app-firewall-add-fullcone.patch
         echo "----${{matrix.target}}-----ipt-bcm---"
+        echo "BCM_FULLCONE_NAME=_BCM_FULLCONE" >> $GITHUB_ENV
+        fi
+        if [ ${{ env.BCM_FULLCONE}} = 1 ] && [ ${{matrix.target}} == 'rockchip-nft' ]; then
+        [ -d openwrt-2410/bcmfullcone ] && cp -r openwrt-2410/bcmfullcone/b-* openwrt-2410/mypatch-2410-rockchip-nft
+        rm -rf openwrt-2410/luci-patch-2410/0004-Revert-luci-app-firewall-add-fullcone.patch
+        echo "----${{matrix.target}}-----nft-bcm---"
         echo "BCM_FULLCONE_NAME=_BCM_FULLCONE" >> $GITHUB_ENV
         fi
         if [ ${{ env.OPENSSL_3_4}} = 1 ]; then
