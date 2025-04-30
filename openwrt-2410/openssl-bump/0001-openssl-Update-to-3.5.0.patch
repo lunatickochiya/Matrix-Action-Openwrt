@@ -1,0 +1,169 @@
+From ff3512563ca81bfe226b3d0c4b6e53145f150ad4 Mon Sep 17 00:00:00 2001
+From: Ryan Keane <the.ra2.ifv@gmail.com>
+Date: Mon, 24 Jun 2024 09:03:48 -0400
+Subject: [PATCH] openssl: Update to 3.5.0
+
+Remove broken mirror, add Github release as mirror.
+
+Refresh patch:
+- 100-Configure-afalg-support.patch
+- 120-strip-cflags-from-binary.patch
+- 140-allow-prefer-chacha20.patch
+- 500-e_devcrypto-default-to-not-use-digests-in-engine.patch
+- 510-e_devcrypto-ignore-error-when-closing-session.patch
+
+Signed-off-by: Ryan Keane <the.ra2.ifv@gmail.com>
+---
+ package/libs/openssl/Makefile                        | 12 +++++++-----
+ .../patches/100-Configure-afalg-support.patch        |  8 ++++----
+ .../patches/120-strip-cflags-from-binary.patch       |  2 +-
+ .../openssl/patches/140-allow-prefer-chacha20.patch  |  8 ++++----
+ ...crypto-default-to-not-use-digests-in-engine.patch |  4 ++--
+ ...devcrypto-ignore-error-when-closing-session.patch |  2 +-
+ 6 files changed, 19 insertions(+), 17 deletions(-)
+
+diff --git a/package/libs/openssl/Makefile b/package/libs/openssl/Makefile
+index 4829670f86..1464fbb017 100644
+--- a/package/libs/openssl/Makefile
++++ b/package/libs/openssl/Makefile
+@@ -8,7 +8,7 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=openssl
+-PKG_VERSION:=3.0.16
++PKG_VERSION:=3.5.0
+ PKG_RELEASE:=1
+ PKG_BUILD_FLAGS:=no-mips16 gc-sections no-lto
+ 
+@@ -17,11 +17,13 @@ PKG_BUILD_PARALLEL:=1
+ PKG_BASE:=$(subst $(space),.,$(wordlist 1,2,$(subst .,$(space),$(PKG_VERSION))))
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:= \
+-	https://www.openssl.org/source/ \
+-	https://www.openssl.org/source/old/$(PKG_BASE)/ \
+-	https://github.com/openssl/openssl/releases/download/$(PKG_NAME)-$(PKG_VERSION)/
++	http://www.openssl.org/source/ \
++	http://www.openssl.org/source/old/$(PKG_BASE)/ \
++	https://github.com/openssl/openssl/releases/download/$(PKG_NAME)-$(PKG_VERSION)/ \
++	http://ftp.fi.muni.cz/pub/openssl/source/ \
++	http://ftp.fi.muni.cz/pub/openssl/source/old/$(PKG_BASE)/
+ 
+-PKG_HASH:=57e03c50feab5d31b152af2b764f10379aecd8ee92f16c985983ce4a99f7ef86
++PKG_HASH:=344d0a79f1a9b08029b0744e2cc401a43f9c90acd1044d09a530b4885a8e9fc0
+ 
+ PKG_LICENSE:=Apache-2.0
+ PKG_LICENSE_FILES:=LICENSE
+diff --git a/package/libs/openssl/patches/100-Configure-afalg-support.patch b/package/libs/openssl/patches/100-Configure-afalg-support.patch
+index e9cd7bf9c1..4fedd37448 100644
+--- a/package/libs/openssl/patches/100-Configure-afalg-support.patch
++++ b/package/libs/openssl/patches/100-Configure-afalg-support.patch
+@@ -10,7 +10,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+ 
+ --- a/Configure
+ +++ b/Configure
+-@@ -1677,7 +1677,9 @@ $config{CFLAGS} = [ map { $_ eq '--ossl-
++@@ -1810,7 +1810,9 @@ $config{CFLAGS} = [ map { $_ eq '--ossl-
+  
+  unless ($disabled{afalgeng}) {
+      $config{afalgeng}="";
+@@ -18,6 +18,6 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+ +    if ($target =~ m/openwrt$/) {
+ +        push @{$config{engdirs}}, "afalg";
+ +    } elsif (grep { $_ eq 'afalgeng' } @{$target{enable}}) {
+-         my $minver = 4*10000 + 1*100 + 0;
+-         if ($config{CROSS_COMPILE} eq "") {
+-             my $verstr = `uname -r`;
++         push @{$config{engdirs}}, "afalg";
++     } else {
++         disable('not-linux', 'afalgeng');
+diff --git a/package/libs/openssl/patches/120-strip-cflags-from-binary.patch b/package/libs/openssl/patches/120-strip-cflags-from-binary.patch
+index ebdb940b42..19765b3415 100644
+--- a/package/libs/openssl/patches/120-strip-cflags-from-binary.patch
++++ b/package/libs/openssl/patches/120-strip-cflags-from-binary.patch
+@@ -10,7 +10,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+ 
+ --- a/crypto/build.info
+ +++ b/crypto/build.info
+-@@ -109,7 +109,7 @@ DEFINE[../libcrypto]=$UPLINKDEF
++@@ -115,7 +115,7 @@ DEFINE[../libcrypto]=$UPLINKDEF
+  
+  DEPEND[info.o]=buildinf.h
+  DEPEND[cversion.o]=buildinf.h
+diff --git a/package/libs/openssl/patches/140-allow-prefer-chacha20.patch b/package/libs/openssl/patches/140-allow-prefer-chacha20.patch
+index fb7bc84361..c013108d55 100644
+--- a/package/libs/openssl/patches/140-allow-prefer-chacha20.patch
++++ b/package/libs/openssl/patches/140-allow-prefer-chacha20.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+ 
+ --- a/ssl/ssl_ciph.c
+ +++ b/ssl/ssl_ciph.c
+-@@ -1506,11 +1506,29 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
++@@ -1488,11 +1488,29 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
+      ssl_cipher_apply_rule(0, SSL_kECDHE, 0, 0, 0, 0, 0, CIPHER_DEL, -1, &head,
+                            &tail);
+  
+@@ -46,7 +46,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+  
+      /*
+       * ...and generally, our preferred cipher is AES.
+-@@ -1565,7 +1583,7 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
++@@ -1547,7 +1565,7 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
+       * Within each group, ciphers remain sorted by strength and previous
+       * preference, i.e.,
+       * 1) ECDHE > DHE
+@@ -55,7 +55,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+       * 3) AES > rest
+       * 4) TLS 1.2 > legacy
+       *
+-@@ -2236,7 +2254,13 @@ const char *OSSL_default_cipher_list(voi
++@@ -2246,7 +2264,13 @@ const char *OSSL_default_cipher_list(voi
+   */
+  const char *OSSL_default_ciphersuites(void)
+  {
+@@ -71,7 +71,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+  }
+ --- a/include/openssl/ssl.h.in
+ +++ b/include/openssl/ssl.h.in
+-@@ -195,9 +195,15 @@ extern "C" {
++@@ -199,9 +199,15 @@ extern "C" {
+   * DEPRECATED IN 3.0.0, in favor of OSSL_default_ciphersuites()
+   * Update both macro and function simultaneously
+   */
+diff --git a/package/libs/openssl/patches/500-e_devcrypto-default-to-not-use-digests-in-engine.patch b/package/libs/openssl/patches/500-e_devcrypto-default-to-not-use-digests-in-engine.patch
+index f183263858..64fb609e2b 100644
+--- a/package/libs/openssl/patches/500-e_devcrypto-default-to-not-use-digests-in-engine.patch
++++ b/package/libs/openssl/patches/500-e_devcrypto-default-to-not-use-digests-in-engine.patch
+@@ -21,7 +21,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+ 
+ --- a/engines/e_devcrypto.c
+ +++ b/engines/e_devcrypto.c
+-@@ -905,7 +905,7 @@ static void prepare_digest_methods(void)
++@@ -906,7 +906,7 @@ static void prepare_digest_methods(void)
+      for (i = 0, known_digest_nids_amount = 0; i < OSSL_NELEM(digest_data);
+           i++) {
+  
+@@ -30,7 +30,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+  
+          /*
+           * Check that the digest is usable
+-@@ -1119,7 +1119,7 @@ static const ENGINE_CMD_DEFN devcrypto_c
++@@ -1120,7 +1120,7 @@ static const ENGINE_CMD_DEFN devcrypto_c
+  #ifdef IMPLEMENT_DIGEST
+     {DEVCRYPTO_CMD_DIGESTS,
+      "DIGESTS",
+diff --git a/package/libs/openssl/patches/510-e_devcrypto-ignore-error-when-closing-session.patch b/package/libs/openssl/patches/510-e_devcrypto-ignore-error-when-closing-session.patch
+index 40b1dc78d3..5b0c8e979a 100644
+--- a/package/libs/openssl/patches/510-e_devcrypto-ignore-error-when-closing-session.patch
++++ b/package/libs/openssl/patches/510-e_devcrypto-ignore-error-when-closing-session.patch
+@@ -10,7 +10,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+ 
+ --- a/engines/e_devcrypto.c
+ +++ b/engines/e_devcrypto.c
+-@@ -211,9 +211,8 @@ static int cipher_init(EVP_CIPHER_CTX *c
++@@ -212,9 +212,8 @@ static int cipher_init(EVP_CIPHER_CTX *c
+      int ret;
+  
+      /* cleanup a previous session */
+-- 
+2.43.0
+
