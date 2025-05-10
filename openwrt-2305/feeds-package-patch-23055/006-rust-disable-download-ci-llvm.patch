@@ -1,0 +1,24 @@
+From b49fb106108abe21eba3c552d66c8a373dce6190 Mon Sep 17 00:00:00 2001
+From: Tianling Shen <cnsztl@immortalwrt.org>
+Date: Wed, 12 Mar 2025 17:24:26 +0800
+Subject: [PATCH] rust: disable download ci llvm
+
+Upstream removed CI builds for this (outdated) version.
+
+Signed-off-by: Tianling Shen <cnsztl@immortalwrt.org>
+---
+ lang/rust/Makefile | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/lang/rust/Makefile b/lang/rust/Makefile
+index 90f7ee56a2b6f..bd1c05f892bd2 100644
+--- a/lang/rust/Makefile
++++ b/lang/rust/Makefile
+@@ -75,7 +75,6 @@ HOST_CONFIGURE_ARGS = \
+ 	--release-channel=stable \
+ 	--enable-cargo-native-static \
+ 	--bootstrap-cache-path=$(DL_DIR)/rustc \
+-	--set=llvm.download-ci-llvm=true \
+ 	$(TARGET_CONFIGURE_ARGS)
+ 
+ define Host/Uninstall
