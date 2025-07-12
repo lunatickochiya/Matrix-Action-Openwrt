@@ -1,18 +1,24 @@
 #
-# Copyright (c) 2018-2023 Nick Peng (pymumu@gmail.com)
+# Copyright (c) 2018-2025 Nick Peng (pymumu@gmail.com)
 # This is free software, licensed under the GNU General Public License v3.
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=smartdns
-PKG_VERSION:=Release46.1
-PKG_RELEASE:=10
+PKG_VERSION:=1.2025.46.dev
+PKG_RELEASE:=3
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://www.github.com/pymumu/smartdns.git
-PKG_SOURCE_VERSION:=b525170bfd627607ee5ac81f97ae0f1f4f087d6b
+PKG_SOURCE_VERSION:=130a9c06016d4aa12fede5edc94dc847c81640d7
 PKG_MIRROR_HASH:=skip
+
+SMARTDNS_WEBUI_VERSION:=1.0.0
+SMAETDNS_WEBUI_SOURCE_PROTO:=git
+SMARTDNS_WEBUI_SOURCE_URL:=https://github.com/pymumu/smartdns-webui.git
+SMARTDNS_WEBUI_SOURCE_VERSION:=c610c52492b3988e7cee370424013afdf0e7a00b
+SMARTDNS_WEBUI_FILE:=smartdns-webui-$(SMARTDNS_WEBUI_VERSION).tar.gz
 
 PKG_MAINTAINER:=Nick Peng <pymumu@gmail.com>
 PKG_LICENSE:=GPL-3.0-or-later
@@ -20,23 +26,33 @@ PKG_LICENSE_FILES:=LICENSE
 
 PKG_BUILD_PARALLEL:=1
 
+# node compile is slow, so do not use it, download node manually.
+# PACKAGE_smartdns-ui:node/host
+PKG_BUILD_DEPENDS:=PACKAGE_smartdns-ui:rust/host
+
+include $(TOPDIR)/feeds/packages/lang/rust/rust-package.mk
 include $(INCLUDE_DIR)/package.mk
 
-MAKE_VARS += VER=$(PKG_VERSION) 
+MAKE_VARS += VER=$(PKG_VERSION)
 MAKE_PATH:=src
 
-define Package/smartdns
+define Package/smartdns/default
   SECTION:=net
   CATEGORY:=Network
-  TITLE:=smartdns server
-  DEPENDS:=+libpthread +libopenssl
+  SUBMENU:=IP Addresses and Names
   URL:=https://www.github.com/pymumu/smartdns/
+endef
+
+define Package/smartdns
+  $(Package/smartdns/default)
+  TITLE:=smartdns server
+  DEPENDS:=+libpthread +libopenssl +libatomic
 endef
 
 define Package/smartdns/description
 SmartDNS is a local DNS server which accepts DNS query requests from local network clients,
 gets DNS query results from multiple upstream DNS servers concurrently, and returns the fastest IP to clients.
-Unlike dnsmasq's all-servers, smartdns returns the fastest IP, and encrypt DNS queries with DoT or DoH. 
+Unlike dnsmasq's all-servers, smartdns returns the fastest IP, and encrypt DNS queries with DoT or DoH.
 endef
 
 define Package/smartdns/conffiles
@@ -49,7 +65,7 @@ define Package/smartdns/conffiles
 endef
 
 define Package/smartdns/install
-	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/config $(1)/etc/init.d 
+	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/config $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/etc/smartdns $(1)/etc/smartdns/domain-set $(1)/etc/smartdns/conf.d/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/smartdns $(1)/usr/sbin/smartdns
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/package/openwrt/files/etc/init.d/smartdns $(1)/etc/init.d/smartdns
@@ -59,4 +75,69 @@ define Package/smartdns/install
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/package/openwrt/files/etc/config/smartdns $(1)/etc/config/smartdns
 endef
 
+define Package/smartdns-ui
+  $(Package/smartdns/default)
+  TITLE:=smartdns dashboard
+  DEPENDS:=+smartdns $(RUST_ARCH_DEPENDS)
+endef
+
+define Package/smartdns-ui/description
+A dashboard ui for smartdns server.
+endef
+
+define Package/smartdns-ui/conffiles
+/etc/config/smartdns
+endef
+
+define Package/smartdns-ui/install
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(INSTALL_DIR) $(1)/etc/smartdns/conf.d/
+	$(INSTALL_DIR) $(1)/usr/share/smartdns/wwwroot
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/plugin/smartdns-ui/target/libsmartdns_ui.so $(1)/usr/lib/libsmartdns_ui.so
+	$(CP) $(PKG_BUILD_DIR)/smartdns-webui/out/* $(1)/usr/share/smartdns/wwwroot
+endef
+
+define Build/Compile/smartdns-webui
+	which npm || (echo "npm not found, please install npm first" && exit 1)
+	npm install --prefix $(PKG_BUILD_DIR)/smartdns-webui/
+	npm run build --prefix $(PKG_BUILD_DIR)/smartdns-webui/
+endef
+
+define Build/Compile/smartdns-ui
+	cargo install --force --locked bindgen-cli
+	CARGO_BUILD_ARGS="$(if $(strip $(RUST_PKG_FEATURES)),--features "$(strip $(RUST_PKG_FEATURES))") --profile $(CARGO_PKG_PROFILE)"
+	+$(CARGO_PKG_VARS) CARGO_BUILD_ARGS="$(CARGO_BUILD_ARGS)" CC=$(TARGET_CC) \
+	PATH="$$(PATH):$(CARGO_HOME)/bin" \
+	make -C $(PKG_BUILD_DIR)/plugin/smartdns-ui
+endef
+
+define Download/smartdns-webui
+	FILE:=$(SMARTDNS_WEBUI_FILE)
+	PROTO:=$(SMAETDNS_WEBUI_SOURCE_PROTO)
+	URL:=$(SMARTDNS_WEBUI_SOURCE_URL)
+	MIRROR_HASH:=skip
+	VERSION:=$(SMARTDNS_WEBUI_SOURCE_VERSION)
+	HASH:=$(SMARTDNS_WEBUI_HASH)
+	SUBDIR:=smartdns-webui
+endef
+$(eval $(call Download,smartdns-webui))
+
+ifdef CONFIG_PACKAGE_smartdns-ui
+define Build/Prepare
+	$(call Build/Prepare/Default)
+	$(TAR) -C $(PKG_BUILD_DIR)/ -xf $(DL_DIR)/$(SMARTDNS_WEBUI_FILE)
+endef
+endif
+
+define Build/Compile
+	$(call Build/Compile/Default,smartdns)
+ifdef CONFIG_PACKAGE_smartdns-ui
+	$(call Build/Compile/smartdns-ui)
+	$(call Build/Compile/smartdns-webui)
+endif
+endef
+
 $(eval $(call BuildPackage,smartdns))
+$(eval $(call RustBinPackage,smartdns-ui))
+$(eval $(call BuildPackage,smartdns-ui))
+
