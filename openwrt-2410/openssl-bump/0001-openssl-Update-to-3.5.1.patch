@@ -30,8 +30,8 @@ index 4829670f86..1464fbb017 100644
  include $(TOPDIR)/rules.mk
  
  PKG_NAME:=openssl
--PKG_VERSION:=3.0.16
-+PKG_VERSION:=3.5.0
+-PKG_VERSION:=3.0.17
++PKG_VERSION:=3.5.1
  PKG_RELEASE:=1
  PKG_BUILD_FLAGS:=no-mips16 gc-sections no-lto
  
@@ -48,8 +48,8 @@ index 4829670f86..1464fbb017 100644
 +	http://ftp.fi.muni.cz/pub/openssl/source/ \
 +	http://ftp.fi.muni.cz/pub/openssl/source/old/$(PKG_BASE)/
  
--PKG_HASH:=57e03c50feab5d31b152af2b764f10379aecd8ee92f16c985983ce4a99f7ef86
-+PKG_HASH:=344d0a79f1a9b08029b0744e2cc401a43f9c90acd1044d09a530b4885a8e9fc0
+-PKG_HASH:=dfdd77e4ea1b57ff3a6dbde6b0bdc3f31db5ac99e7fdd4eaf9e1fbb6ec2db8ce
++PKG_HASH:=529043b15cffa5f36077a4d0af83f3de399807181d607441d734196d889b641f
  
  PKG_LICENSE:=Apache-2.0
  PKG_LICENSE_FILES:=LICENSE
@@ -61,7 +61,7 @@ index e9cd7bf9c1..4fedd37448 100644
  
  --- a/Configure
  +++ b/Configure
--@@ -1677,7 +1677,9 @@ $config{CFLAGS} = [ map { $_ eq '--ossl-
+-@@ -1678,7 +1678,9 @@ $config{CFLAGS} = [ map { $_ eq '--ossl-
 +@@ -1810,7 +1810,9 @@ $config{CFLAGS} = [ map { $_ eq '--ossl-
   
   unless ($disabled{afalgeng}) {
