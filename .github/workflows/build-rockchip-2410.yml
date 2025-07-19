@@ -131,7 +131,7 @@ on:
       patch_repo:
         description: 'Use json patch repo true(1) or false(0) See ReadME'
         required: true
-        default: '{"OPENSSL_3_5": "1", "BCM_FULLCONE": "1", "TRY_BBR_V3": "1"}'
+        default: '{"OPENSSL_3_5": "1", "BCM_FULLCONE": "1", "MAC80211_614": "0", "TRY_BBR_V3": "1"}'
 
       config_repo:
         description: 'Use json config repo true(1) or false(0) See ReadME'
@@ -246,6 +246,7 @@ jobs:
         echo -e "OPENSSL_3_5=$(echo $PATCH_JSON_INPUT | jq -r ".OPENSSL_3_5")" >> $GITHUB_ENV
         echo -e "BCM_FULLCONE=$(echo $PATCH_JSON_INPUT | jq -r ".BCM_FULLCONE")" >> $GITHUB_ENV
         echo -e "TRY_BBR_V3=$(echo $PATCH_JSON_INPUT | jq -r ".TRY_BBR_V3")" >> $GITHUB_ENV
+        echo -e "MAC80211_614=$(echo $PATCH_JSON_INPUT | jq -r ".MAC80211_614")" >> $GITHUB_ENV
         CONFIG_JSON_INPUT='${{ github.event.inputs.config_repo }}'
         echo -e "Cache=$(echo $CONFIG_JSON_INPUT | jq -r ".Cache")" >> $GITHUB_ENV
         echo -e "UPLOAD_RELEASE=$(echo $CONFIG_JSON_INPUT | jq -r ".UPLOAD_RELEASE")" >> $GITHUB_ENV
@@ -309,6 +310,11 @@ jobs:
         [ -d openwrt-2410/mypatch-bbr-v3 ] && cp -r openwrt-2410/mypatch-bbr-v3/* openwrt-2410/mypatch-2410-${{matrix.target}}
         echo "----${{matrix.target}}----bbr-v3---"
         echo "TRY_BBR_V3_NAME=_BBR_V3" >> $GITHUB_ENV
+        fi
+        if [ ${{ env.MAC80211_614}} = 1 ]; then
+        [ -d openwrt-2410/mac80211-614 ] && cp -r openwrt-2410/mac80211-614/* openwrt-2410/mypatch-2410-${{matrix.target}}
+        echo "----${{matrix.target}}----mac80211-6-14---"
+        echo "MAC80211_614_NAME=_MAC80211_614" >> $GITHUB_ENV
         fi
         if [ ${{ env.BCM_FULLCONE}} = 1 ] && [ ${{matrix.target}} == 'rockchip-ipt' ]; then
         [ -d openwrt-2410/bcmfullcone ] && cp -r openwrt-2410/bcmfullcone/a-* openwrt-2410/mypatch-2410-rockchip-ipt
@@ -549,7 +555,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}${{ env.MAC80211_614_NAME }}
         path: |
           firmware
 
@@ -558,7 +564,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_IPK_DIR == 'true' && steps.afb.outputs.status == 'success'
       with:
-        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}
+        name: ${{ env.VERSION }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}${{ env.MAC80211_614_NAME }}
         path: |
           ipks
 
