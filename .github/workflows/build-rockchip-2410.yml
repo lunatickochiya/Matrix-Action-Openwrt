@@ -285,6 +285,12 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
+        sed -i \
+          -e 's|https://git.openwrt.org/feed/packages.git;openwrt-24.10|https://github.com/openwrt/packages.git;openwrt-24.10|' \
+          -e 's|https://git.openwrt.org/project/luci.git;openwrt-24.10|https://github.com/openwrt/luci.git;openwrt-24.10|' \
+          -e 's|https://git.openwrt.org/feed/routing.git;openwrt-24.10|https://github.com/openwrt/routing.git;openwrt-24.10|' \
+          -e 's|https://git.openwrt.org/feed/telephony.git;openwrt-24.10|https://github.com/openwrt/telephony.git;openwrt-24.10|' \
+          feeds.conf.default
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
         bash tpm312/cus.sh
