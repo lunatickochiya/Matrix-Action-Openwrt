@@ -1,0 +1,114 @@
+From 31ba13ace50336e1ad602c53e062f4dedb2cf28d Mon Sep 17 00:00:00 2001
+From: Tianling Shen <cnsztl@immortalwrt.org>
+Date: Tue, 25 Mar 2025 00:09:27 +0800
+Subject: [PATCH] miniupnpd: backport upstream fixes
+
+fix listing port map and removing outdated rules.
+
+Signed-off-by: Tianling Shen <cnsztl@immortalwrt.org>
+(cherry picked from commit 88e55afe5d6e02ce2672a2e1ea098610d1000980)
+---
+ net/miniupnpd/Makefile                        |  2 +-
+ ...0-netfilter_nft-Fixes-parse_rule_nat.patch | 38 ++++++++++++++++
+ ..._nft-properly-delete-the-filter_rule.patch | 44 +++++++++++++++++++
+ 3 files changed, 83 insertions(+), 1 deletion(-)
+ create mode 100644 net/miniupnpd/patches/010-netfilter_nft-Fixes-parse_rule_nat.patch
+ create mode 100644 net/miniupnpd/patches/011-miniupnpd-netfilter_nft-properly-delete-the-filter_rule.patch
+
+diff --git a/net/miniupnpd/patches/010-netfilter_nft-Fixes-parse_rule_nat.patch b/net/miniupnpd/patches/010-netfilter_nft-Fixes-parse_rule_nat.patch
+new file mode 100644
+index 0000000000..b6ebae67a0
+--- /dev/null
++++ b/net/miniupnpd/patches/010-netfilter_nft-Fixes-parse_rule_nat.patch
+@@ -0,0 +1,38 @@
++From 792757fb2731eaf3d1781ca3be7551226c829241 Mon Sep 17 00:00:00 2001
++From: Thomas Bernard <miniupnp@free.fr>
++Date: Sat, 27 Jul 2024 15:13:21 +0200
++Subject: [PATCH] netfilter_nft: Fixes parse_rule_nat()
++
++the port for NAT destination is passed in REG2
++
++should fix #768
++---
++ netfilter_nft/nftnlrdr_misc.c | 9 ++++++---
++ 1 file changed, 6 insertions(+), 3 deletions(-)
++
++--- a/netfilter_nft/nftnlrdr_misc.c
+++++ b/netfilter_nft/nftnlrdr_misc.c
++@@ -283,6 +283,9 @@ parse_rule_nat(struct nftnl_expr *e, rul
++ 	r->family = nftnl_expr_get_u32(e, NFTNL_EXPR_NAT_FAMILY);
++ 	addr_min_reg = nftnl_expr_get_u32(e, NFTNL_EXPR_NAT_REG_ADDR_MIN);
++ 	addr_max_reg = nftnl_expr_get_u32(e, NFTNL_EXPR_NAT_REG_ADDR_MAX);
+++	/* see expr_add_nat() :
+++	 * NFTNL_EXPR_NAT_REG_PROTO_MIN/NFTNL_EXPR_NAT_REG_PROTO_MAX is used
+++	 * for destination port */
++ 	proto_min_reg = nftnl_expr_get_u32(e, NFTNL_EXPR_NAT_REG_PROTO_MIN);
++ 	proto_max_reg = nftnl_expr_get_u32(e, NFTNL_EXPR_NAT_REG_PROTO_MAX);
++ 
++@@ -300,10 +303,10 @@ parse_rule_nat(struct nftnl_expr *e, rul
++ 	}
++ 	reg_val_ptr = get_reg_val_ptr(r, addr_min_reg);
++ 	if (reg_val_ptr != NULL) {
+++		/* destination address */
++ 		r->nat_addr = (in_addr_t)*reg_val_ptr;
++-		if (proto_min_reg == NFT_REG_1) {
++-			r->nat_port = proto_min_val;
++-		}
+++		/* destination port */
+++		r->nat_port = proto_min_val;
++ 	} else {
++ 		syslog(LOG_ERR, "%s: invalid addr_min_reg %u", "parse_rule_nat", addr_min_reg);
++ 	}
+diff --git a/net/miniupnpd/patches/011-miniupnpd-netfilter_nft-properly-delete-the-filter_rule.patch b/net/miniupnpd/patches/011-miniupnpd-netfilter_nft-properly-delete-the-filter_rule.patch
+new file mode 100644
+index 0000000000..72b1ad538f
+--- /dev/null
++++ b/net/miniupnpd/patches/011-miniupnpd-netfilter_nft-properly-delete-the-filter_rule.patch
+@@ -0,0 +1,44 @@
++From 78fbd18000e0533bd0f7c3bda4e54d0cc52312e5 Mon Sep 17 00:00:00 2001
++From: BERNARD Thomas <miniupnp@free.fr>
++Date: Fri, 10 Jan 2025 19:01:44 +0100
++Subject: [PATCH] netfilter_nft: properly delete the filter_rule
++
++also add a few logs
++
++fixes #791
++---
++ netfilter_nft/nftnlrdr.c | 14 ++++++++++----
++ 1 file changed, 10 insertions(+), 4 deletions(-)
++
++--- a/netfilter_nft/nftnlrdr.c
+++++ b/netfilter_nft/nftnlrdr.c
++@@ -316,8 +316,11 @@ delete_redirect_and_filter_rules(unsigne
++ 	d_printf(("delete_redirect_and_filter_rules(%d %d)\n", eport, proto));
++ 	refresh_nft_cache_redirect();
++ 
++-	// Delete Redirect Rule
+++	// Delete Redirect Rule  eport => iaddr:iport
++ 	LIST_FOREACH(p, &head_redirect, entry) {
+++		d_printf(("redirect src %08x:%hu dst %08x:%hu nat %08x:%hu proto=%d  type=%d nat_type=%d\n",
+++		          p->saddr, p->sport, p->daddr, p->dport, p->nat_addr, p->nat_port, p->proto,
+++		          p->type, p->nat_type));
++ 		if (p->dport == eport && p->proto == proto &&
++ 		    (p->type == RULE_NAT && p->nat_type == NFT_NAT_DNAT)) {
++ 			iaddr = p->nat_addr;
++@@ -332,10 +335,13 @@ delete_redirect_and_filter_rules(unsigne
++ 
++ 	if (iaddr != 0 && iport != 0) {
++ 		refresh_nft_cache_filter();
++-		// Delete Forward Rule
+++		// Delete Forward Rule  on iaddr:iport
++ 		LIST_FOREACH(p, &head_filter, entry) {
++-			if (p->nat_port == iport &&
++-				p->nat_addr == iaddr && p->type == RULE_FILTER) {
+++			d_printf(("filter   src %08x:%hu dst %08x:%hu nat %08x:%hu proto=%d  type=%d nat_type=%d\n",
+++			          p->saddr, p->sport, p->daddr, p->dport, p->nat_addr, p->nat_port, p->proto,
+++			          p->type, p->nat_type));
+++			if (p->dport == iport && p->daddr == iaddr && p->proto == proto
+++			    && p->type == RULE_FILTER) {
++ 				r = rule_del_handle(p);
++ 				/* Todo: send bulk request */
++ 				nft_send_rule(r, NFT_MSG_DELRULE, RULE_CHAIN_FILTER);
+-- 
+2.43.0
+
