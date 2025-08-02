@@ -408,6 +408,7 @@ jobs:
         cd openwrt
         ./scripts/feeds update -a
         ./scripts/feeds install -a
+        sed -i 's/--set=llvm\.download-ci-llvm=true/--set=llvm.download-ci-llvm=false/' feeds/packages/lang/rust/Makefile
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 自定义配置（修复feeds）
