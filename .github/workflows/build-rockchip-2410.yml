@@ -492,6 +492,8 @@ jobs:
         awk '/GCC_VERSION/ { print }' .config
         echo "------------------------"
         awk '/CONFIG_PACKAGE_kmod/ { print }' .config
+        echo "------------------------"
+        awk '/turboacc/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
