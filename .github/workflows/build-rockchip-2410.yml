@@ -346,12 +346,13 @@ jobs:
       id: sfe
       run: |
         if [ ${{matrix.target}} == 'rockchip-nft' ]; then
+        bash $GITHUB_WORKSPACE/add-sfe-packages.sh nft2410
         cd openwrt
         curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh && bash add_turboacc.sh
         echo "----${{matrix.target}}-----NFT-acc----"
         cd ../
         elif [ ${{matrix.target}} == 'rockchip-ipt' ]; then
-                bash $GITHUB_WORKSPACE/add-sfe-packages.sh ipt
+                bash $GITHUB_WORKSPACE/add-sfe-packages.sh ipt2410
                 echo "----${{matrix.target}}-----ipt-sfe---"
                 cd openwrt
                 wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/pending-6.6/613-netfilter_optional_tcp_window_check.patch -P target/linux/generic/pending-6.6/
