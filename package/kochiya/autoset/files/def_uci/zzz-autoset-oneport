@@ -1,60 +1,40 @@
 #!/bin/sh
-
-#sed -i '2isrc/gz lunaticurey_luci http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/packages/luci' /etc/opkg/distfeeds.conf
-#sed -i '2isrc/gz lunaticurey_packages http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/packages/packages' /etc/opkg/distfeeds.conf
-#sed -i '2isrc/gz lunaticurey_telephony http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/packages/telephony' /etc/opkg/distfeeds.conf
-#sed -i '2isrc/gz lunaticurey_routing http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/packages/routing' /etc/opkg/distfeeds.conf
-#sed -i '2isrc/gz lunaticurey_management http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/packages/management' /etc/opkg/distfeeds.conf
-#sed -i '2i	option flow_offloading_hw 1' /etc/config/firewall
-#sed -i '2i	option flow_offloading 1' /etc/config/firewall
-
 uci -q batch <<-EOF >/dev/null
 	set luci.main.lang=zh_cn
-	set system.@system[0].hostname=LunaticBox
+	set system.@system[0].hostname=Lunatic_Atheros
 	set system.@system[0].timezone=CST-8
 	set system.@system[0].zonename=Asia/Shanghai
 	set fstab.@global[0].anon_mount=1
-	set wireless.@wifi-device[0].disabled=0
-	set wireless.@wifi-device[1].disabled=0
-	set wireless.@wifi-iface[0].wpa_disable_eapol_key_retries='1'
-	set wireless.@wifi-iface[1].wpa_disable_eapol_key_retries='1'
-	set wireless.radio0.country='CN'
-	set wireless.radio1.country='CN'
-	set wireless.@wifi-iface[0].ssid=Lunatic_2.4G_$(cat /sys/class/ieee80211/phy0/macaddress | sed 's/.[0-9A-Fa-f]:.[0-9A-Fa-f]:.[0-9A-Fa-f]:\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\)/\1\2\3/g' | tr :[a-z] :[A-Z])
-	set wireless.@wifi-iface[1].ssid=Lunatic_5G_$(cat /sys/class/ieee80211/phy1/macaddress | sed 's/.[0-9A-Fa-f]:.[0-9A-Fa-f]:.[0-9A-Fa-f]:\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\):\(.[0-9A-Fa-f]\)/\1\2\3/g' | tr :[a-z] :[A-Z])
-	set network.lan.ipaddr=192.168.19.1
-	set wireless.radio0.legacy_rates='0'
-	set wireless.radio1.legacy_rates='0'
-	set wireless.@wifi-iface[0].disassoc_low_ack='1'
-	set wireless.@wifi-iface[0].short_preamble='1'
-	set wireless.@wifi-iface[1].short_preamble='1'
-	set wireless.@wifi-iface[1].disassoc_low_ack='1'
-	set firewall.@zone[1].input='ACCEPT'
+	set network.lan.ipaddr=192.168.10.1
 	add_list umdns.@umdns[0].network='wan'
+	add_list system.ntp.server='ntp.tencent.com'
+	add_list system.ntp.server='ntp1.aliyun.com'
+	del_list uhttpd.main.listen_https='0.0.0.0:443'
+	del_list uhttpd.main.listen_https='[::]:443'
 	commit
 EOF
 
-sed -i '/DISTRIB_REVISION/d' /etc/openwrt_release
-echo "DISTRIB_REVISION='2U4U'" >> /etc/openwrt_release
 sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
-echo "DISTRIB_DESCRIPTION='OpenWrt'" >> /etc/openwrt_release
-#sed -i '/ath9k/d' /etc/modules.d/ath9k
-#echo "ath9k debug=0x00000200" >> /etc/modules.d/ath9k
 sed -i '202,207d' /www/luci-static/material/js/script.js
-#/etc/init.d/dnscrypt-proxy stop
+
+/etc/init.d/advancedplus stop
+/etc/init.d/advancedplus disable
 /etc/init.d/qos_gargoyle disable
 /etc/init.d/umdns stop
 /etc/init.d/umdns disable
 /etc/init.d/dawn stop
 /etc/init.d/dawn disable
-/etc/modechange start
+/etc/init.d/https-dns-proxy stop
+/etc/init.d/https-dns-proxy disable
 
 
 
-/etc/init.d/advancedplus stop
-/etc/init.d/advancedplus disable
+
+
 
 exit 0
+
+
 
 
 
