@@ -13,10 +13,6 @@ PKG_VERSION:=6.0
 PKG_RELEASE:=3
 MAINTAINER:=lunatickochiya <125438787@qq.com>
 
-define Package/$(PKG_NAME)/conffiles
-/etc/config/openvpn
-endef
-
 include $(TOPDIR)/feeds/luci/luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
