@@ -1,0 +1,172 @@
+From fbd96c86f702afc718355e361e3da197c6e10a85 Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Mon, 4 Aug 2025 19:19:29 +0200
+Subject: [PATCH 1/4] mac80211: backport upstream fixes
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ ...ac80211-Do-not-schedule-stopped-TXQs.patch | 36 +++++++++++++++++++
+ ...n-t-call-fq_flow_idx-for-management-.patch | 33 +++++++++++++++++
+ ...eck-802.11-encaps-offloading-in-ieee.patch | 32 +++++++++++++++++
+ ...80211-Update-skb-s-control-block-key.patch | 27 ++++++++++++++
+ 4 files changed, 128 insertions(+)
+ create mode 100644 package/kernel/mac80211/patches/subsys/330-wifi-mac80211-Do-not-schedule-stopped-TXQs.patch
+ create mode 100644 package/kernel/mac80211/patches/subsys/331-wifi-mac80211-Don-t-call-fq_flow_idx-for-management-.patch
+ create mode 100644 package/kernel/mac80211/patches/subsys/332-wifi-mac80211-Check-802.11-encaps-offloading-in-ieee.patch
+ create mode 100644 package/kernel/mac80211/patches/subsys/333-Reapply-wifi-mac80211-Update-skb-s-control-block-key.patch
+
+diff --git a/package/kernel/mac80211/patches/subsys/330-wifi-mac80211-Do-not-schedule-stopped-TXQs.patch b/package/kernel/mac80211/patches/subsys/330-wifi-mac80211-Do-not-schedule-stopped-TXQs.patch
+new file mode 100644
+index 0000000000..668315477a
+--- /dev/null
++++ b/package/kernel/mac80211/patches/subsys/330-wifi-mac80211-Do-not-schedule-stopped-TXQs.patch
+@@ -0,0 +1,36 @@
++From: Alexander Wetzel <Alexander@wetzel-home.de>
++Date: Thu, 17 Jul 2025 18:25:46 +0200
++Subject: [PATCH] wifi: mac80211: Do not schedule stopped TXQs
++
++Ignore TXQs with the flag IEEE80211_TXQ_STOP when scheduling a queue.
++
++The flag is only set after all fragments have been dequeued and won't
++allow dequeueing other frames as long as the flag is set.
++
++For drivers using ieee80211_txq_schedule_start() this prevents an
++loop trying to push the queued frames while IEEE80211_TXQ_STOP is set:
++
++After setting IEEE80211_TXQ_STOP the driver will call
++ieee80211_return_txq(). Which calls __ieee80211_schedule_txq(), detects
++that there sill are frames in the queue and immediately restarts the
++stopped TXQ. Which can't dequeue any frame and thus starts over the loop.
++
++Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
++Fixes: ba8c3d6f16a1 ("mac80211: add an intermediate software queue implementation")
++Link: https://patch.msgid.link/20250717162547.94582-2-Alexander@wetzel-home.de
++Signed-off-by: Johannes Berg <johannes.berg@intel.com>
++---
++
++--- a/net/mac80211/tx.c
+++++ b/net/mac80211/tx.c
++@@ -4116,7 +4116,9 @@ void __ieee80211_schedule_txq(struct iee
++ 
++ 	spin_lock_bh(&local->active_txq_lock[txq->ac]);
++ 
++-	has_queue = force || txq_has_queue(txq);
+++	has_queue = force ||
+++		    (!test_bit(IEEE80211_TXQ_STOP, &txqi->flags) &&
+++		     txq_has_queue(txq));
++ 	if (list_empty(&txqi->schedule_order) &&
++ 	    (has_queue || ieee80211_txq_keep_active(txqi))) {
++ 		/* If airtime accounting is active, always enqueue STAs at the
+diff --git a/package/kernel/mac80211/patches/subsys/331-wifi-mac80211-Don-t-call-fq_flow_idx-for-management-.patch b/package/kernel/mac80211/patches/subsys/331-wifi-mac80211-Don-t-call-fq_flow_idx-for-management-.patch
+new file mode 100644
+index 0000000000..e0c27a9225
+--- /dev/null
++++ b/package/kernel/mac80211/patches/subsys/331-wifi-mac80211-Don-t-call-fq_flow_idx-for-management-.patch
+@@ -0,0 +1,33 @@
++From: Alexander Wetzel <Alexander@wetzel-home.de>
++Date: Thu, 17 Jul 2025 18:25:47 +0200
++Subject: [PATCH] wifi: mac80211: Don't call fq_flow_idx() for management
++ frames
++
++skb_get_hash() can only be used when the skb is linked to a netdev
++device.
++
++Signed-off-by: Alexander Wetzel <Alexander@wetzel-home.de>
++Fixes: 73bc9e0af594 ("mac80211: don't apply flow control on management frames")
++Link: https://patch.msgid.link/20250717162547.94582-3-Alexander@wetzel-home.de
++Signed-off-by: Johannes Berg <johannes.berg@intel.com>
++---
++
++--- a/net/mac80211/tx.c
+++++ b/net/mac80211/tx.c
++@@ -1444,7 +1444,7 @@ static void ieee80211_txq_enqueue(struct
++ {
++ 	struct fq *fq = &local->fq;
++ 	struct fq_tin *tin = &txqi->tin;
++-	u32 flow_idx = fq_flow_idx(fq, skb);
+++	u32 flow_idx;
++ 
++ 	ieee80211_set_skb_enqueue_time(skb);
++ 
++@@ -1460,6 +1460,7 @@ static void ieee80211_txq_enqueue(struct
++ 			IEEE80211_TX_INTCFL_NEED_TXPROCESSING;
++ 		__skb_queue_tail(&txqi->frags, skb);
++ 	} else {
+++		flow_idx = fq_flow_idx(fq, skb);
++ 		fq_tin_enqueue(fq, tin, flow_idx, skb,
++ 			       fq_skb_free_func);
++ 	}
+diff --git a/package/kernel/mac80211/patches/subsys/332-wifi-mac80211-Check-802.11-encaps-offloading-in-ieee.patch b/package/kernel/mac80211/patches/subsys/332-wifi-mac80211-Check-802.11-encaps-offloading-in-ieee.patch
+new file mode 100644
+index 0000000000..ac6f67bc35
+--- /dev/null
++++ b/package/kernel/mac80211/patches/subsys/332-wifi-mac80211-Check-802.11-encaps-offloading-in-ieee.patch
+@@ -0,0 +1,32 @@
++From: Remi Pommarel <repk@triplefau.lt>
++Date: Thu, 17 Jul 2025 17:45:28 +0200
++Subject: [PATCH] wifi: mac80211: Check 802.11 encaps offloading in
++ ieee80211_tx_h_select_key()
++
++With 802.11 encapsulation offloading, ieee80211_tx_h_select_key() is
++called on 802.3 frames. In that case do not try to use skb data as
++valid 802.11 headers.
++
++Reported-by: Bert Karwatzki <spasswolf@web.de>
++Closes: https://lore.kernel.org/linux-wireless/20250410215527.3001-1-spasswolf@web.de
++Fixes: bb42f2d13ffc ("mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue")
++Signed-off-by: Remi Pommarel <repk@triplefau.lt>
++Link: https://patch.msgid.link/1af4b5b903a5fca5ebe67333d5854f93b2be5abe.1752765971.git.repk@triplefau.lt
++Signed-off-by: Johannes Berg <johannes.berg@intel.com>
++---
++
++--- a/net/mac80211/tx.c
+++++ b/net/mac80211/tx.c
++@@ -622,6 +622,12 @@ ieee80211_tx_h_select_key(struct ieee802
++ 	else
++ 		tx->key = NULL;
++ 
+++	if (info->flags & IEEE80211_TX_CTL_HW_80211_ENCAP) {
+++		if (tx->key && tx->key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE)
+++			info->control.hw_key = &tx->key->conf;
+++		return TX_CONTINUE;
+++	}
+++
++ 	if (tx->key) {
++ 		bool skip_hw = false;
++ 
+diff --git a/package/kernel/mac80211/patches/subsys/333-Reapply-wifi-mac80211-Update-skb-s-control-block-key.patch b/package/kernel/mac80211/patches/subsys/333-Reapply-wifi-mac80211-Update-skb-s-control-block-key.patch
+new file mode 100644
+index 0000000000..ba7d0b6bc4
+--- /dev/null
++++ b/package/kernel/mac80211/patches/subsys/333-Reapply-wifi-mac80211-Update-skb-s-control-block-key.patch
+@@ -0,0 +1,27 @@
++From: Remi Pommarel <repk@triplefau.lt>
++Date: Thu, 17 Jul 2025 17:45:29 +0200
++Subject: [PATCH] Reapply "wifi: mac80211: Update skb's control block key in
++ ieee80211_tx_dequeue()"
++
++This reverts commit 0937cb5f345c ("Revert "wifi: mac80211: Update
++skb's control block key in ieee80211_tx_dequeue()"").
++
++This commit broke TX with 802.11 encapsulation HW offloading, now that
++this is fixed, reapply it.
++
++Fixes: bb42f2d13ffc ("mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue")
++Signed-off-by: Remi Pommarel <repk@triplefau.lt>
++Link: https://patch.msgid.link/66b8fc39fb0194fa06c9ca7eeb6ffe0118dcb3ec.1752765971.git.repk@triplefau.lt
++Signed-off-by: Johannes Berg <johannes.berg@intel.com>
++---
++
++--- a/net/mac80211/tx.c
+++++ b/net/mac80211/tx.c
++@@ -3900,6 +3900,7 @@ begin:
++ 	 * The key can be removed while the packet was queued, so need to call
++ 	 * this here to get the current key.
++ 	 */
+++	info->control.hw_key = NULL;
++ 	r = ieee80211_tx_h_select_key(&tx);
++ 	if (r != TX_CONTINUE) {
++ 		ieee80211_free_txskb(&local->hw, skb);
+-- 
+2.43.0
+
