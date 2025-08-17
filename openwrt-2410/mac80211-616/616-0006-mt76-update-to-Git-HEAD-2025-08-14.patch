@@ -1,0 +1,33 @@
+From d3338ef9fa5316d71f6a8ad9c08c3aadf53fc55e Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Thu, 14 Aug 2025 18:43:48 +0200
+Subject: [PATCH] mt76: update to Git HEAD (2025-08-14)
+
+5f61f34087c5 wifi: mt76: mt7996: fix crash on some tx status reports
+
+Fixes: https://github.com/openwrt/openwrt/issues/19638
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ package/kernel/mt76/Makefile | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/package/kernel/mt76/Makefile b/package/kernel/mt76/Makefile
+index 026218e478..1473e85275 100644
+--- a/package/kernel/mt76/Makefile
++++ b/package/kernel/mt76/Makefile
+@@ -8,9 +8,9 @@ PKG_LICENSE_FILES:=
+ 
+ PKG_SOURCE_URL:=https://github.com/openwrt/mt76
+ PKG_SOURCE_PROTO:=git
+-PKG_SOURCE_DATE:=2025-08-13
+-PKG_SOURCE_VERSION:=903a7e0ace79dc9802b381fa05ecd2028122dd1b
+-PKG_MIRROR_HASH:=fcff7a90c8745091b8113e7833dc1f25e2767ff76da1f7adad27bde225c834df
++PKG_SOURCE_DATE:=2025-08-14
++PKG_SOURCE_VERSION:=5f61f34087c56b1cb0ad56770fe9430065a41a11
++PKG_MIRROR_HASH:=af3f37682dbc7655aecd894e8fe20259170cbcee021361bd460cfab09169fd82
+ 
+ PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
+ PKG_USE_NINJA:=0
+-- 
+2.43.0
+
