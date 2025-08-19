@@ -1,40 +1,46 @@
 #!/bin/sh
 
+. /etc/openwrt_release
+
 IEEE_PATH="/sys/class/ieee80211"
 THERMAL_PATH="/sys/class/thermal"
 
-get_mtwifi_temp() {
-	local ifname="$1"
-	local flag
-	if [ -f "/sys/class/net/${ifname}/flags" ]; then
-		flag="$(cat /sys/class/net/${ifname}/flags)"
-		if [ "$((flag & 0x1))" -eq "1" ]; then
-			iwpriv ${ifname} stat | awk '/CurrentTemperature/ {printf("%d°C", $3)}'
-		else
-			echo "unknown"
-		fi
-	else
-		echo "unknown"
-	fi
-}
+case "$DISTRIB_TARGET" in
+ipq40xx/*|ipq806x/*)
+	wifi_temp="$(awk '{printf("%.1f°C ", $0 / 1000)}' "$IEEE_PATH"/phy*/device/hwmon/hwmon*/temp1_input 2>"/dev/null" | awk '$1=$1')"
+	;;
+mediatek/mt7622)
+	wifi_temp="$(awk '{printf("%.1f°C ", $0 / 1000)}' "$IEEE_PATH"/wl*/hwmon*/temp1_input 2>"/dev/null" | awk '$1=$1')"
+	;;
+*)
+	wifi_temp="$(awk '{printf("%.1f°C ", $0 / 1000)}' "$IEEE_PATH"/phy*/hwmon*/temp1_input 2>"/dev/null" | awk '$1=$1')"
+	;;
+esac
 
-if grep -Eq "ipq40xx|ipq806x" "/etc/openwrt_release"; then
-	wifi_temp="$(awk '{printf("%.1f°C ", $0 / 1000)}' "$IEEE_PATH"/phy*/device/hwmon/hwmon*/temp1_input | awk '$1=$1')"
-elif grep -Eq "mediatek" "/etc/openwrt_release"; then
-	wifi_temp1="$(get_mtwifi_temp ra0)"
-	wifi_temp2="$(get_mtwifi_temp rax0)"
-	wifi_temp="$(echo "$wifi_temp1 $wifi_temp2" | xargs)"
-else
-	wifi_temp="$(awk '{printf("%.1f°C ", $0 / 1000)}' "$IEEE_PATH"/phy*/hwmon*/temp1_input | awk '$1=$1')"
-fi
-
-if grep -q "ipq40xx" "/etc/openwrt_release"; then
+case "$DISTRIB_TARGET" in
+ipq40xx/*)
 	if [ -e "$IEEE_PATH/phy0/hwmon0/temp1_input" ]; then
-		mt76_temp=" $(awk -F ': ' '{print $2}' "$IEEE_PATH/phy0/hwmon0/temp1_input")°C"
+		mt76_temp="$(awk -F ': ' '{print $2}' "$IEEE_PATH/phy0/hwmon0/temp1_input" 2>"/dev/null")°C"
 	fi
+	[ -z "$mt76_temp" ] || wifi_temp="${wifi_temp:+$wifi_temp }$mt76_temp"
+	;;
+*)
+	cpu_temp="$(awk '{printf("%.1f°C", $0 / 1000)}' "$THERMAL_PATH/thermal_zone0/temp" 2>"/dev/null")"
+	;;
+esac
 
-	echo -n "WiFi:${mt76_temp} ${wifi_temp}"
+case "$DISTRIB_TARGET" in
+ipq50xx/*)
+	cpu_temp=""$(cat /sys/class/thermal/thermal_zone0/temp)°C""
+	;;
+esac
+
+if [ -n "$cpu_temp" ] && [ -z "$wifi_temp" ]; then
+	echo -n "CPU: $cpu_temp"
+elif [ -z "$cpu_temp" ] && [ -n "$wifi_temp" ]; then
+	echo -n "WiFi: $wifi_temp"
+elif [ -n "$cpu_temp" ] && [ -n "$wifi_temp" ]; then
+	echo -n "CPU: $cpu_temp, WiFi: $wifi_temp"
 else
-	cpu_temp="$(awk '{printf("%.1f°C", $0 / 1000)}' "$THERMAL_PATH/thermal_zone0/temp")"
-	echo -n "CPU: ${cpu_temp}, WiFi: ${wifi_temp}"
+	echo -n "No temperature info"
 fi
