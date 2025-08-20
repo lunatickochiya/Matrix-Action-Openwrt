@@ -29,6 +29,12 @@ ipq40xx/*)
 	;;
 esac
 
+case "$DISTRIB_TARGET" in
+ipq50xx/*)
+	cpu_temp=""$(cat /sys/class/thermal/thermal_zone0/temp)°C""
+	;;
+esac
+
 if [ -n "$cpu_temp" ] && [ -z "$wifi_temp" ]; then
 	echo -n "CPU: $cpu_temp"
 elif [ -z "$cpu_temp" ] && [ -n "$wifi_temp" ]; then

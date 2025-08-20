@@ -53,6 +53,12 @@ case "$DISTRIB_TARGET" in
 	;;
 esac
 
+case "$DISTRIB_TARGET" in
+ipq50xx/*)
+	cpu_temp=""$(cat /sys/class/thermal/thermal_zone0/temp)°C""
+	;;
+esac
+
 if [ -z "$cpu_freq" ] && [ -n "$cpu_temp" ]; then
 	echo -n "$cpu_arch x $cpu_cores ($cpu_temp)"
 elif [ -z "$cpu_temp" ] && [ -n "$cpu_freq" ] || \
