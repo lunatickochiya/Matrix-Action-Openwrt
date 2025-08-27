@@ -319,6 +319,7 @@ jobs:
         fi
         if [ ${{ env.MAC80211_616}} = 1 ]; then
         [ -d openwrt-2410/mac80211-616 ] && cp -r openwrt-2410/mac80211-616/* openwrt-2410/mypatch-2410-${{matrix.target}}
+        rm -rf openwrt/package/kernel/mt76/patches/100-api_compat.patch
         echo "----${{matrix.target}}----mac80211-6-14---"
         echo "MAC80211_616_NAME=_MAC80211_616" >> $GITHUB_ENV
         fi
