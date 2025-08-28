@@ -1,29 +1,30 @@
-From b6584b8d9e004efbbf7263b7ed33e3959f533fd5 Mon Sep 17 00:00:00 2001
+From 75685cc8375877cde085225c8bf46b83b5674ce7 Mon Sep 17 00:00:00 2001
 From: Felix Fietkau <nbd@nbd.name>
 Date: Wed, 27 Aug 2025 15:24:29 +0200
-Subject: [PATCH 4/5] mac80211: extend connection monitoring for MLO
+Subject: [PATCH] mac80211: extend connection monitoring for MLO
 
 Required for latest mt76
 
 Signed-off-by: Felix Fietkau <nbd@nbd.name>
-(cherry picked from commit 6fbf6d0cfd080230ce4ca72605580b0c188db8a1)
 ---
- ...d-link-iteration-macro-for-link-data.patch |  55 +++++++
- ...211-extend-beacon-monitoring-for-MLO.patch |  77 ++++++++++
- ...extend-connection-monitoring-for-MLO.patch | 141 ++++++++++++++++++
+ ...d-link-iteration-macro-for-link-data.patch |  44 ++++++
+ ...211-extend-beacon-monitoring-for-MLO.patch |  85 +++++++++++
+ ...extend-connection-monitoring-for-MLO.patch | 136 ++++++++++++++++++
  ...ke-CONNECTION_MONITOR-optional-for-M.patch |  25 ++++
- 4 files changed, 298 insertions(+)
- create mode 100644 package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
- create mode 100644 package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
- create mode 100644 package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
- create mode 100644 package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
+ ...llow-scanning-while-on-radar-channel.patch |   8 +-
+ ...out-part-of-ieee80211_calc_expected_.patch |   2 +-
+ 6 files changed, 295 insertions(+), 5 deletions(-)
+ create mode 100644 package/kernel/mac80211/patches/subsys/340-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+ create mode 100644 package/kernel/mac80211/patches/subsys/341-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+ create mode 100644 package/kernel/mac80211/patches/subsys/342-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
+ create mode 100644 package/kernel/mac80211/patches/subsys/343-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
 
-diff --git a/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch b/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+diff --git a/package/kernel/mac80211/patches/subsys/340-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch b/package/kernel/mac80211/patches/subsys/340-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
 new file mode 100644
-index 0000000000..d78a72d246
+index 0000000000..1c3bb784dd
 --- /dev/null
-+++ b/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
-@@ -0,0 +1,55 @@
++++ b/package/kernel/mac80211/patches/subsys/340-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+@@ -0,0 +1,44 @@
 +From: Maharaja Kennadyrajan <maharaja.kennadyrajan@oss.qualcomm.com>
 +Date: Fri, 18 Jul 2025 11:38:35 +0530
 +Subject: [PATCH] wifi: mac80211: Add link iteration macro for link data
@@ -48,21 +49,10 @@ index 0000000000..d78a72d246
 +
 +--- a/net/mac80211/ieee80211_i.h
 ++++ b/net/mac80211/ieee80211_i.h
-+@@ -1211,6 +1211,30 @@ struct ieee80211_sub_if_data *vif_to_sda
-+ 	if ((_link = wiphy_dereference((local)->hw.wiphy,		\
-+ 				       ___sdata->link[___link_id])))
++@@ -1237,6 +1237,19 @@ struct ieee80211_sub_if_data *vif_to_sda
++ 		    ((__link) = sdata_dereference((__sdata)->link[__link_id],	\
++ 						  (__sdata))))
 + 
-++#define for_each_link_data(sdata, __link)					\
-++	/* outer loop just to define the variable ... */			\
-++	for (struct ieee80211_sub_if_data *__sdata = (sdata); __sdata;		\
-++		__sdata = NULL /* always stop */)				\
-++	for (int __link_id = 0;							\
-++	     __link_id < ARRAY_SIZE((__sdata)->link); __link_id++)		\
-++		if ((!(__sdata)->vif.valid_links ||				\
-++		     (__sdata)->vif.valid_links & BIT(__link_id)) &&		\
-++		    ((__link) = sdata_dereference((__sdata)->link[__link_id],	\
-++						  (__sdata))))
-++
 ++/*
 ++ * for_each_link_data_rcu should be used under RCU read lock.
 ++ */
@@ -79,12 +69,12 @@ index 0000000000..d78a72d246
 + static inline int
 + ieee80211_get_mbssid_beacon_len(struct cfg80211_mbssid_elems *elems,
 + 				struct cfg80211_rnr_elems *rnr_elems,
-diff --git a/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch b/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+diff --git a/package/kernel/mac80211/patches/subsys/341-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch b/package/kernel/mac80211/patches/subsys/341-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
 new file mode 100644
-index 0000000000..b1986dc8aa
+index 0000000000..f0226fdff1
 --- /dev/null
-+++ b/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
-@@ -0,0 +1,77 @@
++++ b/package/kernel/mac80211/patches/subsys/341-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+@@ -0,0 +1,85 @@
 +From: Maharaja Kennadyrajan <maharaja.kennadyrajan@oss.qualcomm.com>
 +Date: Fri, 18 Jul 2025 11:38:36 +0530
 +Subject: [PATCH] wifi: mac80211: extend beacon monitoring for MLO
@@ -110,7 +100,7 @@ index 0000000000..b1986dc8aa
 +
 +--- a/net/mac80211/mlme.c
 ++++ b/net/mac80211/mlme.c
-+@@ -2159,6 +2159,21 @@ static void ieee80211_csa_switch_work(st
++@@ -2439,6 +2439,21 @@ static void ieee80211_csa_switch_work(st
 + 		}
 + 	}
 + 
@@ -132,7 +122,7 @@ index 0000000000..b1986dc8aa
 + 	ieee80211_sta_reset_beacon_monitor(sdata);
 + 	ieee80211_sta_reset_conn_monitor(sdata);
 + }
-+@@ -7863,6 +7878,29 @@ void ieee80211_sta_work(struct ieee80211
++@@ -8389,16 +8404,32 @@ void ieee80211_sta_work(struct ieee80211
 + 	}
 + }
 + 
@@ -144,30 +134,38 @@ index 0000000000..b1986dc8aa
 ++	 * the links.
 ++	 */
 ++	struct ieee80211_link_data *link;
-++	bool ret = true;
 ++
-++	rcu_read_lock();
+++	guard(rcu)();
+++
 ++	for_each_link_data_rcu(sdata, link) {
 ++		if (!(link->conf->csa_active &&
-++		      !link->u.mgd.csa.waiting_bcn)) {
-++			ret = false;
-++			break;
-++		}
+++		      !link->u.mgd.csa.waiting_bcn))
+++			return false;
 ++	}
-++	rcu_read_unlock();
 ++
-++	return ret;
+++	return true;
 ++}
 ++
 + static void ieee80211_sta_bcn_mon_timer(struct timer_list *t)
 + {
 + 	struct ieee80211_sub_if_data *sdata =
-diff --git a/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch b/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
++ 		timer_container_of(sdata, t, u.mgd.bcn_mon_timer);
++ 
++-	if (WARN_ON(ieee80211_vif_is_mld(&sdata->vif)))
++-		return;
++-
++-	if (sdata->vif.bss_conf.csa_active &&
++-	    !sdata->deflink.u.mgd.csa.waiting_bcn)
+++	if (ieee80211_is_csa_in_progress(sdata))
++ 		return;
++ 
++ 	if (sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)
+diff --git a/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-extend-connection-monitoring-for-MLO.patch b/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
 new file mode 100644
-index 0000000000..e6227b97ea
+index 0000000000..3da06793de
 --- /dev/null
-+++ b/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
-@@ -0,0 +1,141 @@
++++ b/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
+@@ -0,0 +1,136 @@
 +From: Maharaja Kennadyrajan <maharaja.kennadyrajan@oss.qualcomm.com>
 +Date: Fri, 18 Jul 2025 11:38:37 +0530
 +Subject: [PATCH] wifi: mac80211: extend connection monitoring for MLO
@@ -195,7 +193,7 @@ index 0000000000..e6227b97ea
 +
 +--- a/net/mac80211/mlme.c
 ++++ b/net/mac80211/mlme.c
-+@@ -3831,9 +3831,6 @@ static void ieee80211_mgd_probe_ap_send(
++@@ -4300,9 +4300,6 @@ static void ieee80211_mgd_probe_ap_send(
 + 
 + 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
 + 
@@ -205,7 +203,7 @@ index 0000000000..e6227b97ea
 + 	/*
 + 	 * Try sending broadcast probe requests for the last three
 + 	 * probe requests after the first ones failed since some
-+@@ -3879,9 +3876,6 @@ static void ieee80211_mgd_probe_ap(struc
++@@ -4348,9 +4345,6 @@ static void ieee80211_mgd_probe_ap(struc
 + 
 + 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
 + 
@@ -215,22 +213,22 @@ index 0000000000..e6227b97ea
 + 	if (!ieee80211_sdata_running(sdata))
 + 		return;
 + 
-+@@ -7921,36 +7915,73 @@ static void ieee80211_sta_bcn_mon_timer(
++@@ -8440,36 +8434,70 @@ static void ieee80211_sta_bcn_mon_timer(
 + 			 &sdata->u.mgd.beacon_connection_loss_work);
 + }
 + 
 ++static unsigned long
 ++ieee80211_latest_active_link_conn_timeout(struct ieee80211_sub_if_data *sdata)
 ++{
-++	unsigned long latest_timeout = 0;
+++	unsigned long latest_timeout;
 ++	unsigned int link_id;
 ++	struct sta_info *sta;
 ++
-++	rcu_read_lock();
+++	guard(rcu)();
 ++
 ++	sta = sta_info_get(sdata, sdata->vif.cfg.ap_addr);
 ++	if (!sta)
-++		goto out;
+++		return 0;
 ++
 ++	for (link_id = 0; link_id < ARRAY_SIZE(sta->link);
 ++	     link_id++) {
@@ -260,16 +258,13 @@ index 0000000000..e6227b97ea
 ++			latest_timeout = timeout;
 ++	}
 ++
-++out:
-++	rcu_read_unlock();
-++
 ++	return latest_timeout;
 ++}
 ++
 + static void ieee80211_sta_conn_mon_timer(struct timer_list *t)
 + {
 + 	struct ieee80211_sub_if_data *sdata =
-+ 		from_timer(sdata, t, u.mgd.conn_mon_timer);
++ 		timer_container_of(sdata, t, u.mgd.conn_mon_timer);
 + 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
 + 	struct ieee80211_local *local = sdata->local;
 +-	struct sta_info *sta;
@@ -277,17 +272,17 @@ index 0000000000..e6227b97ea
 ++	unsigned long latest_timeout;
 + 
 +-	if (WARN_ON(ieee80211_vif_is_mld(&sdata->vif)))
-++	if (ieee80211_is_csa_in_progress(sdata))
-+ 		return;
-+ 
++-		return;
++-
 +-	if (sdata->vif.bss_conf.csa_active &&
 +-	    !sdata->deflink.u.mgd.csa.waiting_bcn)
 +-		return;
 +-
 +-	sta = sta_info_get(sdata, sdata->vif.cfg.ap_addr);
 +-	if (!sta)
-+-		return;
-+-
+++	if (ieee80211_is_csa_in_progress(sdata))
++ 		return;
++ 
 +-	timeout = sta->deflink.status_stats.last_ack;
 +-	if (time_before(sta->deflink.status_stats.last_ack, sta->deflink.rx_stats.last_rx))
 +-		timeout = sta->deflink.rx_stats.last_rx;
@@ -295,25 +290,23 @@ index 0000000000..e6227b97ea
 ++	latest_timeout = ieee80211_latest_active_link_conn_timeout(sdata);
 + 
 +-	/* If timeout is after now, then update timer to fire at
-+-	 * the later date, but do not actually probe at this time.
-+-	 */
-+-	if (time_is_after_jiffies(timeout)) {
-+-		mod_timer(&ifmgd->conn_mon_timer, round_jiffies_up(timeout));
 ++	/*
 ++	 * If latest timeout is after now, then update timer to fire at
-++ 	 * the later date, but do not actually probe at this time.
-++ 	 */
++ 	 * the later date, but do not actually probe at this time.
++ 	 */
++-	if (time_is_after_jiffies(timeout)) {
++-		mod_timer(&ifmgd->conn_mon_timer, round_jiffies_up(timeout));
 ++	if (latest_timeout) {
 ++		mod_timer(&ifmgd->conn_mon_timer,
 ++			  round_jiffies_up(latest_timeout));
 + 		return;
 + 	}
 + 
-diff --git a/package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch b/package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
+diff --git a/package/kernel/mac80211/patches/subsys/343-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch b/package/kernel/mac80211/patches/subsys/343-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
 new file mode 100644
-index 0000000000..bbc02cc21d
+index 0000000000..457a8894f2
 --- /dev/null
-+++ b/package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
++++ b/package/kernel/mac80211/patches/subsys/343-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
 @@ -0,0 +1,25 @@
 +From: Lorenzo Bianconi <lorenzo@kernel.org>
 +Date: Tue, 26 Aug 2025 13:54:31 +0200
@@ -330,7 +323,7 @@ index 0000000000..bbc02cc21d
 +
 +--- a/net/mac80211/main.c
 ++++ b/net/mac80211/main.c
-+@@ -1174,9 +1174,6 @@ int ieee80211_register_hw(struct ieee802
++@@ -1179,9 +1179,6 @@ int ieee80211_register_hw(struct ieee802
 + 		if (WARN_ON(!ieee80211_hw_check(hw, MFP_CAPABLE)))
 + 			return -EINVAL;
 + 
@@ -340,6 +333,3 @@ index 0000000000..bbc02cc21d
 + 		if (WARN_ON(ieee80211_hw_check(hw, NEED_DTIM_BEFORE_ASSOC)))
 + 			return -EINVAL;
 + 
--- 
-2.43.0
-
