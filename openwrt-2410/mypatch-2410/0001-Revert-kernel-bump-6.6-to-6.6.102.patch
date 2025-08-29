@@ -1,0 +1,846 @@
+From 7b97e4359fee1df5ead80a03ee5ba85c0673af7b Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Fri, 29 Aug 2025 18:02:03 +0800
+Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.102"
+
+This reverts commit 254f6b241426e1fda72a844752e7f3979ef31626.
+Revert "kernel: Remove patch for fixed bug"
+
+This reverts commit 6bf869db0fe181b28ff71f3145715adc47de1a6b.
+Revert "kernel: bump 6.6 to 6.6.101"
+
+This reverts commit 406489fd83d9015f1827122d912253744c0efe5a.
+Revert "kernel: bump 6.6 to 6.6.102"
+
+This reverts commit a65ca44cb7a3e6fbb43b230c7c5a0684d88bae8b.
+---
+ include/kernel-6.6                            |   4 +-
+ .../900-unaligned_access_hacks.patch          |   2 +-
+ .../950-0087-Add-dwc_otg-driver.patch         |   2 +-
+ ...m-Register-vcsm-cma-as-a-platform-dr.patch |   4 +-
+ ...m-Register-bcm2835-codec-as-a-platfo.patch |   4 +-
+ ...m-Set-up-dma-ranges-on-child-devices.patch |   2 +-
+ ...e-the-old-dma-controller-for-OF-conf.patch |   4 +-
+ ...hiq_arm-Give-vchiq-children-DT-nodes.patch |   2 +-
+ ...q-Load-bcm2835_isp-driver-from-vchiq.patch |   4 +-
+ ...tft-Add-support-for-display-variants.patch |   6 +-
+ ...-phys-addresses-for-slave-DMA-config.patch |   4 +-
+ ...tibility-hack-should-be-X86-specific.patch |   4 +-
+ ...vchiq_arm-Add-36-bit-address-support.patch |   4 +-
+ ...chiq_arm-children-inherit-DMA-config.patch |   2 +-
+ .../621-proc-fix-missing-pde_set_flags.patch  | 121 ------------------
+ ...t-introduce-napi_is_scheduled-helper.patch |   2 +-
+ ...1-nvmem-imx-ocotp-ele-support-i.MX95.patch |   8 +-
+ ...-nvmem-layouts-add-U-Boot-env-layout.patch |  12 +-
+ .../generic/hack-6.6/259-regmap_dynamic.patch |   2 +-
+ ...t-size-the-hashtable-more-adequately.patch |   2 +-
+ .../721-net-add-packet-mangeling.patch        |   4 +-
+ .../hack-6.6/904-debloat_dma_buf.patch        |   2 +-
+ .../pending-6.6/630-packet_socket_type.patch  |   6 +-
+ ...fix-switchdev-host-mdb-entry-updates.patch |   2 +-
+ ...hdev-Don-t-drop-packets-between-port.patch |   2 +-
+ .../pending-6.6/655-increase_skb_pad.patch    |   2 +-
+ ...ng-with-source-address-failed-policy.patch |  14 +-
+ ..._F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch |   2 +-
+ ...les-ignore-EOPNOTSUPP-on-flowtable-d.patch |   2 +-
+ ...env-align-endianness-of-crc32-values.patch |  45 +++++++
+ ...dsa-add-out-of-band-tagging-protocol.patch |   2 +-
+ .../825-i2c-MIPS-adds-ralink-I2C-driver.patch |   2 +-
+ .../310-add-i2c-rtl9300-support.patch         |   2 +-
+ 33 files changed, 103 insertions(+), 179 deletions(-)
+ delete mode 100644 target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch
+ create mode 100644 target/linux/generic/pending-6.6/802-nvmem-u-boot-env-align-endianness-of-crc32-values.patch
+
+diff --git a/include/kernel-6.6 b/include/kernel-6.6
+index 048ae0b42a..7ed3e4f41d 100644
+--- a/include/kernel-6.6
++++ b/include/kernel-6.6
+@@ -1,2 +1,2 @@
+-LINUX_VERSION-6.6 = .102
+-LINUX_KERNEL_HASH-6.6.102 = 80d2feb7334c30bacbe1e7dafa9ea415efb2c0ea4f4740ecbd1467cf5d94de5c
++LINUX_VERSION-6.6 = .99
++LINUX_KERNEL_HASH-6.6.99 = b08679729f1ec74b9fa829f5990936ca2511039d87acc7e8b3f39912de89ab36
+diff --git a/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch b/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch
+index 02b64bb7f8..9168d5e973 100644
+--- a/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch
++++ b/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch
+@@ -579,7 +579,7 @@ SVN-Revision: 35130
+  			goto next_ht;
+ --- a/net/ipv6/ip6_offload.c
+ +++ b/net/ipv6/ip6_offload.c
+-@@ -275,7 +275,7 @@ INDIRECT_CALLABLE_SCOPE struct sk_buff *
++@@ -273,7 +273,7 @@ INDIRECT_CALLABLE_SCOPE struct sk_buff *
+  			continue;
+  
+  		iph2 = (struct ipv6hdr *)(p->data + off);
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0087-Add-dwc_otg-driver.patch b/target/linux/bcm27xx/patches-6.6/950-0087-Add-dwc_otg-driver.patch
+index 0dd0c03400..82e969138e 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0087-Add-dwc_otg-driver.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0087-Add-dwc_otg-driver.patch
+@@ -1189,7 +1189,7 @@ Signed-off-by: Alexander Winkowski <dereference23@outlook.com>
+  }
+ --- a/drivers/usb/core/hub.c
+ +++ b/drivers/usb/core/hub.c
+-@@ -5751,7 +5751,7 @@ static void port_event(struct usb_hub *h
++@@ -5722,7 +5722,7 @@ static void port_event(struct usb_hub *h
+  		port_dev->over_current_count++;
+  		port_over_current_notify(port_dev);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0184-staging-vchiq_arm-Register-vcsm-cma-as-a-platform-dr.patch b/target/linux/bcm27xx/patches-6.6/950-0184-staging-vchiq_arm-Register-vcsm-cma-as-a-platform-dr.patch
+index 6daa690dff..741d377fc8 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0184-staging-vchiq_arm-Register-vcsm-cma-as-a-platform-dr.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0184-staging-vchiq_arm-Register-vcsm-cma-as-a-platform-dr.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+  
+  struct vchiq_drvdata {
+  	const unsigned int cache_line_size;
+-@@ -1824,6 +1825,7 @@ static int vchiq_probe(struct platform_d
++@@ -1825,6 +1826,7 @@ static int vchiq_probe(struct platform_d
+  		goto error_exit;
+  	}
+  
+@@ -30,7 +30,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+  	bcm2835_camera = vchiq_register_child(pdev, "bcm2835-camera");
+  	bcm2835_audio = vchiq_register_child(pdev, "bcm2835_audio");
+  
+-@@ -1839,6 +1841,7 @@ static void vchiq_remove(struct platform
++@@ -1840,6 +1842,7 @@ static void vchiq_remove(struct platform
+  {
+  	platform_device_unregister(bcm2835_audio);
+  	platform_device_unregister(bcm2835_camera);
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0185-staging-vchiq_arm-Register-bcm2835-codec-as-a-platfo.patch b/target/linux/bcm27xx/patches-6.6/950-0185-staging-vchiq_arm-Register-bcm2835-codec-as-a-platfo.patch
+index 5adc8c75af..5a3c91b780 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0185-staging-vchiq_arm-Register-bcm2835-codec-as-a-platfo.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0185-staging-vchiq_arm-Register-bcm2835-codec-as-a-platfo.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+  static struct platform_device *vcsm_cma;
+  
+  struct vchiq_drvdata {
+-@@ -1826,6 +1827,7 @@ static int vchiq_probe(struct platform_d
++@@ -1827,6 +1828,7 @@ static int vchiq_probe(struct platform_d
+  	}
+  
+  	vcsm_cma = vchiq_register_child(pdev, "vcsm-cma");
+@@ -30,7 +30,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+  	bcm2835_camera = vchiq_register_child(pdev, "bcm2835-camera");
+  	bcm2835_audio = vchiq_register_child(pdev, "bcm2835_audio");
+  
+-@@ -1841,6 +1843,7 @@ static void vchiq_remove(struct platform
++@@ -1842,6 +1844,7 @@ static void vchiq_remove(struct platform
+  {
+  	platform_device_unregister(bcm2835_audio);
+  	platform_device_unregister(bcm2835_camera);
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0190-staging-vchiq_arm-Set-up-dma-ranges-on-child-devices.patch b/target/linux/bcm27xx/patches-6.6/950-0190-staging-vchiq_arm-Set-up-dma-ranges-on-child-devices.patch
+index 525cb835e6..3abc4f19bf 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0190-staging-vchiq_arm-Set-up-dma-ranges-on-child-devices.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0190-staging-vchiq_arm-Set-up-dma-ranges-on-child-devices.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+ 
+ --- a/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+ +++ b/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+-@@ -1776,6 +1776,12 @@ vchiq_register_child(struct platform_dev
++@@ -1777,6 +1777,12 @@ vchiq_register_child(struct platform_dev
+  		child = NULL;
+  	}
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0191-staging-vchiq-Use-the-old-dma-controller-for-OF-conf.patch b/target/linux/bcm27xx/patches-6.6/950-0191-staging-vchiq-Use-the-old-dma-controller-for-OF-conf.patch
+index 5613a4100a..e5c5fdbc0b 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0191-staging-vchiq-Use-the-old-dma-controller-for-OF-conf.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0191-staging-vchiq-Use-the-old-dma-controller-for-OF-conf.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+ 
+ --- a/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+ +++ b/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+-@@ -1762,6 +1762,7 @@ vchiq_register_child(struct platform_dev
++@@ -1763,6 +1763,7 @@ vchiq_register_child(struct platform_dev
+  {
+  	struct platform_device_info pdevinfo;
+  	struct platform_device *child;
+@@ -25,7 +25,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+  
+  	memset(&pdevinfo, 0, sizeof(pdevinfo));
+  
+-@@ -1777,10 +1778,20 @@ vchiq_register_child(struct platform_dev
++@@ -1778,10 +1779,20 @@ vchiq_register_child(struct platform_dev
+  	}
+  
+  	/*
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0194-staging-vchiq_arm-Give-vchiq-children-DT-nodes.patch b/target/linux/bcm27xx/patches-6.6/950-0194-staging-vchiq_arm-Give-vchiq-children-DT-nodes.patch
+index a75bd3da56..9dba2dffca 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0194-staging-vchiq_arm-Give-vchiq-children-DT-nodes.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0194-staging-vchiq_arm-Give-vchiq-children-DT-nodes.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+ +++ b/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+-@@ -1771,12 +1771,20 @@ vchiq_register_child(struct platform_dev
++@@ -1772,12 +1772,20 @@ vchiq_register_child(struct platform_dev
+  	pdevinfo.id = PLATFORM_DEVID_NONE;
+  	pdevinfo.dma_mask = DMA_BIT_MASK(32);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0209-staging-vchiq-Load-bcm2835_isp-driver-from-vchiq.patch b/target/linux/bcm27xx/patches-6.6/950-0209-staging-vchiq-Load-bcm2835_isp-driver-from-vchiq.patch
+index 5c1b37bfd9..b5f912c85b 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0209-staging-vchiq-Load-bcm2835_isp-driver-from-vchiq.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0209-staging-vchiq-Load-bcm2835_isp-driver-from-vchiq.patch
+@@ -21,7 +21,7 @@ Signed-off-by: Naushir Patuck <naush@raspberrypi.com>
+  
+  struct vchiq_drvdata {
+  	const unsigned int cache_line_size;
+-@@ -1855,6 +1856,7 @@ static int vchiq_probe(struct platform_d
++@@ -1856,6 +1857,7 @@ static int vchiq_probe(struct platform_d
+  	bcm2835_codec = vchiq_register_child(pdev, "bcm2835-codec");
+  	bcm2835_camera = vchiq_register_child(pdev, "bcm2835-camera");
+  	bcm2835_audio = vchiq_register_child(pdev, "bcm2835_audio");
+@@ -29,7 +29,7 @@ Signed-off-by: Naushir Patuck <naush@raspberrypi.com>
+  
+  	return 0;
+  
+-@@ -1866,6 +1868,7 @@ error_exit:
++@@ -1867,6 +1869,7 @@ error_exit:
+  
+  static void vchiq_remove(struct platform_device *pdev)
+  {
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0243-staging-fbtft-Add-support-for-display-variants.patch b/target/linux/bcm27xx/patches-6.6/950-0243-staging-fbtft-Add-support-for-display-variants.patch
+index fad8eb5a11..f49c9a2b56 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0243-staging-fbtft-Add-support-for-display-variants.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0243-staging-fbtft-Add-support-for-display-variants.patch
+@@ -95,7 +95,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  
+  #include <video/mipi_display.h>
+  
+-@@ -1184,6 +1186,7 @@ static struct fbtft_platform_data *fbtft
++@@ -1183,6 +1185,7 @@ static struct fbtft_platform_data *fbtft
+   * @display: Display properties
+   * @sdev: SPI device
+   * @pdev: Platform device
+@@ -103,7 +103,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+   *
+   * Allocates, initializes and registers a framebuffer
+   *
+-@@ -1193,12 +1196,15 @@ static struct fbtft_platform_data *fbtft
++@@ -1192,12 +1195,15 @@ static struct fbtft_platform_data *fbtft
+   */
+  int fbtft_probe_common(struct fbtft_display *display,
+  		       struct spi_device *sdev,
+@@ -120,7 +120,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	int ret;
+  
+  	if (sdev)
+-@@ -1214,6 +1220,14 @@ int fbtft_probe_common(struct fbtft_disp
++@@ -1213,6 +1219,14 @@ int fbtft_probe_common(struct fbtft_disp
+  		pdata = fbtft_properties_read(dev);
+  		if (IS_ERR(pdata))
+  			return PTR_ERR(pdata);
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0466-mmc-bcm2835-Use-phys-addresses-for-slave-DMA-config.patch b/target/linux/bcm27xx/patches-6.6/950-0466-mmc-bcm2835-Use-phys-addresses-for-slave-DMA-config.patch
+index 48a592e35c..96bbaf1ffa 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0466-mmc-bcm2835-Use-phys-addresses-for-slave-DMA-config.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0466-mmc-bcm2835-Use-phys-addresses-for-slave-DMA-config.patch
+@@ -23,7 +23,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  #include <linux/of_irq.h>
+  #include <linux/platform_device.h>
+  #include <linux/scatterlist.h>
+-@@ -1348,8 +1347,8 @@ static int bcm2835_probe(struct platform
++@@ -1347,8 +1346,8 @@ static int bcm2835_probe(struct platform
+  	struct device *dev = &pdev->dev;
+  	struct clk *clk;
+  	struct bcm2835_host *host;
+@@ -33,7 +33,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	int ret;
+  
+  	dev_dbg(dev, "%s\n", __func__);
+-@@ -1362,23 +1361,13 @@ static int bcm2835_probe(struct platform
++@@ -1361,23 +1360,13 @@ static int bcm2835_probe(struct platform
+  	host->pdev = pdev;
+  	spin_lock_init(&host->lock);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0472-pps-Compatibility-hack-should-be-X86-specific.patch b/target/linux/bcm27xx/patches-6.6/950-0472-pps-Compatibility-hack-should-be-X86-specific.patch
+index 04a2da5b41..4cc2e594ba 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0472-pps-Compatibility-hack-should-be-X86-specific.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0472-pps-Compatibility-hack-should-be-X86-specific.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/drivers/pps/pps.c
+ +++ b/drivers/pps/pps.c
+-@@ -254,12 +254,13 @@ static long pps_cdev_ioctl(struct file *
++@@ -249,12 +249,13 @@ static long pps_cdev_ioctl(struct file *
+  static long pps_cdev_compat_ioctl(struct file *file,
+  		unsigned int cmd, unsigned long arg)
+  {
+@@ -38,7 +38,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  		struct pps_fdata_compat compat;
+  		struct pps_fdata fdata;
+  		int err;
+-@@ -296,6 +297,7 @@ static long pps_cdev_compat_ioctl(struct
++@@ -289,6 +290,7 @@ static long pps_cdev_compat_ioctl(struct
+  		return copy_to_user(uarg, &compat,
+  				sizeof(struct pps_fdata_compat)) ? -EFAULT : 0;
+  	}
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1411-staging-vchiq_arm-Add-36-bit-address-support.patch b/target/linux/bcm27xx/patches-6.6/950-1411-staging-vchiq_arm-Add-36-bit-address-support.patch
+index db65da6997..871b2769b1 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1411-staging-vchiq_arm-Add-36-bit-address-support.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1411-staging-vchiq_arm-Add-36-bit-address-support.patch
+@@ -223,7 +223,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	vchiq_log_info(vchiq_arm_log_level, "vchiq_init - done (slots %pK, phys %pad)",
+  		       vchiq_slot_zero, &slot_phys);
+  
+-@@ -1754,6 +1822,7 @@ void vchiq_platform_conn_state_changed(s
++@@ -1755,6 +1823,7 @@ void vchiq_platform_conn_state_changed(s
+  static const struct of_device_id vchiq_of_match[] = {
+  	{ .compatible = "brcm,bcm2835-vchiq", .data = &bcm2835_drvdata },
+  	{ .compatible = "brcm,bcm2836-vchiq", .data = &bcm2836_drvdata },
+@@ -231,7 +231,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	{},
+  };
+  MODULE_DEVICE_TABLE(of, vchiq_of_match);
+-@@ -1786,22 +1855,8 @@ vchiq_register_child(struct platform_dev
++@@ -1787,22 +1856,8 @@ vchiq_register_child(struct platform_dev
+  
+  	child->dev.of_node = np;
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1412-staging-vchiq_arm-children-inherit-DMA-config.patch b/target/linux/bcm27xx/patches-6.6/950-1412-staging-vchiq_arm-children-inherit-DMA-config.patch
+index bcacf57c5c..df93f3a0c4 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1412-staging-vchiq_arm-children-inherit-DMA-config.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1412-staging-vchiq_arm-children-inherit-DMA-config.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+ +++ b/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+-@@ -1855,8 +1855,18 @@ vchiq_register_child(struct platform_dev
++@@ -1856,8 +1856,18 @@ vchiq_register_child(struct platform_dev
+  
+  	child->dev.of_node = np;
+  
+diff --git a/target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch b/target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch
+deleted file mode 100644
+index ba026b9c3a..0000000000
+--- a/target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch
++++ /dev/null
+@@ -1,121 +0,0 @@
+-From: wangzijie <wangzijie1@honor.com>
+-To: <akpm@linux-foundation.org>, <brauner@kernel.org>,
+-	<viro@zeniv.linux.org.uk>, <adobriyan@gmail.com>,
+-	<rick.p.edgecombe@intel.com>, <ast@kernel.org>,
+-	<k.shutemov@gmail.com>, <jirislaby@kernel.org>,
+-	<linux-fsdevel@vger.kernel.org>
+-Cc: <polynomial-c@gmx.de>, <gregkh@linuxfoundation.org>,
+-	<stable@vger.kernel.org>, <regressions@lists.linux.dev>,
+-	wangzijie <wangzijie1@honor.com>
+-Subject: [PATCH v3] proc: fix missing pde_set_flags() for net proc files
+-Date: Thu, 21 Aug 2025 18:58:06 +0800	[thread overview]
+-Message-ID: <20250821105806.1453833-1-wangzijie1@honor.com> (raw)
+-
+-To avoid potential UAF issues during module removal races, we use pde_set_flags()
+-to save proc_ops flags in PDE itself before proc_register(), and then use
+-pde_has_proc_*() helpers instead of directly dereferencing pde->proc_ops->*.
+-
+-However, the pde_set_flags() call was missing when creating net related proc files.
+-This omission caused incorrect behavior which FMODE_LSEEK was being cleared
+-inappropriately in proc_reg_open() for net proc files. Lars reported it in this link[1].
+-
+-Fix this by ensuring pde_set_flags() is called when register proc entry, and add
+-NULL check for proc_ops in pde_set_flags().
+-
+-[1]: https://lore.kernel.org/all/20250815195616.64497967@chagall.paradoxon.rec/
+-
+-Fixes: ff7ec8dc1b64 ("proc: use the same treatment to check proc_lseek as ones for proc_read_iter et.al")
+-Cc: stable@vger.kernel.org
+-Reported-by: Lars Wendler <polynomial-c@gmx.de>
+-Signed-off-by: wangzijie <wangzijie1@honor.com>
+----
+-v3:
+-- followed by Christian's suggestion to stash pde->proc_ops in a local const variable
+-v2:
+-- followed by Jiri's suggestion to refractor code and reformat commit message
+----
+- fs/proc/generic.c | 38 +++++++++++++++++++++-----------------
+- 1 file changed, 21 insertions(+), 17 deletions(-)
+-
+---- a/fs/proc/generic.c
+-+++ b/fs/proc/generic.c
+-@@ -362,6 +362,25 @@ static const struct inode_operations pro
+- 	.setattr	= proc_notify_change,
+- };
+- 
+-+static void pde_set_flags(struct proc_dir_entry *pde)
+-+{
+-+	const struct proc_ops *proc_ops = pde->proc_ops;
+-+
+-+	if (!proc_ops)
+-+		return;
+-+
+-+	if (proc_ops->proc_flags & PROC_ENTRY_PERMANENT)
+-+		pde->flags |= PROC_ENTRY_PERMANENT;
+-+	if (proc_ops->proc_read_iter)
+-+		pde->flags |= PROC_ENTRY_proc_read_iter;
+-+#ifdef CONFIG_COMPAT
+-+	if (proc_ops->proc_compat_ioctl)
+-+		pde->flags |= PROC_ENTRY_proc_compat_ioctl;
+-+#endif
+-+	if (proc_ops->proc_lseek)
+-+		pde->flags |= PROC_ENTRY_proc_lseek;
+-+}
+-+
+- /* returns the registered entry, or frees dp and returns NULL on failure */
+- struct proc_dir_entry *proc_register(struct proc_dir_entry *dir,
+- 		struct proc_dir_entry *dp)
+-@@ -369,6 +388,8 @@ struct proc_dir_entry *proc_register(str
+- 	if (proc_alloc_inum(&dp->low_ino))
+- 		goto out_free_entry;
+- 
+-+	pde_set_flags(dp);
+-+
+- 	write_lock(&proc_subdir_lock);
+- 	dp->parent = dir;
+- 	if (pde_subdir_insert(dir, dp) == false) {
+-@@ -557,20 +578,6 @@ struct proc_dir_entry *proc_create_reg(c
+- 	return p;
+- }
+- 
+--static void pde_set_flags(struct proc_dir_entry *pde)
+--{
+--	if (pde->proc_ops->proc_flags & PROC_ENTRY_PERMANENT)
+--		pde->flags |= PROC_ENTRY_PERMANENT;
+--	if (pde->proc_ops->proc_read_iter)
+--		pde->flags |= PROC_ENTRY_proc_read_iter;
+--#ifdef CONFIG_COMPAT
+--	if (pde->proc_ops->proc_compat_ioctl)
+--		pde->flags |= PROC_ENTRY_proc_compat_ioctl;
+--#endif
+--	if (pde->proc_ops->proc_lseek)
+--		pde->flags |= PROC_ENTRY_proc_lseek;
+--}
+--
+- struct proc_dir_entry *proc_create_data(const char *name, umode_t mode,
+- 		struct proc_dir_entry *parent,
+- 		const struct proc_ops *proc_ops, void *data)
+-@@ -581,7 +588,6 @@ struct proc_dir_entry *proc_create_data(
+- 	if (!p)
+- 		return NULL;
+- 	p->proc_ops = proc_ops;
+--	pde_set_flags(p);
+- 	return proc_register(parent, p);
+- }
+- EXPORT_SYMBOL(proc_create_data);
+-@@ -632,7 +638,6 @@ struct proc_dir_entry *proc_create_seq_p
+- 	p->proc_ops = &proc_seq_ops;
+- 	p->seq_ops = ops;
+- 	p->state_size = state_size;
+--	pde_set_flags(p);
+- 	return proc_register(parent, p);
+- }
+- EXPORT_SYMBOL(proc_create_seq_private);
+-@@ -663,7 +668,6 @@ struct proc_dir_entry *proc_create_singl
+- 		return NULL;
+- 	p->proc_ops = &proc_single_ops;
+- 	p->single_show = show;
+--	pde_set_flags(p);
+- 	return proc_register(parent, p);
+- }
+- EXPORT_SYMBOL(proc_create_single_data);
+diff --git a/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch b/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch
+index 4aa93c20d1..319bc3e47b 100644
+--- a/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch
++++ b/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch
+@@ -42,7 +42,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+   *	@adap: the adapter
+ --- a/drivers/net/wireless/realtek/rtw89/core.c
+ +++ b/drivers/net/wireless/realtek/rtw89/core.c
+-@@ -1749,7 +1749,7 @@ static void rtw89_core_rx_to_mac80211(st
++@@ -1744,7 +1744,7 @@ static void rtw89_core_rx_to_mac80211(st
+  	struct napi_struct *napi = &rtwdev->napi;
+  
+  	/* In low power mode, napi isn't scheduled. Receive it to netif. */
+diff --git a/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch b/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch
+index 04ac6f1334..de965e1ccd 100644
+--- a/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch
++++ b/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch
+@@ -16,8 +16,8 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ 
+ --- a/drivers/nvmem/imx-ocotp-ele.c
+ +++ b/drivers/nvmem/imx-ocotp-ele.c
+-@@ -15,8 +15,9 @@
+- #include <linux/if_ether.h>	/* ETH_ALEN */
++@@ -14,8 +14,9 @@
++ #include <linux/slab.h>
+  
+  enum fuse_type {
+ -	FUSE_FSB = 1,
+@@ -28,7 +28,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+  	FUSE_INVALID = -1
+  };
+  
+-@@ -96,7 +97,10 @@ static int imx_ocotp_reg_read(void *cont
++@@ -95,7 +96,10 @@ static int imx_ocotp_reg_read(void *cont
+  			continue;
+  		}
+  
+@@ -40,7 +40,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+  	}
+  
+  	memcpy(val, ((u8 *)p) + skipbytes, bytes);
+-@@ -182,8 +186,30 @@ static const struct ocotp_devtype_data i
++@@ -179,8 +183,30 @@ static const struct ocotp_devtype_data i
+  	},
+  };
+  
+diff --git a/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch b/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
+index 3f105cfd2b..af1b8b4e78 100644
+--- a/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
++++ b/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
+@@ -185,7 +185,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ +	size_t crc32_data_offset;
+ +	size_t crc32_data_len;
+ +	size_t crc32_offset;
+-+	uint32_t *crc32_addr;
+++	__le32 *crc32_addr;
+ +	size_t data_offset;
+ +	size_t data_len;
+ +	size_t dev_size;
+@@ -236,8 +236,8 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ +		goto err_kfree;
+ +	}
+ +
+-+	crc32_addr = (uint32_t *)(buf + crc32_offset);
+-+	crc32 = *crc32_addr;
+++	crc32_addr = (__le32 *)(buf + crc32_offset);
+++	crc32 = le32_to_cpu(*crc32_addr);
+ +	crc32_data_len = dev_size - crc32_data_offset;
+ +	data_len = dev_size - data_offset;
+ +
+@@ -439,7 +439,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ -	size_t crc32_data_offset;
+ -	size_t crc32_data_len;
+ -	size_t crc32_offset;
+--	uint32_t *crc32_addr;
++-	__le32 *crc32_addr;
+ -	size_t data_offset;
+ -	size_t data_len;
+ -	size_t dev_size;
+@@ -490,8 +490,8 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ -		goto err_kfree;
+ -	}
+ -
+--	crc32_addr = (uint32_t *)(buf + crc32_offset);
+--	crc32 = *crc32_addr;
++-	crc32_addr = (__le32 *)(buf + crc32_offset);
++-	crc32 = le32_to_cpu(*crc32_addr);
+ -	crc32_data_len = dev_size - crc32_data_offset;
+ -	data_len = dev_size - data_offset;
+ -
+diff --git a/target/linux/generic/hack-6.6/259-regmap_dynamic.patch b/target/linux/generic/hack-6.6/259-regmap_dynamic.patch
+index c7b7a28ce3..4f6dca7127 100644
+--- a/target/linux/generic/hack-6.6/259-regmap_dynamic.patch
++++ b/target/linux/generic/hack-6.6/259-regmap_dynamic.patch
+@@ -137,7 +137,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  #include <linux/mutex.h>
+  #include <linux/err.h>
+  #include <linux/property.h>
+-@@ -3485,3 +3486,5 @@ static int __init regmap_initcall(void)
++@@ -3483,3 +3484,5 @@ static int __init regmap_initcall(void)
+  	return 0;
+  }
+  postcore_initcall(regmap_initcall);
+diff --git a/target/linux/generic/hack-6.6/661-kernel-ct-size-the-hashtable-more-adequately.patch b/target/linux/generic/hack-6.6/661-kernel-ct-size-the-hashtable-more-adequately.patch
+index 64ef073611..ff959ec8d2 100644
+--- a/target/linux/generic/hack-6.6/661-kernel-ct-size-the-hashtable-more-adequately.patch
++++ b/target/linux/generic/hack-6.6/661-kernel-ct-size-the-hashtable-more-adequately.patch
+@@ -14,7 +14,7 @@ Signed-off-by: Rui Salvaterra <rsalvaterra@gmail.com>
+ 
+ --- a/net/netfilter/nf_conntrack_core.c
+ +++ b/net/netfilter/nf_conntrack_core.c
+-@@ -2699,7 +2699,7 @@ int nf_conntrack_init_start(void)
++@@ -2685,7 +2685,7 @@ int nf_conntrack_init_start(void)
+  
+  	if (!nf_conntrack_htable_size) {
+  		nf_conntrack_htable_size
+diff --git a/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch b/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
+index 30a0b86b00..8b784836a0 100644
+--- a/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
++++ b/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
+@@ -60,7 +60,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+   */
+ --- a/include/linux/skbuff.h
+ +++ b/include/linux/skbuff.h
+-@@ -3121,6 +3121,10 @@ static inline int pskb_trim(struct sk_bu
++@@ -3098,6 +3098,10 @@ static inline int pskb_trim(struct sk_bu
+  	return (len < skb->len) ? __pskb_trim(skb, len) : 0;
+  }
+  
+@@ -71,7 +71,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  /**
+   *	pskb_trim_unique - remove end from a paged unique (not cloned) buffer
+   *	@skb: buffer to alter
+-@@ -3286,16 +3290,6 @@ static inline struct sk_buff *dev_alloc_
++@@ -3263,16 +3267,6 @@ static inline struct sk_buff *dev_alloc_
+  }
+  
+  
+diff --git a/target/linux/generic/hack-6.6/904-debloat_dma_buf.patch b/target/linux/generic/hack-6.6/904-debloat_dma_buf.patch
+index 3ca98788ab..4d2ea46212 100644
+--- a/target/linux/generic/hack-6.6/904-debloat_dma_buf.patch
++++ b/target/linux/generic/hack-6.6/904-debloat_dma_buf.patch
+@@ -73,7 +73,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ +MODULE_LICENSE("GPL");
+ --- a/kernel/sched/core.c
+ +++ b/kernel/sched/core.c
+-@@ -4485,6 +4485,7 @@ int wake_up_state(struct task_struct *p,
++@@ -4486,6 +4486,7 @@ int wake_up_state(struct task_struct *p,
+  {
+  	return try_to_wake_up(p, state, 0);
+  }
+diff --git a/target/linux/generic/pending-6.6/630-packet_socket_type.patch b/target/linux/generic/pending-6.6/630-packet_socket_type.patch
+index 4992dd7816..f5c15756c5 100644
+--- a/target/linux/generic/pending-6.6/630-packet_socket_type.patch
++++ b/target/linux/generic/pending-6.6/630-packet_socket_type.patch
+@@ -87,7 +87,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	if (!net_eq(dev_net(dev), sock_net(sk)))
+  		goto drop;
+  
+-@@ -3436,6 +3438,7 @@ static int packet_create(struct net *net
++@@ -3437,6 +3439,7 @@ static int packet_create(struct net *net
+  	mutex_init(&po->pg_vec_lock);
+  	po->rollover = NULL;
+  	po->prot_hook.func = packet_rcv;
+@@ -95,7 +95,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+  	if (sock->type == SOCK_PACKET)
+  		po->prot_hook.func = packet_rcv_spkt;
+-@@ -4103,6 +4106,16 @@ packet_setsockopt(struct socket *sock, i
++@@ -4104,6 +4107,16 @@ packet_setsockopt(struct socket *sock, i
+  		packet_sock_flag_set(po, PACKET_SOCK_QDISC_BYPASS, val);
+  		return 0;
+  	}
+@@ -112,7 +112,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	default:
+  		return -ENOPROTOOPT;
+  	}
+-@@ -4162,6 +4175,13 @@ static int packet_getsockopt(struct sock
++@@ -4163,6 +4176,13 @@ static int packet_getsockopt(struct sock
+  	case PACKET_VNET_HDR_SZ:
+  		val = READ_ONCE(po->vnet_hdr_sz);
+  		break;
+diff --git a/target/linux/generic/pending-6.6/640-net-bridge-fix-switchdev-host-mdb-entry-updates.patch b/target/linux/generic/pending-6.6/640-net-bridge-fix-switchdev-host-mdb-entry-updates.patch
+index 8271e062ff..cf55c6a3fb 100644
+--- a/target/linux/generic/pending-6.6/640-net-bridge-fix-switchdev-host-mdb-entry-updates.patch
++++ b/target/linux/generic/pending-6.6/640-net-bridge-fix-switchdev-host-mdb-entry-updates.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/net/bridge/br_switchdev.c
+ +++ b/net/bridge/br_switchdev.c
+-@@ -571,10 +571,18 @@ static void br_switchdev_host_mdb(struct
++@@ -568,10 +568,18 @@ static void br_switchdev_host_mdb(struct
+  				  struct net_bridge_mdb_entry *mp, int type)
+  {
+  	struct net_device *lower_dev;
+diff --git a/target/linux/generic/pending-6.6/641-net-bridge-switchdev-Don-t-drop-packets-between-port.patch b/target/linux/generic/pending-6.6/641-net-bridge-switchdev-Don-t-drop-packets-between-port.patch
+index 531e1c99c6..1c4ec61b50 100644
+--- a/target/linux/generic/pending-6.6/641-net-bridge-switchdev-Don-t-drop-packets-between-port.patch
++++ b/target/linux/generic/pending-6.6/641-net-bridge-switchdev-Don-t-drop-packets-between-port.patch
+@@ -27,7 +27,7 @@ Signed-off-by: Leon M. Busch-George <leon@georgemail.eu>
+ 
+ --- a/net/bridge/br_switchdev.c
+ +++ b/net/bridge/br_switchdev.c
+-@@ -70,7 +70,7 @@ bool nbp_switchdev_allowed_egress(const
++@@ -67,7 +67,7 @@ bool nbp_switchdev_allowed_egress(const
+  	struct br_input_skb_cb *cb = BR_INPUT_SKB_CB(skb);
+  
+  	return !test_bit(p->hwdom, &cb->fwd_hwdoms) &&
+diff --git a/target/linux/generic/pending-6.6/655-increase_skb_pad.patch b/target/linux/generic/pending-6.6/655-increase_skb_pad.patch
+index 8fbc915881..4f3bb06051 100644
+--- a/target/linux/generic/pending-6.6/655-increase_skb_pad.patch
++++ b/target/linux/generic/pending-6.6/655-increase_skb_pad.patch
+@@ -9,7 +9,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/include/linux/skbuff.h
+ +++ b/include/linux/skbuff.h
+-@@ -3088,7 +3088,7 @@ static inline int pskb_network_may_pull(
++@@ -3065,7 +3065,7 @@ static inline int pskb_network_may_pull(
+   * NET_IP_ALIGN(2) + ethernet_header(14) + IP_header(20/40) + ports(8)
+   */
+  #ifndef NET_SKB_PAD
+diff --git a/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch b/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch
+index ef7ca8cf74..0ad36b3430 100644
+--- a/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch
++++ b/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch
+@@ -185,7 +185,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  		cfg->fc_flags |= RTF_REJECT;
+  
+  	if (rtm->rtm_type == RTN_LOCAL)
+-@@ -6349,6 +6380,8 @@ static int ip6_route_dev_notify(struct n
++@@ -6341,6 +6372,8 @@ static int ip6_route_dev_notify(struct n
+  #ifdef CONFIG_IPV6_MULTIPLE_TABLES
+  		net->ipv6.ip6_prohibit_entry->dst.dev = dev;
+  		net->ipv6.ip6_prohibit_entry->rt6i_idev = in6_dev_get(dev);
+@@ -194,7 +194,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  		net->ipv6.ip6_blk_hole_entry->dst.dev = dev;
+  		net->ipv6.ip6_blk_hole_entry->rt6i_idev = in6_dev_get(dev);
+  #endif
+-@@ -6360,6 +6393,7 @@ static int ip6_route_dev_notify(struct n
++@@ -6352,6 +6385,7 @@ static int ip6_route_dev_notify(struct n
+  		in6_dev_put_clear(&net->ipv6.ip6_null_entry->rt6i_idev);
+  #ifdef CONFIG_IPV6_MULTIPLE_TABLES
+  		in6_dev_put_clear(&net->ipv6.ip6_prohibit_entry->rt6i_idev);
+@@ -202,7 +202,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  		in6_dev_put_clear(&net->ipv6.ip6_blk_hole_entry->rt6i_idev);
+  #endif
+  	}
+-@@ -6560,6 +6594,8 @@ static int __net_init ip6_route_net_init
++@@ -6552,6 +6586,8 @@ static int __net_init ip6_route_net_init
+  
+  #ifdef CONFIG_IPV6_MULTIPLE_TABLES
+  	net->ipv6.fib6_has_custom_rules = false;
+@@ -211,7 +211,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  	net->ipv6.ip6_prohibit_entry = kmemdup(&ip6_prohibit_entry_template,
+  					       sizeof(*net->ipv6.ip6_prohibit_entry),
+  					       GFP_KERNEL);
+-@@ -6570,11 +6606,21 @@ static int __net_init ip6_route_net_init
++@@ -6562,11 +6598,21 @@ static int __net_init ip6_route_net_init
+  			 ip6_template_metrics, true);
+  	INIT_LIST_HEAD(&net->ipv6.ip6_prohibit_entry->dst.rt_uncached);
+  
+@@ -234,7 +234,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  	net->ipv6.ip6_blk_hole_entry->dst.ops = &net->ipv6.ip6_dst_ops;
+  	dst_init_metrics(&net->ipv6.ip6_blk_hole_entry->dst,
+  			 ip6_template_metrics, true);
+-@@ -6601,6 +6647,8 @@ out:
++@@ -6593,6 +6639,8 @@ out:
+  	return ret;
+  
+  #ifdef CONFIG_IPV6_MULTIPLE_TABLES
+@@ -243,7 +243,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  out_ip6_prohibit_entry:
+  	kfree(net->ipv6.ip6_prohibit_entry);
+  out_ip6_null_entry:
+-@@ -6620,6 +6668,7 @@ static void __net_exit ip6_route_net_exi
++@@ -6612,6 +6660,7 @@ static void __net_exit ip6_route_net_exi
+  	kfree(net->ipv6.ip6_null_entry);
+  #ifdef CONFIG_IPV6_MULTIPLE_TABLES
+  	kfree(net->ipv6.ip6_prohibit_entry);
+@@ -251,7 +251,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  	kfree(net->ipv6.ip6_blk_hole_entry);
+  #endif
+  	dst_entries_destroy(&net->ipv6.ip6_dst_ops);
+-@@ -6703,6 +6752,9 @@ void __init ip6_route_init_special_entri
++@@ -6695,6 +6744,9 @@ void __init ip6_route_init_special_entri
+  	init_net.ipv6.ip6_prohibit_entry->rt6i_idev = in6_dev_get(init_net.loopback_dev);
+  	init_net.ipv6.ip6_blk_hole_entry->dst.dev = init_net.loopback_dev;
+  	init_net.ipv6.ip6_blk_hole_entry->rt6i_idev = in6_dev_get(init_net.loopback_dev);
+diff --git a/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch b/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
+index 1d69f9f775..fffb6cbb54 100644
+--- a/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
++++ b/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
+@@ -65,7 +65,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+ --- a/net/8021q/vlan.h
+ +++ b/net/8021q/vlan.h
+-@@ -109,7 +109,7 @@ static inline netdev_features_t vlan_tnl
++@@ -108,7 +108,7 @@ static inline netdev_features_t vlan_tnl
+  	netdev_features_t ret;
+  
+  	ret = real_dev->hw_enc_features &
+diff --git a/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch b/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
+index 7a5413700a..1ae6f89399 100644
+--- a/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
++++ b/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/net/netfilter/nf_tables_api.c
+ +++ b/net/netfilter/nf_tables_api.c
+-@@ -8449,7 +8449,7 @@ static int nft_register_flowtable_net_ho
++@@ -8469,7 +8469,7 @@ static int nft_register_flowtable_net_ho
+  		err = flowtable->data.type->setup(&flowtable->data,
+  						  hook->ops.dev,
+  						  FLOW_BLOCK_BIND);
+diff --git a/target/linux/generic/pending-6.6/802-nvmem-u-boot-env-align-endianness-of-crc32-values.patch b/target/linux/generic/pending-6.6/802-nvmem-u-boot-env-align-endianness-of-crc32-values.patch
+new file mode 100644
+index 0000000000..29fe668f8d
+--- /dev/null
++++ b/target/linux/generic/pending-6.6/802-nvmem-u-boot-env-align-endianness-of-crc32-values.patch
+@@ -0,0 +1,45 @@
++From 0e71cac033bb7689c4dfa2e6814191337ef770f5 Mon Sep 17 00:00:00 2001
++From: INAGAKI Hiroshi <musashino.open@gmail.com>
++Date: Thu, 13 Oct 2022 00:51:33 +0900
++Subject: [PATCH] nvmem: layouts: u-boot-env: align endianness of crc32 values
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++This patch fixes crc32 error on Big-Endianness system by conversion of
++calculated crc32 value.
++
++Little-Endianness system:
++
++  obtained crc32: Little
++calculated crc32: Little
++
++Big-Endianness system:
++
++  obtained crc32: Little
++calculated crc32: Big
++
++log (APRESIA ApresiaLightGS120GT-SS, RTL8382M, Big-Endianness):
++
++[    8.570000] u_boot_env 18001200.spi:flash@0:partitions:partition@c0000: Invalid calculated CRC32: 0x88cd6f09 (expected: 0x096fcd88)
++[    8.580000] u_boot_env: probe of 18001200.spi:flash@0:partitions:partition@c0000 failed with error -22
++
++Fixes: f955dc1445069 ("nvmem: add driver handling U-Boot environment variables")
++
++Signed-off-by: INAGAKI Hiroshi <musashino.open@gmail.com>
++Acked-by: Rafał Miłecki <rafal@milecki.pl>
++Tested-by: Christian Lamparter <chunkeey@gmail.com>
++Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
++---
++
++--- a/drivers/nvmem/layouts/u-boot-env.c
+++++ b/drivers/nvmem/layouts/u-boot-env.c
++@@ -148,7 +148,7 @@ int u_boot_env_parse(struct device *dev,
++ 	crc32_data_len = dev_size - crc32_data_offset;
++ 	data_len = dev_size - data_offset;
++ 
++-	calc = crc32(~0, buf + crc32_data_offset, crc32_data_len) ^ ~0L;
+++	calc = le32_to_cpu((__le32)crc32(~0, buf + crc32_data_offset, crc32_data_len) ^ ~0L);
++ 	if (calc != crc32) {
++ 		dev_err(dev, "Invalid calculated CRC32: 0x%08x (expected: 0x%08x)\n", calc, crc32);
++ 		err = -EINVAL;
+diff --git a/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch b/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch
+index 15b8e6dadc..d49b18242a 100644
+--- a/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch
++++ b/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch
+@@ -93,7 +93,7 @@ Signed-off-by: Maxime Chevallier <maxime.chevallier@bootlin.com>
+ +#endif
+ --- a/include/linux/skbuff.h
+ +++ b/include/linux/skbuff.h
+-@@ -4706,6 +4706,9 @@ enum skb_ext_id {
++@@ -4683,6 +4683,9 @@ enum skb_ext_id {
+  #if IS_ENABLED(CONFIG_MCTP_FLOWS)
+  	SKB_EXT_MCTP,
+  #endif
+diff --git a/target/linux/ramips/patches-6.6/825-i2c-MIPS-adds-ralink-I2C-driver.patch b/target/linux/ramips/patches-6.6/825-i2c-MIPS-adds-ralink-I2C-driver.patch
+index 747d515964..9755eeb777 100644
+--- a/target/linux/ramips/patches-6.6/825-i2c-MIPS-adds-ralink-I2C-driver.patch
++++ b/target/linux/ramips/patches-6.6/825-i2c-MIPS-adds-ralink-I2C-driver.patch
+@@ -45,7 +45,7 @@ Signed-off-by: John Crispin <blogic@openwrt.org>
+ +};
+ --- a/drivers/i2c/busses/Kconfig
+ +++ b/drivers/i2c/busses/Kconfig
+-@@ -1024,6 +1024,11 @@ config I2C_RK3X
++@@ -1023,6 +1023,11 @@ config I2C_RK3X
+  	  This driver can also be built as a module. If so, the module will
+  	  be called i2c-rk3x.
+  
+diff --git a/target/linux/realtek/patches-6.6/310-add-i2c-rtl9300-support.patch b/target/linux/realtek/patches-6.6/310-add-i2c-rtl9300-support.patch
+index c3b30f5fb7..9eaed95d0d 100644
+--- a/target/linux/realtek/patches-6.6/310-add-i2c-rtl9300-support.patch
++++ b/target/linux/realtek/patches-6.6/310-add-i2c-rtl9300-support.patch
+@@ -17,7 +17,7 @@ Submitted-by: Birger Koblitz <git@birger-koblitz.de>
+ 
+ --- a/drivers/i2c/busses/Kconfig
+ +++ b/drivers/i2c/busses/Kconfig
+-@@ -1024,6 +1024,16 @@ config I2C_RK3X
++@@ -1023,6 +1023,16 @@ config I2C_RK3X
+  	  This driver can also be built as a module. If so, the module will
+  	  be called i2c-rk3x.
+  
+-- 
+2.43.0
+
