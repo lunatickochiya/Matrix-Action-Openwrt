@@ -1,109 +1,169 @@
-From df7fd9434288412518be320bd92d4b501d8ef102 Mon Sep 17 00:00:00 2001
+From 443d2578fa68c5cdab55c2f15702b73f7d1b703b Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
-Date: Fri, 5 Sep 2025 19:04:45 +0800
-Subject: [PATCH 2/2] Revert "kernel: bump 6.6 to 6.6.103"
+Date: Wed, 10 Sep 2025 20:45:35 +0800
+Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.104"
 
-This reverts commit 3f4d1b2d5c5033d712d0519f448c1ccd1e61ff25.
+This reverts commit 254f6b241426e1fda72a844752e7f3979ef31626.
+Revert "kernel: Remove patch for fixed bug"
+
+This reverts commit 6bf869db0fe181b28ff71f3145715adc47de1a6b.
+Revert "kernel: bump 6.6 to 6.6.101"
+
+This reverts commit 406489fd83d9015f1827122d912253744c0efe5a.
+Revert "kernel: bump 6.6 to 6.6.102"
+
+This reverts commit a65ca44cb7a3e6fbb43b230c7c5a0684d88bae8b.
+Revert "kernel: bump 6.6 to 6.6.103"
+
+This reverts commit c676281e7e26c532b53908f84c59786fde189a76.
+Revert "kernel: Fix kernel regression in local-broadcast routes"
+
+This reverts commit 8b0eb9c91d02c0fa135fa2295452c7731e93e3de.
+Revert "lantiq: Fix VPE kernel patch"
+
+This reverts commit 78763b7b84b1ec128d99bd5a8c7982e874cb9679.
+Revert "kernel: bump 6.6 to 6.6.104"
+
+This reverts commit fe3d783d1e98840dbcb3a20205578eb9bddd7a8c.
+Revert "kernel: add support for FudanMicro FM25S01A SPI-NAND"
+
+This reverts commit ac4516d64f99fb5d3c17c9be4ab320c7f7232fa3.
 ---
- include/kernel-6.6                            |  4 +-
- .../105-uart-add-en7523-support.patch         |  2 +-
- .../901-snand-mtk-bmt-support.patch           |  6 +-
- ...per-force-gzip-as-mkimage-s-compress.patch |  2 +-
- .../900-unaligned_access_hacks.patch          |  2 +-
- ...Demote-deferral-errors-to-INFO-level.patch |  4 +-
- ...all-the-downstream-rpi-sound-card-dr.patch |  2 +-
- ...-tc358743-Increase-FIFO-level-to-374.patch | 31 ++++++
- ...-Add-support-for-972Mbit-s-link-freq.patch |  4 +-
- ...743-Check-I2C-succeeded-during-probe.patch | 98 +++++++++++++++++++
- ...eturn-an-appropriate-colorspace-from.patch | 98 +++++++++++++++++++
- ...hci_fixup_endpoint-for-interval-adju.patch |  4 +-
- ...d-add-the-endpoint-context-in-xhci_f.patch |  2 +-
- ...i2c-tc358743-Fix-fallthrough-warning.patch |  2 +-
- ...43-Only-allow-supported-pixel-fmts-i.patch | 30 ++++++
- ...xups-for-driver-submitted-to-mailing.patch |  8 +-
- ...b-xhci-add-VLI_SS_BULK_OUT_BUG-quirk.patch |  6 +-
- ...5-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch |  6 +-
- ...-Allow-RESET_BRCMSTB-on-ARCH_BCM2835.patch | 20 ++++
- ...nt-to-request-a-particular-dev-fbN-n.patch | 10 +-
- ...pci-Disable-Host-Memory-Buffer-usage.patch |  6 +-
- ...support-for-performing-fake-doorbell.patch |  6 +-
- ...d-add-support-for-FORESEE-F35SQA002G.patch |  2 +-
- ...tional-threaded-NAPI-wakeup-based-on.patch |  6 +-
- ...-to-use-SMP-threads-for-backlog-NAPI.patch | 22 ++---
- ...klog-NAPI-to-clean-up-the-defer_list.patch |  2 +-
- ...-net-Rename-rps_lock-to-backlog_lock.patch | 18 ++--
- ...-net-Make-USO-depend-on-CSUM-offload.patch |  6 +-
- ...64-if-device-if-driver-is-configured.patch |  2 +-
- ...-create-a-dummy-net_device-allocator.patch |  6 +-
- ...HY-package-API-to-support-multiple-g.patch |  2 +-
- ...iatek-fix-ppe-flow-accounting-for-L2.patch |  2 +-
- ..._eth_soc-rely-on-mtk_pse_port-defini.patch |  2 +-
- ..._wed-introduce-versioning-utility-ro.patch |  2 +-
- ...k_wed-add-mtk_wed_soc_data-structure.patch |  4 +-
- ..._wed-introduce-WED-support-for-MT798.patch |  4 +-
- ..._wed-introduce-partial-AMSDU-offload.patch |  4 +-
- ..._eth_soc-ppe-add-support-for-multipl.patch |  6 +-
- ..._eth_soc-ppe-prevent-ppe-update-for-.patch |  2 +-
- ...t-introduce-napi_is_scheduled-helper.patch |  2 +-
- ...igger-netdev-Extend-speeds-up-to-10G.patch | 14 +--
- ...ger-netdev-Configure-LED-blink-inter.patch | 81 +++++++++++++++
- ...et-free_netdev-exit-earlier-if-dummy.patch |  2 +-
- ...dd-RCTAPT-support-for-different-OSRs.patch |  4 +-
- ...w-configuration-of-oversampling-rate.patch |  4 +-
- ...er-reuse-allocated-entropy-collector.patch |  2 +-
- .../generic/hack-6.6/204-module_strip.patch   |  8 +-
- .../721-net-add-packet-mangeling.patch        |  2 +-
- .../hack-6.6/901-debloat_sock_diag.patch      |  2 +-
- .../generic/hack-6.6/902-debloat_proc.patch   |  2 +-
- ...include-asm-rwonce.h-for-kernel-code.patch |  2 +-
- ...flip_threshold-to-75-of-ECC-strength.patch |  2 +-
- ...nd-Add-support-for-Etron-EM73D044VCx.patch |  2 +-
- ..._F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch |  2 +-
- ...-bus-mhi-core-add-SBL-state-callback.patch |  2 +-
- ...-max-gen-first-for-IMX8MM-and-IMX8MP.patch |  2 +-
- ...msm-use-sdhci_set_clock-instead-of-s.patch |  2 +-
- ...m-comment-unused-sdhci_msm_set_clock.patch |  2 +-
- ...dsa-add-out-of-band-tagging-protocol.patch |  2 +-
- .../999-atm-mpoa-intel-dsl-phy-support.patch  |  4 +-
- .../0001-MIPS-lantiq-add-pcie-driver.patch    |  2 +-
- .../lantiq/patches-6.6/0152-lantiq-VPE.patch  |  7 +-
- .../121-hack-spi-nand-1b-bbm.patch            |  4 +-
- .../330-snand-mtk-bmt-support.patch           |  6 +-
- ...Add-support-for-the-Fidelix-FM35X1GA.patch |  2 +-
- .../patches-6.6/410-bt-mtk-serial-fix.patch   |  2 +-
- ...and-Add-calibration-support-for-spin.patch |  4 +-
- ...nor-Add-calibration-support-for-spi-.patch |  2 +-
- ...-pwm-mediatek-add-support-for-MT7988.patch |  4 +-
- ...960-asus-hack-u-boot-ignore-mtdparts.patch |  4 +-
- ...pc-add-compressed-zImage-for-mpc85xx.patch |  4 +-
- ...0-powerpc-85xx-tl-wdr4900-v1-support.patch |  4 +-
- .../101-powerpc-85xx-hiveap-330-support.patch |  4 +-
- .../106-powerpc-85xx-ws-ap3710i-support.patch |  4 +-
- ...-powerpc-85xx-add-ws-ap3825i-support.patch |  4 +-
- ...-powerpc-85xx-add-ws-ap3715i-support.patch |  4 +-
- .../110-powerpc-85xx-br200-wp-support.patch   |  4 +-
- ...ootwrapper-disable-uImage-generation.patch |  4 +-
- .../810-uvc-add-iPassion-iP2970-support.patch |  6 +-
- ...t-8250-Add-dw-auto-flow-ctrl-support.patch |  2 +-
- ...ove-performance-usb-using-lowmem-for.patch | 16 +--
- ...ma_alloc_noncoherent-to-alloc-low-me.patch | 10 +-
- 82 files changed, 526 insertions(+), 167 deletions(-)
+ include/kernel-6.6                            |   4 +-
+ .../105-uart-add-en7523-support.patch         |   2 +-
+ .../901-snand-mtk-bmt-support.patch           |   6 +-
+ ...per-force-gzip-as-mkimage-s-compress.patch |   2 +-
+ .../900-unaligned_access_hacks.patch          |   4 +-
+ ...Demote-deferral-errors-to-INFO-level.patch |   4 +-
+ .../950-0087-Add-dwc_otg-driver.patch         |   2 +-
+ ...all-the-downstream-rpi-sound-card-dr.patch |   2 +-
+ ...-tc358743-Increase-FIFO-level-to-374.patch |  31 +++++
+ ...-Add-support-for-972Mbit-s-link-freq.patch |   4 +-
+ ...743-Check-I2C-succeeded-during-probe.patch |  98 ++++++++++++++
+ ...eturn-an-appropriate-colorspace-from.patch |  98 ++++++++++++++
+ ...hci_fixup_endpoint-for-interval-adju.patch |   4 +-
+ ...d-add-the-endpoint-context-in-xhci_f.patch |   2 +-
+ ...ce-quirks-for-Freeway-Airmouse-T3-an.patch |   4 +-
+ ...m-Register-vcsm-cma-as-a-platform-dr.patch |   4 +-
+ ...m-Register-bcm2835-codec-as-a-platfo.patch |   4 +-
+ ...m-Set-up-dma-ranges-on-child-devices.patch |   2 +-
+ ...e-the-old-dma-controller-for-OF-conf.patch |   4 +-
+ ...hiq_arm-Give-vchiq-children-DT-nodes.patch |   2 +-
+ ...q-Load-bcm2835_isp-driver-from-vchiq.patch |   4 +-
+ ...i2c-tc358743-Fix-fallthrough-warning.patch |   2 +-
+ ...43-Only-allow-supported-pixel-fmts-i.patch |  30 +++++
+ ...tft-Add-support-for-display-variants.patch |   6 +-
+ ...xups-for-driver-submitted-to-mailing.patch |   8 +-
+ ...-phys-addresses-for-slave-DMA-config.patch |   4 +-
+ ...tibility-hack-should-be-X86-specific.patch |   4 +-
+ ...b-xhci-add-VLI_SS_BULK_OUT_BUG-quirk.patch |   6 +-
+ ...5-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch |   6 +-
+ ...-Allow-RESET_BRCMSTB-on-ARCH_BCM2835.patch |  20 +++
+ .../950-0530-pinctrl-Add-rp1-driver.patch     |   2 +-
+ ...nt-to-request-a-particular-dev-fbN-n.patch |  10 +-
+ ...vchiq_arm-Add-36-bit-address-support.patch |   4 +-
+ ...chiq_arm-children-inherit-DMA-config.patch |   2 +-
+ ...pci-Disable-Host-Memory-Buffer-usage.patch |   6 +-
+ ...support-for-performing-fake-doorbell.patch |   6 +-
+ ...d-add-support-for-FORESEE-F35SQA002G.patch |   2 +-
+ ...-add-support-for-FudanMicro-FM25S01A.patch | 124 ------------------
+ ...tional-threaded-NAPI-wakeup-based-on.patch |   6 +-
+ ...-to-use-SMP-threads-for-backlog-NAPI.patch |  22 ++--
+ ...klog-NAPI-to-clean-up-the-defer_list.patch |   2 +-
+ ...-net-Rename-rps_lock-to-backlog_lock.patch |  18 +--
+ ...-net-Make-USO-depend-on-CSUM-offload.patch |   6 +-
+ ...64-if-device-if-driver-is-configured.patch |   2 +-
+ .../621-proc-fix-missing-pde_set_flags.patch  | 121 -----------------
+ ...-create-a-dummy-net_device-allocator.patch |   6 +-
+ ...HY-package-API-to-support-multiple-g.patch |   2 +-
+ ...iatek-fix-ppe-flow-accounting-for-L2.patch |   2 +-
+ ..._eth_soc-rely-on-mtk_pse_port-defini.patch |   2 +-
+ ..._wed-introduce-versioning-utility-ro.patch |   2 +-
+ ...k_wed-add-mtk_wed_soc_data-structure.patch |   4 +-
+ ..._wed-introduce-WED-support-for-MT798.patch |   4 +-
+ ..._wed-introduce-partial-AMSDU-offload.patch |   4 +-
+ ..._eth_soc-ppe-add-support-for-multipl.patch |   6 +-
+ ..._eth_soc-ppe-prevent-ppe-update-for-.patch |   2 +-
+ ...t-introduce-napi_is_scheduled-helper.patch |   4 +-
+ ...et-stmmac-improve-TX-timer-arm-logic.patch |   2 +-
+ ...c-move-TX-timer-arm-after-DMA-enable.patch |  16 +--
+ ...1-nvmem-imx-ocotp-ele-support-i.MX95.patch |   8 +-
+ ...-nvmem-layouts-add-U-Boot-env-layout.patch |  12 +-
+ ...igger-netdev-Extend-speeds-up-to-10G.patch |  14 +-
+ ...ger-netdev-Configure-LED-blink-inter.patch |  81 ++++++++++++
+ ...et-free_netdev-exit-earlier-if-dummy.patch |   2 +-
+ ...dd-RCTAPT-support-for-different-OSRs.patch |   4 +-
+ ...w-configuration-of-oversampling-rate.patch |   4 +-
+ ...er-reuse-allocated-entropy-collector.patch |   2 +-
+ .../generic/hack-6.6/204-module_strip.patch   |   8 +-
+ .../generic/hack-6.6/259-regmap_dynamic.patch |   2 +-
+ ...t-size-the-hashtable-more-adequately.patch |   2 +-
+ .../721-net-add-packet-mangeling.patch        |   6 +-
+ .../hack-6.6/901-debloat_sock_diag.patch      |   2 +-
+ .../generic/hack-6.6/902-debloat_proc.patch   |   2 +-
+ .../hack-6.6/904-debloat_dma_buf.patch        |   2 +-
+ ...include-asm-rwonce.h-for-kernel-code.patch |   2 +-
+ ...flip_threshold-to-75-of-ECC-strength.patch |   2 +-
+ ...nd-Add-support-for-Etron-EM73D044VCx.patch |  10 +-
+ .../pending-6.6/630-packet_socket_type.patch  |   6 +-
+ ...fix-switchdev-host-mdb-entry-updates.patch |   2 +-
+ ...hdev-Don-t-drop-packets-between-port.patch |   2 +-
+ .../pending-6.6/655-increase_skb_pad.patch    |   2 +-
+ ...ng-with-source-address-failed-policy.patch |  14 +-
+ ..._F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch |   4 +-
+ ...les-ignore-EOPNOTSUPP-on-flowtable-d.patch |   2 +-
+ ...-bus-mhi-core-add-SBL-state-callback.patch |   2 +-
+ ...env-align-endianness-of-crc32-values.patch |  45 +++++++
+ ...-max-gen-first-for-IMX8MM-and-IMX8MP.patch |   2 +-
+ ...msm-use-sdhci_set_clock-instead-of-s.patch |   2 +-
+ ...m-comment-unused-sdhci_msm_set_clock.patch |   2 +-
+ ...dsa-add-out-of-band-tagging-protocol.patch |   2 +-
+ .../999-atm-mpoa-intel-dsl-phy-support.patch  |   4 +-
+ .../0001-MIPS-lantiq-add-pcie-driver.patch    |   2 +-
+ .../lantiq/patches-6.6/0152-lantiq-VPE.patch  |   7 +-
+ .../121-hack-spi-nand-1b-bbm.patch            |   4 +-
+ .../330-snand-mtk-bmt-support.patch           |   6 +-
+ ...Add-support-for-the-Fidelix-FM35X1GA.patch |  12 +-
+ .../patches-6.6/410-bt-mtk-serial-fix.patch   |   2 +-
+ ...and-Add-calibration-support-for-spin.patch |   4 +-
+ ...nor-Add-calibration-support-for-spi-.patch |   2 +-
+ ...-pwm-mediatek-add-support-for-MT7988.patch |   4 +-
+ ...960-asus-hack-u-boot-ignore-mtdparts.patch |   4 +-
+ ...pc-add-compressed-zImage-for-mpc85xx.patch |   4 +-
+ ...0-powerpc-85xx-tl-wdr4900-v1-support.patch |   4 +-
+ .../101-powerpc-85xx-hiveap-330-support.patch |   4 +-
+ .../106-powerpc-85xx-ws-ap3710i-support.patch |   4 +-
+ ...-powerpc-85xx-add-ws-ap3825i-support.patch |   4 +-
+ ...-powerpc-85xx-add-ws-ap3715i-support.patch |   4 +-
+ .../110-powerpc-85xx-br200-wp-support.patch   |   4 +-
+ ...ootwrapper-disable-uImage-generation.patch |   4 +-
+ .../810-uvc-add-iPassion-iP2970-support.patch |   6 +-
+ .../825-i2c-MIPS-adds-ralink-I2C-driver.patch |   2 +-
+ .../310-add-i2c-rtl9300-support.patch         |   2 +-
+ ...t-8250-Add-dw-auto-flow-ctrl-support.patch |   2 +-
+ ...ove-performance-usb-using-lowmem-for.patch |  16 +--
+ ...ma_alloc_noncoherent-to-alloc-low-me.patch |  10 +-
+ .../1009-net-stmmac-use-GFP_DMA32.patch       |   2 +-
+ 115 files changed, 648 insertions(+), 489 deletions(-)
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0135-media-tc358743-Increase-FIFO-level-to-374.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0137-media-tc358743-Check-I2C-succeeded-during-probe.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0143-media-tc358743-Return-an-appropriate-colorspace-from.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0237-media-i2c-tc358743-Only-allow-supported-pixel-fmts-i.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0510-Allow-RESET_BRCMSTB-on-ARCH_BCM2835.patch
+ delete mode 100644 target/linux/generic/backport-6.6/419-v6.17-mtd-spinand-add-support-for-FudanMicro-FM25S01A.patch
+ delete mode 100644 target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch
  create mode 100644 target/linux/generic/backport-6.6/847-v6.17-Revert-leds-trigger-netdev-Configure-LED-blink-inter.patch
+ create mode 100644 target/linux/generic/pending-6.6/802-nvmem-u-boot-env-align-endianness-of-crc32-values.patch
 
 diff --git a/include/kernel-6.6 b/include/kernel-6.6
-index 8a2014fcc6..048ae0b42a 100644
+index 70decb6786..7ed3e4f41d 100644
 --- a/include/kernel-6.6
 +++ b/include/kernel-6.6
 @@ -1,2 +1,2 @@
--LINUX_VERSION-6.6 = .103
--LINUX_KERNEL_HASH-6.6.103 = d288dd38c3e62ba576ba6b3ad2a84cfba65cd43b702f6c50d1f701aee942b18e
-+LINUX_VERSION-6.6 = .102
-+LINUX_KERNEL_HASH-6.6.102 = 80d2feb7334c30bacbe1e7dafa9ea415efb2c0ea4f4740ecbd1467cf5d94de5c
+-LINUX_VERSION-6.6 = .104
+-LINUX_KERNEL_HASH-6.6.104 = 2a772f9d661afabaaddcdfd1116239acb2d943377aceab9e0baed2b7a915e36a
++LINUX_VERSION-6.6 = .99
++LINUX_KERNEL_HASH-6.6.99 = b08679729f1ec74b9fa829f5990936ca2511039d87acc7e8b3f39912de89ab36
 diff --git a/target/linux/airoha/patches-6.6/105-uart-add-en7523-support.patch b/target/linux/airoha/patches-6.6/105-uart-add-en7523-support.patch
 index 9ea355370b..80723bd5af 100644
 --- a/target/linux/airoha/patches-6.6/105-uart-add-en7523-support.patch
@@ -118,14 +178,14 @@ index 9ea355370b..80723bd5af 100644
   	serial8250_set_divisor(port, baud, quot, frac);
   
 diff --git a/target/linux/airoha/patches-6.6/901-snand-mtk-bmt-support.patch b/target/linux/airoha/patches-6.6/901-snand-mtk-bmt-support.patch
-index 87d898d4a4..06026f375e 100644
+index 90619d971e..06026f375e 100644
 --- a/target/linux/airoha/patches-6.6/901-snand-mtk-bmt-support.patch
 +++ b/target/linux/airoha/patches-6.6/901-snand-mtk-bmt-support.patch
 @@ -8,7 +8,7 @@
   
   static int spinand_read_reg_op(struct spinand_device *spinand, u8 reg, u8 *val)
   {
--@@ -1351,6 +1352,7 @@ static int spinand_probe(struct spi_mem
+-@@ -1352,6 +1353,7 @@ static int spinand_probe(struct spi_mem
 +@@ -1348,6 +1349,7 @@ static int spinand_probe(struct spi_mem
   	if (ret)
   		return ret;
@@ -134,7 +194,7 @@ index 87d898d4a4..06026f375e 100644
   	ret = mtd_device_register(mtd, NULL, 0);
   	if (ret)
   		goto err_spinand_cleanup;
--@@ -1358,6 +1360,7 @@ static int spinand_probe(struct spi_mem
+-@@ -1359,6 +1361,7 @@ static int spinand_probe(struct spi_mem
 +@@ -1355,6 +1357,7 @@ static int spinand_probe(struct spi_mem
   	return 0;
   
@@ -143,7 +203,7 @@ index 87d898d4a4..06026f375e 100644
   	spinand_cleanup(spinand);
   
   	return ret;
--@@ -1376,6 +1379,7 @@ static int spinand_remove(struct spi_mem
+-@@ -1377,6 +1380,7 @@ static int spinand_remove(struct spi_mem
 +@@ -1373,6 +1376,7 @@ static int spinand_remove(struct spi_mem
   	if (ret)
   		return ret;
@@ -162,9 +222,18 @@ index dcc82546a2..3ea4faf202 100644
   # args (to if_changed): 1 = (this rule), 2 = platform, 3 = dts 4=dtb 5=initrd
   quiet_cmd_wrap	= WRAP    $@
 diff --git a/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch b/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch
-index 2e574740be..02b64bb7f8 100644
+index 2e574740be..9168d5e973 100644
 --- a/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch
 +++ b/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch
+@@ -579,7 +579,7 @@ SVN-Revision: 35130
+  			goto next_ht;
+ --- a/net/ipv6/ip6_offload.c
+ +++ b/net/ipv6/ip6_offload.c
+-@@ -275,7 +275,7 @@ INDIRECT_CALLABLE_SCOPE struct sk_buff *
++@@ -273,7 +273,7 @@ INDIRECT_CALLABLE_SCOPE struct sk_buff *
+  			continue;
+  
+  		iph2 = (struct ipv6hdr *)(p->data + off);
 @@ -785,7 +785,7 @@ SVN-Revision: 35130
   
  --- a/include/net/neighbour.h
@@ -196,6 +265,19 @@ index 9255c4480f..623c859a43 100644
   	for_each_link_codecs(dai_link, i, codec) {
   		asoc_rtd_to_codec(rtd, i) = snd_soc_find_dai(codec);
   		if (!asoc_rtd_to_codec(rtd, i)) {
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0087-Add-dwc_otg-driver.patch b/target/linux/bcm27xx/patches-6.6/950-0087-Add-dwc_otg-driver.patch
+index 0dd0c03400..82e969138e 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0087-Add-dwc_otg-driver.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0087-Add-dwc_otg-driver.patch
+@@ -1189,7 +1189,7 @@ Signed-off-by: Alexander Winkowski <dereference23@outlook.com>
+  }
+ --- a/drivers/usb/core/hub.c
+ +++ b/drivers/usb/core/hub.c
+-@@ -5751,7 +5751,7 @@ static void port_event(struct usb_hub *h
++@@ -5722,7 +5722,7 @@ static void port_event(struct usb_hub *h
+  		port_dev->over_current_count++;
+  		port_over_current_notify(port_dev);
+  
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch b/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
 index 58aa944087..2346d42732 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
@@ -511,6 +593,142 @@ index b162b37cf4..b5c72fb89f 100644
   		return;
   	}
   	ctrl_ctx->add_flags = xhci_get_endpoint_flag_from_index(ep_index);
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0169-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch b/target/linux/bcm27xx/patches-6.6/950-0169-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch
+index 96c04d52c7..4ffa3ed95d 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0169-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0169-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch
+@@ -33,7 +33,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.org>
+  #define USB_VENDOR_ID_BELKIN		0x050d
+  #define USB_DEVICE_ID_FLIP_KVM		0x3201
+  
+-@@ -1449,6 +1452,9 @@
++@@ -1446,6 +1449,9 @@
+  #define USB_VENDOR_ID_XIAOMI		0x2717
+  #define USB_DEVICE_ID_MI_SILENT_MOUSE	0x5014
+  
+@@ -53,7 +53,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.org>
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_CHICONY, USB_DEVICE_ID_CHICONY_MULTI_TOUCH), HID_QUIRK_MULTI_INPUT },
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_CHICONY, USB_DEVICE_ID_CHICONY_PIXART_USB_OPTICAL_MOUSE), HID_QUIRK_ALWAYS_POLL },
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_CHICONY, USB_DEVICE_ID_CHICONY_PIXART_USB_OPTICAL_MOUSE2), HID_QUIRK_ALWAYS_POLL },
+-@@ -213,6 +214,7 @@ static const struct hid_device_id hid_qu
++@@ -211,6 +212,7 @@ static const struct hid_device_id hid_qu
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_WISEGROUP, USB_DEVICE_ID_QUAD_USB_JOYPAD), HID_QUIRK_NOGET | HID_QUIRK_MULTI_INPUT },
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_XIN_MO, USB_DEVICE_ID_XIN_MO_DUAL_ARCADE), HID_QUIRK_MULTI_INPUT },
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_LOGITECH, USB_DEVICE_ID_LOGITECH_GROUP_AUDIO), HID_QUIRK_NOGET },
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0184-staging-vchiq_arm-Register-vcsm-cma-as-a-platform-dr.patch b/target/linux/bcm27xx/patches-6.6/950-0184-staging-vchiq_arm-Register-vcsm-cma-as-a-platform-dr.patch
+index 6daa690dff..741d377fc8 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0184-staging-vchiq_arm-Register-vcsm-cma-as-a-platform-dr.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0184-staging-vchiq_arm-Register-vcsm-cma-as-a-platform-dr.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+  
+  struct vchiq_drvdata {
+  	const unsigned int cache_line_size;
+-@@ -1824,6 +1825,7 @@ static int vchiq_probe(struct platform_d
++@@ -1825,6 +1826,7 @@ static int vchiq_probe(struct platform_d
+  		goto error_exit;
+  	}
+  
+@@ -30,7 +30,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+  	bcm2835_camera = vchiq_register_child(pdev, "bcm2835-camera");
+  	bcm2835_audio = vchiq_register_child(pdev, "bcm2835_audio");
+  
+-@@ -1839,6 +1841,7 @@ static void vchiq_remove(struct platform
++@@ -1840,6 +1842,7 @@ static void vchiq_remove(struct platform
+  {
+  	platform_device_unregister(bcm2835_audio);
+  	platform_device_unregister(bcm2835_camera);
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0185-staging-vchiq_arm-Register-bcm2835-codec-as-a-platfo.patch b/target/linux/bcm27xx/patches-6.6/950-0185-staging-vchiq_arm-Register-bcm2835-codec-as-a-platfo.patch
+index 5adc8c75af..5a3c91b780 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0185-staging-vchiq_arm-Register-bcm2835-codec-as-a-platfo.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0185-staging-vchiq_arm-Register-bcm2835-codec-as-a-platfo.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+  static struct platform_device *vcsm_cma;
+  
+  struct vchiq_drvdata {
+-@@ -1826,6 +1827,7 @@ static int vchiq_probe(struct platform_d
++@@ -1827,6 +1828,7 @@ static int vchiq_probe(struct platform_d
+  	}
+  
+  	vcsm_cma = vchiq_register_child(pdev, "vcsm-cma");
+@@ -30,7 +30,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+  	bcm2835_camera = vchiq_register_child(pdev, "bcm2835-camera");
+  	bcm2835_audio = vchiq_register_child(pdev, "bcm2835_audio");
+  
+-@@ -1841,6 +1843,7 @@ static void vchiq_remove(struct platform
++@@ -1842,6 +1844,7 @@ static void vchiq_remove(struct platform
+  {
+  	platform_device_unregister(bcm2835_audio);
+  	platform_device_unregister(bcm2835_camera);
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0190-staging-vchiq_arm-Set-up-dma-ranges-on-child-devices.patch b/target/linux/bcm27xx/patches-6.6/950-0190-staging-vchiq_arm-Set-up-dma-ranges-on-child-devices.patch
+index 525cb835e6..3abc4f19bf 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0190-staging-vchiq_arm-Set-up-dma-ranges-on-child-devices.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0190-staging-vchiq_arm-Set-up-dma-ranges-on-child-devices.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+ 
+ --- a/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+ +++ b/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+-@@ -1776,6 +1776,12 @@ vchiq_register_child(struct platform_dev
++@@ -1777,6 +1777,12 @@ vchiq_register_child(struct platform_dev
+  		child = NULL;
+  	}
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0191-staging-vchiq-Use-the-old-dma-controller-for-OF-conf.patch b/target/linux/bcm27xx/patches-6.6/950-0191-staging-vchiq-Use-the-old-dma-controller-for-OF-conf.patch
+index 5613a4100a..e5c5fdbc0b 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0191-staging-vchiq-Use-the-old-dma-controller-for-OF-conf.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0191-staging-vchiq-Use-the-old-dma-controller-for-OF-conf.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+ 
+ --- a/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+ +++ b/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+-@@ -1762,6 +1762,7 @@ vchiq_register_child(struct platform_dev
++@@ -1763,6 +1763,7 @@ vchiq_register_child(struct platform_dev
+  {
+  	struct platform_device_info pdevinfo;
+  	struct platform_device *child;
+@@ -25,7 +25,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+  
+  	memset(&pdevinfo, 0, sizeof(pdevinfo));
+  
+-@@ -1777,10 +1778,20 @@ vchiq_register_child(struct platform_dev
++@@ -1778,10 +1779,20 @@ vchiq_register_child(struct platform_dev
+  	}
+  
+  	/*
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0194-staging-vchiq_arm-Give-vchiq-children-DT-nodes.patch b/target/linux/bcm27xx/patches-6.6/950-0194-staging-vchiq_arm-Give-vchiq-children-DT-nodes.patch
+index a75bd3da56..9dba2dffca 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0194-staging-vchiq_arm-Give-vchiq-children-DT-nodes.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0194-staging-vchiq_arm-Give-vchiq-children-DT-nodes.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+ +++ b/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+-@@ -1771,12 +1771,20 @@ vchiq_register_child(struct platform_dev
++@@ -1772,12 +1772,20 @@ vchiq_register_child(struct platform_dev
+  	pdevinfo.id = PLATFORM_DEVID_NONE;
+  	pdevinfo.dma_mask = DMA_BIT_MASK(32);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0209-staging-vchiq-Load-bcm2835_isp-driver-from-vchiq.patch b/target/linux/bcm27xx/patches-6.6/950-0209-staging-vchiq-Load-bcm2835_isp-driver-from-vchiq.patch
+index 5c1b37bfd9..b5f912c85b 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0209-staging-vchiq-Load-bcm2835_isp-driver-from-vchiq.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0209-staging-vchiq-Load-bcm2835_isp-driver-from-vchiq.patch
+@@ -21,7 +21,7 @@ Signed-off-by: Naushir Patuck <naush@raspberrypi.com>
+  
+  struct vchiq_drvdata {
+  	const unsigned int cache_line_size;
+-@@ -1855,6 +1856,7 @@ static int vchiq_probe(struct platform_d
++@@ -1856,6 +1857,7 @@ static int vchiq_probe(struct platform_d
+  	bcm2835_codec = vchiq_register_child(pdev, "bcm2835-codec");
+  	bcm2835_camera = vchiq_register_child(pdev, "bcm2835-camera");
+  	bcm2835_audio = vchiq_register_child(pdev, "bcm2835_audio");
+@@ -29,7 +29,7 @@ Signed-off-by: Naushir Patuck <naush@raspberrypi.com>
+  
+  	return 0;
+  
+-@@ -1866,6 +1868,7 @@ error_exit:
++@@ -1867,6 +1869,7 @@ error_exit:
+  
+  static void vchiq_remove(struct platform_device *pdev)
+  {
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0210-media-i2c-tc358743-Fix-fallthrough-warning.patch b/target/linux/bcm27xx/patches-6.6/950-0210-media-i2c-tc358743-Fix-fallthrough-warning.patch
 index 6b0296c5a5..265e0c6cec 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0210-media-i2c-tc358743-Fix-fallthrough-warning.patch
@@ -560,6 +778,37 @@ index 0000000000..a8c881e732
 + 
 + 	if (ret)
 + 		return ret;
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0243-staging-fbtft-Add-support-for-display-variants.patch b/target/linux/bcm27xx/patches-6.6/950-0243-staging-fbtft-Add-support-for-display-variants.patch
+index fad8eb5a11..f49c9a2b56 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0243-staging-fbtft-Add-support-for-display-variants.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0243-staging-fbtft-Add-support-for-display-variants.patch
+@@ -95,7 +95,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  
+  #include <video/mipi_display.h>
+  
+-@@ -1184,6 +1186,7 @@ static struct fbtft_platform_data *fbtft
++@@ -1183,6 +1185,7 @@ static struct fbtft_platform_data *fbtft
+   * @display: Display properties
+   * @sdev: SPI device
+   * @pdev: Platform device
+@@ -103,7 +103,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+   *
+   * Allocates, initializes and registers a framebuffer
+   *
+-@@ -1193,12 +1196,15 @@ static struct fbtft_platform_data *fbtft
++@@ -1192,12 +1195,15 @@ static struct fbtft_platform_data *fbtft
+   */
+  int fbtft_probe_common(struct fbtft_display *display,
+  		       struct spi_device *sdev,
+@@ -120,7 +120,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	int ret;
+  
+  	if (sdev)
+-@@ -1214,6 +1220,14 @@ int fbtft_probe_common(struct fbtft_disp
++@@ -1213,6 +1219,14 @@ int fbtft_probe_common(struct fbtft_disp
+  		pdata = fbtft_properties_read(dev);
+  		if (IS_ERR(pdata))
+  			return PTR_ERR(pdata);
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0371-hwmon-emc2305-fixups-for-driver-submitted-to-mailing.patch b/target/linux/bcm27xx/patches-6.6/950-0371-hwmon-emc2305-fixups-for-driver-submitted-to-mailing.patch
 index 60f4735d59..3585008543 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0371-hwmon-emc2305-fixups-for-driver-submitted-to-mailing.patch
@@ -600,6 +849,50 @@ index 60f4735d59..3585008543 100644
   	.class  = I2C_CLASS_HWMON,
   	.driver = {
   		.name = "emc2305",
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0466-mmc-bcm2835-Use-phys-addresses-for-slave-DMA-config.patch b/target/linux/bcm27xx/patches-6.6/950-0466-mmc-bcm2835-Use-phys-addresses-for-slave-DMA-config.patch
+index 48a592e35c..96bbaf1ffa 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0466-mmc-bcm2835-Use-phys-addresses-for-slave-DMA-config.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0466-mmc-bcm2835-Use-phys-addresses-for-slave-DMA-config.patch
+@@ -23,7 +23,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  #include <linux/of_irq.h>
+  #include <linux/platform_device.h>
+  #include <linux/scatterlist.h>
+-@@ -1348,8 +1347,8 @@ static int bcm2835_probe(struct platform
++@@ -1347,8 +1346,8 @@ static int bcm2835_probe(struct platform
+  	struct device *dev = &pdev->dev;
+  	struct clk *clk;
+  	struct bcm2835_host *host;
+@@ -33,7 +33,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	int ret;
+  
+  	dev_dbg(dev, "%s\n", __func__);
+-@@ -1362,23 +1361,13 @@ static int bcm2835_probe(struct platform
++@@ -1361,23 +1360,13 @@ static int bcm2835_probe(struct platform
+  	host->pdev = pdev;
+  	spin_lock_init(&host->lock);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0472-pps-Compatibility-hack-should-be-X86-specific.patch b/target/linux/bcm27xx/patches-6.6/950-0472-pps-Compatibility-hack-should-be-X86-specific.patch
+index 04a2da5b41..4cc2e594ba 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0472-pps-Compatibility-hack-should-be-X86-specific.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0472-pps-Compatibility-hack-should-be-X86-specific.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/drivers/pps/pps.c
+ +++ b/drivers/pps/pps.c
+-@@ -254,12 +254,13 @@ static long pps_cdev_ioctl(struct file *
++@@ -249,12 +249,13 @@ static long pps_cdev_ioctl(struct file *
+  static long pps_cdev_compat_ioctl(struct file *file,
+  		unsigned int cmd, unsigned long arg)
+  {
+@@ -38,7 +38,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  		struct pps_fdata_compat compat;
+  		struct pps_fdata fdata;
+  		int err;
+-@@ -296,6 +297,7 @@ static long pps_cdev_compat_ioctl(struct
++@@ -289,6 +290,7 @@ static long pps_cdev_compat_ioctl(struct
+  		return copy_to_user(uarg, &compat,
+  				sizeof(struct pps_fdata_compat)) ? -EFAULT : 0;
+  	}
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0484-usb-xhci-add-VLI_SS_BULK_OUT_BUG-quirk.patch b/target/linux/bcm27xx/patches-6.6/950-0484-usb-xhci-add-VLI_SS_BULK_OUT_BUG-quirk.patch
 index f807be77eb..e9ad87d316 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0484-usb-xhci-add-VLI_SS_BULK_OUT_BUG-quirk.patch
@@ -688,6 +981,19 @@ index 0000000000..3d408f1578
 + 	default ARCH_BRCMSTB
 + 	help
 + 	  This enables the reset controller driver for Broadcom STB SoCs using
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0530-pinctrl-Add-rp1-driver.patch b/target/linux/bcm27xx/patches-6.6/950-0530-pinctrl-Add-rp1-driver.patch
+index de7cbe96f4..cd1473ab2e 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0530-pinctrl-Add-rp1-driver.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0530-pinctrl-Add-rp1-driver.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/drivers/pinctrl/Kconfig
+ +++ b/drivers/pinctrl/Kconfig
+-@@ -506,6 +506,13 @@ config PINCTRL_MLXBF3
++@@ -505,6 +505,13 @@ config PINCTRL_MLXBF3
+  	  each pin. This driver can also be built as a module called
+  	  pinctrl-mlxbf3.
+  
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0678-fbdev-Allow-client-to-request-a-particular-dev-fbN-n.patch b/target/linux/bcm27xx/patches-6.6/950-0678-fbdev-Allow-client-to-request-a-particular-dev-fbN-n.patch
 index 767ead3e2d..fa382806f5 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0678-fbdev-Allow-client-to-request-a-particular-dev-fbN-n.patch
@@ -722,6 +1028,41 @@ index 767ead3e2d..fa382806f5 100644
 +@@ -1043,6 +1046,12 @@ static void do_unregister_framebuffer(st
   	put_fb_info(fb_info);
   }
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1411-staging-vchiq_arm-Add-36-bit-address-support.patch b/target/linux/bcm27xx/patches-6.6/950-1411-staging-vchiq_arm-Add-36-bit-address-support.patch
+index db65da6997..871b2769b1 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1411-staging-vchiq_arm-Add-36-bit-address-support.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1411-staging-vchiq_arm-Add-36-bit-address-support.patch
+@@ -223,7 +223,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	vchiq_log_info(vchiq_arm_log_level, "vchiq_init - done (slots %pK, phys %pad)",
+  		       vchiq_slot_zero, &slot_phys);
+  
+-@@ -1754,6 +1822,7 @@ void vchiq_platform_conn_state_changed(s
++@@ -1755,6 +1823,7 @@ void vchiq_platform_conn_state_changed(s
+  static const struct of_device_id vchiq_of_match[] = {
+  	{ .compatible = "brcm,bcm2835-vchiq", .data = &bcm2835_drvdata },
+  	{ .compatible = "brcm,bcm2836-vchiq", .data = &bcm2836_drvdata },
+@@ -231,7 +231,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	{},
+  };
+  MODULE_DEVICE_TABLE(of, vchiq_of_match);
+-@@ -1786,22 +1855,8 @@ vchiq_register_child(struct platform_dev
++@@ -1787,22 +1856,8 @@ vchiq_register_child(struct platform_dev
+  
+  	child->dev.of_node = np;
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1412-staging-vchiq_arm-children-inherit-DMA-config.patch b/target/linux/bcm27xx/patches-6.6/950-1412-staging-vchiq_arm-children-inherit-DMA-config.patch
+index bcacf57c5c..df93f3a0c4 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1412-staging-vchiq_arm-children-inherit-DMA-config.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1412-staging-vchiq_arm-children-inherit-DMA-config.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+ +++ b/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_arm.c
+-@@ -1855,8 +1855,18 @@ vchiq_register_child(struct platform_dev
++@@ -1856,8 +1856,18 @@ vchiq_register_child(struct platform_dev
+  
+  	child->dev.of_node = np;
   
 diff --git a/target/linux/bcm27xx/patches-6.6/950-1438-nvme-pci-Disable-Host-Memory-Buffer-usage.patch b/target/linux/bcm27xx/patches-6.6/950-1438-nvme-pci-Disable-Host-Memory-Buffer-usage.patch
 index 6662fb4de1..777d134313 100644
@@ -798,6 +1139,136 @@ index 459dd4481e..90672b9979 100644
   	&alliancememory_spinand_manufacturer,
   	&ato_spinand_manufacturer,
   	&esmt_c8_spinand_manufacturer,
+diff --git a/target/linux/generic/backport-6.6/419-v6.17-mtd-spinand-add-support-for-FudanMicro-FM25S01A.patch b/target/linux/generic/backport-6.6/419-v6.17-mtd-spinand-add-support-for-FudanMicro-FM25S01A.patch
+deleted file mode 100644
+index af6d87049d..0000000000
+--- a/target/linux/generic/backport-6.6/419-v6.17-mtd-spinand-add-support-for-FudanMicro-FM25S01A.patch
++++ /dev/null
+@@ -1,124 +0,0 @@
+-From 5f284dc15ca8695d0394414045ac64616a3b0e69 Mon Sep 17 00:00:00 2001
+-From: Tianling Shen <cnsztl@gmail.com>
+-Date: Mon, 25 Aug 2025 01:00:13 +0800
+-Subject: [PATCH] mtd: spinand: add support for FudanMicro FM25S01A
+-
+-Add support for FudanMicro FM25S01A SPI NAND.
+-Datasheet: http://eng.fmsh.com/nvm/FM25S01A_ds_eng.pdf
+-
+-Signed-off-by: Tianling Shen <cnsztl@gmail.com>
+-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+-Link: https://lore.kernel.org/linux-mtd/20250824170013.3328777-1-cnsztl@gmail.com
+----
+- drivers/mtd/nand/spi/Makefile |  2 +-
+- drivers/mtd/nand/spi/core.c   |  1 +
+- drivers/mtd/nand/spi/fmsh.c   | 74 +++++++++++++++++++++++++++++++++++
+- include/linux/mtd/spinand.h   |  1 +
+- 4 files changed, 77 insertions(+), 1 deletion(-)
+- create mode 100644 drivers/mtd/nand/spi/fmsh.c
+-
+---- a/drivers/mtd/nand/spi/Makefile
+-+++ b/drivers/mtd/nand/spi/Makefile
+-@@ -1,4 +1,4 @@
+- # SPDX-License-Identifier: GPL-2.0
+--spinand-objs := core.o alliancememory.o ato.o esmt.o foresee.o gigadevice.o macronix.o
+-+spinand-objs := core.o alliancememory.o ato.o esmt.o fmsh.o foresee.o gigadevice.o macronix.o
+- spinand-objs += micron.o paragon.o toshiba.o winbond.o xtx.o
+- obj-$(CONFIG_MTD_SPI_NAND) += spinand.o
+---- a/drivers/mtd/nand/spi/core.c
+-+++ b/drivers/mtd/nand/spi/core.c
+-@@ -943,6 +943,7 @@ static const struct spinand_manufacturer
+- 	&alliancememory_spinand_manufacturer,
+- 	&ato_spinand_manufacturer,
+- 	&esmt_c8_spinand_manufacturer,
+-+	&fmsh_spinand_manufacturer,
+- 	&foresee_spinand_manufacturer,
+- 	&gigadevice_spinand_manufacturer,
+- 	&macronix_spinand_manufacturer,
+---- /dev/null
+-+++ b/drivers/mtd/nand/spi/fmsh.c
+-@@ -0,0 +1,74 @@
+-+// SPDX-License-Identifier: GPL-2.0
+-+/*
+-+ * Copyright (c) 2020-2021 Rockchip Electronics Co., Ltd.
+-+ *
+-+ * Author: Dingqiang Lin <jon.lin@rock-chips.com>
+-+ */
+-+
+-+#include <linux/device.h>
+-+#include <linux/kernel.h>
+-+#include <linux/mtd/spinand.h>
+-+
+-+#define SPINAND_MFR_FMSH		0xA1
+-+
+-+static SPINAND_OP_VARIANTS(read_cache_variants,
+-+		SPINAND_PAGE_READ_FROM_CACHE_QUADIO_OP(0, 2, NULL, 0),
+-+		SPINAND_PAGE_READ_FROM_CACHE_X4_OP(0, 1, NULL, 0),
+-+		SPINAND_PAGE_READ_FROM_CACHE_DUALIO_OP(0, 1, NULL, 0),
+-+		SPINAND_PAGE_READ_FROM_CACHE_X2_OP(0, 1, NULL, 0),
+-+		SPINAND_PAGE_READ_FROM_CACHE_OP(true, 0, 1, NULL, 0),
+-+		SPINAND_PAGE_READ_FROM_CACHE_OP(false, 0, 1, NULL, 0));
+-+
+-+static SPINAND_OP_VARIANTS(write_cache_variants,
+-+		SPINAND_PROG_LOAD_X4(true, 0, NULL, 0),
+-+		SPINAND_PROG_LOAD(true, 0, NULL, 0));
+-+
+-+static SPINAND_OP_VARIANTS(update_cache_variants,
+-+		SPINAND_PROG_LOAD_X4(false, 0, NULL, 0),
+-+		SPINAND_PROG_LOAD(false, 0, NULL, 0));
+-+
+-+static int fm25s01a_ooblayout_ecc(struct mtd_info *mtd, int section,
+-+				  struct mtd_oob_region *region)
+-+{
+-+	return -ERANGE;
+-+}
+-+
+-+static int fm25s01a_ooblayout_free(struct mtd_info *mtd, int section,
+-+				   struct mtd_oob_region *region)
+-+{
+-+	if (section)
+-+		return -ERANGE;
+-+
+-+	region->offset = 2;
+-+	region->length = 62;
+-+
+-+	return 0;
+-+}
+-+
+-+static const struct mtd_ooblayout_ops fm25s01a_ooblayout = {
+-+	.ecc = fm25s01a_ooblayout_ecc,
+-+	.free = fm25s01a_ooblayout_free,
+-+};
+-+
+-+static const struct spinand_info fmsh_spinand_table[] = {
+-+	SPINAND_INFO("FM25S01A",
+-+		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_DUMMY, 0xE4),
+-+		     NAND_MEMORG(1, 2048, 64, 64, 1024, 20, 1, 1, 1),
+-+		     NAND_ECCREQ(1, 512),
+-+		     SPINAND_INFO_OP_VARIANTS(&read_cache_variants,
+-+					      &write_cache_variants,
+-+					      &update_cache_variants),
+-+		     SPINAND_HAS_QE_BIT,
+-+		     SPINAND_ECCINFO(&fm25s01a_ooblayout, NULL)),
+-+};
+-+
+-+static const struct spinand_manufacturer_ops fmsh_spinand_manuf_ops = {
+-+};
+-+
+-+const struct spinand_manufacturer fmsh_spinand_manufacturer = {
+-+	.id = SPINAND_MFR_FMSH,
+-+	.name = "Fudan Micro",
+-+	.chips = fmsh_spinand_table,
+-+	.nchips = ARRAY_SIZE(fmsh_spinand_table),
+-+	.ops = &fmsh_spinand_manuf_ops,
+-+};
+---- a/include/linux/mtd/spinand.h
+-+++ b/include/linux/mtd/spinand.h
+-@@ -263,6 +263,7 @@ struct spinand_manufacturer {
+- extern const struct spinand_manufacturer alliancememory_spinand_manufacturer;
+- extern const struct spinand_manufacturer ato_spinand_manufacturer;
+- extern const struct spinand_manufacturer esmt_c8_spinand_manufacturer;
+-+extern const struct spinand_manufacturer fmsh_spinand_manufacturer;
+- extern const struct spinand_manufacturer foresee_spinand_manufacturer;
+- extern const struct spinand_manufacturer gigadevice_spinand_manufacturer;
+- extern const struct spinand_manufacturer macronix_spinand_manufacturer;
 diff --git a/target/linux/generic/backport-6.6/600-v6.10-net-Remove-conditional-threaded-NAPI-wakeup-based-on.patch b/target/linux/generic/backport-6.6/600-v6.10-net-Remove-conditional-threaded-NAPI-wakeup-based-on.patch
 index 9d95631fac..afaa5328ca 100644
 --- a/target/linux/generic/backport-6.6/600-v6.10-net-Remove-conditional-threaded-NAPI-wakeup-based-on.patch
@@ -1074,6 +1545,133 @@ index bf2c428eb4..c27ccc1942 100644
   		ops->ndo_get_stats64(dev, storage);
   	} else if (ops->ndo_get_stats) {
   		netdev_stats_to_stats64(storage, ops->ndo_get_stats(dev));
+diff --git a/target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch b/target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch
+deleted file mode 100644
+index ba026b9c3a..0000000000
+--- a/target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch
++++ /dev/null
+@@ -1,121 +0,0 @@
+-From: wangzijie <wangzijie1@honor.com>
+-To: <akpm@linux-foundation.org>, <brauner@kernel.org>,
+-	<viro@zeniv.linux.org.uk>, <adobriyan@gmail.com>,
+-	<rick.p.edgecombe@intel.com>, <ast@kernel.org>,
+-	<k.shutemov@gmail.com>, <jirislaby@kernel.org>,
+-	<linux-fsdevel@vger.kernel.org>
+-Cc: <polynomial-c@gmx.de>, <gregkh@linuxfoundation.org>,
+-	<stable@vger.kernel.org>, <regressions@lists.linux.dev>,
+-	wangzijie <wangzijie1@honor.com>
+-Subject: [PATCH v3] proc: fix missing pde_set_flags() for net proc files
+-Date: Thu, 21 Aug 2025 18:58:06 +0800	[thread overview]
+-Message-ID: <20250821105806.1453833-1-wangzijie1@honor.com> (raw)
+-
+-To avoid potential UAF issues during module removal races, we use pde_set_flags()
+-to save proc_ops flags in PDE itself before proc_register(), and then use
+-pde_has_proc_*() helpers instead of directly dereferencing pde->proc_ops->*.
+-
+-However, the pde_set_flags() call was missing when creating net related proc files.
+-This omission caused incorrect behavior which FMODE_LSEEK was being cleared
+-inappropriately in proc_reg_open() for net proc files. Lars reported it in this link[1].
+-
+-Fix this by ensuring pde_set_flags() is called when register proc entry, and add
+-NULL check for proc_ops in pde_set_flags().
+-
+-[1]: https://lore.kernel.org/all/20250815195616.64497967@chagall.paradoxon.rec/
+-
+-Fixes: ff7ec8dc1b64 ("proc: use the same treatment to check proc_lseek as ones for proc_read_iter et.al")
+-Cc: stable@vger.kernel.org
+-Reported-by: Lars Wendler <polynomial-c@gmx.de>
+-Signed-off-by: wangzijie <wangzijie1@honor.com>
+----
+-v3:
+-- followed by Christian's suggestion to stash pde->proc_ops in a local const variable
+-v2:
+-- followed by Jiri's suggestion to refractor code and reformat commit message
+----
+- fs/proc/generic.c | 38 +++++++++++++++++++++-----------------
+- 1 file changed, 21 insertions(+), 17 deletions(-)
+-
+---- a/fs/proc/generic.c
+-+++ b/fs/proc/generic.c
+-@@ -362,6 +362,25 @@ static const struct inode_operations pro
+- 	.setattr	= proc_notify_change,
+- };
+- 
+-+static void pde_set_flags(struct proc_dir_entry *pde)
+-+{
+-+	const struct proc_ops *proc_ops = pde->proc_ops;
+-+
+-+	if (!proc_ops)
+-+		return;
+-+
+-+	if (proc_ops->proc_flags & PROC_ENTRY_PERMANENT)
+-+		pde->flags |= PROC_ENTRY_PERMANENT;
+-+	if (proc_ops->proc_read_iter)
+-+		pde->flags |= PROC_ENTRY_proc_read_iter;
+-+#ifdef CONFIG_COMPAT
+-+	if (proc_ops->proc_compat_ioctl)
+-+		pde->flags |= PROC_ENTRY_proc_compat_ioctl;
+-+#endif
+-+	if (proc_ops->proc_lseek)
+-+		pde->flags |= PROC_ENTRY_proc_lseek;
+-+}
+-+
+- /* returns the registered entry, or frees dp and returns NULL on failure */
+- struct proc_dir_entry *proc_register(struct proc_dir_entry *dir,
+- 		struct proc_dir_entry *dp)
+-@@ -369,6 +388,8 @@ struct proc_dir_entry *proc_register(str
+- 	if (proc_alloc_inum(&dp->low_ino))
+- 		goto out_free_entry;
+- 
+-+	pde_set_flags(dp);
+-+
+- 	write_lock(&proc_subdir_lock);
+- 	dp->parent = dir;
+- 	if (pde_subdir_insert(dir, dp) == false) {
+-@@ -557,20 +578,6 @@ struct proc_dir_entry *proc_create_reg(c
+- 	return p;
+- }
+- 
+--static void pde_set_flags(struct proc_dir_entry *pde)
+--{
+--	if (pde->proc_ops->proc_flags & PROC_ENTRY_PERMANENT)
+--		pde->flags |= PROC_ENTRY_PERMANENT;
+--	if (pde->proc_ops->proc_read_iter)
+--		pde->flags |= PROC_ENTRY_proc_read_iter;
+--#ifdef CONFIG_COMPAT
+--	if (pde->proc_ops->proc_compat_ioctl)
+--		pde->flags |= PROC_ENTRY_proc_compat_ioctl;
+--#endif
+--	if (pde->proc_ops->proc_lseek)
+--		pde->flags |= PROC_ENTRY_proc_lseek;
+--}
+--
+- struct proc_dir_entry *proc_create_data(const char *name, umode_t mode,
+- 		struct proc_dir_entry *parent,
+- 		const struct proc_ops *proc_ops, void *data)
+-@@ -581,7 +588,6 @@ struct proc_dir_entry *proc_create_data(
+- 	if (!p)
+- 		return NULL;
+- 	p->proc_ops = proc_ops;
+--	pde_set_flags(p);
+- 	return proc_register(parent, p);
+- }
+- EXPORT_SYMBOL(proc_create_data);
+-@@ -632,7 +638,6 @@ struct proc_dir_entry *proc_create_seq_p
+- 	p->proc_ops = &proc_seq_ops;
+- 	p->seq_ops = ops;
+- 	p->state_size = state_size;
+--	pde_set_flags(p);
+- 	return proc_register(parent, p);
+- }
+- EXPORT_SYMBOL(proc_create_seq_private);
+-@@ -663,7 +668,6 @@ struct proc_dir_entry *proc_create_singl
+- 		return NULL;
+- 	p->proc_ops = &proc_single_ops;
+- 	p->single_show = show;
+--	pde_set_flags(p);
+- 	return proc_register(parent, p);
+- }
+- EXPORT_SYMBOL(proc_create_single_data);
 diff --git a/target/linux/generic/backport-6.6/700-v6.10-net-create-a-dummy-net_device-allocator.patch b/target/linux/generic/backport-6.6/700-v6.10-net-create-a-dummy-net_device-allocator.patch
 index c91d0428b8..efc6412177 100644
 --- a/target/linux/generic/backport-6.6/700-v6.10-net-create-a-dummy-net_device-allocator.patch
@@ -1268,9 +1866,18 @@ index 0ef6cd88b1..d70c89f7c4 100644
   		if (mtk_is_netsys_v2_or_greater(eth)) {
   			idev = __dev_get_by_index(&init_net, match.key->ingress_ifindex);
 diff --git a/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch b/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch
-index b9bf885d9d..4aa93c20d1 100644
+index b9bf885d9d..319bc3e47b 100644
 --- a/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch
 +++ b/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch
+@@ -42,7 +42,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+   *	@adap: the adapter
+ --- a/drivers/net/wireless/realtek/rtw89/core.c
+ +++ b/drivers/net/wireless/realtek/rtw89/core.c
+-@@ -1749,7 +1749,7 @@ static void rtw89_core_rx_to_mac80211(st
++@@ -1744,7 +1744,7 @@ static void rtw89_core_rx_to_mac80211(st
+  	struct napi_struct *napi = &rtwdev->napi;
+  
+  	/* In low power mode, napi isn't scheduled. Receive it to netif. */
 @@ -85,7 +85,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
   /**
  --- a/net/core/dev.c
@@ -1280,6 +1887,172 @@ index b9bf885d9d..4aa93c20d1 100644
   	 * accidentally calling ->poll() when NAPI is not scheduled.
   	 */
   	work = 0;
+diff --git a/target/linux/generic/backport-6.6/771-v6.7-01-net-stmmac-improve-TX-timer-arm-logic.patch b/target/linux/generic/backport-6.6/771-v6.7-01-net-stmmac-improve-TX-timer-arm-logic.patch
+index cca517644a..38907ed051 100644
+--- a/target/linux/generic/backport-6.6/771-v6.7-01-net-stmmac-improve-TX-timer-arm-logic.patch
++++ b/target/linux/generic/backport-6.6/771-v6.7-01-net-stmmac-improve-TX-timer-arm-logic.patch
+@@ -46,7 +46,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+ +++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+-@@ -2994,13 +2994,25 @@ static void stmmac_tx_timer_arm(struct s
++@@ -2993,13 +2993,25 @@ static void stmmac_tx_timer_arm(struct s
+  {
+  	struct stmmac_tx_queue *tx_q = &priv->dma_conf.tx_queue[queue];
+  	u32 tx_coal_timer = priv->tx_coal_timer[queue];
+diff --git a/target/linux/generic/backport-6.6/771-v6.7-02-net-stmmac-move-TX-timer-arm-after-DMA-enable.patch b/target/linux/generic/backport-6.6/771-v6.7-02-net-stmmac-move-TX-timer-arm-after-DMA-enable.patch
+index 00829a15df..c9fb4c17c2 100644
+--- a/target/linux/generic/backport-6.6/771-v6.7-02-net-stmmac-move-TX-timer-arm-after-DMA-enable.patch
++++ b/target/linux/generic/backport-6.6/771-v6.7-02-net-stmmac-move-TX-timer-arm-after-DMA-enable.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+ +++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+-@@ -2542,9 +2542,13 @@ static void stmmac_bump_dma_threshold(st
++@@ -2541,9 +2541,13 @@ static void stmmac_bump_dma_threshold(st
+   * @priv: driver private structure
+   * @budget: napi budget limiting this functions packet handling
+   * @queue: TX queue index
+@@ -33,7 +33,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  {
+  	struct stmmac_tx_queue *tx_q = &priv->dma_conf.tx_queue[queue];
+  	struct stmmac_txq_stats *txq_stats = &priv->xstats.txq_stats[queue];
+-@@ -2704,7 +2708,7 @@ static int stmmac_tx_clean(struct stmmac
++@@ -2703,7 +2707,7 @@ static int stmmac_tx_clean(struct stmmac
+  
+  	/* We still have pending packets, let's call for a new scheduling */
+  	if (tx_q->dirty_tx != tx_q->cur_tx)
+@@ -42,7 +42,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  
+  	u64_stats_update_begin(&txq_stats->napi_syncp);
+  	u64_stats_add(&txq_stats->napi.tx_packets, tx_packets);
+-@@ -5611,6 +5615,7 @@ static int stmmac_napi_poll_tx(struct na
++@@ -5609,6 +5613,7 @@ static int stmmac_napi_poll_tx(struct na
+  		container_of(napi, struct stmmac_channel, tx_napi);
+  	struct stmmac_priv *priv = ch->priv_data;
+  	struct stmmac_txq_stats *txq_stats;
+@@ -50,7 +50,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	u32 chan = ch->index;
+  	int work_done;
+  
+-@@ -5619,7 +5624,7 @@ static int stmmac_napi_poll_tx(struct na
++@@ -5617,7 +5622,7 @@ static int stmmac_napi_poll_tx(struct na
+  	u64_stats_inc(&txq_stats->napi.poll);
+  	u64_stats_update_end(&txq_stats->napi_syncp);
+  
+@@ -59,7 +59,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	work_done = min(work_done, budget);
+  
+  	if (work_done < budget && napi_complete_done(napi, work_done)) {
+-@@ -5630,6 +5635,10 @@ static int stmmac_napi_poll_tx(struct na
++@@ -5628,6 +5633,10 @@ static int stmmac_napi_poll_tx(struct na
+  		spin_unlock_irqrestore(&ch->lock, flags);
+  	}
+  
+@@ -70,7 +70,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	return work_done;
+  }
+  
+-@@ -5638,6 +5647,7 @@ static int stmmac_napi_poll_rxtx(struct
++@@ -5636,6 +5645,7 @@ static int stmmac_napi_poll_rxtx(struct
+  	struct stmmac_channel *ch =
+  		container_of(napi, struct stmmac_channel, rxtx_napi);
+  	struct stmmac_priv *priv = ch->priv_data;
+@@ -78,7 +78,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	int rx_done, tx_done, rxtx_done;
+  	struct stmmac_rxq_stats *rxq_stats;
+  	struct stmmac_txq_stats *txq_stats;
+-@@ -5653,7 +5663,7 @@ static int stmmac_napi_poll_rxtx(struct
++@@ -5651,7 +5661,7 @@ static int stmmac_napi_poll_rxtx(struct
+  	u64_stats_inc(&txq_stats->napi.poll);
+  	u64_stats_update_end(&txq_stats->napi_syncp);
+  
+@@ -87,7 +87,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	tx_done = min(tx_done, budget);
+  
+  	rx_done = stmmac_rx_zc(priv, budget, chan);
+-@@ -5678,6 +5688,10 @@ static int stmmac_napi_poll_rxtx(struct
++@@ -5676,6 +5686,10 @@ static int stmmac_napi_poll_rxtx(struct
+  		spin_unlock_irqrestore(&ch->lock, flags);
+  	}
+  
+diff --git a/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch b/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch
+index 04ac6f1334..de965e1ccd 100644
+--- a/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch
++++ b/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch
+@@ -16,8 +16,8 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ 
+ --- a/drivers/nvmem/imx-ocotp-ele.c
+ +++ b/drivers/nvmem/imx-ocotp-ele.c
+-@@ -15,8 +15,9 @@
+- #include <linux/if_ether.h>	/* ETH_ALEN */
++@@ -14,8 +14,9 @@
++ #include <linux/slab.h>
+  
+  enum fuse_type {
+ -	FUSE_FSB = 1,
+@@ -28,7 +28,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+  	FUSE_INVALID = -1
+  };
+  
+-@@ -96,7 +97,10 @@ static int imx_ocotp_reg_read(void *cont
++@@ -95,7 +96,10 @@ static int imx_ocotp_reg_read(void *cont
+  			continue;
+  		}
+  
+@@ -40,7 +40,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+  	}
+  
+  	memcpy(val, ((u8 *)p) + skipbytes, bytes);
+-@@ -182,8 +186,30 @@ static const struct ocotp_devtype_data i
++@@ -179,8 +183,30 @@ static const struct ocotp_devtype_data i
+  	},
+  };
+  
+diff --git a/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch b/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
+index 3f105cfd2b..af1b8b4e78 100644
+--- a/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
++++ b/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
+@@ -185,7 +185,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ +	size_t crc32_data_offset;
+ +	size_t crc32_data_len;
+ +	size_t crc32_offset;
+-+	uint32_t *crc32_addr;
+++	__le32 *crc32_addr;
+ +	size_t data_offset;
+ +	size_t data_len;
+ +	size_t dev_size;
+@@ -236,8 +236,8 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ +		goto err_kfree;
+ +	}
+ +
+-+	crc32_addr = (uint32_t *)(buf + crc32_offset);
+-+	crc32 = *crc32_addr;
+++	crc32_addr = (__le32 *)(buf + crc32_offset);
+++	crc32 = le32_to_cpu(*crc32_addr);
+ +	crc32_data_len = dev_size - crc32_data_offset;
+ +	data_len = dev_size - data_offset;
+ +
+@@ -439,7 +439,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ -	size_t crc32_data_offset;
+ -	size_t crc32_data_len;
+ -	size_t crc32_offset;
+--	uint32_t *crc32_addr;
++-	__le32 *crc32_addr;
+ -	size_t data_offset;
+ -	size_t data_len;
+ -	size_t dev_size;
+@@ -490,8 +490,8 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ -		goto err_kfree;
+ -	}
+ -
+--	crc32_addr = (uint32_t *)(buf + crc32_offset);
+--	crc32 = *crc32_addr;
++-	crc32_addr = (__le32 *)(buf + crc32_offset);
++-	crc32 = le32_to_cpu(*crc32_addr);
+ -	crc32_data_len = dev_size - crc32_data_offset;
+ -	data_len = dev_size - data_offset;
+ -
 diff --git a/target/linux/generic/backport-6.6/834-v6.8-leds-trigger-netdev-Extend-speeds-up-to-10G.patch b/target/linux/generic/backport-6.6/834-v6.8-leds-trigger-netdev-Extend-speeds-up-to-10G.patch
 index 4571d7d2bf..3a64e6822d 100644
 --- a/target/linux/generic/backport-6.6/834-v6.8-leds-trigger-netdev-Extend-speeds-up-to-10G.patch
@@ -1544,10 +2317,54 @@ index 9402ecb147..ccadee1e5a 100644
   		       info->name, modmagic, vermagic);
   		return -ENOEXEC;
   	}
+diff --git a/target/linux/generic/hack-6.6/259-regmap_dynamic.patch b/target/linux/generic/hack-6.6/259-regmap_dynamic.patch
+index c7b7a28ce3..4f6dca7127 100644
+--- a/target/linux/generic/hack-6.6/259-regmap_dynamic.patch
++++ b/target/linux/generic/hack-6.6/259-regmap_dynamic.patch
+@@ -137,7 +137,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  #include <linux/mutex.h>
+  #include <linux/err.h>
+  #include <linux/property.h>
+-@@ -3485,3 +3486,5 @@ static int __init regmap_initcall(void)
++@@ -3483,3 +3484,5 @@ static int __init regmap_initcall(void)
+  	return 0;
+  }
+  postcore_initcall(regmap_initcall);
+diff --git a/target/linux/generic/hack-6.6/661-kernel-ct-size-the-hashtable-more-adequately.patch b/target/linux/generic/hack-6.6/661-kernel-ct-size-the-hashtable-more-adequately.patch
+index 64ef073611..ff959ec8d2 100644
+--- a/target/linux/generic/hack-6.6/661-kernel-ct-size-the-hashtable-more-adequately.patch
++++ b/target/linux/generic/hack-6.6/661-kernel-ct-size-the-hashtable-more-adequately.patch
+@@ -14,7 +14,7 @@ Signed-off-by: Rui Salvaterra <rsalvaterra@gmail.com>
+ 
+ --- a/net/netfilter/nf_conntrack_core.c
+ +++ b/net/netfilter/nf_conntrack_core.c
+-@@ -2699,7 +2699,7 @@ int nf_conntrack_init_start(void)
++@@ -2685,7 +2685,7 @@ int nf_conntrack_init_start(void)
+  
+  	if (!nf_conntrack_htable_size) {
+  		nf_conntrack_htable_size
 diff --git a/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch b/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
-index 1b210ee3cc..30a0b86b00 100644
+index 1b210ee3cc..8b784836a0 100644
 --- a/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
 +++ b/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
+@@ -60,7 +60,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+   */
+ --- a/include/linux/skbuff.h
+ +++ b/include/linux/skbuff.h
+-@@ -3121,6 +3121,10 @@ static inline int pskb_trim(struct sk_bu
++@@ -3098,6 +3098,10 @@ static inline int pskb_trim(struct sk_bu
+  	return (len < skb->len) ? __pskb_trim(skb, len) : 0;
+  }
+  
+@@ -71,7 +71,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  /**
+   *	pskb_trim_unique - remove end from a paged unique (not cloned) buffer
+   *	@skb: buffer to alter
+-@@ -3286,16 +3290,6 @@ static inline struct sk_buff *dev_alloc_
++@@ -3263,16 +3267,6 @@ static inline struct sk_buff *dev_alloc_
+  }
+  
+  
 @@ -105,7 +105,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
   	help
  --- a/net/core/dev.c
@@ -1583,6 +2400,19 @@ index 6c41d39d40..886111a66c 100644
   
   static int __init proto_init(void)
   {
+diff --git a/target/linux/generic/hack-6.6/904-debloat_dma_buf.patch b/target/linux/generic/hack-6.6/904-debloat_dma_buf.patch
+index 3ca98788ab..4d2ea46212 100644
+--- a/target/linux/generic/hack-6.6/904-debloat_dma_buf.patch
++++ b/target/linux/generic/hack-6.6/904-debloat_dma_buf.patch
+@@ -73,7 +73,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ +MODULE_LICENSE("GPL");
+ --- a/kernel/sched/core.c
+ +++ b/kernel/sched/core.c
+-@@ -4485,6 +4485,7 @@ int wake_up_state(struct task_struct *p,
++@@ -4486,6 +4486,7 @@ int wake_up_state(struct task_struct *p,
+  {
+  	return try_to_wake_up(p, state, 0);
+  }
 diff --git a/target/linux/generic/pending-6.6/100-compiler.h-only-include-asm-rwonce.h-for-kernel-code.patch b/target/linux/generic/pending-6.6/100-compiler.h-only-include-asm-rwonce.h-for-kernel-code.patch
 index 09442a9bfc..50fcdbaed8 100644
 --- a/target/linux/generic/pending-6.6/100-compiler.h-only-include-asm-rwonce.h-for-kernel-code.patch
@@ -1597,23 +2427,32 @@ index 09442a9bfc..50fcdbaed8 100644
   #define prevent_tail_call_optimization()	mb()
   
 diff --git a/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch b/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch
-index b34e2df935..84c6c4ae13 100644
+index 7f60c21a3a..84c6c4ae13 100644
 --- a/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch
 +++ b/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch
 @@ -53,7 +53,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
  
  --- a/drivers/mtd/nand/spi/core.c
  +++ b/drivers/mtd/nand/spi/core.c
--@@ -1290,6 +1290,7 @@ static int spinand_init(struct spinand_d
+-@@ -1291,6 +1291,7 @@ static int spinand_init(struct spinand_d
 +@@ -1287,6 +1287,7 @@ static int spinand_init(struct spinand_d
   	/* Propagate ECC information to mtd_info */
   	mtd->ecc_strength = nanddev_get_ecc_conf(nand)->strength;
   	mtd->ecc_step_size = nanddev_get_ecc_conf(nand)->step_size;
 diff --git a/target/linux/generic/pending-6.6/487-mtd-spinand-Add-support-for-Etron-EM73D044VCx.patch b/target/linux/generic/pending-6.6/487-mtd-spinand-Add-support-for-Etron-EM73D044VCx.patch
-index 233122d7d4..7a3a0f33ad 100644
+index 65efad224d..7a3a0f33ad 100644
 --- a/target/linux/generic/pending-6.6/487-mtd-spinand-Add-support-for-Etron-EM73D044VCx.patch
 +++ b/target/linux/generic/pending-6.6/487-mtd-spinand-Add-support-for-Etron-EM73D044VCx.patch
-@@ -49,7 +49,7 @@ Submitted-by: Daniel Danzberger <daniel@dd-wrt.com>
+@@ -42,21 +42,21 @@ Submitted-by: Daniel Danzberger <daniel@dd-wrt.com>
+ +++ b/drivers/mtd/nand/spi/Makefile
+ @@ -1,4 +1,4 @@
+  # SPDX-License-Identifier: GPL-2.0
+--spinand-objs := core.o alliancememory.o ato.o esmt.o fmsh.o foresee.o gigadevice.o macronix.o
++-spinand-objs := core.o alliancememory.o ato.o esmt.o foresee.o gigadevice.o macronix.o
+ -spinand-objs += micron.o paragon.o toshiba.o winbond.o xtx.o
+-+spinand-objs := core.o alliancememory.o ato.o esmt.o etron.o fmsh.o foresee.o gigadevice.o
+++spinand-objs := core.o alliancememory.o ato.o esmt.o etron.o foresee.o gigadevice.o
+ +spinand-objs += macronix.o micron.o paragon.o toshiba.o winbond.o xtx.o
   obj-$(CONFIG_MTD_SPI_NAND) += spinand.o
  --- a/drivers/mtd/nand/spi/core.c
  +++ b/drivers/mtd/nand/spi/core.c
@@ -1622,10 +2461,172 @@ index 233122d7d4..7a3a0f33ad 100644
   	&alliancememory_spinand_manufacturer,
   	&ato_spinand_manufacturer,
   	&esmt_c8_spinand_manufacturer,
+ +	&etron_spinand_manufacturer,
+- 	&fmsh_spinand_manufacturer,
+  	&foresee_spinand_manufacturer,
+  	&gigadevice_spinand_manufacturer,
++ 	&macronix_spinand_manufacturer,
+ --- /dev/null
+ +++ b/drivers/mtd/nand/spi/etron.c
+ @@ -0,0 +1,98 @@
+@@ -165,6 +165,6 @@ Submitted-by: Daniel Danzberger <daniel@dd-wrt.com>
+  extern const struct spinand_manufacturer ato_spinand_manufacturer;
+  extern const struct spinand_manufacturer esmt_c8_spinand_manufacturer;
+ +extern const struct spinand_manufacturer etron_spinand_manufacturer;
+- extern const struct spinand_manufacturer fmsh_spinand_manufacturer;
+  extern const struct spinand_manufacturer foresee_spinand_manufacturer;
+  extern const struct spinand_manufacturer gigadevice_spinand_manufacturer;
++ extern const struct spinand_manufacturer macronix_spinand_manufacturer;
+diff --git a/target/linux/generic/pending-6.6/630-packet_socket_type.patch b/target/linux/generic/pending-6.6/630-packet_socket_type.patch
+index 4992dd7816..f5c15756c5 100644
+--- a/target/linux/generic/pending-6.6/630-packet_socket_type.patch
++++ b/target/linux/generic/pending-6.6/630-packet_socket_type.patch
+@@ -87,7 +87,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	if (!net_eq(dev_net(dev), sock_net(sk)))
+  		goto drop;
+  
+-@@ -3436,6 +3438,7 @@ static int packet_create(struct net *net
++@@ -3437,6 +3439,7 @@ static int packet_create(struct net *net
+  	mutex_init(&po->pg_vec_lock);
+  	po->rollover = NULL;
+  	po->prot_hook.func = packet_rcv;
+@@ -95,7 +95,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+  	if (sock->type == SOCK_PACKET)
+  		po->prot_hook.func = packet_rcv_spkt;
+-@@ -4103,6 +4106,16 @@ packet_setsockopt(struct socket *sock, i
++@@ -4104,6 +4107,16 @@ packet_setsockopt(struct socket *sock, i
+  		packet_sock_flag_set(po, PACKET_SOCK_QDISC_BYPASS, val);
+  		return 0;
+  	}
+@@ -112,7 +112,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	default:
+  		return -ENOPROTOOPT;
+  	}
+-@@ -4162,6 +4175,13 @@ static int packet_getsockopt(struct sock
++@@ -4163,6 +4176,13 @@ static int packet_getsockopt(struct sock
+  	case PACKET_VNET_HDR_SZ:
+  		val = READ_ONCE(po->vnet_hdr_sz);
+  		break;
+diff --git a/target/linux/generic/pending-6.6/640-net-bridge-fix-switchdev-host-mdb-entry-updates.patch b/target/linux/generic/pending-6.6/640-net-bridge-fix-switchdev-host-mdb-entry-updates.patch
+index 8271e062ff..cf55c6a3fb 100644
+--- a/target/linux/generic/pending-6.6/640-net-bridge-fix-switchdev-host-mdb-entry-updates.patch
++++ b/target/linux/generic/pending-6.6/640-net-bridge-fix-switchdev-host-mdb-entry-updates.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/net/bridge/br_switchdev.c
+ +++ b/net/bridge/br_switchdev.c
+-@@ -571,10 +571,18 @@ static void br_switchdev_host_mdb(struct
++@@ -568,10 +568,18 @@ static void br_switchdev_host_mdb(struct
+  				  struct net_bridge_mdb_entry *mp, int type)
+  {
+  	struct net_device *lower_dev;
+diff --git a/target/linux/generic/pending-6.6/641-net-bridge-switchdev-Don-t-drop-packets-between-port.patch b/target/linux/generic/pending-6.6/641-net-bridge-switchdev-Don-t-drop-packets-between-port.patch
+index 531e1c99c6..1c4ec61b50 100644
+--- a/target/linux/generic/pending-6.6/641-net-bridge-switchdev-Don-t-drop-packets-between-port.patch
++++ b/target/linux/generic/pending-6.6/641-net-bridge-switchdev-Don-t-drop-packets-between-port.patch
+@@ -27,7 +27,7 @@ Signed-off-by: Leon M. Busch-George <leon@georgemail.eu>
+ 
+ --- a/net/bridge/br_switchdev.c
+ +++ b/net/bridge/br_switchdev.c
+-@@ -70,7 +70,7 @@ bool nbp_switchdev_allowed_egress(const
++@@ -67,7 +67,7 @@ bool nbp_switchdev_allowed_egress(const
+  	struct br_input_skb_cb *cb = BR_INPUT_SKB_CB(skb);
+  
+  	return !test_bit(p->hwdom, &cb->fwd_hwdoms) &&
+diff --git a/target/linux/generic/pending-6.6/655-increase_skb_pad.patch b/target/linux/generic/pending-6.6/655-increase_skb_pad.patch
+index 8fbc915881..4f3bb06051 100644
+--- a/target/linux/generic/pending-6.6/655-increase_skb_pad.patch
++++ b/target/linux/generic/pending-6.6/655-increase_skb_pad.patch
+@@ -9,7 +9,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/include/linux/skbuff.h
+ +++ b/include/linux/skbuff.h
+-@@ -3088,7 +3088,7 @@ static inline int pskb_network_may_pull(
++@@ -3065,7 +3065,7 @@ static inline int pskb_network_may_pull(
+   * NET_IP_ALIGN(2) + ethernet_header(14) + IP_header(20/40) + ports(8)
+   */
+  #ifndef NET_SKB_PAD
+diff --git a/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch b/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch
+index ef7ca8cf74..0ad36b3430 100644
+--- a/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch
++++ b/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch
+@@ -185,7 +185,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  		cfg->fc_flags |= RTF_REJECT;
+  
+  	if (rtm->rtm_type == RTN_LOCAL)
+-@@ -6349,6 +6380,8 @@ static int ip6_route_dev_notify(struct n
++@@ -6341,6 +6372,8 @@ static int ip6_route_dev_notify(struct n
+  #ifdef CONFIG_IPV6_MULTIPLE_TABLES
+  		net->ipv6.ip6_prohibit_entry->dst.dev = dev;
+  		net->ipv6.ip6_prohibit_entry->rt6i_idev = in6_dev_get(dev);
+@@ -194,7 +194,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  		net->ipv6.ip6_blk_hole_entry->dst.dev = dev;
+  		net->ipv6.ip6_blk_hole_entry->rt6i_idev = in6_dev_get(dev);
+  #endif
+-@@ -6360,6 +6393,7 @@ static int ip6_route_dev_notify(struct n
++@@ -6352,6 +6385,7 @@ static int ip6_route_dev_notify(struct n
+  		in6_dev_put_clear(&net->ipv6.ip6_null_entry->rt6i_idev);
+  #ifdef CONFIG_IPV6_MULTIPLE_TABLES
+  		in6_dev_put_clear(&net->ipv6.ip6_prohibit_entry->rt6i_idev);
+@@ -202,7 +202,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  		in6_dev_put_clear(&net->ipv6.ip6_blk_hole_entry->rt6i_idev);
+  #endif
+  	}
+-@@ -6560,6 +6594,8 @@ static int __net_init ip6_route_net_init
++@@ -6552,6 +6586,8 @@ static int __net_init ip6_route_net_init
+  
+  #ifdef CONFIG_IPV6_MULTIPLE_TABLES
+  	net->ipv6.fib6_has_custom_rules = false;
+@@ -211,7 +211,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  	net->ipv6.ip6_prohibit_entry = kmemdup(&ip6_prohibit_entry_template,
+  					       sizeof(*net->ipv6.ip6_prohibit_entry),
+  					       GFP_KERNEL);
+-@@ -6570,11 +6606,21 @@ static int __net_init ip6_route_net_init
++@@ -6562,11 +6598,21 @@ static int __net_init ip6_route_net_init
+  			 ip6_template_metrics, true);
+  	INIT_LIST_HEAD(&net->ipv6.ip6_prohibit_entry->dst.rt_uncached);
+  
+@@ -234,7 +234,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  	net->ipv6.ip6_blk_hole_entry->dst.ops = &net->ipv6.ip6_dst_ops;
+  	dst_init_metrics(&net->ipv6.ip6_blk_hole_entry->dst,
+  			 ip6_template_metrics, true);
+-@@ -6601,6 +6647,8 @@ out:
++@@ -6593,6 +6639,8 @@ out:
+  	return ret;
+  
+  #ifdef CONFIG_IPV6_MULTIPLE_TABLES
+@@ -243,7 +243,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  out_ip6_prohibit_entry:
+  	kfree(net->ipv6.ip6_prohibit_entry);
+  out_ip6_null_entry:
+-@@ -6620,6 +6668,7 @@ static void __net_exit ip6_route_net_exi
++@@ -6612,6 +6660,7 @@ static void __net_exit ip6_route_net_exi
+  	kfree(net->ipv6.ip6_null_entry);
+  #ifdef CONFIG_IPV6_MULTIPLE_TABLES
+  	kfree(net->ipv6.ip6_prohibit_entry);
+@@ -251,7 +251,7 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
+  	kfree(net->ipv6.ip6_blk_hole_entry);
+  #endif
+  	dst_entries_destroy(&net->ipv6.ip6_dst_ops);
+-@@ -6703,6 +6752,9 @@ void __init ip6_route_init_special_entri
++@@ -6695,6 +6744,9 @@ void __init ip6_route_init_special_entri
+  	init_net.ipv6.ip6_prohibit_entry->rt6i_idev = in6_dev_get(init_net.loopback_dev);
+  	init_net.ipv6.ip6_blk_hole_entry->dst.dev = init_net.loopback_dev;
+  	init_net.ipv6.ip6_blk_hole_entry->rt6i_idev = in6_dev_get(init_net.loopback_dev);
 diff --git a/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch b/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
-index 126ee5e520..1d69f9f775 100644
+index 126ee5e520..fffb6cbb54 100644
 --- a/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
 +++ b/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
+@@ -65,7 +65,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+ --- a/net/8021q/vlan.h
+ +++ b/net/8021q/vlan.h
+-@@ -109,7 +109,7 @@ static inline netdev_features_t vlan_tnl
++@@ -108,7 +108,7 @@ static inline netdev_features_t vlan_tnl
+  	netdev_features_t ret;
+  
+  	ret = real_dev->hw_enc_features &
 @@ -96,7 +96,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
   	return features;
  --- a/net/core/sock.c
@@ -1635,6 +2636,19 @@ index 126ee5e520..1d69f9f775 100644
   	if (sk_is_tcp(sk))
   		sk->sk_route_caps |= NETIF_F_GSO;
   	if (sk->sk_route_caps & NETIF_F_GSO)
+diff --git a/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch b/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
+index 7a5413700a..1ae6f89399 100644
+--- a/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
++++ b/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/net/netfilter/nf_tables_api.c
+ +++ b/net/netfilter/nf_tables_api.c
+-@@ -8449,7 +8449,7 @@ static int nft_register_flowtable_net_ho
++@@ -8469,7 +8469,7 @@ static int nft_register_flowtable_net_ho
+  		err = flowtable->data.type->setup(&flowtable->data,
+  						  hook->ops.dev,
+  						  FLOW_BLOCK_BIND);
 diff --git a/target/linux/generic/pending-6.6/790-bus-mhi-core-add-SBL-state-callback.patch b/target/linux/generic/pending-6.6/790-bus-mhi-core-add-SBL-state-callback.patch
 index 80d1306115..fe0f260ae3 100644
 --- a/target/linux/generic/pending-6.6/790-bus-mhi-core-add-SBL-state-callback.patch
@@ -1648,6 +2662,57 @@ index 80d1306115..fe0f260ae3 100644
   			switch (event) {
   			case MHI_EE_SBL:
   				st = DEV_ST_TRANSITION_SBL;
+diff --git a/target/linux/generic/pending-6.6/802-nvmem-u-boot-env-align-endianness-of-crc32-values.patch b/target/linux/generic/pending-6.6/802-nvmem-u-boot-env-align-endianness-of-crc32-values.patch
+new file mode 100644
+index 0000000000..29fe668f8d
+--- /dev/null
++++ b/target/linux/generic/pending-6.6/802-nvmem-u-boot-env-align-endianness-of-crc32-values.patch
+@@ -0,0 +1,45 @@
++From 0e71cac033bb7689c4dfa2e6814191337ef770f5 Mon Sep 17 00:00:00 2001
++From: INAGAKI Hiroshi <musashino.open@gmail.com>
++Date: Thu, 13 Oct 2022 00:51:33 +0900
++Subject: [PATCH] nvmem: layouts: u-boot-env: align endianness of crc32 values
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++This patch fixes crc32 error on Big-Endianness system by conversion of
++calculated crc32 value.
++
++Little-Endianness system:
++
++  obtained crc32: Little
++calculated crc32: Little
++
++Big-Endianness system:
++
++  obtained crc32: Little
++calculated crc32: Big
++
++log (APRESIA ApresiaLightGS120GT-SS, RTL8382M, Big-Endianness):
++
++[    8.570000] u_boot_env 18001200.spi:flash@0:partitions:partition@c0000: Invalid calculated CRC32: 0x88cd6f09 (expected: 0x096fcd88)
++[    8.580000] u_boot_env: probe of 18001200.spi:flash@0:partitions:partition@c0000 failed with error -22
++
++Fixes: f955dc1445069 ("nvmem: add driver handling U-Boot environment variables")
++
++Signed-off-by: INAGAKI Hiroshi <musashino.open@gmail.com>
++Acked-by: Rafał Miłecki <rafal@milecki.pl>
++Tested-by: Christian Lamparter <chunkeey@gmail.com>
++Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
++---
++
++--- a/drivers/nvmem/layouts/u-boot-env.c
+++++ b/drivers/nvmem/layouts/u-boot-env.c
++@@ -148,7 +148,7 @@ int u_boot_env_parse(struct device *dev,
++ 	crc32_data_len = dev_size - crc32_data_offset;
++ 	data_len = dev_size - data_offset;
++ 
++-	calc = crc32(~0, buf + crc32_data_offset, crc32_data_len) ^ ~0L;
+++	calc = le32_to_cpu((__le32)crc32(~0, buf + crc32_data_offset, crc32_data_len) ^ ~0L);
++ 	if (calc != crc32) {
++ 		dev_err(dev, "Invalid calculated CRC32: 0x%08x (expected: 0x%08x)\n", calc, crc32);
++ 		err = -EINVAL;
 diff --git a/target/linux/imx/patches-6.6/600-PCI-imx6-Start-link-at-max-gen-first-for-IMX8MM-and-IMX8MP.patch b/target/linux/imx/patches-6.6/600-PCI-imx6-Start-link-at-max-gen-first-for-IMX8MM-and-IMX8MP.patch
 index c9878e55ad..d8818369bc 100644
 --- a/target/linux/imx/patches-6.6/600-PCI-imx6-Start-link-at-max-gen-first-for-IMX8MM-and-IMX8MP.patch
@@ -1688,7 +2753,7 @@ index 6e0f35b6fc..a90b0aaf9b 100644
   }
   
 diff --git a/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch b/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch
-index 292f6e6f10..15b8e6dadc 100644
+index 292f6e6f10..d49b18242a 100644
 --- a/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch
 +++ b/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch
 @@ -93,7 +93,7 @@ Signed-off-by: Maxime Chevallier <maxime.chevallier@bootlin.com>
@@ -1696,7 +2761,7 @@ index 292f6e6f10..15b8e6dadc 100644
  --- a/include/linux/skbuff.h
  +++ b/include/linux/skbuff.h
 -@@ -4712,6 +4712,9 @@ enum skb_ext_id {
-+@@ -4706,6 +4706,9 @@ enum skb_ext_id {
++@@ -4683,6 +4683,9 @@ enum skb_ext_id {
   #if IS_ENABLED(CONFIG_MCTP_FLOWS)
   	SKB_EXT_MCTP,
   #endif
@@ -1776,14 +2841,14 @@ index d3fccad711..ff5521c44e 100644
   	spinand_select_target(spinand, pos->target);
   	spinand_read_page(spinand, &req);
 diff --git a/target/linux/mediatek/patches-6.6/330-snand-mtk-bmt-support.patch b/target/linux/mediatek/patches-6.6/330-snand-mtk-bmt-support.patch
-index 87d898d4a4..06026f375e 100644
+index 90619d971e..06026f375e 100644
 --- a/target/linux/mediatek/patches-6.6/330-snand-mtk-bmt-support.patch
 +++ b/target/linux/mediatek/patches-6.6/330-snand-mtk-bmt-support.patch
 @@ -8,7 +8,7 @@
   
   static int spinand_read_reg_op(struct spinand_device *spinand, u8 reg, u8 *val)
   {
--@@ -1351,6 +1352,7 @@ static int spinand_probe(struct spi_mem
+-@@ -1352,6 +1353,7 @@ static int spinand_probe(struct spi_mem
 +@@ -1348,6 +1349,7 @@ static int spinand_probe(struct spi_mem
   	if (ret)
   		return ret;
@@ -1792,7 +2857,7 @@ index 87d898d4a4..06026f375e 100644
   	ret = mtd_device_register(mtd, NULL, 0);
   	if (ret)
   		goto err_spinand_cleanup;
--@@ -1358,6 +1360,7 @@ static int spinand_probe(struct spi_mem
+-@@ -1359,6 +1361,7 @@ static int spinand_probe(struct spi_mem
 +@@ -1355,6 +1357,7 @@ static int spinand_probe(struct spi_mem
   	return 0;
   
@@ -1801,24 +2866,49 @@ index 87d898d4a4..06026f375e 100644
   	spinand_cleanup(spinand);
   
   	return ret;
--@@ -1376,6 +1379,7 @@ static int spinand_remove(struct spi_mem
+-@@ -1377,6 +1380,7 @@ static int spinand_remove(struct spi_mem
 +@@ -1373,6 +1376,7 @@ static int spinand_remove(struct spi_mem
   	if (ret)
   		return ret;
   
 diff --git a/target/linux/mediatek/patches-6.6/340-mtd-spinand-Add-support-for-the-Fidelix-FM35X1GA.patch b/target/linux/mediatek/patches-6.6/340-mtd-spinand-Add-support-for-the-Fidelix-FM35X1GA.patch
-index c2c7af67b1..e06e125c46 100644
+index 9ff6e811ec..e06e125c46 100644
 --- a/target/linux/mediatek/patches-6.6/340-mtd-spinand-Add-support-for-the-Fidelix-FM35X1GA.patch
 +++ b/target/linux/mediatek/patches-6.6/340-mtd-spinand-Add-support-for-the-Fidelix-FM35X1GA.patch
-@@ -24,7 +24,7 @@ Signed-off-by: Davide Fioravanti <pantanastyle@gmail.com>
+@@ -18,16 +18,16 @@ Signed-off-by: Davide Fioravanti <pantanastyle@gmail.com>
+ +++ b/drivers/mtd/nand/spi/Makefile
+ @@ -1,4 +1,4 @@
+  # SPDX-License-Identifier: GPL-2.0
+--spinand-objs := core.o alliancememory.o ato.o esmt.o etron.o fmsh.o foresee.o gigadevice.o
+-+spinand-objs := core.o alliancememory.o ato.o esmt.o etron.o fidelix.o fmsh.o foresee.o gigadevice.o
++-spinand-objs := core.o alliancememory.o ato.o esmt.o etron.o foresee.o gigadevice.o
+++spinand-objs := core.o alliancememory.o ato.o esmt.o etron.o fidelix.o foresee.o gigadevice.o
+  spinand-objs += macronix.o micron.o paragon.o toshiba.o winbond.o xtx.o
   obj-$(CONFIG_MTD_SPI_NAND) += spinand.o
  --- a/drivers/mtd/nand/spi/core.c
  +++ b/drivers/mtd/nand/spi/core.c
--@@ -945,6 +945,7 @@ static const struct spinand_manufacturer
+-@@ -946,6 +946,7 @@ static const struct spinand_manufacturer
 +@@ -942,6 +942,7 @@ static const struct spinand_manufacturer
-  	&ato_spinand_manufacturer,
++ 	&ato_spinand_manufacturer,
   	&esmt_c8_spinand_manufacturer,
   	&etron_spinand_manufacturer,
+- 	&fmsh_spinand_manufacturer,
+ +	&fidelix_spinand_manufacturer,
+  	&foresee_spinand_manufacturer,
+  	&gigadevice_spinand_manufacturer,
+@@ -113,10 +113,10 @@ Signed-off-by: Davide Fioravanti <pantanastyle@gmail.com>
+ +};
+ --- a/include/linux/mtd/spinand.h
+ +++ b/include/linux/mtd/spinand.h
+-@@ -265,6 +265,7 @@ extern const struct spinand_manufacturer
++@@ -264,6 +264,7 @@ extern const struct spinand_manufacturer
++ extern const struct spinand_manufacturer ato_spinand_manufacturer;
+  extern const struct spinand_manufacturer esmt_c8_spinand_manufacturer;
+  extern const struct spinand_manufacturer etron_spinand_manufacturer;
+- extern const struct spinand_manufacturer fmsh_spinand_manufacturer;
+ +extern const struct spinand_manufacturer fidelix_spinand_manufacturer;
+  extern const struct spinand_manufacturer foresee_spinand_manufacturer;
+  extern const struct spinand_manufacturer gigadevice_spinand_manufacturer;
 diff --git a/target/linux/mediatek/patches-6.6/410-bt-mtk-serial-fix.patch b/target/linux/mediatek/patches-6.6/410-bt-mtk-serial-fix.patch
 index 907c0fb765..1a67286e61 100644
 --- a/target/linux/mediatek/patches-6.6/410-bt-mtk-serial-fix.patch
@@ -1833,14 +2923,14 @@ index 907c0fb765..1a67286e61 100644
   	unsigned int baud, quot, frac = 0;
   
 diff --git a/target/linux/mediatek/patches-6.6/435-drivers-mtd-spinand-Add-calibration-support-for-spin.patch b/target/linux/mediatek/patches-6.6/435-drivers-mtd-spinand-Add-calibration-support-for-spin.patch
-index 4240675259..50149fd819 100644
+index 8da008f09f..50149fd819 100644
 --- a/target/linux/mediatek/patches-6.6/435-drivers-mtd-spinand-Add-calibration-support-for-spin.patch
 +++ b/target/linux/mediatek/patches-6.6/435-drivers-mtd-spinand-Add-calibration-support-for-spin.patch
 @@ -11,7 +11,7 @@ Signed-off-by: SkyLake.Huang <skylake.huang@mediatek.com>
  
  --- a/drivers/mtd/nand/spi/core.c
  +++ b/drivers/mtd/nand/spi/core.c
--@@ -983,6 +983,56 @@ static int spinand_manufacturer_match(st
+-@@ -984,6 +984,56 @@ static int spinand_manufacturer_match(st
 +@@ -980,6 +980,56 @@ static int spinand_manufacturer_match(st
   	return -ENOTSUPP;
   }
@@ -1849,20 +2939,20 @@ index 4240675259..50149fd819 100644
   static int spinand_id_detect(struct spinand_device *spinand)
   {
   	u8 *id = spinand->id.data;
--@@ -1233,6 +1283,10 @@ static int spinand_init(struct spinand_d
+-@@ -1234,6 +1284,10 @@ static int spinand_init(struct spinand_d
 +@@ -1230,6 +1280,10 @@ static int spinand_init(struct spinand_d
   	if (!spinand->scratchbuf)
   		return -ENOMEM;
   
 diff --git a/target/linux/mediatek/patches-6.6/436-drivers-mtd-spi-nor-Add-calibration-support-for-spi-.patch b/target/linux/mediatek/patches-6.6/436-drivers-mtd-spi-nor-Add-calibration-support-for-spi-.patch
-index d1923b4969..27c5dfd5d6 100644
+index f4802f5d15..27c5dfd5d6 100644
 --- a/target/linux/mediatek/patches-6.6/436-drivers-mtd-spi-nor-Add-calibration-support-for-spi-.patch
 +++ b/target/linux/mediatek/patches-6.6/436-drivers-mtd-spi-nor-Add-calibration-support-for-spi-.patch
 @@ -12,7 +12,7 @@ Signed-off-by: SkyLake.Huang <skylake.huang@mediatek.com>
  
  --- a/drivers/mtd/nand/spi/core.c
  +++ b/drivers/mtd/nand/spi/core.c
--@@ -1024,7 +1024,10 @@ int spinand_cal_read(void *priv, u32 *ad
+-@@ -1025,7 +1025,10 @@ int spinand_cal_read(void *priv, u32 *ad
 +@@ -1021,7 +1021,10 @@ int spinand_cal_read(void *priv, u32 *ad
   	if (ret)
   		return ret;
@@ -1890,14 +2980,14 @@ index 7e0c1a7cdd..09e4be3b34 100644
   	{ .compatible = "mediatek,mt7981-pwm", .data = &mt7981_pwm_data },
   	{ .compatible = "mediatek,mt7986-pwm", .data = &mt7986_pwm_data },
 diff --git a/target/linux/mediatek/patches-6.6/960-asus-hack-u-boot-ignore-mtdparts.patch b/target/linux/mediatek/patches-6.6/960-asus-hack-u-boot-ignore-mtdparts.patch
-index 84f965c0e4..9b503527ce 100644
+index 3167dc9c59..9b503527ce 100644
 --- a/target/linux/mediatek/patches-6.6/960-asus-hack-u-boot-ignore-mtdparts.patch
 +++ b/target/linux/mediatek/patches-6.6/960-asus-hack-u-boot-ignore-mtdparts.patch
 @@ -29,7 +29,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
  
  --- a/drivers/mtd/nand/spi/core.c
  +++ b/drivers/mtd/nand/spi/core.c
--@@ -1445,6 +1445,7 @@ static int spinand_remove(struct spi_mem
+-@@ -1446,6 +1446,7 @@ static int spinand_remove(struct spi_mem
 +@@ -1442,6 +1442,7 @@ static int spinand_remove(struct spi_mem
   
   static const struct spi_device_id spinand_ids[] = {
@@ -1906,7 +2996,7 @@ index 84f965c0e4..9b503527ce 100644
   	{ /* sentinel */ },
   };
   MODULE_DEVICE_TABLE(spi, spinand_ids);
--@@ -1452,6 +1453,7 @@ MODULE_DEVICE_TABLE(spi, spinand_ids);
+-@@ -1453,6 +1454,7 @@ MODULE_DEVICE_TABLE(spi, spinand_ids);
 +@@ -1449,6 +1450,7 @@ MODULE_DEVICE_TABLE(spi, spinand_ids);
   #ifdef CONFIG_OF
   static const struct of_device_id spinand_of_ids[] = {
@@ -2118,6 +3208,32 @@ index c121690786..6c6cff13c9 100644
   	if (npackets == 0)
   		return -ENOMEM;
   
+diff --git a/target/linux/ramips/patches-6.6/825-i2c-MIPS-adds-ralink-I2C-driver.patch b/target/linux/ramips/patches-6.6/825-i2c-MIPS-adds-ralink-I2C-driver.patch
+index 747d515964..9755eeb777 100644
+--- a/target/linux/ramips/patches-6.6/825-i2c-MIPS-adds-ralink-I2C-driver.patch
++++ b/target/linux/ramips/patches-6.6/825-i2c-MIPS-adds-ralink-I2C-driver.patch
+@@ -45,7 +45,7 @@ Signed-off-by: John Crispin <blogic@openwrt.org>
+ +};
+ --- a/drivers/i2c/busses/Kconfig
+ +++ b/drivers/i2c/busses/Kconfig
+-@@ -1024,6 +1024,11 @@ config I2C_RK3X
++@@ -1023,6 +1023,11 @@ config I2C_RK3X
+  	  This driver can also be built as a module. If so, the module will
+  	  be called i2c-rk3x.
+  
+diff --git a/target/linux/realtek/patches-6.6/310-add-i2c-rtl9300-support.patch b/target/linux/realtek/patches-6.6/310-add-i2c-rtl9300-support.patch
+index c3b30f5fb7..9eaed95d0d 100644
+--- a/target/linux/realtek/patches-6.6/310-add-i2c-rtl9300-support.patch
++++ b/target/linux/realtek/patches-6.6/310-add-i2c-rtl9300-support.patch
+@@ -17,7 +17,7 @@ Submitted-by: Birger Koblitz <git@birger-koblitz.de>
+ 
+ --- a/drivers/i2c/busses/Kconfig
+ +++ b/drivers/i2c/busses/Kconfig
+-@@ -1024,6 +1024,16 @@ config I2C_RK3X
++@@ -1023,6 +1023,16 @@ config I2C_RK3X
+  	  This driver can also be built as a module. If so, the module will
+  	  be called i2c-rk3x.
+  
 diff --git a/target/linux/starfive/patches-6.6/0066-uart-8250-Add-dw-auto-flow-ctrl-support.patch b/target/linux/starfive/patches-6.6/0066-uart-8250-Add-dw-auto-flow-ctrl-support.patch
 index 68e495112c..4fd92a46dc 100644
 --- a/target/linux/starfive/patches-6.6/0066-uart-8250-Add-dw-auto-flow-ctrl-support.patch
@@ -2256,6 +3372,19 @@ index 2a72bcb9cf..e5dfb37078 100644
   	xhci->isoc_bei_interval = AVOID_BEI_INTERVAL_MAX;
   
   	if (xhci->quirks & XHCI_LOCAL_BUFFER) {
+diff --git a/target/linux/starfive/patches-6.6/1009-net-stmmac-use-GFP_DMA32.patch b/target/linux/starfive/patches-6.6/1009-net-stmmac-use-GFP_DMA32.patch
+index 4d3997b24e..79f2cb3f06 100644
+--- a/target/linux/starfive/patches-6.6/1009-net-stmmac-use-GFP_DMA32.patch
++++ b/target/linux/starfive/patches-6.6/1009-net-stmmac-use-GFP_DMA32.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Matteo Croce <mcroce@microsoft.com>
+  
+  	if (priv->dma_cap.host_dma_width <= 32)
+  		gfp |= GFP_DMA32;
+-@@ -4693,7 +4693,7 @@ static inline void stmmac_rx_refill(stru
++@@ -4692,7 +4692,7 @@ static inline void stmmac_rx_refill(stru
+  	struct stmmac_rx_queue *rx_q = &priv->dma_conf.rx_queue[queue];
+  	int dirty = stmmac_rx_dirty(priv, queue);
+  	unsigned int entry = rx_q->dirty_rx;
 -- 
 2.43.0
 
