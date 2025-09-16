@@ -1,0 +1,40 @@
+From 0806ca6c5bd987eeb0ea5a22ae2488f1c24d5ea5 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Mon, 15 Sep 2025 21:42:06 +0800
+Subject: [PATCH] Revert "mt76: update to Git HEAD (2025-09-15)" Revert "mt76:
+ update to Git HEAD (2025-09-09)"
+
+This reverts commit 186534e167b51023a531a0bffafa5dee39ba57d2.
+Revert "mt76: update to Git HEAD (2025-09-15)"
+
+This reverts commit 457d0ca35970b24a2d0b8cc410ee73795b1b0440.
+---
+ .../kernel/mt76/patches/100-api_compat.patch  | 42 ++++---------------
+ ...tk_wed-move-dlm-a-dedicated-dts-node.patch |  4 +-
+ 2 files changed, 11 insertions(+), 35 deletions(-)
+
+diff --git a/target/linux/mediatek/patches-6.6/944-net-ethernet-mtk_wed-move-dlm-a-dedicated-dts-node.patch b/target/linux/mediatek/patches-6.6/944-net-ethernet-mtk_wed-move-dlm-a-dedicated-dts-node.patch
+index a7a854dd6e..abb6591b7d 100644
+--- a/target/linux/mediatek/patches-6.6/944-net-ethernet-mtk_wed-move-dlm-a-dedicated-dts-node.patch
++++ b/target/linux/mediatek/patches-6.6/944-net-ethernet-mtk_wed-move-dlm-a-dedicated-dts-node.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+
+ --- a/drivers/net/ethernet/mediatek/mtk_wed.c
+ +++ b/drivers/net/ethernet/mediatek/mtk_wed.c
+-@@ -1333,6 +1333,24 @@ mtk_wed_rro_alloc(struct mtk_wed_device
++@@ -1322,6 +1322,24 @@ mtk_wed_rro_alloc(struct mtk_wed_device
+  	struct device_node *np;
+  	int index;
+
+@@ -47,7 +47,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+  	index = of_property_match_string(dev->hw->node, "memory-region-names",
+  					 "wo-dlm");
+  	if (index < 0)
+-@@ -1349,6 +1367,7 @@ mtk_wed_rro_alloc(struct mtk_wed_device
++@@ -1338,6 +1356,7 @@ mtk_wed_rro_alloc(struct mtk_wed_device
+  		return -ENODEV;
+
+  	dev->rro.miod_phys = rmem->base;
+--
+2.43.0
+
