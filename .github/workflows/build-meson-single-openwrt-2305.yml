@@ -291,11 +291,11 @@ jobs:
       id: config2
       run: |
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-meson
         make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-meson
         make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod
+        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-meson
         make defconfig
         $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
         awk '/meson8b/ { print }' .config
