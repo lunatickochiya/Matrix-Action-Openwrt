@@ -305,6 +305,9 @@ function add_openwrt_sfe_kmods() {
 
 function add_openwrt_files() {
 	mkdir -p openwrt/feeds/lunatic7
+	mkdir -p openwrt/feeds/packages
+	mkdir -p openwrt/feeds/luci
+	mkdir -p openwrt/feeds/nss_packages
 	[ -d package ] && mv -f package/* openwrt/package
 	[ -d $OpenWrt_PATCH_FILE_DIR/package-for-mt798x ] && mv -f $OpenWrt_PATCH_FILE_DIR/package-for-mt798x/* openwrt/package
 # for 2410
