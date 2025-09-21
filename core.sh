@@ -305,9 +305,7 @@ function add_openwrt_sfe_kmods() {
 
 function add_openwrt_files() {
 	mkdir -p openwrt/feeds/lunatic7
-	mkdir -p openwrt/feeds/packages
-	mkdir -p openwrt/feeds/luci
-	mkdir -p openwrt/feeds/nss_packages
+
 	[ -d package ] && mv -f package/* openwrt/package
 	[ -d $OpenWrt_PATCH_FILE_DIR/package-for-mt798x ] && mv -f $OpenWrt_PATCH_FILE_DIR/package-for-mt798x/* openwrt/package
 # for 2410
@@ -322,9 +320,6 @@ function add_openwrt_files() {
 
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-2410 ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-2410 openwrt/mypatch-2410
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-2410-$Matrix_Target ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-2410-$Matrix_Target openwrt/mypatch
-    [ -d $OpenWrt_PATCH_FILE_DIR/lunatic7-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
-	[ -d $OpenWrt_PATCH_FILE_DIR/luci-patch-2410 ] && mv -f $OpenWrt_PATCH_FILE_DIR/luci-patch-2410 openwrt/feeds/luci/luci-patch-2410
-	[ -d $OpenWrt_PATCH_FILE_DIR/feeds-package-patch-2410 ] && mv -f $OpenWrt_PATCH_FILE_DIR/feeds-package-patch-2410 openwrt/feeds/packages/feeds-package-patch-2410
 
 	if [ "$TEST_KERNEL" = "1" ]; then
 		find openwrt/target/linux/mediatek/dts/ -type f -name 'mt7981*.dts' -exec sed -i 's|#include "mt7981.dtsi"|#include "mt7981b.dtsi"|' {} +
@@ -338,10 +333,6 @@ function add_openwrt_files() {
 	[ -d $OpenWrt_PATCH_FILE_DIR/package-for-openwrt-ipq ] && cp -r $OpenWrt_PATCH_FILE_DIR/package-for-openwrt-ipq/* openwrt/package
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-openwrt-ipq ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-openwrt-ipq openwrt/mypatch-openwrt-ipq
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-openwrt-ipq-$Matrix_Target ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-openwrt-ipq-$Matrix_Target openwrt/mypatch
-
-	[ -d $OpenWrt_PATCH_FILE_DIR/lunatic7-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
-	[ -d $OpenWrt_PATCH_FILE_DIR/luci-patch-openwrt-ipq ] && mv -f $OpenWrt_PATCH_FILE_DIR/luci-patch-openwrt-ipq openwrt/feeds/luci/luci-patch-openwrt-ipq
-	[ -d $OpenWrt_PATCH_FILE_DIR/feeds-package-patch-openwrt-ipq ] && mv -f $OpenWrt_PATCH_FILE_DIR/feeds-package-patch-openwrt-ipq openwrt/feeds/packages/feeds-package-patch-openwrt-ipq
 	fi
 
 	[ -e files ] && mv files openwrt/files
@@ -414,6 +405,17 @@ function move_openwrt_config_ready() {
 }
 
 function fix_openwrt_feeds() {
+	if [ "$OpenWrt_PATCH_FILE_DIR" = "openwrt-2410" ]; then
+	[ -d $OpenWrt_PATCH_FILE_DIR/lunatic7-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
+	[ -d $OpenWrt_PATCH_FILE_DIR/luci-patch-2410 ] && mv -f $OpenWrt_PATCH_FILE_DIR/luci-patch-2410 openwrt/feeds/luci/luci-patch-2410
+	[ -d $OpenWrt_PATCH_FILE_DIR/feeds-package-patch-2410 ] && mv -f $OpenWrt_PATCH_FILE_DIR/feeds-package-patch-2410 openwrt/feeds/packages/feeds-package-patch-2410
+	fi
+	if [ "$OpenWrt_PATCH_FILE_DIR" = "openwrt-ipq" ]; then
+	[ -d $OpenWrt_PATCH_FILE_DIR/lunatic7-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
+	[ -d $OpenWrt_PATCH_FILE_DIR/luci-patch-openwrt-ipq ] && mv -f $OpenWrt_PATCH_FILE_DIR/luci-patch-openwrt-ipq openwrt/feeds/luci/luci-patch-openwrt-ipq
+	[ -d $OpenWrt_PATCH_FILE_DIR/feeds-package-patch-openwrt-ipq ] && mv -f $OpenWrt_PATCH_FILE_DIR/feeds-package-patch-openwrt-ipq openwrt/feeds/packages/feeds-package-patch-openwrt-ipq
+	fi
+
 	cd openwrt
 	"$GITHUB_WORKSPACE/$DIY_SH"  "$Matrix_Target"
 	cd ../
