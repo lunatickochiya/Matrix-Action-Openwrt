@@ -32,7 +32,7 @@ function init_pkg_env() {
 }
 
 function init_gh_env_2410() {
-	source "${GITHUB_WORKSPACE}/env/common.txt"
+	source "${GITHUB_WORKSPACE}/env/common-rk3399.txt"
 	source "${GITHUB_WORKSPACE}/env/openwrt-24.10.repo"
 	echo -e "TEST_KERNEL=$(echo $PATCH_JSON_INPUT | jq -r ".TEST_KERNEL")" >> "$GITHUB_ENV"
 }
@@ -88,82 +88,28 @@ function init_gh_env_common() {
 }
 
 function init_math_config() {
-	if [ "$Matrix_Target" == 'mt798x-nftables' ] || [ "$Matrix_Target" == 'mt798x-nousb-nftables' ] || \
-		[ "$Matrix_Target" == 'ramips-nftables' ] || [ "$Matrix_Target" == 'ath79-nftables' ] || \
-		[ "$Matrix_Target" == 'ipq-nftables' ]; then
-		bash $GITHUB_WORKSPACE/add-test-packages.sh nft
-		echo "----$Matrix_Target-----NFT-test---"
+	if [ $Matrix_Target == 'rockchip-nft' ]; then
+	bash $GITHUB_WORKSPACE/add-test-packages.sh nft
+	echo "----$Matrix_Target-----NFT-test---"
 	fi
-
-	if [ "$Matrix_Target" == 'mt798x-iptables' ] || [ "$Matrix_Target" == 'mt798x-nousb-iptables' ] || \
-		[ "$Matrix_Target" == 'ramips-iptables' ] || [ "$Matrix_Target" == 'ath79-iptables' ] || \
-		[ "$Matrix_Target" == 'ipq-iptables' ]; then
-		mv -f machine-configs/single/$Target_CFG_Machine-iptables.config machine-configs/$Matrix_Target.config
+	if [ $Matrix_Target == 'rockchip-ipt' ]; then
+		mv -f machine-configs/single/$Target_CFG_Machine-ipt.config machine-configs/$Matrix_Target.config
 		echo "----$Matrix_Target-----IPT-Machine--------"
-	elif [ "$Matrix_Target" == 'mt798x-nftables' ] || [ "$Matrix_Target" == 'mt798x-nousb-nftables' ] || \
-		 [ "$Matrix_Target" == 'ramips-nftables' ] || [ "$Matrix_Target" == 'ath79-nftables' ] || \
-		 [ "$Matrix_Target" == 'ipq-nftables' ]; then
-		mv -f machine-configs/single/$Target_CFG_Machine-nftables.config machine-configs/$Matrix_Target.config
+	elif [ $Matrix_Target == 'rockchip-nft' ]; then
+		mv -f machine-configs/single/$Target_CFG_Machine-nft.config machine-configs/$Matrix_Target.config
 		echo "----$Matrix_Target-----NFT-Machine--------"
 	fi
+
 }
 
 function init_openwrt_pkg_config() {
-	case "$Matrix_Target" in
-		mt798x-iptables)
-			mv -f package-configs/single/$Target_CFG_Machine-iptables.config package-configs/mt798x-common-iptables.config
-			echo "----$Matrix_Target-----IPT-Package-Config----"
-			;;
-		mt798x-nftables)
-			mv -f package-configs/single/$Target_CFG_Machine-nftables.config package-configs/mt798x-common-nftables.config
-			echo "----$Matrix_Target-----NFT-Package-Config----"
-			;;
-		mt798x-nousb-nftables)
-			mv -f package-configs/single/$Target_CFG_Machine-nftables.config package-configs/mt798x-nousb-nftables.config
-			echo "----$Matrix_Target-----NFT-Package-Config----"
-			;;
-		mt798x-nousb-iptables)
-			mv -f package-configs/single/$Target_CFG_Machine-iptables.config package-configs/mt798x-nousb-iptables.config
-			echo "----$Matrix_Target-----IPT-Package-Config----"
-			;;
-		ramips-iptables)
-			mv -f package-configs/single/$Target_CFG_Machine-iptables.config package-configs/ramips-common-iptables.config
-			echo "----$Matrix_Target-----IPT-Package-Config----"
-			;;
-		ramips-nftables)
-			mv -f package-configs/single/$Target_CFG_Machine-nftables.config package-configs/ramips-common-nftables.config
-			echo "----$Matrix_Target-----NFT-Package-Config----"
-			;;
-		ath79-iptables)
-			mv -f package-configs/single/$Target_CFG_Machine-iptables.config package-configs/ath79-common-iptables.config
-			echo "----$Matrix_Target-----IPT-Package-Config----"
-			;;
-		ath79-nftables)
-			mv -f package-configs/single/$Target_CFG_Machine-nftables.config package-configs/ath79-common-nftables.config
-			echo "----$Matrix_Target-----NFT-Package-Config----"
-			;;
-		ipq-iptables)
-			mv -f package-configs/single/$Target_CFG_Machine-iptables.config package-configs/ipq-common-iptables.config
-			echo "----$Matrix_Target-----IPT-Package-Config----"
-			;;
-		ipq-nftables)
-			mv -f package-configs/single/$Target_CFG_Machine-nftables.config package-configs/ipq-common-nftables.config
-			echo "----$Matrix_Target-----NFT-Package-Config----"
-			;;
-	esac
-}
-
-function init_openwrt_pkg_config_nss() {
-	case "$Matrix_Target" in
-		ipq-iptables)
-			mv -f package-configs/single/$Target_CFG_Machine-iptables-nss.config package-configs/ipq-common-iptables.config
-			echo "----$Matrix_Target-----IPT-Package-Config----"
-			;;
-		ipq-nftables)
-			mv -f package-configs/single/$Target_CFG_Machine-nftables-nss.config package-configs/ipq-common-nftables.config
-			echo "----$Matrix_Target-----NFT-Package-Config----"
-			;;
-	esac
+	if [ $Matrix_Target == 'rockchip-ipt' ]; then
+		mv -f package-configs/single/$Target_CFG_Machine-ipt.config package-configs/rockchip-ipt-2410.config
+		echo "----$Matrix_Target-----IPT-Package-Config----"
+	elif [ $Matrix_Target == 'rockchip-nft' ]; then
+		mv -f package-configs/single/$Target_CFG_Machine-nft.config package-configs/rockchip-nft-2410.config
+		echo "----$Matrix_Target-----NFT-Package-Config----"
+	fi
 }
 
 function init_openwrt_patch_common() {
@@ -252,9 +198,9 @@ function ln_openwrt() {
 
 function add_openwrt_sfe_ipt_k66() {
 	if [ "$Matrix_Target" == 'mt798x-iptables' ] || [ "$Matrix_Target" == 'mt798x-nousb-iptables' ] || \
-	   [ "$Matrix_Target" == 'ramips-iptables' ] || [ "$Matrix_Target" == 'ath79-iptables' ] || \
-	   [ "$Matrix_Target" == 'ipq-iptables' ]; then
-		bash "$GITHUB_WORKSPACE/add-sfe-packages.sh" ipt
+		[ "$Matrix_Target" == 'ramips-iptables' ] || [ "$Matrix_Target" == 'ath79-iptables' ] || \
+		[ "$Matrix_Target" == 'ipq-iptables' ] || [ "$Matrix_Target" == 'rockchip-ipt' ]; then
+		bash $GITHUB_WORKSPACE/add-sfe-packages.sh ipt2410
 		echo "----$Matrix_Target-----ipt-sfe---"
 		cd openwrt
 		wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/pending-6.6/613-netfilter_optional_tcp_window_check.patch -P target/linux/generic/pending-6.6/
@@ -272,8 +218,9 @@ function add_openwrt_sfe_ipt_k66() {
 
 function add_openwrt_sfe_nft_k66() {
 	if [ "$Matrix_Target" == 'mt798x-nftables' ] || [ "$Matrix_Target" == 'mt798x-nousb-nftables' ] || \
-	   [ "$Matrix_Target" == 'ramips-nftables' ] || [ "$Matrix_Target" == 'ath79-nftables' ] || \
-	   [ "$Matrix_Target" == 'ipq-nftables' ]; then
+		[ "$Matrix_Target" == 'ramips-nftables' ] || [ "$Matrix_Target" == 'ath79-nftables' ] || \
+		[ "$Matrix_Target" == 'ipq-iptables' ] || [ "$Matrix_Target" == 'rockchip-nft' ]; then
+		bash $GITHUB_WORKSPACE/add-sfe-packages.sh nft2410
 		cd openwrt
 		curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh && bash add_turboacc.sh
 		echo "----$Matrix_Target-----NFT-acc----"

@@ -9,22 +9,6 @@ on:
   repository_dispatch:
   workflow_dispatch:
     inputs:
-#      Cache:
-#        description: 'Use Cache'
-#        required: true
-#        default: 'true'
-#        type: choice
-#        options:
-#        - 'true'
-#        - 'false'
-#      UPLOAD_RELEASE:
-#        description: 'UPLOAD To RELEASE'
-#        required: true
-#        default: 'true'
-#        type: choice
-#        options:
-#        - 'true'
-#        - 'false'
       MACH:
         description: 'Choose machine'
         required: true
@@ -84,42 +68,6 @@ on:
         - '172.18.0.1'
         - '10.0.0.1'
         - '10.88.0.1'
-#      ALLKMOD:
-#        description: 'Compile All Kmods'
-#        required: true
-#        default: 'true'
-#        type: choice
-#        options:
-#        - 'true'
-#        - 'false'
-#      TEST-KERNEL:
-#        description: 'OpenWrt-24.10 use testing kernel'
-#        default: 'false'
-#        type: choice
-#        options:
-#        - 'true'
-#        - 'false'
-#      KERNEL66:
-#        description: 'OpenWrt-24.10 use 6.6 kernel'
-#        default: 'false'
-#        type: choice
-#        options:
-#        - 'true'
-#        - 'false'
-#      TRY_BBR_V3:
-#        description: 'Update BBR TO V3'
-#        default: 'false'
-#        type: choice
-#        options:
-#        - 'true'
-#        - 'false'
-#      BCM_FULLCONE:
-#        description: 'bcm fullcone'
-#        default: 'false'
-#        type: choice
-#        options:
-#        - 'true'
-#        - 'false'
 
       SFE_BUILDIN:
         description: 'Build sfe'
@@ -128,6 +76,7 @@ on:
         options:
         - 'true'
         - 'false'
+
       patch_repo:
         description: 'Use json patch repo true(1) or false(0) See ReadME'
         required: true
@@ -174,6 +123,10 @@ jobs:
     strategy:
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     name: Build ${{github.event.inputs.MACH}} openwrt ${{ github.event.inputs.REPO }}
+    env:
+      Matrix_Target: ${{ matrix.target }}
+      Target_CFG_Machine: ${{github.event.inputs.MACH}}
+      OpenWrt_PATCH_FILE_DIR: openwrt-2410
     
     steps:
     - name: 检查
@@ -196,86 +149,27 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-        sudo -E apt-get -qq update
-        sudo -E apt-get -qq install build-essential clang flex g++ gawk gcc-multilib gettext \
-        git libncurses5-dev libssl-dev python3-distutils python3-pyelftools python3-setuptools \
-        libpython3-dev rsync unzip zlib1g-dev swig aria2 jq subversion qemu-utils ccache rename \
-        libelf-dev device-tree-compiler libgnutls28-dev coccinelle libgmp3-dev libmpc-dev libfuse-dev b43-fwcutter cups-ppdc
-        sudo -E apt-get -qq purge azure-cli ghc* zulu* llvm* firefox powershell openjdk* dotnet* google* mysql* php* android*
-        sudo -E apt-get -qq autoremove --purge
-        sudo -E apt-get -qq clean
-        sudo timedatectl set-timezone "$TZ"
-        sudo mkdir -p /workdir
-        sudo chown $USER:$GROUPS /workdir
+        chmod +x gen-sha256sum.sh add-test-packages.sh add-sfe-packages.sh core.sh
+        $GITHUB_WORKSPACE/core.sh init-pkg-env
 
     - name: 设置GITHUB_ENV
       id: env
+      env:
+        PATCH_JSON_INPUT: ${{ github.event.inputs.patch_repo }}
+        CONFIG_JSON_INPUT: ${{ github.event.inputs.config_repo }}
       run: |
-        echo "date=$(date +'%m/%d_%Y_%H/%M')" >> $GITHUB_ENV
-        echo "date2=$(date +'%Y/%m %d')" >> $GITHUB_ENV
-        echo "date3=$(date +'%m.%d')" >> $GITHUB_ENV
-        VERSION="$(echo "${{github.event.action}}" | grep -Eo " [0-9.]+" | sed -e 's/ //')" || true
-        [ "$VERSION" ] && echo "VERSION=$VERSION" >> $GITHUB_ENV || echo "VERSION=$(date +'%m.%d')" >> $GITHUB_ENV
         echo ${{matrix.target}}
-        source "${GITHUB_WORKSPACE}/env/common-rk3399.txt"
-        if [ "${{ matrix.repo }}" == "openwrt-24.10" ]; then
-        source "${GITHUB_WORKSPACE}/env/openwrt-24.10.repo"
-        elif [ "${{ matrix.repo }}" == "main" ]; then
-        source "${GITHUB_WORKSPACE}/env/openwrt-main.repo"
-        fi
-        echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
-        echo "BURN_UBOOT_IMG_URL=${BURN_UBOOT_IMG_URL}" >> $GITHUB_ENV
-        echo "AMLIMG_TOOL_URL=${AMLIMG_TOOL_URL}" >> $GITHUB_ENV
-        echo "REPO_BRANCH=${{ matrix.repo }}" >> $GITHUB_ENV
-        echo "DIY_SH=${DIY_SH}" >> $GITHUB_ENV
-        echo "DIY_SH_AFB=${DIY_SH_AFB}" >> $GITHUB_ENV
-        echo "DIY_SH_RFC=${DIY_SH_RFC}" >> $GITHUB_ENV
-        echo "UPLOAD_BIN_DIR=${UPLOAD_BIN_DIR}" >> $GITHUB_ENV
-        echo "UPLOAD_IPK_DIR=${UPLOAD_IPK_DIR}" >> $GITHUB_ENV
-        echo "UPLOAD_FIRMWARE=${UPLOAD_FIRMWARE}" >> $GITHUB_ENV
-        echo "UPLOAD_COWTRANSFER=${UPLOAD_COWTRANSFER}" >> $GITHUB_ENV
-        echo "UPLOAD_WETRANSFER=${UPLOAD_WETRANSFER}" >> $GITHUB_ENV
-        echo "UPLOAD_ALLKMOD=${UPLOAD_ALLKMOD}" >> $GITHUB_ENV
-        echo "UPLOAD_SYSUPGRADE=${UPLOAD_SYSUPGRADE}" >> $GITHUB_ENV
-        echo "USE_Cache=${USE_Cache}" >> $GITHUB_ENV
-        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
-        echo "Kernel_Test=_Kernel_Test_Ver" >> $GITHUB_ENV
-        fi
-        PATCH_JSON_INPUT='${{ github.event.inputs.patch_repo }}'
-        echo -e "OPENSSL_3_5=$(echo $PATCH_JSON_INPUT | jq -r ".OPENSSL_3_5")" >> $GITHUB_ENV
-        echo -e "BCM_FULLCONE=$(echo $PATCH_JSON_INPUT | jq -r ".BCM_FULLCONE")" >> $GITHUB_ENV
-        echo -e "TRY_BBR_V3=$(echo $PATCH_JSON_INPUT | jq -r ".TRY_BBR_V3")" >> $GITHUB_ENV
-        echo -e "MAC80211_616=$(echo $PATCH_JSON_INPUT | jq -r ".MAC80211_616")" >> $GITHUB_ENV
-        CONFIG_JSON_INPUT='${{ github.event.inputs.config_repo }}'
-        echo -e "Cache=$(echo $CONFIG_JSON_INPUT | jq -r ".Cache")" >> $GITHUB_ENV
-        echo -e "UPLOAD_RELEASE=$(echo $CONFIG_JSON_INPUT | jq -r ".UPLOAD_RELEASE")" >> $GITHUB_ENV
-        echo -e "ALLKMOD=$(echo $CONFIG_JSON_INPUT | jq -r ".ALLKMOD")" >> $GITHUB_ENV
-        chmod +x $DIY_SH $DIY_SH_AFB $DIY_SH_RFC gen-sha256sum.sh add-test-packages.sh add-sfe-packages.sh
+        $GITHUB_WORKSPACE/core.sh init-gh-env-2410
 
     - name: 导入机器及安装包config
+      id: cfg
       run: |
-        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
+        if [ ${{ env.TEST_KERNEL }} = 1 ]; then
         $GITHUB_WORKSPACE/$DIY_SH add-test-config
+        echo "Kernel_Test=_Kernel_Test_Ver" >> $GITHUB_ENV
         fi
-        if [ ${{matrix.target}} == 'rockchip-nft' ]; then
-        bash $GITHUB_WORKSPACE/add-test-packages.sh nft
-        echo "----${{matrix.target}}-----NFT-test---"
-        fi
-        if [ ${{matrix.target}} == 'rockchip-ipt' ]; then
-                mv -f machine-configs/single/${{github.event.inputs.MACH}}-ipt.config machine-configs/${{matrix.target}}.config
-                echo "----${{matrix.target}}-----IPT-Machine--------"
-        elif [ ${{matrix.target}} == 'rockchip-nft' ]; then
-                mv -f machine-configs/single/${{github.event.inputs.MACH}}-nft.config machine-configs/${{matrix.target}}.config
-                echo "----${{matrix.target}}-----NFT-Machine--------"
-        fi
-        if [ ${{matrix.target}} == 'rockchip-ipt' ]; then
-                mv -f package-configs/single/${{github.event.inputs.MACH}}-ipt.config package-configs/rockchip-ipt-2410.config
-                echo "----${{matrix.target}}-----IPT-Package-Config----"
-        elif [ ${{matrix.target}} == 'rockchip-nft' ]; then
-                mv -f package-configs/single/${{github.event.inputs.MACH}}-nft.config package-configs/rockchip-nft-2410.config
-                echo "----${{matrix.target}}-----NFT-Package-Config----"
-        fi
+        $GITHUB_WORKSPACE/core.sh init-math-config
+        $GITHUB_WORKSPACE/core.sh init-openwrt-pkg-config
 
     - name: 克隆源代码
       working-directory: /workdir
@@ -301,74 +195,19 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        sudo mkdir -p -m 777 /mnt/openwrt/dl /mnt/openwrt/bin /mnt/openwrt/staging_dir /mnt/openwrt/build_dir
-        #ln -sf /mnt/openwrt/dl openwrt/dl
-        ln -sf /mnt/openwrt/bin openwrt/bin
-        ln -sf /mnt/openwrt/staging_dir openwrt/staging_dir
-        ln -sf /mnt/openwrt/build_dir openwrt/build_dir
-        df -hT
-        ls /mnt/openwrt
+        $GITHUB_WORKSPACE/core.sh ln-openwrt
 
     - name: Patch 自定义
       id: patch
       run: |
-        if [ ${{ env.TRY_BBR_V3 }} = 1 ]; then
-        [ -d openwrt-2410/mypatch-bbr-v3 ] && cp -r openwrt-2410/mypatch-bbr-v3/* openwrt-2410/mypatch-2410-${{matrix.target}}
-        echo "----${{matrix.target}}----bbr-v3---"
-        echo "TRY_BBR_V3_NAME=_BBR_V3" >> $GITHUB_ENV
-        fi
-        if [ ${{ env.MAC80211_616}} = 1 ]; then
-        [ -d openwrt-2410/mac80211-616 ] && cp -r openwrt-2410/mac80211-616/* openwrt-2410/mypatch-2410-${{matrix.target}}
-        rm -rf openwrt/package/kernel/mt76/patches/100-api_compat.patch
-        echo "----${{matrix.target}}----mac80211-6-14---"
-        echo "MAC80211_616_NAME=_MAC80211_616" >> $GITHUB_ENV
-        fi
-        if [ ${{ env.BCM_FULLCONE}} = 1 ] && [ ${{matrix.target}} == 'rockchip-ipt' ]; then
-        [ -d openwrt-2410/bcmfullcone ] && cp -r openwrt-2410/bcmfullcone/a-* openwrt-2410/mypatch-2410-rockchip-ipt
-        rm -rf openwrt-2410/luci-patch-2410/0004-Revert-luci-app-firewall-add-fullcone.patch
-        echo "----${{matrix.target}}-----ipt-bcm---"
-        echo "BCM_FULLCONE_NAME=_BCM_FULLCONE" >> $GITHUB_ENV
-        fi
-        if [ ${{ env.BCM_FULLCONE}} = 1 ] && [ ${{matrix.target}} == 'rockchip-nft' ]; then
-        [ -d openwrt-2410/bcmfullcone ] && cp -r openwrt-2410/bcmfullcone/b-* openwrt-2410/mypatch-2410-rockchip-nft
-        rm -rf openwrt-2410/luci-patch-2410/0004-Revert-luci-app-firewall-add-fullcone.patch
-        echo "----${{matrix.target}}-----nft-bcm---"
-        echo "BCM_FULLCONE_NAME=_BCM_FULLCONE" >> $GITHUB_ENV
-        fi
-        if [ ${{ env.OPENSSL_3_5}} = 1 ]; then
-        [ -d openwrt-2410/openssl-bump ] && cp -r openwrt-2410/openssl-bump/* openwrt-2410/mypatch-2410-${{matrix.target}}
-        echo "----${{matrix.target}}----openssl-3-4---"
-        echo "OPENSSL_3_5_NAME=_OPENSSL_3_5" >> $GITHUB_ENV
-        fi
+        $GITHUB_WORKSPACE/core.sh init-openwrt-patch-2410
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 添加 SFE
       if: github.event.inputs.SFE_BUILDIN == 'true'
       id: sfe
       run: |
-        if [ ${{matrix.target}} == 'rockchip-nft' ]; then
-        bash $GITHUB_WORKSPACE/add-sfe-packages.sh nft2410
-        cd openwrt
-        curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh && bash add_turboacc.sh
-        echo "----${{matrix.target}}-----NFT-acc----"
-        cd ../
-        elif [ ${{matrix.target}} == 'rockchip-ipt' ]; then
-                bash $GITHUB_WORKSPACE/add-sfe-packages.sh ipt2410
-                echo "----${{matrix.target}}-----ipt-sfe---"
-                cd openwrt
-                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/pending-6.6/613-netfilter_optional_tcp_window_check.patch -P target/linux/generic/pending-6.6/
-                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch -P target/linux/generic/hack-6.6/
-                wget -N https://raw.githubusercontent.com/chenmozhijin/turboacc/refs/heads/package/hack-6.6/953-net-patch-linux-kernel-to-support-shortcut-fe.patch -P target/linux/generic/hack-6.6/
-                echo "# CONFIG_NF_CONNTRACK_CHAIN_EVENTS is not set" >> "./target/linux/generic/config-6.6"
-                echo "# CONFIG_SHORTCUT_FE is not set" >> "./target/linux/generic/config-6.6"
-                # git clone https://github.com/lunatickochiya/luci-app-turboacc-js package/luci-app-turboacc-js && sed -i 's?\.\./\.\./luci.mk?$(TOPDIR)/feeds/luci/luci.mk?' ./package/luci-app-turboacc-js/Makefile ; rm -rf ./package/luci-app-turboacc-js/.git/
-                git clone --depth=1 --single-branch --branch "package" https://github.com/chenmozhijin/turboacc && mv -n turboacc/shortcut-fe ./package ; rm -rf turboacc
-                cd ../
-        echo "----${{matrix.target}}-----IPT-acc----"
-        fi
-        sed -i 's/kmod-shortcut-fe-cm,kmod-shortcut-fe,kmod-fast-classifier,kmod-fast-classifier-noload,kmod-shortcut-fe-drv,//g' package-configs/kmod_exclude_list*
-        # sed -i 's/"feeds\/lunatic7\/shortcut-fe"//g' diy-2410.sh
-        # sed -i 's/"feeds\/lunatic7\/luci-app-turboacc"//g' diy-2410.sh
+        $GITHUB_WORKSPACE/core.sh add-openwrt-sfe-2410
         echo "status=success" >> $GITHUB_OUTPUT
         echo "SFE=_SFE" >> $GITHUB_ENV
 
