@@ -1,24 +1,36 @@
-From e8f8955c151ad96f8a8be4c7aa47fb4a7ab83957 Mon Sep 17 00:00:00 2001
+From 30dfb8364c7b0cb1df7a204ce7c7ad3426ce4adc Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
-Date: Mon, 22 Sep 2025 15:44:42 +0800
-Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.106"
+Date: Fri, 3 Oct 2025 20:58:41 +0800
+Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.108"
 
-This reverts commit 0609bca75875efc6b73c0fa47cc7efb98ed06e13.
+This reverts commit a7badea52f1120bef17951c8527a9a6389913639.
+Revert "kernel: bump 6.6 to 6.6.105"
+
+This reverts commit bd96218268157b9b4057f737a4f11717ca0c4836.
 Revert "kernel: bump 6.6 to 6.6.106"
 
-This reverts commit 475b18bfc6a546b352d2eac3e6d7b4835d229668.
+This reverts commit 75e16f06d8f051dcda2415df1d5b30e7219d35ef.
 ---
  include/kernel-6.6                            |   4 +-
+ ...oup-Disable-cgroup-memory-by-default.patch |   8 +-
+ ...7xx-Read-modem-line-state-at-startup.patch |   2 +-
  ...-net-macb-Also-set-DMA-coherent-mask.patch |  28 ++--
+ ...l-command-line-to-disable-memory-cgr.patch |   8 +-
  ...port-for-Raspberry-Pi-RP1-ethernet-c.patch |   4 +-
+ ...-kernel-command-line-to-disable-memo.patch |   2 +-
+ ...-announce-support-for-SER_RS485_RTS_.patch |   2 +-
  ...x_cpus_namespace_collision_shadowing.patch |   2 +-
  .../621-proc-fix-missing-pde_set_flags.patch  | 121 ++++++++++++++++++
+ ...ort-for-scanning-PHY-in-PHY-packages.patch |   4 +-
  ...iatek-split-tx-and-rx-fields-in-mtk_.patch |  66 +++++-----
  ...iatek-use-QDMA-instead-of-ADMAv2-on-.patch |  12 +-
  ..._eth_soc-handle-dma-buffer-size-soc-.patch |  38 +++---
  ..._eth_soc-ppe-add-support-for-multipl.patch |  28 ++--
  ...ediatek-Allow-gaps-in-MAC-allocation.patch |   2 +-
  ..._eth_soc-implement-.-get-set-_pausep.patch |   4 +-
+ .../hack-6.6/901-debloat_sock_diag.patch      |   2 +-
+ .../generic/hack-6.6/902-debloat_proc.patch   |   2 +-
+ ..._F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch |   2 +-
  ...net-mtk_eth_soc-enable-threaded-NAPI.patch |   2 +-
  ..._eth_soc-work-around-issue-with-send.patch |   4 +-
  ...ernet-mtk_eth_soc-use-napi_build_skb.patch |   4 +-
@@ -35,19 +47,72 @@ This reverts commit 475b18bfc6a546b352d2eac3e6d7b4835d229668.
  ...mediatek-lvts_thermal-Add-suspend-an.patch |   4 +-
  ...mediatek-lvts_thermal-Add-mt8192-sup.patch |   8 +-
  ...mediatek-lvts_thermal-Update-calibra.patch |   4 +-
- 27 files changed, 312 insertions(+), 152 deletions(-)
+ 36 files changed, 328 insertions(+), 168 deletions(-)
  create mode 100644 target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch
  create mode 100644 target/linux/generic/pending-6.6/742-net-ethernet-mtk_eth_soc-fix-tx-vlan-tag-for-llc-pac.patch
 
 diff --git a/include/kernel-6.6 b/include/kernel-6.6
-index e6fa78c5d7..70decb6786 100644
+index b1eaea13b2..70decb6786 100644
 --- a/include/kernel-6.6
 +++ b/include/kernel-6.6
 @@ -1,2 +1,2 @@
--LINUX_VERSION-6.6 = .106
--LINUX_KERNEL_HASH-6.6.106 = 0c3180e2d8dcd0b70fe83554d9c440e31bab17873e360b89c4ab62a4fd26a8a0
+-LINUX_VERSION-6.6 = .108
+-LINUX_KERNEL_HASH-6.6.108 = 601cd332aa695d16607b353feff369b4a0b36d111be077e8af54bdd41e1968a6
 +LINUX_VERSION-6.6 = .104
 +LINUX_KERNEL_HASH-6.6.104 = 2a772f9d661afabaaddcdfd1116239acb2d943377aceab9e0baed2b7a915e36a
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch b/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch
+index eb29af01c1..5600e85734 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+ 
+ --- a/kernel/cgroup/cgroup.c
+ +++ b/kernel/cgroup/cgroup.c
+-@@ -6082,6 +6082,9 @@ int __init cgroup_init_early(void)
++@@ -6059,6 +6059,9 @@ int __init cgroup_init_early(void)
+  	return 0;
+  }
+  
+@@ -27,7 +27,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  /**
+   * cgroup_init - cgroup initialization
+   *
+-@@ -6115,6 +6118,12 @@ int __init cgroup_init(void)
++@@ -6092,6 +6095,12 @@ int __init cgroup_init(void)
+  
+  	cgroup_unlock();
+  
+@@ -40,7 +40,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  	for_each_subsys(ss, ssid) {
+  		if (ss->early_init) {
+  			struct cgroup_subsys_state *css =
+-@@ -6769,6 +6778,10 @@ static int __init cgroup_disable(char *s
++@@ -6740,6 +6749,10 @@ static int __init cgroup_disable(char *s
+  			    strcmp(token, ss->legacy_name))
+  				continue;
+  
+@@ -51,7 +51,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  			static_branch_disable(cgroup_subsys_enabled_key[i]);
+  			pr_info("Disabling %s control group subsystem\n",
+  				ss->name);
+-@@ -6787,6 +6800,31 @@ static int __init cgroup_disable(char *s
++@@ -6758,6 +6771,31 @@ static int __init cgroup_disable(char *s
+  }
+  __setup("cgroup_disable=", cgroup_disable);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0475-serial-sc16is7xx-Read-modem-line-state-at-startup.patch b/target/linux/bcm27xx/patches-6.6/950-0475-serial-sc16is7xx-Read-modem-line-state-at-startup.patch
+index 932e4264b0..0149501e77 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0475-serial-sc16is7xx-Read-modem-line-state-at-startup.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0475-serial-sc16is7xx-Read-modem-line-state-at-startup.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/drivers/tty/serial/sc16is7xx.c
+ +++ b/drivers/tty/serial/sc16is7xx.c
+-@@ -1200,6 +1200,9 @@ static int sc16is7xx_startup(struct uart
++@@ -1210,6 +1210,9 @@ static int sc16is7xx_startup(struct uart
+  	      SC16IS7XX_IER_MSI_BIT;
+  	sc16is7xx_port_write(port, SC16IS7XX_IER_REG, val);
+  
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0518-net-macb-Also-set-DMA-coherent-mask.patch b/target/linux/bcm27xx/patches-6.6/950-0518-net-macb-Also-set-DMA-coherent-mask.patch
 index e164a7b683..9abdb37960 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0518-net-macb-Also-set-DMA-coherent-mask.patch
@@ -166,6 +231,46 @@ index e164a7b683..9abdb37960 100644
   static struct platform_driver macb_driver = {
   	.probe		= macb_probe,
   	.remove		= macb_remove,
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch b/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch
+index 7946586d40..b1ceaad71d 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch
+@@ -148,7 +148,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  
+ --- a/kernel/cgroup/cgroup.c
+ +++ b/kernel/cgroup/cgroup.c
+-@@ -6082,9 +6082,6 @@ int __init cgroup_init_early(void)
++@@ -6059,9 +6059,6 @@ int __init cgroup_init_early(void)
+  	return 0;
+  }
+  
+@@ -158,7 +158,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  /**
+   * cgroup_init - cgroup initialization
+   *
+-@@ -6118,12 +6115,6 @@ int __init cgroup_init(void)
++@@ -6095,12 +6092,6 @@ int __init cgroup_init(void)
+  
+  	cgroup_unlock();
+  
+@@ -171,7 +171,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  	for_each_subsys(ss, ssid) {
+  		if (ss->early_init) {
+  			struct cgroup_subsys_state *css =
+-@@ -6778,10 +6769,6 @@ static int __init cgroup_disable(char *s
++@@ -6749,10 +6740,6 @@ static int __init cgroup_disable(char *s
+  			    strcmp(token, ss->legacy_name))
+  				continue;
+  
+@@ -182,7 +182,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  			static_branch_disable(cgroup_subsys_enabled_key[i]);
+  			pr_info("Disabling %s control group subsystem\n",
+  				ss->name);
+-@@ -6815,7 +6802,7 @@ static int __init cgroup_enable(char *st
++@@ -6786,7 +6773,7 @@ static int __init cgroup_enable(char *st
+  			    strcmp(token, ss->legacy_name))
+  				continue;
+  
 diff --git a/target/linux/bcm27xx/patches-6.6/950-1423-net-macb-Add-support-for-Raspberry-Pi-RP1-ethernet-c.patch b/target/linux/bcm27xx/patches-6.6/950-1423-net-macb-Add-support-for-Raspberry-Pi-RP1-ethernet-c.patch
 index 14220b754e..6a9b7b36bd 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-1423-net-macb-Add-support-for-Raspberry-Pi-RP1-ethernet-c.patch
@@ -188,6 +293,32 @@ index 14220b754e..6a9b7b36bd 100644
   	{ .compatible = "microchip,mpfs-macb", .data = &mpfs_config },
   	{ .compatible = "microchip,sama7g5-gem", .data = &sama7g5_gem_config },
   	{ .compatible = "microchip,sama7g5-emac", .data = &sama7g5_emac_config },
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1445-fixup-cgroup-Use-kernel-command-line-to-disable-memo.patch b/target/linux/bcm27xx/patches-6.6/950-1445-fixup-cgroup-Use-kernel-command-line-to-disable-memo.patch
+index 5241744b2c..b3a73945f6 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1445-fixup-cgroup-Use-kernel-command-line-to-disable-memo.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1445-fixup-cgroup-Use-kernel-command-line-to-disable-memo.patch
+@@ -14,7 +14,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/kernel/cgroup/cgroup.c
+ +++ b/kernel/cgroup/cgroup.c
+-@@ -6802,11 +6802,19 @@ static int __init cgroup_enable(char *st
++@@ -6773,11 +6773,19 @@ static int __init cgroup_enable(char *st
+  			    strcmp(token, ss->legacy_name))
+  				continue;
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1464-serial-sc16is7xx-announce-support-for-SER_RS485_RTS_.patch b/target/linux/bcm27xx/patches-6.6/950-1464-serial-sc16is7xx-announce-support-for-SER_RS485_RTS_.patch
+index 2d408eddfd..2f52823afc 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1464-serial-sc16is7xx-announce-support-for-SER_RS485_RTS_.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1464-serial-sc16is7xx-announce-support-for-SER_RS485_RTS_.patch
+@@ -31,7 +31,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ 
+ --- a/drivers/tty/serial/sc16is7xx.c
+ +++ b/drivers/tty/serial/sc16is7xx.c
+-@@ -1470,7 +1470,7 @@ static int sc16is7xx_setup_mctrl_ports(s
++@@ -1480,7 +1480,7 @@ static int sc16is7xx_setup_mctrl_ports(s
+  }
+  
+  static const struct serial_rs485 sc16is7xx_rs485_supported = {
 diff --git a/target/linux/generic/backport-6.6/0080-v6.9-smp-Avoid-setup_max_cpus_namespace_collision_shadowing.patch b/target/linux/generic/backport-6.6/0080-v6.9-smp-Avoid-setup_max_cpus_namespace_collision_shadowing.patch
 index a9ac399bcb..f5459aaccd 100644
 --- a/target/linux/generic/backport-6.6/0080-v6.9-smp-Avoid-setup_max_cpus_namespace_collision_shadowing.patch
@@ -328,6 +459,28 @@ index 0000000000..ba026b9c3a
 + 	return proc_register(parent, p);
 + }
 + EXPORT_SYMBOL(proc_create_single_data);
+diff --git a/target/linux/generic/backport-6.6/716-v6.9-02-net-phy-add-support-for-scanning-PHY-in-PHY-packages.patch b/target/linux/generic/backport-6.6/716-v6.9-02-net-phy-add-support-for-scanning-PHY-in-PHY-packages.patch
+index 9a2b082001..81f2d1d8e6 100644
+--- a/target/linux/generic/backport-6.6/716-v6.9-02-net-phy-add-support-for-scanning-PHY-in-PHY-packages.patch
++++ b/target/linux/generic/backport-6.6/716-v6.9-02-net-phy-add-support-for-scanning-PHY-in-PHY-packages.patch
+@@ -143,7 +143,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  }
+ --- a/drivers/net/phy/mdio_bus.c
+ +++ b/drivers/net/phy/mdio_bus.c
+-@@ -456,19 +456,34 @@ EXPORT_SYMBOL(of_mdio_find_bus);
++@@ -455,19 +455,34 @@ EXPORT_SYMBOL(of_mdio_find_bus);
+   * found, set the of_node pointer for the mdio device. This allows
+   * auto-probed phy devices to be supplied with information passed in
+   * via DT.
+@@ -185,7 +185,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  		addr = of_mdio_parse_addr(dev, child);
+  		if (addr < 0)
+  			continue;
+-@@ -478,9 +493,22 @@ static void of_mdiobus_link_mdiodev(stru
++@@ -477,9 +492,22 @@ static void of_mdiobus_link_mdiodev(stru
+  			/* The refcount on "child" is passed to the mdio
+  			 * device. Do _not_ use of_node_put(child) here.
+  			 */
 diff --git a/target/linux/generic/backport-6.6/751-01-v6.8-net-ethernet-mediatek-split-tx-and-rx-fields-in-mtk_.patch b/target/linux/generic/backport-6.6/751-01-v6.8-net-ethernet-mediatek-split-tx-and-rx-fields-in-mtk_.patch
 index 8369007dd1..7d232563ca 100644
 --- a/target/linux/generic/backport-6.6/751-01-v6.8-net-ethernet-mediatek-split-tx-and-rx-fields-in-mtk_.patch
@@ -1027,6 +1180,45 @@ index 6db2901cd0..b16910e18e 100644
   	.get_strings		= mtk_get_strings,
   	.get_sset_count		= mtk_get_sset_count,
   	.get_ethtool_stats	= mtk_get_ethtool_stats,
+diff --git a/target/linux/generic/hack-6.6/901-debloat_sock_diag.patch b/target/linux/generic/hack-6.6/901-debloat_sock_diag.patch
+index ed1dd85e31..157f8f76e3 100644
+--- a/target/linux/generic/hack-6.6/901-debloat_sock_diag.patch
++++ b/target/linux/generic/hack-6.6/901-debloat_sock_diag.patch
+@@ -83,7 +83,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  INDIRECT_CALLABLE_DECLARE(struct dst_entry *ip6_dst_check(struct dst_entry *,
+  							  u32));
+  INDIRECT_CALLABLE_DECLARE(struct dst_entry *ipv4_dst_check(struct dst_entry *,
+-@@ -2263,9 +2280,11 @@ static void __sk_free(struct sock *sk)
++@@ -2258,9 +2275,11 @@ static void __sk_free(struct sock *sk)
+  	if (likely(sk->sk_net_refcnt))
+  		sock_inuse_add(sock_net(sk), -1);
+  
+diff --git a/target/linux/generic/hack-6.6/902-debloat_proc.patch b/target/linux/generic/hack-6.6/902-debloat_proc.patch
+index ed6b751e1c..6c41d39d40 100644
+--- a/target/linux/generic/hack-6.6/902-debloat_proc.patch
++++ b/target/linux/generic/hack-6.6/902-debloat_proc.patch
+@@ -330,7 +330,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+ --- a/net/core/sock.c
+ +++ b/net/core/sock.c
+-@@ -4165,6 +4165,8 @@ static __net_initdata struct pernet_oper
++@@ -4160,6 +4160,8 @@ static __net_initdata struct pernet_oper
+  
+  static int __init proto_init(void)
+  {
+diff --git a/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch b/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
+index d7d654e49f..126ee5e520 100644
+--- a/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
++++ b/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
+@@ -96,7 +96,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	return features;
+ --- a/net/core/sock.c
+ +++ b/net/core/sock.c
+-@@ -2466,7 +2466,7 @@ void sk_setup_caps(struct sock *sk, stru
++@@ -2461,7 +2461,7 @@ void sk_setup_caps(struct sock *sk, stru
+  	if (sk_is_tcp(sk))
+  		sk->sk_route_caps |= NETIF_F_GSO;
+  	if (sk->sk_route_caps & NETIF_F_GSO)
 diff --git a/target/linux/generic/pending-6.6/702-net-ethernet-mtk_eth_soc-enable-threaded-NAPI.patch b/target/linux/generic/pending-6.6/702-net-ethernet-mtk_eth_soc-enable-threaded-NAPI.patch
 index 63435530c1..cd3c9df2bb 100644
 --- a/target/linux/generic/pending-6.6/702-net-ethernet-mtk_eth_soc-enable-threaded-NAPI.patch
