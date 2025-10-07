@@ -1,20 +1,26 @@
-From 30dfb8364c7b0cb1df7a204ce7c7ad3426ce4adc Mon Sep 17 00:00:00 2001
+From 350f16322a536b8fd5564ab731e4dd77f166a2a1 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
-Date: Fri, 3 Oct 2025 20:58:41 +0800
-Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.108"
+Date: Tue, 7 Oct 2025 13:37:53 +0800
+Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.109"
 
-This reverts commit a7badea52f1120bef17951c8527a9a6389913639.
+This reverts commit 4921978eec1587bfaf95489ffdc218808906906f.
 Revert "kernel: bump 6.6 to 6.6.105"
 
 This reverts commit bd96218268157b9b4057f737a4f11717ca0c4836.
 Revert "kernel: bump 6.6 to 6.6.106"
 
 This reverts commit 75e16f06d8f051dcda2415df1d5b30e7219d35ef.
+Revert "kernel: bump 6.6 to 6.6.108"
+
+This reverts commit a7badea52f1120bef17951c8527a9a6389913639.
 ---
  include/kernel-6.6                            |   4 +-
  ...oup-Disable-cgroup-memory-by-default.patch |   8 +-
+ ...all-the-downstream-rpi-sound-card-dr.patch |   2 +-
+ ...ci_sync-Add-fallback-bd-address-prop.patch |   4 +-
  ...7xx-Read-modem-line-state-at-startup.patch |   2 +-
  ...-net-macb-Also-set-DMA-coherent-mask.patch |  28 ++--
+ ...th-hci_sync-Fix-crash-on-NULL-parent.patch |   2 +-
  ...l-command-line-to-disable-memory-cgr.patch |   8 +-
  ...port-for-Raspberry-Pi-RP1-ethernet-c.patch |   4 +-
  ...-kernel-command-line-to-disable-memo.patch |   2 +-
@@ -30,6 +36,7 @@ This reverts commit 75e16f06d8f051dcda2415df1d5b30e7219d35ef.
  ..._eth_soc-implement-.-get-set-_pausep.patch |   4 +-
  .../hack-6.6/901-debloat_sock_diag.patch      |   2 +-
  .../generic/hack-6.6/902-debloat_proc.patch   |   2 +-
+ ...include-asm-rwonce.h-for-kernel-code.patch |   2 +-
  ..._F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch |   2 +-
  ...net-mtk_eth_soc-enable-threaded-NAPI.patch |   2 +-
  ..._eth_soc-work-around-issue-with-send.patch |   4 +-
@@ -40,6 +47,16 @@ This reverts commit 75e16f06d8f051dcda2415df1d5b30e7219d35ef.
  ..._eth_soc-do-not-enable-page-pool-sta.patch |   4 +-
  ..._eth_soc-fix-tx-vlan-tag-for-llc-pac.patch |  39 ++++++
  .../0001-MIPS-lantiq-add-pcie-driver.patch    |   2 +-
+ ...ow-phy-mode-internal-on-the-CPU-port.patch |   4 +-
+ ...swip-add-terminating-n-where-missing.patch |  14 +-
+ ...swip-Use-dev_err_probe-where-appropr.patch |  18 +--
+ ...swip-Don-t-manually-call-gswip_port_.patch |   2 +-
+ ...swip-do-also-enable-or-disable-cpu-p.patch |  73 +++++++++++
+ ...swip-Use-dsa_is_cpu_port-in-gswip_po.patch |   2 +-
+ ...q_gswip-Change-literal-6-to-ETH_ALEN.patch |   2 +-
+ ...swip-Consistently-use-macros-for-the.patch |   6 +-
+ ...p-Update-comments-in-gswip_port_vlan.patch |   4 +-
+ ...swip-Improve-error-message-in-gswip_.patch |   2 +-
  ...vert-to-platform-remove-callback-ret.patch |   6 +-
  ...mediatek-lvts_thermal-Make-coeff-con.patch |  30 ++---
  ...mediatek-lvts_thermal-Add-mt7988-sup.patch |  10 +-
@@ -47,17 +64,18 @@ This reverts commit 75e16f06d8f051dcda2415df1d5b30e7219d35ef.
  ...mediatek-lvts_thermal-Add-suspend-an.patch |   4 +-
  ...mediatek-lvts_thermal-Add-mt8192-sup.patch |   8 +-
  ...mediatek-lvts_thermal-Update-calibra.patch |   4 +-
- 36 files changed, 328 insertions(+), 168 deletions(-)
+ 50 files changed, 433 insertions(+), 200 deletions(-)
  create mode 100644 target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch
  create mode 100644 target/linux/generic/pending-6.6/742-net-ethernet-mtk_eth_soc-fix-tx-vlan-tag-for-llc-pac.patch
+ create mode 100644 target/linux/lantiq/patches-6.6/0736-v6.11-net-dsa-lantiq_gswip-do-also-enable-or-disable-cpu-p.patch
 
 diff --git a/include/kernel-6.6 b/include/kernel-6.6
-index b1eaea13b2..70decb6786 100644
+index 990ef3dfd1..70decb6786 100644
 --- a/include/kernel-6.6
 +++ b/include/kernel-6.6
 @@ -1,2 +1,2 @@
--LINUX_VERSION-6.6 = .108
--LINUX_KERNEL_HASH-6.6.108 = 601cd332aa695d16607b353feff369b4a0b36d111be077e8af54bdd41e1968a6
+-LINUX_VERSION-6.6 = .109
+-LINUX_KERNEL_HASH-6.6.109 = 7731cd99778cfdeedd63aa1b5aa8379511b97ec7df8c9eca44baed4e401730f4
 +LINUX_VERSION-6.6 = .104
 +LINUX_KERNEL_HASH-6.6.104 = 2a772f9d661afabaaddcdfd1116239acb2d943377aceab9e0baed2b7a915e36a
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch b/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch
@@ -100,6 +118,41 @@ index eb29af01c1..5600e85734 100644
   }
   __setup("cgroup_disable=", cgroup_disable);
   
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch b/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
+index e3ca201449..58aa944087 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
+@@ -17583,7 +17583,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	 * For devices with more than one control interface, we assume the
+ --- a/sound/usb/quirks.c
+ +++ b/sound/usb/quirks.c
+-@@ -2278,6 +2278,8 @@ static const struct usb_audio_quirk_flag
++@@ -2260,6 +2260,8 @@ static const struct usb_audio_quirk_flag
+  		   QUIRK_FLAG_ALIGN_TRANSFER),
+  	DEVICE_FLG(0x534d, 0x2109, /* MacroSilicon MS2109 */
+  		   QUIRK_FLAG_ALIGN_TRANSFER),
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch b/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
+index 5f532aa9fc..27acfe21b7 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/net/bluetooth/hci_sync.c
+ +++ b/net/bluetooth/hci_sync.c
+-@@ -4934,6 +4934,7 @@ static const struct {
++@@ -4927,6 +4927,7 @@ static const struct {
+   */
+  static int hci_dev_setup_sync(struct hci_dev *hdev)
+  {
+@@ -28,7 +28,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	int ret = 0;
+  	bool invalid_bdaddr;
+  	size_t i;
+-@@ -4962,7 +4963,8 @@ static int hci_dev_setup_sync(struct hci
++@@ -4955,7 +4956,8 @@ static int hci_dev_setup_sync(struct hci
+  			 test_bit(HCI_QUIRK_USE_BDADDR_PROPERTY, &hdev->quirks);
+  	if (!ret) {
+  		if (test_bit(HCI_QUIRK_USE_BDADDR_PROPERTY, &hdev->quirks) &&
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0475-serial-sc16is7xx-Read-modem-line-state-at-startup.patch b/target/linux/bcm27xx/patches-6.6/950-0475-serial-sc16is7xx-Read-modem-line-state-at-startup.patch
 index 932e4264b0..0149501e77 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0475-serial-sc16is7xx-Read-modem-line-state-at-startup.patch
@@ -231,6 +284,19 @@ index e164a7b683..9abdb37960 100644
   static struct platform_driver macb_driver = {
   	.probe		= macb_probe,
   	.remove		= macb_remove,
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch b/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
+index 50b09c744e..d40b127927 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/net/bluetooth/hci_sync.c
+ +++ b/net/bluetooth/hci_sync.c
+-@@ -4934,7 +4934,8 @@ static const struct {
++@@ -4927,7 +4927,8 @@ static const struct {
+   */
+  static int hci_dev_setup_sync(struct hci_dev *hdev)
+  {
 diff --git a/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch b/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch
 index 7946586d40..b1ceaad71d 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch
@@ -1206,6 +1272,19 @@ index ed6b751e1c..6c41d39d40 100644
   
   static int __init proto_init(void)
   {
+diff --git a/target/linux/generic/pending-6.6/100-compiler.h-only-include-asm-rwonce.h-for-kernel-code.patch b/target/linux/generic/pending-6.6/100-compiler.h-only-include-asm-rwonce.h-for-kernel-code.patch
+index e32735e6b4..09442a9bfc 100644
+--- a/target/linux/generic/pending-6.6/100-compiler.h-only-include-asm-rwonce.h-for-kernel-code.patch
++++ b/target/linux/generic/pending-6.6/100-compiler.h-only-include-asm-rwonce.h-for-kernel-code.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  #endif /* __KERNEL__ */
+  
+  /**
+-@@ -259,6 +261,4 @@ static inline void *offset_to_ptr(const
++@@ -250,6 +252,4 @@ static inline void *offset_to_ptr(const
+   */
+  #define prevent_tail_call_optimization()	mb()
+  
 diff --git a/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch b/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
 index d7d654e49f..126ee5e520 100644
 --- a/target/linux/generic/pending-6.6/681-net-remove-NETIF_F_GSO_FRAGLIST-from-NETIF_F_GSO_SOF.patch
@@ -1530,6 +1609,364 @@ index 4ba92226ac..ab6d2a1486 100644
   			 void *userdata);
   int pci_cfg_space_size(struct pci_dev *dev);
   unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+diff --git a/target/linux/lantiq/patches-6.6/0732-v6.11-net-dsa-lantiq_gswip-Only-allow-phy-mode-internal-on-the-CPU-port.patch b/target/linux/lantiq/patches-6.6/0732-v6.11-net-dsa-lantiq_gswip-Only-allow-phy-mode-internal-on-the-CPU-port.patch
+index bfd06228fa..305ad4c42c 100644
+--- a/target/linux/lantiq/patches-6.6/0732-v6.11-net-dsa-lantiq_gswip-Only-allow-phy-mode-internal-on-the-CPU-port.patch
++++ b/target/linux/lantiq/patches-6.6/0732-v6.11-net-dsa-lantiq_gswip-Only-allow-phy-mode-internal-on-the-CPU-port.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/lantiq_gswip.c
+ +++ b/drivers/net/dsa/lantiq_gswip.c
+-@@ -1511,6 +1511,7 @@ static void gswip_xrx200_phylink_get_cap
++@@ -1509,6 +1509,7 @@ static void gswip_xrx200_phylink_get_cap
+  	case 2:
+  	case 3:
+  	case 4:
+@@ -28,7 +28,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		__set_bit(PHY_INTERFACE_MODE_INTERNAL,
+  			  config->supported_interfaces);
+  		break;
+-@@ -1542,6 +1543,7 @@ static void gswip_xrx300_phylink_get_cap
++@@ -1540,6 +1541,7 @@ static void gswip_xrx300_phylink_get_cap
+  	case 2:
+  	case 3:
+  	case 4:
+diff --git a/target/linux/lantiq/patches-6.6/0733-v6.11-net-dsa-lantiq_gswip-add-terminating-n-where-missing.patch b/target/linux/lantiq/patches-6.6/0733-v6.11-net-dsa-lantiq_gswip-add-terminating-n-where-missing.patch
+index cb0235e584..55adfe021f 100644
+--- a/target/linux/lantiq/patches-6.6/0733-v6.11-net-dsa-lantiq_gswip-add-terminating-n-where-missing.patch
++++ b/target/linux/lantiq/patches-6.6/0733-v6.11-net-dsa-lantiq_gswip-add-terminating-n-where-missing.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/lantiq_gswip.c
+ +++ b/drivers/net/dsa/lantiq_gswip.c
+-@@ -830,7 +830,7 @@ static int gswip_setup(struct dsa_switch
++@@ -829,7 +829,7 @@ static int gswip_setup(struct dsa_switch
+  
+  	err = gswip_pce_load_microcode(priv);
+  	if (err) {
+@@ -26,7 +26,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		return err;
+  	}
+  
+-@@ -1782,7 +1782,7 @@ static u32 gswip_bcm_ram_entry_read(stru
++@@ -1780,7 +1780,7 @@ static u32 gswip_bcm_ram_entry_read(stru
+  	err = gswip_switch_r_timeout(priv, GSWIP_BM_RAM_CTRL,
+  				     GSWIP_BM_RAM_CTRL_BAS);
+  	if (err) {
+@@ -35,7 +35,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  			table, index);
+  		return 0;
+  	}
+-@@ -2012,7 +2012,7 @@ static void gswip_gphy_fw_remove(struct
++@@ -2009,7 +2009,7 @@ static void gswip_gphy_fw_remove(struct
+  
+  	ret = regmap_write(priv->rcu_regmap, gphy_fw->fw_addr_offset, 0);
+  	if (ret)
+@@ -44,7 +44,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  	clk_disable_unprepare(gphy_fw->clk_gate);
+  
+-@@ -2041,7 +2041,7 @@ static int gswip_gphy_fw_list(struct gsw
++@@ -2038,7 +2038,7 @@ static int gswip_gphy_fw_list(struct gsw
+  			priv->gphy_fw_name_cfg = &xrx200a2x_gphy_data;
+  			break;
+  		default:
+@@ -53,7 +53,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  			return -ENOENT;
+  		}
+  	}
+-@@ -2051,7 +2051,7 @@ static int gswip_gphy_fw_list(struct gsw
++@@ -2048,7 +2048,7 @@ static int gswip_gphy_fw_list(struct gsw
+  		priv->gphy_fw_name_cfg = match->data;
+  
+  	if (!priv->gphy_fw_name_cfg) {
+@@ -62,7 +62,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		return -ENOENT;
+  	}
+  
+-@@ -2153,7 +2153,7 @@ static int gswip_probe(struct platform_d
++@@ -2150,7 +2150,7 @@ static int gswip_probe(struct platform_d
+  			return -EINVAL;
+  		break;
+  	default:
+@@ -71,7 +71,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		return -ENOENT;
+  	}
+  
+-@@ -2184,7 +2184,7 @@ static int gswip_probe(struct platform_d
++@@ -2181,7 +2181,7 @@ static int gswip_probe(struct platform_d
+  		goto mdio_bus;
+  	}
+  	if (!dsa_is_cpu_port(priv->ds, priv->hw_info->cpu_port)) {
+diff --git a/target/linux/lantiq/patches-6.6/0734-v6.11-net-dsa-lantiq_gswip-Use-dev_err_probe-where-appropr.patch b/target/linux/lantiq/patches-6.6/0734-v6.11-net-dsa-lantiq_gswip-Use-dev_err_probe-where-appropr.patch
+index a5a443c7a7..7894979707 100644
+--- a/target/linux/lantiq/patches-6.6/0734-v6.11-net-dsa-lantiq_gswip-Use-dev_err_probe-where-appropr.patch
++++ b/target/linux/lantiq/patches-6.6/0734-v6.11-net-dsa-lantiq_gswip-Use-dev_err_probe-where-appropr.patch
+@@ -21,7 +21,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/lantiq_gswip.c
+ +++ b/drivers/net/dsa/lantiq_gswip.c
+-@@ -1922,11 +1922,9 @@ static int gswip_gphy_fw_load(struct gsw
++@@ -1919,11 +1919,9 @@ static int gswip_gphy_fw_load(struct gsw
+  	msleep(200);
+  
+  	ret = request_firmware(&fw, gphy_fw->fw_name, dev);
+@@ -36,7 +36,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  	/* GPHY cores need the firmware code in a persistent and contiguous
+  	 * memory area with a 16 kB boundary aligned start address.
+-@@ -1939,9 +1937,9 @@ static int gswip_gphy_fw_load(struct gsw
++@@ -1936,9 +1934,9 @@ static int gswip_gphy_fw_load(struct gsw
+  		dev_addr = ALIGN(dma_addr, XRX200_GPHY_FW_ALIGN);
+  		memcpy(fw_addr, fw->data, fw->size);
+  	} else {
+@@ -48,7 +48,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	}
+  
+  	release_firmware(fw);
+-@@ -1968,8 +1966,8 @@ static int gswip_gphy_fw_probe(struct gs
++@@ -1965,8 +1963,8 @@ static int gswip_gphy_fw_probe(struct gs
+  
+  	gphy_fw->clk_gate = devm_clk_get(dev, gphyname);
+  	if (IS_ERR(gphy_fw->clk_gate)) {
+@@ -59,7 +59,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	}
+  
+  	ret = of_property_read_u32(gphy_fw_np, "reg", &gphy_fw->fw_addr_offset);
+-@@ -1989,8 +1987,8 @@ static int gswip_gphy_fw_probe(struct gs
++@@ -1986,8 +1984,8 @@ static int gswip_gphy_fw_probe(struct gs
+  		gphy_fw->fw_name = priv->gphy_fw_name_cfg->ge_firmware_name;
+  		break;
+  	default:
+@@ -70,7 +70,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	}
+  
+  	gphy_fw->reset = of_reset_control_array_get_exclusive(gphy_fw_np);
+-@@ -2041,8 +2039,9 @@ static int gswip_gphy_fw_list(struct gsw
++@@ -2038,8 +2036,9 @@ static int gswip_gphy_fw_list(struct gsw
+  			priv->gphy_fw_name_cfg = &xrx200a2x_gphy_data;
+  			break;
+  		default:
+@@ -82,7 +82,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		}
+  	}
+  
+-@@ -2050,10 +2049,9 @@ static int gswip_gphy_fw_list(struct gsw
++@@ -2047,10 +2046,9 @@ static int gswip_gphy_fw_list(struct gsw
+  	if (match && match->data)
+  		priv->gphy_fw_name_cfg = match->data;
+  
+@@ -96,7 +96,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  	priv->num_gphy_fw = of_get_available_child_count(gphy_fw_list_np);
+  	if (!priv->num_gphy_fw)
+-@@ -2153,8 +2151,8 @@ static int gswip_probe(struct platform_d
++@@ -2150,8 +2148,8 @@ static int gswip_probe(struct platform_d
+  			return -EINVAL;
+  		break;
+  	default:
+@@ -107,7 +107,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	}
+  
+  	/* bring up the mdio bus */
+-@@ -2162,10 +2160,9 @@ static int gswip_probe(struct platform_d
++@@ -2159,10 +2157,9 @@ static int gswip_probe(struct platform_d
+  	if (gphy_fw_np) {
+  		err = gswip_gphy_fw_list(priv, gphy_fw_np, version);
+  		of_node_put(gphy_fw_np);
+@@ -121,7 +121,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	}
+  
+  	/* bring up the mdio bus */
+-@@ -2173,20 +2170,20 @@ static int gswip_probe(struct platform_d
++@@ -2170,20 +2167,20 @@ static int gswip_probe(struct platform_d
+  	if (mdio_np) {
+  		err = gswip_mdio(priv, mdio_np);
+  		if (err) {
+diff --git a/target/linux/lantiq/patches-6.6/0735-v6.11-net-dsa-lantiq_gswip-Don-t-manually-call-gswip_port_.patch b/target/linux/lantiq/patches-6.6/0735-v6.11-net-dsa-lantiq_gswip-Don-t-manually-call-gswip_port_.patch
+index 96ac8b5307..b7de069c5f 100644
+--- a/target/linux/lantiq/patches-6.6/0735-v6.11-net-dsa-lantiq_gswip-Don-t-manually-call-gswip_port_.patch
++++ b/target/linux/lantiq/patches-6.6/0735-v6.11-net-dsa-lantiq_gswip-Don-t-manually-call-gswip_port_.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/lantiq_gswip.c
+ +++ b/drivers/net/dsa/lantiq_gswip.c
+-@@ -892,8 +892,6 @@ static int gswip_setup(struct dsa_switch
++@@ -891,8 +891,6 @@ static int gswip_setup(struct dsa_switch
+  
+  	ds->mtu_enforcement_ingress = true;
+  
+diff --git a/target/linux/lantiq/patches-6.6/0736-v6.11-net-dsa-lantiq_gswip-do-also-enable-or-disable-cpu-p.patch b/target/linux/lantiq/patches-6.6/0736-v6.11-net-dsa-lantiq_gswip-do-also-enable-or-disable-cpu-p.patch
+new file mode 100644
+index 0000000000..0baca3d7c2
+--- /dev/null
++++ b/target/linux/lantiq/patches-6.6/0736-v6.11-net-dsa-lantiq_gswip-do-also-enable-or-disable-cpu-p.patch
+@@ -0,0 +1,73 @@
++From 86b9ea6412af41914ef6549f85a849c3b987f4f3 Mon Sep 17 00:00:00 2001
++From: Martin Schiller <ms@dev.tdt.de>
++Date: Tue, 11 Jun 2024 15:54:28 +0200
++Subject: net: dsa: lantiq_gswip: do also enable or disable cpu port
++
++Before commit 74be4babe72f ("net: dsa: do not enable or disable non user
++ports"), gswip_port_enable/disable() were also executed for the cpu port
++in gswip_setup() which disabled the cpu port during initialization.
++
++Let's restore this by removing the dsa_is_user_port checks. Also, let's
++clean up the gswip_port_enable() function so that we only have to check
++for the cpu port once. The operation reordering done here is safe.
++
++Signed-off-by: Martin Schiller <ms@dev.tdt.de>
++Acked-by: Hauke Mehrtens <hauke@hauke-m.de>
++Reviewed-by: Vladimir Oltean <olteanv@gmail.com>
++Link: https://lore.kernel.org/r/20240611135434.3180973-7-ms@dev.tdt.de
++Signed-off-by: Jakub Kicinski <kuba@kernel.org>
++---
++ drivers/net/dsa/lantiq_gswip.c | 24 ++++++++----------------
++ 1 file changed, 8 insertions(+), 16 deletions(-)
++
++--- a/drivers/net/dsa/lantiq_gswip.c
+++++ b/drivers/net/dsa/lantiq_gswip.c
++@@ -688,13 +688,18 @@ static int gswip_port_enable(struct dsa_
++ 	struct gswip_priv *priv = ds->priv;
++ 	int err;
++ 
++-	if (!dsa_is_user_port(ds, port))
++-		return 0;
++-
++ 	if (!dsa_is_cpu_port(ds, port)) {
+++		u32 mdio_phy = 0;
+++
++ 		err = gswip_add_single_port_br(priv, port, true);
++ 		if (err)
++ 			return err;
+++
+++		if (phydev)
+++			mdio_phy = phydev->mdio.addr & GSWIP_MDIO_PHY_ADDR_MASK;
+++
+++		gswip_mdio_mask(priv, GSWIP_MDIO_PHY_ADDR_MASK, mdio_phy,
+++				GSWIP_MDIO_PHYp(port));
++ 	}
++ 
++ 	/* RMON Counter Enable for port */
++@@ -707,16 +712,6 @@ static int gswip_port_enable(struct dsa_
++ 	gswip_switch_mask(priv, 0, GSWIP_SDMA_PCTRL_EN,
++ 			  GSWIP_SDMA_PCTRLp(port));
++ 
++-	if (!dsa_is_cpu_port(ds, port)) {
++-		u32 mdio_phy = 0;
++-
++-		if (phydev)
++-			mdio_phy = phydev->mdio.addr & GSWIP_MDIO_PHY_ADDR_MASK;
++-
++-		gswip_mdio_mask(priv, GSWIP_MDIO_PHY_ADDR_MASK, mdio_phy,
++-				GSWIP_MDIO_PHYp(port));
++-	}
++-
++ 	return 0;
++ }
++ 
++@@ -724,9 +719,6 @@ static void gswip_port_disable(struct ds
++ {
++ 	struct gswip_priv *priv = ds->priv;
++ 
++-	if (!dsa_is_user_port(ds, port))
++-		return;
++-
++ 	gswip_switch_mask(priv, GSWIP_FDMA_PCTRL_EN, 0,
++ 			  GSWIP_FDMA_PCTRLp(port));
++ 	gswip_switch_mask(priv, GSWIP_SDMA_PCTRL_EN, 0,
+diff --git a/target/linux/lantiq/patches-6.6/0737-v6.11-net-dsa-lantiq_gswip-Use-dsa_is_cpu_port-in-gswip_po.patch b/target/linux/lantiq/patches-6.6/0737-v6.11-net-dsa-lantiq_gswip-Use-dsa_is_cpu_port-in-gswip_po.patch
+index 30d3efcca6..493aea4295 100644
+--- a/target/linux/lantiq/patches-6.6/0737-v6.11-net-dsa-lantiq_gswip-Use-dsa_is_cpu_port-in-gswip_po.patch
++++ b/target/linux/lantiq/patches-6.6/0737-v6.11-net-dsa-lantiq_gswip-Use-dsa_is_cpu_port-in-gswip_po.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/lantiq_gswip.c
+ +++ b/drivers/net/dsa/lantiq_gswip.c
+-@@ -1467,12 +1467,11 @@ static int gswip_port_max_mtu(struct dsa
++@@ -1457,12 +1457,11 @@ static int gswip_port_max_mtu(struct dsa
+  static int gswip_port_change_mtu(struct dsa_switch *ds, int port, int new_mtu)
+  {
+  	struct gswip_priv *priv = ds->priv;
+diff --git a/target/linux/lantiq/patches-6.6/0738-v6.11-net-dsa-lantiq_gswip-Change-literal-6-to-ETH_ALEN.patch b/target/linux/lantiq/patches-6.6/0738-v6.11-net-dsa-lantiq_gswip-Change-literal-6-to-ETH_ALEN.patch
+index 73206e050a..773d43ee19 100644
+--- a/target/linux/lantiq/patches-6.6/0738-v6.11-net-dsa-lantiq_gswip-Change-literal-6-to-ETH_ALEN.patch
++++ b/target/linux/lantiq/patches-6.6/0738-v6.11-net-dsa-lantiq_gswip-Change-literal-6-to-ETH_ALEN.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/lantiq_gswip.c
+ +++ b/drivers/net/dsa/lantiq_gswip.c
+-@@ -1416,7 +1416,7 @@ static int gswip_port_fdb_dump(struct ds
++@@ -1406,7 +1406,7 @@ static int gswip_port_fdb_dump(struct ds
+  {
+  	struct gswip_priv *priv = ds->priv;
+  	struct gswip_pce_table_entry mac_bridge = {0,};
+diff --git a/target/linux/lantiq/patches-6.6/0739-v6.11-net-dsa-lantiq_gswip-Consistently-use-macros-for-the.patch b/target/linux/lantiq/patches-6.6/0739-v6.11-net-dsa-lantiq_gswip-Consistently-use-macros-for-the.patch
+index 22371ff180..31f2e60bfb 100644
+--- a/target/linux/lantiq/patches-6.6/0739-v6.11-net-dsa-lantiq_gswip-Consistently-use-macros-for-the.patch
++++ b/target/linux/lantiq/patches-6.6/0739-v6.11-net-dsa-lantiq_gswip-Consistently-use-macros-for-the.patch
+@@ -36,7 +36,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  #define XRX200_GPHY_FW_ALIGN	(16 * 1024)
+  
+-@@ -1306,10 +1308,11 @@ static void gswip_port_fast_age(struct d
++@@ -1297,10 +1299,11 @@ static void gswip_port_fast_age(struct d
+  		if (!mac_bridge.valid)
+  			continue;
+  
+@@ -50,7 +50,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  			continue;
+  
+  		mac_bridge.valid = false;
+-@@ -1385,9 +1388,9 @@ static int gswip_port_fdb(struct dsa_swi
++@@ -1375,9 +1378,9 @@ static int gswip_port_fdb(struct dsa_swi
+  	mac_bridge.key[0] = addr[5] | (addr[4] << 8);
+  	mac_bridge.key[1] = addr[3] | (addr[2] << 8);
+  	mac_bridge.key[2] = addr[1] | (addr[0] << 8);
+@@ -62,7 +62,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	mac_bridge.valid = add;
+  
+  	err = gswip_pce_table_entry_write(priv, &mac_bridge);
+-@@ -1441,14 +1444,15 @@ static int gswip_port_fdb_dump(struct ds
++@@ -1431,14 +1434,15 @@ static int gswip_port_fdb_dump(struct ds
+  		addr[2] = (mac_bridge.key[1] >> 8) & 0xff;
+  		addr[1] = mac_bridge.key[2] & 0xff;
+  		addr[0] = (mac_bridge.key[2] >> 8) & 0xff;
+diff --git a/target/linux/lantiq/patches-6.6/0741-v6.11-net-dsa-lantiq_gswip-Update-comments-in-gswip_port_vlan.patch b/target/linux/lantiq/patches-6.6/0741-v6.11-net-dsa-lantiq_gswip-Update-comments-in-gswip_port_vlan.patch
+index d95b3c8ca1..16702c9356 100644
+--- a/target/linux/lantiq/patches-6.6/0741-v6.11-net-dsa-lantiq_gswip-Update-comments-in-gswip_port_vlan.patch
++++ b/target/linux/lantiq/patches-6.6/0741-v6.11-net-dsa-lantiq_gswip-Update-comments-in-gswip_port_vlan.patch
+@@ -21,7 +21,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/lantiq_gswip.c
+ +++ b/drivers/net/dsa/lantiq_gswip.c
+-@@ -782,7 +782,7 @@ static int gswip_port_vlan_filtering(str
++@@ -773,7 +773,7 @@ static int gswip_port_vlan_filtering(str
+  	}
+  
+  	if (vlan_filtering) {
+@@ -30,7 +30,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		gswip_switch_mask(priv,
+  				  GSWIP_PCE_VCTRL_VSR,
+  				  GSWIP_PCE_VCTRL_UVR | GSWIP_PCE_VCTRL_VIMR |
+-@@ -791,7 +791,7 @@ static int gswip_port_vlan_filtering(str
++@@ -782,7 +782,7 @@ static int gswip_port_vlan_filtering(str
+  		gswip_switch_mask(priv, GSWIP_PCE_PCTRL_0_TVM, 0,
+  				  GSWIP_PCE_PCTRL_0p(port));
+  	} else {
+diff --git a/target/linux/lantiq/patches-6.6/0742-v6.11-net-dsa-lantiq_gswip-Improve-error-message-in-gswip_.patch b/target/linux/lantiq/patches-6.6/0742-v6.11-net-dsa-lantiq_gswip-Improve-error-message-in-gswip_.patch
+index a56d036edc..56d882c9f9 100644
+--- a/target/linux/lantiq/patches-6.6/0742-v6.11-net-dsa-lantiq_gswip-Improve-error-message-in-gswip_.patch
++++ b/target/linux/lantiq/patches-6.6/0742-v6.11-net-dsa-lantiq_gswip-Improve-error-message-in-gswip_.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/lantiq_gswip.c
+ +++ b/drivers/net/dsa/lantiq_gswip.c
+-@@ -1373,7 +1373,8 @@ static int gswip_port_fdb(struct dsa_swi
++@@ -1363,7 +1363,8 @@ static int gswip_port_fdb(struct dsa_swi
+  	}
+  
+  	if (fid == -1) {
 diff --git a/target/linux/mediatek/patches-6.6/830-v6.7-39-thermal-lvts-Convert-to-platform-remove-callback-ret.patch b/target/linux/mediatek/patches-6.6/830-v6.7-39-thermal-lvts-Convert-to-platform-remove-callback-ret.patch
 index ed5e71f25b..2793f3857f 100644
 --- a/target/linux/mediatek/patches-6.6/830-v6.7-39-thermal-lvts-Convert-to-platform-remove-callback-ret.patch
