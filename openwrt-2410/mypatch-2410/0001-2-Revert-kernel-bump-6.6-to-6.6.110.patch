@@ -1,9 +1,9 @@
-From 350f16322a536b8fd5564ab731e4dd77f166a2a1 Mon Sep 17 00:00:00 2001
+From 36e8060cf3c840e59e2b7aa295716c6411beb322 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
-Date: Tue, 7 Oct 2025 13:37:53 +0800
-Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.109"
+Date: Sun, 12 Oct 2025 14:42:28 +0800
+Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.110"
 
-This reverts commit 4921978eec1587bfaf95489ffdc218808906906f.
+This reverts commit b1d8acdeeee394b81ccd30c2f2a98f4966b93046.
 Revert "kernel: bump 6.6 to 6.6.105"
 
 This reverts commit bd96218268157b9b4057f737a4f11717ca0c4836.
@@ -13,6 +13,9 @@ This reverts commit 75e16f06d8f051dcda2415df1d5b30e7219d35ef.
 Revert "kernel: bump 6.6 to 6.6.108"
 
 This reverts commit a7badea52f1120bef17951c8527a9a6389913639.
+Revert "kernel: bump 6.6 to 6.6.109"
+
+This reverts commit 4921978eec1587bfaf95489ffdc218808906906f.
 ---
  include/kernel-6.6                            |   4 +-
  ...oup-Disable-cgroup-memory-by-default.patch |   8 +-
@@ -64,18 +67,19 @@ This reverts commit a7badea52f1120bef17951c8527a9a6389913639.
  ...mediatek-lvts_thermal-Add-suspend-an.patch |   4 +-
  ...mediatek-lvts_thermal-Add-mt8192-sup.patch |   8 +-
  ...mediatek-lvts_thermal-Update-calibra.patch |   4 +-
- 50 files changed, 433 insertions(+), 200 deletions(-)
+ .../810-uvc-add-iPassion-iP2970-support.patch |   6 +-
+ 51 files changed, 436 insertions(+), 203 deletions(-)
  create mode 100644 target/linux/generic/backport-6.6/621-proc-fix-missing-pde_set_flags.patch
  create mode 100644 target/linux/generic/pending-6.6/742-net-ethernet-mtk_eth_soc-fix-tx-vlan-tag-for-llc-pac.patch
  create mode 100644 target/linux/lantiq/patches-6.6/0736-v6.11-net-dsa-lantiq_gswip-do-also-enable-or-disable-cpu-p.patch
 
 diff --git a/include/kernel-6.6 b/include/kernel-6.6
-index 990ef3dfd1..70decb6786 100644
+index d6270b06ef..70decb6786 100644
 --- a/include/kernel-6.6
 +++ b/include/kernel-6.6
 @@ -1,2 +1,2 @@
--LINUX_VERSION-6.6 = .109
--LINUX_KERNEL_HASH-6.6.109 = 7731cd99778cfdeedd63aa1b5aa8379511b97ec7df8c9eca44baed4e401730f4
+-LINUX_VERSION-6.6 = .110
+-LINUX_KERNEL_HASH-6.6.110 = 1bf20daf5543b8759f325e55fb0da4913715e68741627a13380e66aaf219fb1d
 +LINUX_VERSION-6.6 = .104
 +LINUX_KERNEL_HASH-6.6.104 = 2a772f9d661afabaaddcdfd1116239acb2d943377aceab9e0baed2b7a915e36a
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch b/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch
@@ -2283,6 +2287,37 @@ index 62c4297857..c20c0b5f2e 100644
    * <-----mcu-tc#2-----> <-----sensor#4-----> <-----sensor#5-----> <-----sensor#6-----> <-----sensor#7----->
    *  0x13 | 0x14 | 0x15 | 0x16 | 0x17 | 0x18 | 0x19 | 0x1A | 0x1B | 0x1C | 0x1D | 0x1E | 0x1F | 0x20 | 0x21
    *
+diff --git a/target/linux/ramips/patches-6.6/810-uvc-add-iPassion-iP2970-support.patch b/target/linux/ramips/patches-6.6/810-uvc-add-iPassion-iP2970-support.patch
+index 9122652337..c121690786 100644
+--- a/target/linux/ramips/patches-6.6/810-uvc-add-iPassion-iP2970-support.patch
++++ b/target/linux/ramips/patches-6.6/810-uvc-add-iPassion-iP2970-support.patch
+@@ -13,7 +13,7 @@ Signed-off-by: John Crispin <blogic@openwrt.org>
+ 
+ --- a/drivers/media/usb/uvc/uvc_driver.c
+ +++ b/drivers/media/usb/uvc/uvc_driver.c
+-@@ -3329,6 +3329,18 @@ static const struct usb_device_id uvc_id
++@@ -3310,6 +3310,18 @@ static const struct usb_device_id uvc_id
+  	  .bInterfaceSubClass	= 1,
+  	  .bInterfaceProtocol	= 0,
+  	  .driver_info		= UVC_INFO_META(V4L2_META_FMT_D4XX) },
+@@ -225,7 +225,7 @@ Signed-off-by: John Crispin <blogic@openwrt.org>
+  	for_each_uvc_urb(uvc_urb, stream) {
+ --- a/drivers/media/usb/uvc/uvcvideo.h
+ +++ b/drivers/media/usb/uvc/uvcvideo.h
+-@@ -79,6 +79,8 @@
++@@ -77,6 +77,8 @@
+  #define UVC_QUIRK_DISABLE_AUTOSUSPEND	0x00008000
+  #define UVC_QUIRK_INVALID_DEVICE_SOF	0x00010000
+  #define UVC_QUIRK_MJPEG_NO_EOF		0x00020000
+@@ -234,7 +234,7 @@ Signed-off-by: John Crispin <blogic@openwrt.org>
+  
+  /* Format flags */
+  #define UVC_FMT_FLAG_COMPRESSED		0x00000001
+-@@ -593,6 +595,7 @@ struct uvc_device {
++@@ -591,6 +593,7 @@ struct uvc_device {
+  
+  	struct input_dev *input;
+  	char input_phys[64];
 -- 
 2.43.0
 
