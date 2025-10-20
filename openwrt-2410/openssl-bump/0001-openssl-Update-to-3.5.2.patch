@@ -30,9 +30,9 @@ index 4829670f86..1464fbb017 100644
  include $(TOPDIR)/rules.mk
  
  PKG_NAME:=openssl
--PKG_VERSION:=3.0.17
-+PKG_VERSION:=3.5.2
- PKG_RELEASE:=3
+-PKG_VERSION:=3.0.18
++PKG_VERSION:=3.5.4
+ PKG_RELEASE:=1
  PKG_BUILD_FLAGS:=no-mips16 gc-sections no-lto
  
 @@ -17,11 +17,13 @@ PKG_BUILD_PARALLEL:=1
@@ -48,8 +48,8 @@ index 4829670f86..1464fbb017 100644
 +	http://ftp.fi.muni.cz/pub/openssl/source/ \
 +	http://ftp.fi.muni.cz/pub/openssl/source/old/$(PKG_BASE)/
  
--PKG_HASH:=dfdd77e4ea1b57ff3a6dbde6b0bdc3f31db5ac99e7fdd4eaf9e1fbb6ec2db8ce
-+PKG_HASH:=c53a47e5e441c930c3928cf7bf6fb00e5d129b630e0aa873b08258656e7345ec
+-PKG_HASH:=d80c34f5cf902dccf1f1b5df5ebb86d0392e37049e5d73df1b3abae72e4ffe8b
++PKG_HASH:=967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99
  
  PKG_LICENSE:=Apache-2.0
  PKG_LICENSE_FILES:=LICENSE
