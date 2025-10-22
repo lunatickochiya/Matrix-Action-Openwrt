@@ -175,6 +175,14 @@ function patch_op_tele() {
         cd ../..
         done
         }
+function patch_tele() {
+    for telepatch in $( ls feeds/telephony/feeds-telephony-patch ); do
+    cd feeds/telephony/
+    echo Applying feeds-telephony-patch $telepatch
+        patch -p1 --no-backup-if-mismatch < feeds-telephony-patch/$telepatch
+    cd ../..
+    done
+        }
 
 function patch_kernel61() {
 
@@ -566,6 +574,7 @@ remove_error_package_not_install
 patch_package
 patch_luci
 patch_lunatic7
+patch_tele
 add_rockchip_ipt_packages
 elif [ "$1" == "rockchip-nft" ]; then
 autosetver
@@ -573,6 +582,7 @@ remove_error_package_not_install
 patch_package
 patch_luci
 patch_lunatic7
+patch_tele
 add_rockchip_nft_packages
 elif [ "$1" == "patch-openwrt" ]; then
 patch_openwrt_2410

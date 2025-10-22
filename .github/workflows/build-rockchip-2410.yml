@@ -265,6 +265,7 @@ jobs:
         [ -d openwrt-2410/lunatic7-revert ] && mv -f openwrt-2410/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-2410/luci-patch-2410 ] && mv -f openwrt-2410/luci-patch-2410 openwrt/feeds/luci/luci-patch-2410
         [ -d openwrt-2410/feeds-package-patch-2410 ] && mv -f openwrt-2410/feeds-package-patch-2410 openwrt/feeds/packages/feeds-package-patch-2410
+        [ -d openwrt-2410/feeds-telephony-patch ] && mv -f openwrt-2410/feeds-telephony-patch openwrt/feeds/telephony/feeds-telephony-patch
         elif [ "${{ matrix.repo }}" == "main" ]; then
         [ -d openwrt-main/lunatic7-revert ] && mv -f openwrt-main/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-main/luci-patch ] && mv -f openwrt-main/luci-patch openwrt/feeds/luci/luci-patch

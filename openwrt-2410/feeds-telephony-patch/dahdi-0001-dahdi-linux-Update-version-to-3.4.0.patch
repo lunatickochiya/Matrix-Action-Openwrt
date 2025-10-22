@@ -1,0 +1,539 @@
+From c80fd2d66d4df12cfd72d5d26547f829d7266a8d Mon Sep 17 00:00:00 2001
+From: Philip Prindeville <philipp@redfish-solutions.com>
+Date: Sat, 31 May 2025 10:41:47 -0600
+Subject: [PATCH] dahdi-linux: Update version to 3.4.0
+
+Signed-off-by: Philip Prindeville <philipp@redfish-solutions.com>
+---
+ libs/dahdi-linux/Makefile                     |   9 +-
+ .../010-eliminate-old-style-declaration.patch |  22 +++
+ .../patches/011-rename-max-definition.patch   | 107 +++++++++++++++
+ .../012-xpp-sysfs-use-const-struct.patch      |  66 +++++++++
+ .../013-braces-around-empty-stmts.patch       |  28 ++++
+ ....patch => 130-xpp-fix-32-bit-kernel.patch} | 126 ++++++++----------
+ .../205-dahdi-xpp-fix-wrong-printf-to-d.patch |  44 ------
+ 7 files changed, 285 insertions(+), 117 deletions(-)
+ create mode 100644 libs/dahdi-linux/patches/010-eliminate-old-style-declaration.patch
+ create mode 100644 libs/dahdi-linux/patches/011-rename-max-definition.patch
+ create mode 100644 libs/dahdi-linux/patches/012-xpp-sysfs-use-const-struct.patch
+ create mode 100644 libs/dahdi-linux/patches/013-braces-around-empty-stmts.patch
+ rename libs/dahdi-linux/patches/{130-DAHLIN-371-pld-linux-math64.patch => 130-xpp-fix-32-bit-kernel.patch} (51%)
+ delete mode 100644 libs/dahdi-linux/patches/205-dahdi-xpp-fix-wrong-printf-to-d.patch
+
+diff --git a/libs/dahdi-linux/Makefile b/libs/dahdi-linux/Makefile
+index 97955d1..315abbf 100644
+--- a/libs/dahdi-linux/Makefile
++++ b/libs/dahdi-linux/Makefile
+@@ -9,13 +9,12 @@ include $(TOPDIR)/rules.mk
+ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=dahdi-linux
++PKG_VERSION:=3.4.0
+ PKG_RELEASE:=1
+ 
+-PKG_SOURCE_PROTO:=git
+-PKG_SOURCE_URL:=https://github.com/asterisk/dahdi-linux.git
+-PKG_SOURCE_DATE=2024-04-12
+-PKG_SOURCE_VERSION:=83d89b64d9151dbe4eb53b9ebc8640a08fcf4d63
+-PKG_MIRROR_HASH:=67acfb62213270050d941643cb763c315cc6a2682a94fc517975707918e42ecb
++PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
++PKG_SOURCE_URL:=https://github.com/asterisk/$(PKG_NAME)/releases/download/v$(PKG_VERSION)
++PKG_HASH:=b1344d61b86f68ae3fb774b76657216c6bf3cca89e04bfc6c93dbefccc88c654
+ 
+ PKG_LICENSE:=GPL-2.0
+ PKG_LICENSE_FILES:=LICENSE
+diff --git a/libs/dahdi-linux/patches/010-eliminate-old-style-declaration.patch b/libs/dahdi-linux/patches/010-eliminate-old-style-declaration.patch
+new file mode 100644
+index 0000000..9a80f2a
+--- /dev/null
++++ b/libs/dahdi-linux/patches/010-eliminate-old-style-declaration.patch
+@@ -0,0 +1,22 @@
++commit fe19b533513a2dbc69208bb3ca5dd4948c72c7b9
++Author: InterLinked1 <24227567+InterLinked1@users.noreply.github.com>
++Date:   Sun Sep 22 14:14:14 2024 -0400
++
++    wct4xxp: Eliminate old-style declaration.
++    
++    Fix a single instance of functions being declared inline after their
++    return type, which causes a compiler error on newer systems.
++    
++    Resolves: #59
++
++--- a/drivers/dahdi/wct4xxp/base.c
+++++ b/drivers/dahdi/wct4xxp/base.c
++@@ -1172,7 +1172,7 @@ static int t4_ioctl(struct dahdi_chan *c
++ 	return 0;
++ }
++ 
++-static void inline t4_hdlc_xmit_fifo(struct t4 *wc, unsigned int span, struct t4_span *ts)
+++static inline void t4_hdlc_xmit_fifo(struct t4 *wc, unsigned int span, struct t4_span *ts)
++ {
++ 	int res, i;
++ 	unsigned int size = 32;
+diff --git a/libs/dahdi-linux/patches/011-rename-max-definition.patch b/libs/dahdi-linux/patches/011-rename-max-definition.patch
+new file mode 100644
+index 0000000..d08d049
+--- /dev/null
++++ b/libs/dahdi-linux/patches/011-rename-max-definition.patch
+@@ -0,0 +1,107 @@
++commit b821026c73588e927ae882f904642c2103781395
++Author: InterLinked1 <24227567+InterLinked1@users.noreply.github.com>
++Date:   Sun Sep 22 16:34:05 2024 -0400
++
++    drivers: Rename MAX definition to avoid macro naming conflict.
++    
++    MAX can already be defined by the kernel headers and cause
++    compilation failure due to the redefinition, so use
++    MAX_ATTEMPTS to a more descriptive and non-conflicting name.
++    
++    Resolves: #61
++
++--- a/drivers/dahdi/opvxa1200/base.c
+++++ b/drivers/dahdi/opvxa1200/base.c
++@@ -868,12 +868,12 @@ static int __wait_access(struct wctdm *w
++     long origjiffies;
++     int count = 0;
++ 
++-    #define MAX 6000 /* attempts */
+++    #define MAX_ATTEMPTS 6000 /* attempts */
++ 
++ 
++     origjiffies = jiffies;
++     /* Wait for indirect access */
++-    while (count++ < MAX)
+++    while (count++ < MAX_ATTEMPTS)
++ 	 {
++ 		data = __wctdm_getreg(wc, card, I_STATUS);
++ 
++@@ -882,7 +882,7 @@ static int __wait_access(struct wctdm *w
++ 
++ 	 }
++ 
++-    if(count > (MAX-1)) printk(KERN_NOTICE " ##### Loop error (%02x) #####\n", data);
+++    if(count > (MAX_ATTEMPTS-1)) printk(KERN_NOTICE " ##### Loop error (%02x) #####\n", data);
++ 
++ 	return 0;
++ }
++--- a/drivers/dahdi/wcaxx-base.c
+++++ b/drivers/dahdi/wcaxx-base.c
++@@ -1066,16 +1066,16 @@ static int wait_access(struct wcaxx *wc,
++ 	unsigned char data = 0;
++ 	int count = 0;
++ 
++-	#define MAX 10 /* attempts */
+++	#define MAX_ATTEMPTS 10 /* attempts */
++ 
++ 	/* Wait for indirect access */
++-	while (count++ < MAX) {
+++	while (count++ < MAX_ATTEMPTS) {
++ 		data = wcaxx_getreg(wc, mod, I_STATUS);
++ 		if (!data)
++ 			return 0;
++ 	}
++ 
++-	if (count > (MAX-1)) {
+++	if (count > (MAX_ATTEMPTS-1)) {
++ 		dev_notice(&wc->xb.pdev->dev,
++ 			   " ##### Loop error (%02x) #####\n", data);
++ 	}
++--- a/drivers/dahdi/wctdm.c
+++++ b/drivers/dahdi/wctdm.c
++@@ -628,11 +628,11 @@ static int __wait_access(struct wctdm *w
++     unsigned char data = 0;
++     int count = 0;
++ 
++-    #define MAX 6000 /* attempts */
+++    #define MAX_ATTEMPTS 6000 /* attempts */
++ 
++ 
++     /* Wait for indirect access */
++-    while (count++ < MAX)
+++    while (count++ < MAX_ATTEMPTS)
++ 	 {
++ 		data = __wctdm_getreg(wc, card, I_STATUS);
++ 
++@@ -641,7 +641,7 @@ static int __wait_access(struct wctdm *w
++ 
++ 	 }
++ 
++-    if(count > (MAX-1)) printk(KERN_NOTICE " ##### Loop error (%02x) #####\n", data);
+++    if(count > (MAX_ATTEMPTS-1)) printk(KERN_NOTICE " ##### Loop error (%02x) #####\n", data);
++ 
++ 	return 0;
++ }
++--- a/drivers/dahdi/wctdm24xxp/base.c
+++++ b/drivers/dahdi/wctdm24xxp/base.c
++@@ -1516,16 +1516,16 @@ static int wait_access(struct wctdm *wc,
++ 	unsigned char data = 0;
++ 	int count = 0;
++ 
++-	#define MAX 10 /* attempts */
+++	#define MAX_ATTEMPTS 10 /* attempts */
++ 
++ 	/* Wait for indirect access */
++-	while (count++ < MAX) {
+++	while (count++ < MAX_ATTEMPTS) {
++ 		data = wctdm_getreg(wc, mod, I_STATUS);
++ 		if (!data)
++ 			return 0;
++ 	}
++ 
++-	if (count > (MAX-1)) {
+++	if (count > (MAX_ATTEMPTS-1)) {
++ 		dev_notice(&wc->vb.pdev->dev,
++ 			   " ##### Loop error (%02x) #####\n", data);
++ 	}
+diff --git a/libs/dahdi-linux/patches/012-xpp-sysfs-use-const-struct.patch b/libs/dahdi-linux/patches/012-xpp-sysfs-use-const-struct.patch
+new file mode 100644
+index 0000000..0330f04
+--- /dev/null
++++ b/libs/dahdi-linux/patches/012-xpp-sysfs-use-const-struct.patch
+@@ -0,0 +1,66 @@
++commit 5358829a0902fd472f79a56d895db71da2aa03a4
++Author: InterLinked1 <24227567+InterLinked1@users.noreply.github.com>
++Date:   Mon Sep 23 08:04:54 2024 -0400
++
++    xpp, sysfs: Use const struct device_device if needed.
++    
++    Kernel commit d69d804845985c29ab5be5a4b3b1f4787893daf8
++    changed struct device_driver to be const, so make the
++    arguments const on kernels 6.11 and newer.
++    
++    Resolves: #63
++
++--- a/drivers/dahdi/dahdi-sysfs-chan.c
+++++ b/drivers/dahdi/dahdi-sysfs-chan.c
++@@ -220,7 +220,11 @@ static void chan_release(struct device *
++ 	chan_dbg(DEVICES, chan, "SYSFS\n");
++ }
++ 
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
+++static int chan_match(struct device *dev, const struct device_driver *driver)
+++#else
++ static int chan_match(struct device *dev, struct device_driver *driver)
+++#endif /* LINUX_VERSION_CODE */
++ {
++ 	struct dahdi_chan *chan;
++ 
++--- a/drivers/dahdi/dahdi-sysfs.c
+++++ b/drivers/dahdi/dahdi-sysfs.c
++@@ -42,7 +42,11 @@ module_param(tools_rootdir, charp, 0444)
++ MODULE_PARM_DESC(tools_rootdir,
++ 		"root directory of all tools paths (default /)");
++ 
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
+++static int span_match(struct device *dev, const struct device_driver *driver)
+++#else
++ static int span_match(struct device *dev, struct device_driver *driver)
+++#endif /* LINUX_VERSION_CODE */
++ {
++ 	return 1;
++ }
++--- a/drivers/dahdi/xpp/xbus-sysfs.c
+++++ b/drivers/dahdi/xpp/xbus-sysfs.c
++@@ -397,7 +397,11 @@ static struct attribute *xbus_dev_attrs[
++ ATTRIBUTE_GROUPS(xbus_dev);
++ #endif
++ 
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
+++static int astribank_match(struct device *dev, const struct device_driver *driver)
+++#else
++ static int astribank_match(struct device *dev, struct device_driver *driver)
+++#endif /* LINUX_VERSION_CODE */
++ {
++ 	DBG(DEVICES, "SYSFS MATCH: dev->bus_id = %s, driver->name = %s\n",
++ 	    dev_name(dev), driver->name);
++@@ -766,7 +770,11 @@ static DEVICE_ATTR_READER(refcount_xpd_s
++ 	return len;
++ }
++ 
+++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 11, 0)
+++static int xpd_match(struct device *dev, const struct device_driver *driver)
+++#else
++ static int xpd_match(struct device *dev, struct device_driver *driver)
+++#endif /* LINUX_VERSION_CODE */
++ {
++ 	struct xpd_driver *xpd_driver;
++ 	xpd_t *xpd;
+diff --git a/libs/dahdi-linux/patches/013-braces-around-empty-stmts.patch b/libs/dahdi-linux/patches/013-braces-around-empty-stmts.patch
+new file mode 100644
+index 0000000..b4ace21
+--- /dev/null
++++ b/libs/dahdi-linux/patches/013-braces-around-empty-stmts.patch
+@@ -0,0 +1,28 @@
++commit 6cdf7a14cec7f44c6e2003365f7ee184b5ebb6b4
++Author: InterLinked1 <24227567+InterLinked1@users.noreply.github.com>
++Date:   Mon Sep 23 19:14:44 2024 -0400
++
++    xpp: Add braces around empty if statements.
++    
++    Avoid compilation failure on modern kernels by adding braces
++    around empty if body.
++    
++    Resolves: #65
++
++--- a/drivers/dahdi/xpp/card_fxs.c
+++++ b/drivers/dahdi/xpp/card_fxs.c
++@@ -1169,10 +1169,12 @@ static int set_vmwi(xpd_t *xpd, int pos,
++ 			    "%s: VMWI(hvdc) is not implemented yet. Ignored.\n",
++ 			    __func__);
++ 	}
++-	if (VMWI_TYPE(priv, pos, HVAC))
+++	if (VMWI_TYPE(priv, pos, HVAC)) {
++ 		;		/* VMWI_NEON */
++-	if (priv->vmwisetting[pos].vmwi_type == 0)
+++	}
+++	if (priv->vmwisetting[pos].vmwi_type == 0) {
++ 		;		/* Disable VMWI */
+++	}
++ 	priv->vmwisetting[pos] = vmwisetting;
++ 	set_vm_led_mode(xpd->xbus, xpd, pos, PHONEDEV(xpd).msg_waiting[pos]);
++ 	return 0;
+diff --git a/libs/dahdi-linux/patches/130-DAHLIN-371-pld-linux-math64.patch b/libs/dahdi-linux/patches/130-xpp-fix-32-bit-kernel.patch
+similarity index 51%
+rename from libs/dahdi-linux/patches/130-DAHLIN-371-pld-linux-math64.patch
+rename to libs/dahdi-linux/patches/130-xpp-fix-32-bit-kernel.patch
+index ffa6d08..3069569 100644
+--- a/libs/dahdi-linux/patches/130-DAHLIN-371-pld-linux-math64.patch
++++ b/libs/dahdi-linux/patches/130-xpp-fix-32-bit-kernel.patch
+@@ -1,41 +1,45 @@
++commit 648016d6b3a06f7ec75c17ef94ffa17be59eebcf
++Author: Fabrice Fontaine <fontaine.fabrice@gmail.com>
++Date:   Wed Aug 16 09:30:01 2023 +0200
++
++    xpp: Fix build with 32-bits kernel
++    
++    Use div_s64 or div_s64_rem to fix the following build failure on 32-bits
++    kernels:
++    
++    ERROR: modpost: "__divdi3" [/home/fabrice/buildroot/output/build/dahdi-linux-5c840cf43838e0690873e73409491c392333b3b8/drivers/dahdi/xpp/xpp_usb.ko] undefined!
++    ERROR: modpost: "__udivdi3" [/home/fabrice/buildroot/output/build/dahdi-linux-5c840cf43838e0690873e73409491c392333b3b8/drivers/dahdi/xpp/xpp_usb.ko] undefined!
++    ERROR: modpost: "__moddi3" [/home/fabrice/buildroot/output/build/dahdi-linux-5c840cf43838e0690873e73409491c392333b3b8/drivers/dahdi/xpp/xpp.ko] undefined!
++    ERROR: modpost: "__divdi3" [/home/fabrice/buildroot/output/build/dahdi-linux-5c840cf43838e0690873e73409491c392333b3b8/drivers/dahdi/xpp/xpp.ko] undefined!
++    
++    [Retrieved from:
++    https://git.buildroot.net/buildroot/tree/package/dahdi-linux/0002-fix-build-with-32-bits-kernel.patch]
++    
++    Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
++
+ --- a/drivers/dahdi/xpp/xbus-core.c
+ +++ b/drivers/dahdi/xpp/xbus-core.c
+-@@ -25,6 +25,7 @@
+- #include <linux/errno.h>
+- #include <linux/sched.h>
+- #include <linux/mutex.h>
+-+#include <linux/math64.h>
+- #include <linux/proc_fs.h>
+- #include <linux/seq_file.h>
+- #include <linux/slab.h>
+-@@ -1771,11 +1772,13 @@ out:
++@@ -1771,11 +1771,14 @@ out:
+  
+  static void xbus_fill_proc_queue(struct seq_file *sfile, struct xframe_queue *q)
+  {
+-+	s32 rem;
+-+	s64 lag_sec = div_s64_rem(q->worst_lag_usec, 1000, &rem);
+++	s64 msec = 0;
+++	s32 rem = 0;
+++
+++	msec = div_s64_rem(q->worst_lag_usec, 1000, &rem);
+  	seq_printf(sfile,
+ -		"%-15s: counts %3d, %3d, %3d worst %3d, overflows %3d worst_lag %02lld.%lld ms\n",
+-+		"%-15s: counts %3d, %3d, %3d worst %3d, overflows %3d worst_lag %02lld.%ld ms\n",
+++		"%-15s: counts %3d, %3d, %3d worst %3d, overflows %3d worst_lag %02lld.%d ms\n",
+  		q->name, q->steady_state_count, q->count, q->max_count,
+ -		q->worst_count, q->overflows, q->worst_lag_usec / 1000,
+ -		q->worst_lag_usec % 1000);
+-+		q->worst_count, q->overflows, lag_sec,
+-+		rem);
+++		q->worst_count, q->overflows, msec, rem);
+  	xframe_queue_clearstats(q);
+  }
+  
+ --- a/drivers/dahdi/xpp/xbus-pcm.c
+ +++ b/drivers/dahdi/xpp/xbus-pcm.c
+-@@ -22,6 +22,7 @@
+- #include <linux/version.h>
+- #include <linux/kernel.h>
+- #include <linux/module.h>
+-+#include <linux/math64.h>
+- #include "xbus-pcm.h"
+- #include "xbus-core.h"
+- #include "xpp_dahdi.h"
+-@@ -129,7 +130,7 @@ static int xpp_ticker_step(struct xpp_ti
++@@ -129,7 +129,7 @@ static int xpp_ticker_step(struct xpp_ti
+  		usec = ktime_us_delta(ticker->last_sample,
+  					ticker->first_sample);
+  		ticker->first_sample = ticker->last_sample;
+@@ -44,7 +48,7 @@
+  		cycled = 1;
+  	}
+  	ticker->count++;
+-@@ -497,7 +498,7 @@ static void send_drift(xbus_t *xbus, int
++@@ -497,7 +497,7 @@ static void send_drift(xbus_t *xbus, int
+  	XBUS_DBG(SYNC, xbus,
+  		 "%sDRIFT adjust %s (%d) (last update %lld seconds ago)\n",
+  		 (disable_pll_sync) ? "Fake " : "", msg, drift,
+@@ -55,79 +59,65 @@
+  			   drift);
+ --- a/drivers/dahdi/xpp/xbus-sysfs.c
+ +++ b/drivers/dahdi/xpp/xbus-sysfs.c
+-@@ -23,6 +23,7 @@
+- #include <linux/kernel.h>
+- #include <linux/module.h>
+- #include <linux/errno.h>
+-+#include <linux/math64.h>
+- #include <linux/proc_fs.h>
+- #ifdef	PROTOCOL_DEBUG
+- #include <linux/ctype.h>
+-@@ -249,11 +250,9 @@ static DEVICE_ATTR_READER(driftinfo_show
++@@ -249,7 +249,7 @@ static DEVICE_ATTR_READER(driftinfo_show
+  	/*
+  	 * Calculate lost ticks time
+  	 */
+ -	seconds = ktime_ms_delta(now, di->last_lost_tick) / 1000;
+--	minutes = seconds / 60;
+--	seconds = seconds % 60;
+--	hours = minutes / 60;
+--	minutes = minutes % 60;
+ +	seconds = div_s64(ktime_ms_delta(now, di->last_lost_tick), 1000);
+-+	minutes = div_s64_rem(seconds, 60, &seconds);
+-+	hours = div_s64_rem(minutes, 60, &minutes);
+- 	len += snprintf(buf + len, PAGE_SIZE - len,
+- 		"%-15s: %8d (was %d:%02d:%02d ago)\n", "lost_ticks",
+- 		di->lost_ticks, hours, minutes, seconds);
++ 	minutes = seconds / 60;
++ 	seconds = seconds % 60;
++ 	hours = minutes / 60;
+ --- a/drivers/dahdi/xpp/xframe_queue.c
+ +++ b/drivers/dahdi/xpp/xframe_queue.c
+-@@ -1,3 +1,4 @@
+-+#include <linux/math64.h>
+- #include "xframe_queue.h"
+- #include "xbus-core.h"
+- #include "dahdi_debug.h"
+-@@ -40,10 +41,11 @@ static void __xframe_dump_queue(struct x
++@@ -35,15 +35,18 @@ static void __xframe_dump_queue(struct x
++ 	int i = 0;
++ 	char prefix[30];
++ 	ktime_t now = ktime_get();
+++	s64 msec = 0;
+++	s32 rem = 0;
++ 
++ 	printk(KERN_DEBUG "%s: dump queue '%s' (first packet in each frame)\n",
+  	       THIS_MODULE->name, q->name);
+  	list_for_each_entry_reverse(xframe, &q->head, frame_list) {
+  		xpacket_t *pack = (xpacket_t *)&xframe->packets[0];
+--		s64 usec = ktime_us_delta(now, xframe->kt_queued);
+-+		s32 rem;
+-+		s64 sec = div_s64_rem(ktime_us_delta(now, xframe->kt_queued), 1000, &rem);
++ 		s64 usec = ktime_us_delta(now, xframe->kt_queued);
+++		msec = div_s64_rem(usec, 1000, &rem);
+  
+ -		snprintf(prefix, ARRAY_SIZE(prefix), "  %3d> %5lld.%03lld msec",
+ -			 i++, usec / 1000, usec % 1000);
+-+		snprintf(prefix, ARRAY_SIZE(prefix), "  %3d> %5lld.%03ld msec",
+-+			 i++, sec, rem);
+++		snprintf(prefix, ARRAY_SIZE(prefix), "  %3d> %5lld.%03d msec",
+++			 i++, msec, rem);
+  		dump_packet(prefix, pack, 1);
+  	}
+  }
+-@@ -60,11 +62,13 @@ static bool __xframe_enqueue(struct xfra
++@@ -52,6 +55,8 @@ static bool __xframe_enqueue(struct xfra
++ {
++ 	int ret = 1;
++ 	static int overflow_cnt;
+++	s64 msec = 0;
+++	s32 rem = 0;
++ 
++ 	if (unlikely(q->disabled)) {
++ 		ret = 0;
++@@ -60,11 +65,11 @@ static bool __xframe_enqueue(struct xfra
+  	if (q->count >= q->max_count) {
+  		q->overflows++;
+  		if ((overflow_cnt++ % 1000) < 5) {
+ -			NOTICE("Overflow of %-15s: counts %3d, %3d, %3d worst %3d, overflows %3d worst_lag %02lld.%lld ms\n",
+-+			s32 rem;
+-+			s64 lag_sec = div_s64_rem(q->worst_lag_usec, 1000, &rem);
+-+			NOTICE("Overflow of %-15s: counts %3d, %3d, %3d worst %3d, overflows %3d worst_lag %02lld.%ld ms\n",
+++			msec = div_s64_rem(q->worst_lag_usec, 1000, &rem);
+++			NOTICE("Overflow of %-15s: counts %3d, %3d, %3d worst %3d, overflows %3d worst_lag %02lld.%d ms\n",
+  			     q->name, q->steady_state_count, q->count,
+  			     q->max_count, q->worst_count, q->overflows,
+ -			     q->worst_lag_usec / 1000,
+ -			     q->worst_lag_usec % 1000);
+-+			     lag_sec,
+-+			     rem);
+++			     msec, rem);
+  			__xframe_dump_queue(q);
+  		}
+  		ret = 0;
+ --- a/drivers/dahdi/xpp/xpp_usb.c
+ +++ b/drivers/dahdi/xpp/xpp_usb.c
+-@@ -27,6 +27,7 @@
+- #include <linux/interrupt.h>
+- #include <linux/delay.h>	/* for udelay */
+- #include <linux/seq_file.h>
+-+#include <linux/math64.h>
+- #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+- #include <asm/uaccess.h>
+- #else
+-@@ -891,7 +892,7 @@ static void xpp_send_callback(struct urb
++@@ -891,7 +891,7 @@ static void xpp_send_callback(struct urb
+  		usec = 0; /* System clock jumped */
+  	if (usec > xusb->max_tx_delay)
+  		xusb->max_tx_delay = usec;
+diff --git a/libs/dahdi-linux/patches/205-dahdi-xpp-fix-wrong-printf-to-d.patch b/libs/dahdi-linux/patches/205-dahdi-xpp-fix-wrong-printf-to-d.patch
+deleted file mode 100644
+index 3dca2fc..0000000
+--- a/libs/dahdi-linux/patches/205-dahdi-xpp-fix-wrong-printf-to-d.patch
++++ /dev/null
+@@ -1,44 +0,0 @@
+-From 14a9e676d635b1c2be1bab4114cc76c1793892d0 Mon Sep 17 00:00:00 2001
+-From: Christian Marangi <ansuelsmth@gmail.com>
+-Date: Fri, 12 May 2023 20:22:31 +0200
+-Subject: [PATCH 6/6] dahdi: xpp: fix wrong printf to %d
+-
+-Fix wrong printf that should be %d with int variables.
+-
+-Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+----
+- drivers/dahdi/xpp/xbus-core.c    | 2 +-
+- drivers/dahdi/xpp/xframe_queue.c | 4 ++--
+- 2 files changed, 3 insertions(+), 3 deletions(-)
+-
+---- a/drivers/dahdi/xpp/xbus-core.c
+-+++ b/drivers/dahdi/xpp/xbus-core.c
+-@@ -1775,7 +1775,7 @@ static void xbus_fill_proc_queue(struct
+- 	s32 rem;
+- 	s64 lag_sec = div_s64_rem(q->worst_lag_usec, 1000, &rem);
+- 	seq_printf(sfile,
+--		"%-15s: counts %3d, %3d, %3d worst %3d, overflows %3d worst_lag %02lld.%ld ms\n",
+-+		"%-15s: counts %3d, %3d, %3d worst %3d, overflows %3d worst_lag %02lld.%d ms\n",
+- 		q->name, q->steady_state_count, q->count, q->max_count,
+- 		q->worst_count, q->overflows, lag_sec,
+- 		rem);
+---- a/drivers/dahdi/xpp/xframe_queue.c
+-+++ b/drivers/dahdi/xpp/xframe_queue.c
+-@@ -44,7 +44,7 @@ static void __xframe_dump_queue(struct x
+- 		s32 rem;
+- 		s64 sec = div_s64_rem(ktime_us_delta(now, xframe->kt_queued), 1000, &rem);
+- 
+--		snprintf(prefix, ARRAY_SIZE(prefix), "  %3d> %5lld.%03ld msec",
+-+		snprintf(prefix, ARRAY_SIZE(prefix), "  %3d> %5lld.%03d msec",
+- 			 i++, sec, rem);
+- 		dump_packet(prefix, pack, 1);
+- 	}
+-@@ -64,7 +64,7 @@ static bool __xframe_enqueue(struct xfra
+- 		if ((overflow_cnt++ % 1000) < 5) {
+- 			s32 rem;
+- 			s64 lag_sec = div_s64_rem(q->worst_lag_usec, 1000, &rem);
+--			NOTICE("Overflow of %-15s: counts %3d, %3d, %3d worst %3d, overflows %3d worst_lag %02lld.%ld ms\n",
+-+			NOTICE("Overflow of %-15s: counts %3d, %3d, %3d worst %3d, overflows %3d worst_lag %02lld.%d ms\n",
+- 			     q->name, q->steady_state_count, q->count,
+- 			     q->max_count, q->worst_count, q->overflows,
+- 			     lag_sec,
+-- 
+2.43.0
+
