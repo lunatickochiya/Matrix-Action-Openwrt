@@ -1,0 +1,54 @@
+From c56d3bc5c145e7d1672d31aae7c1ddd0d6e1ded2 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Thu, 23 Oct 2025 21:57:45 +0800
+Subject: [PATCH] rtw fix
+
+---
+ .../mac80211/patches/rtl/088-rtw88-fix.patch  | 35 +++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+ create mode 100644 package/kernel/mac80211/patches/rtl/088-rtw88-fix.patch
+
+diff --git a/package/kernel/mac80211/patches/rtl/088-rtw88-fix.patch b/package/kernel/mac80211/patches/rtl/088-rtw88-fix.patch
+new file mode 100644
+index 0000000000..d28044a52e
+--- /dev/null
++++ b/package/kernel/mac80211/patches/rtl/088-rtw88-fix.patch
+@@ -0,0 +1,35 @@
++From d58ad77d5cc2a6d04db622a898e54d93fc7002a2 Mon Sep 17 00:00:00 2001
++From: Kees Cook <kees@kernel.org>
++Date: Mon, 10 Mar 2025 15:22:58 -0700
++Subject: wifi: rtw88: Add __nonstring annotations for unterminated strings
++
++When a character array without a terminating NUL character has a static
++initializer, GCC 15's -Wunterminated-string-initialization will only
++warn if the array lacks the "nonstring" attribute[1]. Mark the arrays
++with __nonstring to and correctly identify the char array as "not a C
++string" and thereby eliminate the warning.
++
++Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=117178 [1]
++Cc: Ping-Ke Shih <pkshih@realtek.com>
++Cc: Johannes Berg <johannes@sipsolutions.net>
++Cc: linux-wireless@vger.kernel.org
++Signed-off-by: Kees Cook <kees@kernel.org>
++Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
++Link: https://patch.msgid.link/20250310222257.work.866-kees@kernel.org
++---
++ drivers/net/wireless/realtek/rtw88/main.h | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++diff --git a/drivers/net/wireless/realtek/rtw88/main.h b/drivers/net/wireless/realtek/rtw88/main.h
++index c15e0f55d09a7a..02343e059fd977 100644
++--- a/drivers/net/wireless/realtek/rtw88/main.h
+++++ b/drivers/net/wireless/realtek/rtw88/main.h
++@@ -835,7 +835,7 @@
++ };
++
++ struct rtw_regulatory {
++-	char alpha2[2] __nonstring;
+++	char alpha2[2];
++ 	u8 txpwr_regd_2g;
++ 	u8 txpwr_regd_5g;
++ };
+-- 
+2.43.0
+
