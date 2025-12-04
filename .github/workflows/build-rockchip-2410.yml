@@ -179,7 +179,6 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
-        git checkout 443fc115767f4f1c95fb8536c7e615c5371cc1da
         sed -i \
           -e 's|https://git.openwrt.org/feed/packages.git;openwrt-24.10|https://github.com/openwrt/packages.git;openwrt-24.10|' \
           -e 's|https://git.openwrt.org/project/luci.git;openwrt-24.10|https://github.com/openwrt/luci.git;openwrt-24.10|' \
