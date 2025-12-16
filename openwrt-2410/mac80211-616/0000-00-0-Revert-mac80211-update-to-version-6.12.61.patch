@@ -1,0 +1,807 @@
+From b7ceeab45ccf29179c7e4db95b5b461df69cb4ba Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Tue, 16 Dec 2025 20:57:48 +0800
+Subject: [PATCH] Revert "mac80211: update to version 6.12.61"
+
+This reverts commit 454fd695894fba1fb81d5b6fa92feab8707d7419.
+---
+ package/kernel/mac80211/Makefile              |  4 +-
+ .../930-ath10k_add_tpt_led_trigger.patch      |  4 +-
+ ...75-ath10k-use-tpt-trigger-by-default.patch |  2 +-
+ ...-power-reduction-for-US-regulatory-d.patch |  8 +--
+ ...k-always-use-mac80211-loss-detection.patch |  2 +-
+ .../991-ath10k-support-flush_sta-method.patch |  6 +-
+ ...k_mac_op_flush_sta-to-properly-flush.patch |  4 +-
+ ...upport-setting-FW-memory-mode-via-DT.patch |  4 +-
+ ...-and-handle-country-code-for-WCN7850.patch | 18 ++---
+ ...ectly-handle-mcast-packets-for-clien.patch | 66 +++++++++++++++++++
+ ...fer-a-ccode-from-OTP-over-nvram-file.patch |  2 +-
+ ...eroperating-DPP-and-other-encryption.patch |  2 +-
+ ...mfmac-disable-dump_survey-on-bcm2835.patch |  6 +-
+ .../patches/build/140-trace_backport.patch    |  2 +-
+ ...x-init_vqs-build-error-on-kernel-6.6.patch |  4 +-
+ ...-the-RX-descriptor-with-a-single-fun.patch |  2 +-
+ ...e-data-rate-fallback-for-older-chips.patch |  2 +-
+ .../110-mac80211_keep_keys_on_stop_ap.patch   |  2 +-
+ .../mac80211/patches/subsys/210-ap_scan.patch |  2 +-
+ ...dd-AQL-support-for-broadcast-packets.patch |  2 +-
+ ...11-add-option-for-vif-allowed-radios.patch |  6 +-
+ ...s-net_device-to-.set_monitor_channel.patch |  4 +-
+ ...d-flag-to-opt-out-of-virtual-monitor.patch | 20 +++---
+ ...d-support-for-the-monitor-SKIP_TX-fl.patch |  4 +-
+ ...x-vif-addr-when-switching-from-monit.patch |  4 +-
+ ...pport-EHT-1024-aggregation-size-in-T.patch |  2 +-
+ ...d-link-iteration-macro-for-link-data.patch |  2 +-
+ ...211-extend-beacon-monitoring-for-MLO.patch |  4 +-
+ ...extend-connection-monitoring-for-MLO.patch |  6 +-
+ 29 files changed, 131 insertions(+), 65 deletions(-)
+ create mode 100644 package/kernel/mac80211/patches/ath12k/002-wifi-ath12k-correctly-handle-mcast-packets-for-clien.patch
+
+diff --git a/package/kernel/mac80211/Makefile b/package/kernel/mac80211/Makefile
+index 93f664dbb4..80ffb9f598 100644
+--- a/package/kernel/mac80211/Makefile
++++ b/package/kernel/mac80211/Makefile
+@@ -10,13 +10,13 @@ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=mac80211
+ 
+-PKG_VERSION:=6.12.61
++PKG_VERSION:=6.12.52
+ PKG_RELEASE:=1
+ PKG_LICENSE:=GPL-2.0-only
+ PKG_LICENSE_FILES:=COPYING
+ 
+ PKG_SOURCE_URL:=http://mirror2.openwrt.org/sources/
+-PKG_HASH:=9db2f836dba7f38ad68f8798720ad4360bce6a3557bde02b88b3a4f068c77118
++PKG_HASH:=ed6ef4c67e08b294ed1101c7cc5ae584a5f338c99ef95362fa3921eb6d207f5d
+ 
+ PKG_SOURCE:=backports-$(PKG_VERSION).tar.xz
+ PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(if $(BUILD_VARIANT),$(PKG_NAME)-$(BUILD_VARIANT)/)backports-$(PKG_VERSION)
+diff --git a/package/kernel/mac80211/patches/ath10k/930-ath10k_add_tpt_led_trigger.patch b/package/kernel/mac80211/patches/ath10k/930-ath10k_add_tpt_led_trigger.patch
+index ad43dcef90..c71123a8fe 100644
+--- a/package/kernel/mac80211/patches/ath10k/930-ath10k_add_tpt_led_trigger.patch
++++ b/package/kernel/mac80211/patches/ath10k/930-ath10k_add_tpt_led_trigger.patch
+@@ -1,6 +1,6 @@
+ --- a/drivers/net/wireless/ath/ath10k/mac.c
+ +++ b/drivers/net/wireless/ath/ath10k/mac.c
+-@@ -9932,6 +9932,21 @@ static int ath10k_mac_init_rd(struct ath
++@@ -9924,6 +9924,21 @@ static int ath10k_mac_init_rd(struct ath
+  	return 0;
+  }
+  
+@@ -22,7 +22,7 @@
+  int ath10k_mac_register(struct ath10k *ar)
+  {
+  	static const u32 cipher_suites[] = {
+-@@ -10294,6 +10309,12 @@ int ath10k_mac_register(struct ath10k *a
++@@ -10286,6 +10301,12 @@ int ath10k_mac_register(struct ath10k *a
+  
+  	ar->hw->weight_multiplier = ATH10K_AIRTIME_WEIGHT_MULTIPLIER;
+  
+diff --git a/package/kernel/mac80211/patches/ath10k/975-ath10k-use-tpt-trigger-by-default.patch b/package/kernel/mac80211/patches/ath10k/975-ath10k-use-tpt-trigger-by-default.patch
+index d5f8a56c00..be2ccfd0bf 100644
+--- a/package/kernel/mac80211/patches/ath10k/975-ath10k-use-tpt-trigger-by-default.patch
++++ b/package/kernel/mac80211/patches/ath10k/975-ath10k-use-tpt-trigger-by-default.patch
+@@ -40,7 +40,7 @@ Signed-off-by: Mathias Kresin <dev@kresin.me>
+  	if (ret)
+ --- a/drivers/net/wireless/ath/ath10k/mac.c
+ +++ b/drivers/net/wireless/ath/ath10k/mac.c
+-@@ -10310,7 +10310,7 @@ int ath10k_mac_register(struct ath10k *a
++@@ -10302,7 +10302,7 @@ int ath10k_mac_register(struct ath10k *a
+  	ar->hw->weight_multiplier = ATH10K_AIRTIME_WEIGHT_MULTIPLIER;
+  
+  #ifdef CPTCFG_MAC80211_LEDS
+diff --git a/package/kernel/mac80211/patches/ath10k/981-ath10k-adjust-tx-power-reduction-for-US-regulatory-d.patch b/package/kernel/mac80211/patches/ath10k/981-ath10k-adjust-tx-power-reduction-for-US-regulatory-d.patch
+index 2aba614090..f1770cfbe0 100644
+--- a/package/kernel/mac80211/patches/ath10k/981-ath10k-adjust-tx-power-reduction-for-US-regulatory-d.patch
++++ b/package/kernel/mac80211/patches/ath10k/981-ath10k-adjust-tx-power-reduction-for-US-regulatory-d.patch
+@@ -28,7 +28,7 @@ Forwarded: no
+ 
+ --- a/drivers/net/wireless/ath/ath10k/mac.c
+ +++ b/drivers/net/wireless/ath/ath10k/mac.c
+-@@ -1030,6 +1030,40 @@ static inline int ath10k_vdev_setup_sync
++@@ -1022,6 +1022,40 @@ static inline int ath10k_vdev_setup_sync
+  	return ar->last_wmi_vdev_start_status;
+  }
+  
+@@ -69,7 +69,7 @@ Forwarded: no
+  static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
+  {
+  	struct cfg80211_chan_def *chandef = NULL;
+-@@ -1062,7 +1096,8 @@ static int ath10k_monitor_vdev_start(str
++@@ -1054,7 +1088,8 @@ static int ath10k_monitor_vdev_start(str
+  	arg.channel.min_power = 0;
+  	arg.channel.max_power = channel->max_power * 2;
+  	arg.channel.max_reg_power = channel->max_reg_power * 2;
+@@ -79,7 +79,7 @@ Forwarded: no
+  
+  	reinit_completion(&ar->vdev_setup_done);
+  	reinit_completion(&ar->vdev_delete_done);
+-@@ -1508,7 +1543,8 @@ static int ath10k_vdev_start_restart(str
++@@ -1500,7 +1535,8 @@ static int ath10k_vdev_start_restart(str
+  	arg.channel.min_power = 0;
+  	arg.channel.max_power = chandef->chan->max_power * 2;
+  	arg.channel.max_reg_power = chandef->chan->max_reg_power * 2;
+@@ -89,7 +89,7 @@ Forwarded: no
+  
+  	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+  		arg.ssid = arvif->u.ap.ssid;
+-@@ -3439,7 +3475,8 @@ static int ath10k_update_channel_list(st
++@@ -3431,7 +3467,8 @@ static int ath10k_update_channel_list(st
+  			ch->min_power = 0;
+  			ch->max_power = channel->max_power * 2;
+  			ch->max_reg_power = channel->max_reg_power * 2;
+diff --git a/package/kernel/mac80211/patches/ath10k/988-ath10k-always-use-mac80211-loss-detection.patch b/package/kernel/mac80211/patches/ath10k/988-ath10k-always-use-mac80211-loss-detection.patch
+index 619555cbad..f7387595a9 100644
+--- a/package/kernel/mac80211/patches/ath10k/988-ath10k-always-use-mac80211-loss-detection.patch
++++ b/package/kernel/mac80211/patches/ath10k/988-ath10k-always-use-mac80211-loss-detection.patch
+@@ -18,7 +18,7 @@ Signed-off-by: David Bauer <mail@david-bauer.net>
+ 
+ --- a/drivers/net/wireless/ath/ath10k/mac.c
+ +++ b/drivers/net/wireless/ath/ath10k/mac.c
+-@@ -10102,7 +10102,6 @@ int ath10k_mac_register(struct ath10k *a
++@@ -10094,7 +10094,6 @@ int ath10k_mac_register(struct ath10k *a
+  	ieee80211_hw_set(ar->hw, CHANCTX_STA_CSA);
+  	ieee80211_hw_set(ar->hw, QUEUE_CONTROL);
+  	ieee80211_hw_set(ar->hw, SUPPORTS_TX_FRAG);
+diff --git a/package/kernel/mac80211/patches/ath10k/991-ath10k-support-flush_sta-method.patch b/package/kernel/mac80211/patches/ath10k/991-ath10k-support-flush_sta-method.patch
+index 1111568af2..c426d4b6a8 100644
+--- a/package/kernel/mac80211/patches/ath10k/991-ath10k-support-flush_sta-method.patch
++++ b/package/kernel/mac80211/patches/ath10k/991-ath10k-support-flush_sta-method.patch
+@@ -29,7 +29,7 @@ Tested-by: Florian Maurer <maurer@fh-aachen.de>
+ 
+ --- a/drivers/net/wireless/ath/ath10k/mac.c
+ +++ b/drivers/net/wireless/ath/ath10k/mac.c
+-@@ -8143,6 +8143,20 @@ static void ath10k_flush(struct ieee8021
++@@ -8135,6 +8135,20 @@ static void ath10k_flush(struct ieee8021
+  	mutex_unlock(&ar->conf_mutex);
+  }
+  
+@@ -50,7 +50,7 @@ Tested-by: Florian Maurer <maurer@fh-aachen.de>
+  /* TODO: Implement this function properly
+   * For now it is needed to reply to Probe Requests in IBSS mode.
+   * Probably we need this information from FW.
+-@@ -9494,6 +9508,7 @@ static const struct ieee80211_ops ath10k
++@@ -9486,6 +9500,7 @@ static const struct ieee80211_ops ath10k
+  	.set_rts_threshold		= ath10k_set_rts_threshold,
+  	.set_frag_threshold		= ath10k_mac_op_set_frag_threshold,
+  	.flush				= ath10k_flush,
+@@ -58,7 +58,7 @@ Tested-by: Florian Maurer <maurer@fh-aachen.de>
+  	.tx_last_beacon			= ath10k_tx_last_beacon,
+  	.set_antenna			= ath10k_set_antenna,
+  	.get_antenna			= ath10k_get_antenna,
+-@@ -10315,6 +10330,9 @@ int ath10k_mac_register(struct ath10k *a
++@@ -10307,6 +10322,9 @@ int ath10k_mac_register(struct ath10k *a
+  	if (!ar->hw_params.hw_ops->set_coverage_class)
+  		ar->ops->set_coverage_class = NULL;
+  
+diff --git a/package/kernel/mac80211/patches/ath11k/453-ath11k-add-ath11k_mac_op_flush_sta-to-properly-flush.patch b/package/kernel/mac80211/patches/ath11k/453-ath11k-add-ath11k_mac_op_flush_sta-to-properly-flush.patch
+index 056c2f09e5..0612150f3c 100644
+--- a/package/kernel/mac80211/patches/ath11k/453-ath11k-add-ath11k_mac_op_flush_sta-to-properly-flush.patch
++++ b/package/kernel/mac80211/patches/ath11k/453-ath11k-add-ath11k_mac_op_flush_sta-to-properly-flush.patch
+@@ -31,7 +31,7 @@ Signed-off-by: Florian Maurer <f.maurer@outlook.de>
+ 
+ --- a/drivers/net/wireless/ath/ath11k/mac.c
+ +++ b/drivers/net/wireless/ath/ath11k/mac.c
+-@@ -8327,6 +8327,23 @@ static void ath11k_mac_op_flush(struct i
++@@ -8278,6 +8278,23 @@ static void ath11k_mac_op_flush(struct i
+  	ath11k_mac_flush_tx_complete(ar);
+  }
+  
+@@ -55,7 +55,7 @@ Signed-off-by: Florian Maurer <f.maurer@outlook.de>
+  static bool
+  ath11k_mac_has_single_legacy_rate(struct ath11k *ar,
+  				  enum nl80211_band band,
+-@@ -9959,6 +9976,7 @@ static const struct ieee80211_ops ath11k
++@@ -9910,6 +9927,7 @@ static const struct ieee80211_ops ath11k
+  	.set_bitrate_mask		= ath11k_mac_op_set_bitrate_mask,
+  	.get_survey			= ath11k_mac_op_get_survey,
+  	.flush				= ath11k_mac_op_flush,
+diff --git a/package/kernel/mac80211/patches/ath11k/903-ath11k-support-setting-FW-memory-mode-via-DT.patch b/package/kernel/mac80211/patches/ath11k/903-ath11k-support-setting-FW-memory-mode-via-DT.patch
+index c7ce4b7235..2bc1ca3c7d 100644
+--- a/package/kernel/mac80211/patches/ath11k/903-ath11k-support-setting-FW-memory-mode-via-DT.patch
++++ b/package/kernel/mac80211/patches/ath11k/903-ath11k-support-setting-FW-memory-mode-via-DT.patch
+@@ -31,7 +31,7 @@ Signed-off-by: Robert Marko <robimarko@gmail.com>
+  	{
+  		.hw_rev = ATH11K_HW_IPQ8074,
+  		.name = "ipq8074 hw2.0",
+-@@ -2239,7 +2239,8 @@ static void ath11k_core_reset(struct wor
++@@ -2201,7 +2201,8 @@ static void ath11k_core_reset(struct wor
+  static int ath11k_init_hw_params(struct ath11k_base *ab)
+  {
+  	const struct ath11k_hw_params *hw_params = NULL;
+@@ -41,7 +41,7 @@ Signed-off-by: Robert Marko <robimarko@gmail.com>
+  
+  	for (i = 0; i < ARRAY_SIZE(ath11k_hw_params); i++) {
+  		hw_params = &ath11k_hw_params[i];
+-@@ -2255,7 +2256,31 @@ static int ath11k_init_hw_params(struct
++@@ -2217,7 +2218,31 @@ static int ath11k_init_hw_params(struct
+  
+  	ab->hw_params = *hw_params;
+  
+diff --git a/package/kernel/mac80211/patches/ath12k/001-wifi-ath12k-add-11d-scan-offload-support-and-handle-country-code-for-WCN7850.patch b/package/kernel/mac80211/patches/ath12k/001-wifi-ath12k-add-11d-scan-offload-support-and-handle-country-code-for-WCN7850.patch
+index 5005b796da..b265fcdeab 100644
+--- a/package/kernel/mac80211/patches/ath12k/001-wifi-ath12k-add-11d-scan-offload-support-and-handle-country-code-for-WCN7850.patch
++++ b/package/kernel/mac80211/patches/ath12k/001-wifi-ath12k-add-11d-scan-offload-support-and-handle-country-code-for-WCN7850.patch
+@@ -532,7 +532,7 @@ Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+  	return ret;
+  }
+  
+-@@ -6000,7 +6015,7 @@ static int ath12k_mac_start(struct ath12
++@@ -5998,7 +6013,7 @@ static int ath12k_mac_start(struct ath12
+  
+  	/* TODO: Do we need to enable ANI? */
+  
+@@ -541,7 +541,7 @@ Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+  
+  	ar->num_started_vdevs = 0;
+  	ar->num_created_vdevs = 0;
+-@@ -6180,6 +6195,9 @@ static void ath12k_mac_stop(struct ath12
++@@ -6178,6 +6193,9 @@ static void ath12k_mac_stop(struct ath12
+  	cancel_delayed_work_sync(&ar->scan.timeout);
+  	cancel_work_sync(&ar->regd_update_work);
+  	cancel_work_sync(&ar->ab->rfkill_work);
+@@ -551,7 +551,7 @@ Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+  
+  	spin_lock_bh(&ar->data_lock);
+  	list_for_each_entry_safe(ppdu_stats, tmp, &ar->ppdu_stats_info, list) {
+-@@ -6426,6 +6444,117 @@ static void ath12k_mac_op_update_vif_off
++@@ -6424,6 +6442,117 @@ static void ath12k_mac_op_update_vif_off
+  	ath12k_mac_update_vif_offload(arvif);
+  }
+  
+@@ -669,7 +669,7 @@ Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+  static int ath12k_mac_vdev_create(struct ath12k *ar, struct ieee80211_vif *vif)
+  {
+  	struct ath12k_hw *ah = ar->ah;
+-@@ -6540,6 +6669,7 @@ static int ath12k_mac_vdev_create(struct
++@@ -6538,6 +6667,7 @@ static int ath12k_mac_vdev_create(struct
+  				    arvif->vdev_id, ret);
+  			goto err_peer_del;
+  		}
+@@ -677,7 +677,7 @@ Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+  		break;
+  	case WMI_VDEV_TYPE_STA:
+  		param_id = WMI_STA_PS_PARAM_RX_WAKE_POLICY;
+-@@ -6578,6 +6708,13 @@ static int ath12k_mac_vdev_create(struct
++@@ -6576,6 +6706,13 @@ static int ath12k_mac_vdev_create(struct
+  				    arvif->vdev_id, ret);
+  			goto err_peer_del;
+  		}
+@@ -691,7 +691,7 @@ Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+  		break;
+  	default:
+  		break;
+-@@ -6918,6 +7055,11 @@ static void ath12k_mac_op_remove_interfa
++@@ -6916,6 +7053,11 @@ static void ath12k_mac_op_remove_interfa
+  	ath12k_dbg(ab, ATH12K_DBG_MAC, "mac remove interface (vdev %d)\n",
+  		   arvif->vdev_id);
+  
+@@ -703,7 +703,7 @@ Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+  	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+  		ret = ath12k_peer_delete(ar, arvif->vdev_id, vif->addr);
+  		if (ret)
+-@@ -7758,6 +7900,14 @@ ath12k_mac_op_unassign_vif_chanctx(struc
++@@ -7756,6 +7898,14 @@ ath12k_mac_op_unassign_vif_chanctx(struc
+  	    ar->num_started_vdevs == 1 && ar->monitor_vdev_created)
+  		ath12k_mac_monitor_stop(ar);
+  
+@@ -718,7 +718,7 @@ Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+  	mutex_unlock(&ar->conf_mutex);
+  }
+  
+-@@ -8296,6 +8446,14 @@ ath12k_mac_op_reconfig_complete(struct i
++@@ -8294,6 +8444,14 @@ ath12k_mac_op_reconfig_complete(struct i
+  		ath12k_warn(ar->ab, "pdev %d successfully recovered\n",
+  			    ar->pdev->pdev_id);
+  
+@@ -733,7 +733,7 @@ Acked-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+  		if (ab->is_reset) {
+  			recovery_count = atomic_inc_return(&ab->recovery_count);
+  
+-@@ -9346,6 +9504,9 @@ static void ath12k_mac_setup(struct ath1
++@@ -9344,6 +9502,9 @@ static void ath12k_mac_setup(struct ath1
+  
+  	INIT_WORK(&ar->wmi_mgmt_tx_work, ath12k_mgmt_over_wmi_tx_work);
+  	skb_queue_head_init(&ar->wmi_mgmt_tx_queue);
+diff --git a/package/kernel/mac80211/patches/ath12k/002-wifi-ath12k-correctly-handle-mcast-packets-for-clien.patch b/package/kernel/mac80211/patches/ath12k/002-wifi-ath12k-correctly-handle-mcast-packets-for-clien.patch
+new file mode 100644
+index 0000000000..2e5e080524
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath12k/002-wifi-ath12k-correctly-handle-mcast-packets-for-clien.patch
+@@ -0,0 +1,66 @@
++From a1eb56723b3203d366d2293a368b8bc8ef8894cd Mon Sep 17 00:00:00 2001
++From: Sarika Sharma <quic_sarishar@quicinc.com>
++Date: Fri, 11 Apr 2025 11:45:23 +0530
++Subject: [PATCH] wifi: ath12k: correctly handle mcast packets for clients
++
++commit 4541b0c8c3c1b85564971d497224e57cf8076a02 upstream.
++
++Currently, RX is_mcbc bit is set for packets sent from client as
++destination address (DA) is multicast/broadcast address, but packets
++are actually unicast as receiver address (RA) is not multicast address.
++Hence, packets are not handled properly due to this is_mcbc bit.
++
++Therefore, reset the is_mcbc bit if interface type is AP.
++
++Tested-on: QCN9274 hw2.0 PCI WLAN.WBE.1.4.1-00199-QCAHKSWPL_SILICONZ-1
++
++Signed-off-by: Sarika Sharma <quic_sarishar@quicinc.com>
++Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
++Link: https://patch.msgid.link/20250411061523.859387-3-quic_sarishar@quicinc.com
++Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
++[ Adjust context ]
++Signed-off-by: Oliver Sedlbauer <os@dev.tdt.de>
++Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
++---
++ drivers/net/wireless/ath/ath12k/dp_rx.c | 5 +++++
++ drivers/net/wireless/ath/ath12k/peer.c  | 3 +++
++ drivers/net/wireless/ath/ath12k/peer.h  | 2 ++
++ 3 files changed, 10 insertions(+)
++
++--- a/drivers/net/wireless/ath/ath12k/dp_rx.c
+++++ b/drivers/net/wireless/ath/ath12k/dp_rx.c
++@@ -2214,6 +2214,11 @@ static void ath12k_dp_rx_h_mpdu(struct a
++ 	spin_lock_bh(&ar->ab->base_lock);
++ 	peer = ath12k_dp_rx_h_find_peer(ar->ab, msdu);
++ 	if (peer) {
+++		/* resetting mcbc bit because mcbc packets are unicast
+++		 * packets only for AP as STA sends unicast packets.
+++		 */
+++		rxcb->is_mcbc = rxcb->is_mcbc && !peer->ucast_ra_only;
+++
++ 		if (rxcb->is_mcbc)
++ 			enctype = peer->sec_type_grp;
++ 		else
++--- a/drivers/net/wireless/ath/ath12k/peer.c
+++++ b/drivers/net/wireless/ath/ath12k/peer.c
++@@ -331,6 +331,9 @@ int ath12k_peer_create(struct ath12k *ar
++ 		arvif->ast_idx = peer->hw_peer_id;
++ 	}
++ 
+++	if (arvif->vif->type == NL80211_IFTYPE_AP)
+++		peer->ucast_ra_only = true;
+++
++ 	peer->sec_type = HAL_ENCRYPT_TYPE_OPEN;
++ 	peer->sec_type_grp = HAL_ENCRYPT_TYPE_OPEN;
++ 
++--- a/drivers/net/wireless/ath/ath12k/peer.h
+++++ b/drivers/net/wireless/ath/ath12k/peer.h
++@@ -47,6 +47,8 @@ struct ath12k_peer {
++ 
++ 	/* protected by ab->data_lock */
++ 	bool dp_setup_done;
+++
+++	bool ucast_ra_only;
++ };
++ 
++ void ath12k_peer_unmap_event(struct ath12k_base *ab, u16 peer_id);
+diff --git a/package/kernel/mac80211/patches/brcm/870-02-rpi-6.12-brcmfmac-Prefer-a-ccode-from-OTP-over-nvram-file.patch b/package/kernel/mac80211/patches/brcm/870-02-rpi-6.12-brcmfmac-Prefer-a-ccode-from-OTP-over-nvram-file.patch
+index f3606dce41..9a7f9eb266 100644
+--- a/package/kernel/mac80211/patches/brcm/870-02-rpi-6.12-brcmfmac-Prefer-a-ccode-from-OTP-over-nvram-file.patch
++++ b/package/kernel/mac80211/patches/brcm/870-02-rpi-6.12-brcmfmac-Prefer-a-ccode-from-OTP-over-nvram-file.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  #include <net/cfg80211.h>
+  #include <net/netlink.h>
+  #include <uapi/linux/if_arp.h>
+-@@ -8211,31 +8212,45 @@ static void brcmf_cfg80211_reg_notifier(
++@@ -8212,31 +8213,45 @@ static void brcmf_cfg80211_reg_notifier(
+  	struct brcmf_if *ifp = brcmf_get_ifp(cfg->pub, 0);
+  	struct brcmf_pub *drvr = cfg->pub;
+  	struct brcmf_fil_country_le ccreq;
+diff --git a/package/kernel/mac80211/patches/brcm/870-05-rpi-6.12-brcmfmac-Fix-interoperating-DPP-and-other-encryption.patch b/package/kernel/mac80211/patches/brcm/870-05-rpi-6.12-brcmfmac-Fix-interoperating-DPP-and-other-encryption.patch
+index ccf3ae71fd..080ce2bb86 100644
+--- a/package/kernel/mac80211/patches/brcm/870-05-rpi-6.12-brcmfmac-Fix-interoperating-DPP-and-other-encryption.patch
++++ b/package/kernel/mac80211/patches/brcm/870-05-rpi-6.12-brcmfmac-Fix-interoperating-DPP-and-other-encryption.patch
+@@ -119,7 +119,7 @@ Signed-off-by: Chi-hsien Lin <chi-hsien.lin@cypress.com>
+  	err = brcmf_fil_bsscfg_data_set(vif->ifp, "actframe_abort", &int_val,
+  					sizeof(s32));
+  	if (err)
+-@@ -1817,6 +1821,7 @@ bool brcmf_p2p_send_action_frame(struct
++@@ -1826,6 +1830,7 @@ bool brcmf_p2p_send_action_frame(struct
+  	/* validate channel and p2p ies */
+  	if (config_af_params.search_channel &&
+  	    IS_P2P_SOCIAL_CHANNEL(le32_to_cpu(af_params->channel)) &&
+diff --git a/package/kernel/mac80211/patches/brcm/871-brcmfmac-disable-dump_survey-on-bcm2835.patch b/package/kernel/mac80211/patches/brcm/871-brcmfmac-disable-dump_survey-on-bcm2835.patch
+index 97af080710..0dd0d11c18 100644
+--- a/package/kernel/mac80211/patches/brcm/871-brcmfmac-disable-dump_survey-on-bcm2835.patch
++++ b/package/kernel/mac80211/patches/brcm/871-brcmfmac-disable-dump_survey-on-bcm2835.patch
+@@ -9,7 +9,7 @@ Signed-off-by: Álvaro Fernández Rojas <noltari@gmail.com>
+ 
+ --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+ +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+-@@ -7990,6 +7990,7 @@ static s32 brcmf_translate_country_code(
++@@ -7991,6 +7991,7 @@ static s32 brcmf_translate_country_code(
+  	return 0;
+  }
+  
+@@ -17,7 +17,7 @@ Signed-off-by: Álvaro Fernández Rojas <noltari@gmail.com>
+  static int
+  brcmf_parse_dump_obss(char *buf, struct brcmf_dump_survey *survey)
+  {
+-@@ -8212,6 +8213,7 @@ exit:
++@@ -8213,6 +8214,7 @@ exit:
+  		brcmf_set_mpc(ifp, 1);
+  	return err;
+  }
+@@ -25,7 +25,7 @@ Signed-off-by: Álvaro Fernández Rojas <noltari@gmail.com>
+  
+  static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
+  					struct regulatory_request *req)
+-@@ -8378,8 +8380,10 @@ struct brcmf_cfg80211_info *brcmf_cfg802
++@@ -8379,8 +8381,10 @@ struct brcmf_cfg80211_info *brcmf_cfg802
+  	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_GTK))
+  		ops->set_rekey_data = brcmf_cfg80211_set_rekey_data;
+  #endif
+diff --git a/package/kernel/mac80211/patches/build/140-trace_backport.patch b/package/kernel/mac80211/patches/build/140-trace_backport.patch
+index 50cbc2255e..8b77b7e83d 100644
+--- a/package/kernel/mac80211/patches/build/140-trace_backport.patch
++++ b/package/kernel/mac80211/patches/build/140-trace_backport.patch
+@@ -530,7 +530,7 @@
+  
+ --- a/net/wireless/trace.h
+ +++ b/net/wireless/trace.h
+-@@ -467,7 +467,7 @@ TRACE_EVENT(rdev_add_virtual_intf,
++@@ -446,7 +446,7 @@ TRACE_EVENT(rdev_add_virtual_intf,
+  	),
+  	TP_fast_assign(
+  		WIPHY_ASSIGN;
+diff --git a/package/kernel/mac80211/patches/build/230-fix-init_vqs-build-error-on-kernel-6.6.patch b/package/kernel/mac80211/patches/build/230-fix-init_vqs-build-error-on-kernel-6.6.patch
+index 42acb1d627..229deee9e8 100644
+--- a/package/kernel/mac80211/patches/build/230-fix-init_vqs-build-error-on-kernel-6.6.patch
++++ b/package/kernel/mac80211/patches/build/230-fix-init_vqs-build-error-on-kernel-6.6.patch
+@@ -1,6 +1,6 @@
+ --- a/drivers/net/wireless/virtual/mac80211_hwsim.c
+ +++ b/drivers/net/wireless/virtual/mac80211_hwsim.c
+-@@ -6637,6 +6637,7 @@ static void hwsim_virtio_rx_done(struct
++@@ -6636,6 +6636,7 @@ static void hwsim_virtio_rx_done(struct
+  
+  static int init_vqs(struct virtio_device *vdev)
+  {
+@@ -8,7 +8,7 @@
+  	struct virtqueue_info vqs_info[HWSIM_NUM_VQS] = {
+  		[HWSIM_VQ_TX] = { "tx", hwsim_virtio_tx_done },
+  		[HWSIM_VQ_RX] = { "rx", hwsim_virtio_rx_done },
+-@@ -6644,6 +6645,19 @@ static int init_vqs(struct virtio_device
++@@ -6643,6 +6644,19 @@ static int init_vqs(struct virtio_device
+  
+  	return virtio_find_vqs(vdev, HWSIM_NUM_VQS,
+  			       hwsim_vqs, vqs_info, NULL);
+diff --git a/package/kernel/mac80211/patches/rtl/019-v6.13-wifi-rtw88-Parse-the-RX-descriptor-with-a-single-fun.patch b/package/kernel/mac80211/patches/rtl/019-v6.13-wifi-rtw88-Parse-the-RX-descriptor-with-a-single-fun.patch
+index 2f7bdce51a..4c6966a3c6 100644
+--- a/package/kernel/mac80211/patches/rtl/019-v6.13-wifi-rtw88-Parse-the-RX-descriptor-with-a-single-fun.patch
++++ b/package/kernel/mac80211/patches/rtl/019-v6.13-wifi-rtw88-Parse-the-RX-descriptor-with-a-single-fun.patch
+@@ -535,7 +535,7 @@ Link: https://patch.msgid.link/913f1747-38fc-4409-85a4-57bb9cee506b@gmail.com
+  				struct rtw_rx_pkt_stat *pkt_stat);
+ --- a/drivers/net/wireless/realtek/rtw88/sdio.c
+ +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+-@@ -983,8 +983,7 @@ static void rtw_sdio_rxfifo_recv(struct
++@@ -979,8 +979,7 @@ static void rtw_sdio_rxfifo_recv(struct
+  
+  	while (true) {
+  		rx_desc = skb->data;
+diff --git a/package/kernel/mac80211/patches/rtl/030-v6.13-wifi-rtw88-Enable-data-rate-fallback-for-older-chips.patch b/package/kernel/mac80211/patches/rtl/030-v6.13-wifi-rtw88-Enable-data-rate-fallback-for-older-chips.patch
+index 3e28fe9595..9c3bf29321 100644
+--- a/package/kernel/mac80211/patches/rtl/030-v6.13-wifi-rtw88-Enable-data-rate-fallback-for-older-chips.patch
++++ b/package/kernel/mac80211/patches/rtl/030-v6.13-wifi-rtw88-Enable-data-rate-fallback-for-older-chips.patch
+@@ -121,7 +121,7 @@ Link: https://patch.msgid.link/2b3e3e6f-541b-4a3b-8ca3-65b267e6a95a@gmail.com
+  	.ht_supported = true,
+ --- a/drivers/net/wireless/realtek/rtw88/sdio.c
+ +++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+-@@ -866,7 +866,7 @@ static void rtw_sdio_tx_skb_prepare(stru
++@@ -862,7 +862,7 @@ static void rtw_sdio_tx_skb_prepare(stru
+  
+  	pkt_info->qsel = rtw_sdio_get_tx_qsel(rtwdev, skb, queue);
+  
+diff --git a/package/kernel/mac80211/patches/subsys/110-mac80211_keep_keys_on_stop_ap.patch b/package/kernel/mac80211/patches/subsys/110-mac80211_keep_keys_on_stop_ap.patch
+index c0f0fbc796..68534f4e7b 100644
+--- a/package/kernel/mac80211/patches/subsys/110-mac80211_keep_keys_on_stop_ap.patch
++++ b/package/kernel/mac80211/patches/subsys/110-mac80211_keep_keys_on_stop_ap.patch
+@@ -9,7 +9,7 @@ Used for AP+STA support in OpenWrt - preserve AP mode keys across STA reconnect
+ 
+ --- a/net/mac80211/cfg.c
+ +++ b/net/mac80211/cfg.c
+-@@ -1663,12 +1663,6 @@ static int ieee80211_stop_ap(struct wiph
++@@ -1649,12 +1649,6 @@ static int ieee80211_stop_ap(struct wiph
+  
+  	__sta_info_flush(sdata, true, link_id);
+  
+diff --git a/package/kernel/mac80211/patches/subsys/210-ap_scan.patch b/package/kernel/mac80211/patches/subsys/210-ap_scan.patch
+index 0e886899c9..ca4ac8adb6 100644
+--- a/package/kernel/mac80211/patches/subsys/210-ap_scan.patch
++++ b/package/kernel/mac80211/patches/subsys/210-ap_scan.patch
+@@ -8,7 +8,7 @@ Subject: [PATCH] mac80211: allow scans in access point mode (for site survey)
+ 
+ --- a/net/mac80211/cfg.c
+ +++ b/net/mac80211/cfg.c
+-@@ -2877,6 +2877,8 @@ static int ieee80211_scan(struct wiphy *
++@@ -2863,6 +2863,8 @@ static int ieee80211_scan(struct wiphy *
+  		 */
+  		fallthrough;
+  	case NL80211_IFTYPE_AP:
+diff --git a/package/kernel/mac80211/patches/subsys/320-mac80211-add-AQL-support-for-broadcast-packets.patch b/package/kernel/mac80211/patches/subsys/320-mac80211-add-AQL-support-for-broadcast-packets.patch
+index b976e8d7a2..6ec52af9a4 100644
+--- a/package/kernel/mac80211/patches/subsys/320-mac80211-add-AQL-support-for-broadcast-packets.patch
++++ b/package/kernel/mac80211/patches/subsys/320-mac80211-add-AQL-support-for-broadcast-packets.patch
+@@ -70,7 +70,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+ --- a/net/mac80211/ieee80211_i.h
+ +++ b/net/mac80211/ieee80211_i.h
+-@@ -1362,10 +1362,12 @@ struct ieee80211_local {
++@@ -1360,10 +1360,12 @@ struct ieee80211_local {
+  	spinlock_t handle_wake_tx_queue_lock;
+  
+  	u16 airtime_flags;
+diff --git a/package/kernel/mac80211/patches/subsys/330-wifi-cfg80211-add-option-for-vif-allowed-radios.patch b/package/kernel/mac80211/patches/subsys/330-wifi-cfg80211-add-option-for-vif-allowed-radios.patch
+index faf40ddb2e..4ecbc514fc 100644
+--- a/package/kernel/mac80211/patches/subsys/330-wifi-cfg80211-add-option-for-vif-allowed-radios.patch
++++ b/package/kernel/mac80211/patches/subsys/330-wifi-cfg80211-add-option-for-vif-allowed-radios.patch
+@@ -23,7 +23,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/include/net/cfg80211.h
+ +++ b/include/net/cfg80211.h
+-@@ -6352,6 +6352,7 @@ enum ieee80211_ap_reg_power {
++@@ -6274,6 +6274,7 @@ enum ieee80211_ap_reg_power {
+   *	entered.
+   * @links.cac_time_ms: CAC time in ms
+   * @valid_links: bitmap describing what elements of @links are valid
+@@ -31,7 +31,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+   */
+  struct wireless_dev {
+  	struct wiphy *wiphy;
+-@@ -6464,6 +6465,8 @@ struct wireless_dev {
++@@ -6386,6 +6387,8 @@ struct wireless_dev {
+  		unsigned int cac_time_ms;
+  	} links[IEEE80211_MLD_MAX_NUM_LINKS];
+  	u16 valid_links;
+@@ -40,7 +40,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  };
+  
+  static inline const u8 *wdev_address(struct wireless_dev *wdev)
+-@@ -6650,6 +6653,17 @@ bool cfg80211_radio_chandef_valid(const
++@@ -6572,6 +6575,17 @@ bool cfg80211_radio_chandef_valid(const
+  				  const struct cfg80211_chan_def *chandef);
+  
+  /**
+diff --git a/package/kernel/mac80211/patches/subsys/334-wifi-cfg80211-pass-net_device-to-.set_monitor_channel.patch b/package/kernel/mac80211/patches/subsys/334-wifi-cfg80211-pass-net_device-to-.set_monitor_channel.patch
+index a2a269ee35..f1fc9190fc 100644
+--- a/package/kernel/mac80211/patches/subsys/334-wifi-cfg80211-pass-net_device-to-.set_monitor_channel.patch
++++ b/package/kernel/mac80211/patches/subsys/334-wifi-cfg80211-pass-net_device-to-.set_monitor_channel.patch
+@@ -59,7 +59,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	int	(*scan)(struct wiphy *wiphy,
+ --- a/net/mac80211/cfg.c
+ +++ b/net/mac80211/cfg.c
+-@@ -893,6 +893,7 @@ static int ieee80211_get_station(struct
++@@ -879,6 +879,7 @@ static int ieee80211_get_station(struct
+  }
+  
+  static int ieee80211_set_monitor_channel(struct wiphy *wiphy,
+@@ -126,7 +126,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  }
+ --- a/net/wireless/trace.h
+ +++ b/net/wireless/trace.h
+-@@ -1339,19 +1339,21 @@ TRACE_EVENT(rdev_libertas_set_mesh_chann
++@@ -1318,19 +1318,21 @@ TRACE_EVENT(rdev_libertas_set_mesh_chann
+  );
+  
+  TRACE_EVENT(rdev_set_monitor_channel,
+diff --git a/package/kernel/mac80211/patches/subsys/335-wifi-mac80211-add-flag-to-opt-out-of-virtual-monitor.patch b/package/kernel/mac80211/patches/subsys/335-wifi-mac80211-add-flag-to-opt-out-of-virtual-monitor.patch
+index 5f27b3d103..bb2d5da1a4 100644
+--- a/package/kernel/mac80211/patches/subsys/335-wifi-mac80211-add-flag-to-opt-out-of-virtual-monitor.patch
++++ b/package/kernel/mac80211/patches/subsys/335-wifi-mac80211-add-flag-to-opt-out-of-virtual-monitor.patch
+@@ -60,7 +60,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  		ieee80211_set_mu_mimo_follow(monitor_sdata, params);
+  
+  	if (params->flags) {
+-@@ -903,22 +908,25 @@ static int ieee80211_set_monitor_channel
++@@ -889,22 +894,25 @@ static int ieee80211_set_monitor_channel
+  
+  	lockdep_assert_wiphy(local->hw.wiphy);
+  
+@@ -95,7 +95,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	if (ret)
+  		return ret;
+  done:
+-@@ -3064,7 +3072,8 @@ static int ieee80211_set_tx_power(struct
++@@ -3050,7 +3058,8 @@ static int ieee80211_set_tx_power(struct
+  	if (wdev) {
+  		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+  
+@@ -105,7 +105,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  			if (!ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF))
+  				return -EOPNOTSUPP;
+  
+-@@ -3112,7 +3121,8 @@ static int ieee80211_set_tx_power(struct
++@@ -3098,7 +3107,8 @@ static int ieee80211_set_tx_power(struct
+  	}
+  
+  	list_for_each_entry(sdata, &local->interfaces, list) {
+@@ -115,7 +115,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  			has_monitor = true;
+  			continue;
+  		}
+-@@ -3122,7 +3132,8 @@ static int ieee80211_set_tx_power(struct
++@@ -3108,7 +3118,8 @@ static int ieee80211_set_tx_power(struct
+  		sdata->vif.bss_conf.txpower_type = txp_type;
+  	}
+  	list_for_each_entry(sdata, &local->interfaces, list) {
+@@ -125,7 +125,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  			continue;
+  		ieee80211_recalc_txpower(sdata, update_txp_type);
+  	}
+-@@ -4317,7 +4328,8 @@ static int ieee80211_cfg_get_channel(str
++@@ -4303,7 +4314,8 @@ static int ieee80211_cfg_get_channel(str
+  	if (chanctx_conf) {
+  		*chandef = link->conf->chanreq.oper;
+  		ret = 0;
+@@ -201,7 +201,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+ --- a/net/mac80211/iface.c
+ +++ b/net/mac80211/iface.c
+-@@ -296,8 +296,13 @@ static int _ieee80211_change_mac(struct
++@@ -279,8 +279,13 @@ static int _ieee80211_change_mac(struct
+  	ret = eth_mac_addr(sdata->dev, sa);
+  
+  	if (ret == 0) {
+@@ -217,7 +217,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	}
+  
+  	/* Regardless of eth_mac_addr() return we still want to add the
+-@@ -722,9 +727,11 @@ static void ieee80211_do_stop(struct iee
++@@ -705,9 +710,11 @@ static void ieee80211_do_stop(struct iee
+  		ieee80211_recalc_idle(local);
+  		ieee80211_recalc_offload(local);
+  
+@@ -230,7 +230,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  		fallthrough;
+  	default:
+  		if (!going_down)
+-@@ -1157,7 +1164,8 @@ int ieee80211_add_virtual_monitor(struct
++@@ -1140,7 +1147,8 @@ int ieee80211_add_virtual_monitor(struct
+  	ASSERT_RTNL();
+  	lockdep_assert_wiphy(local->hw.wiphy);
+  
+@@ -240,7 +240,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  		return 0;
+  
+  	sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size, GFP_KERNEL);
+-@@ -1219,6 +1227,9 @@ void ieee80211_del_virtual_monitor(struc
++@@ -1202,6 +1210,9 @@ void ieee80211_del_virtual_monitor(struc
+  {
+  	struct ieee80211_sub_if_data *sdata;
+  
+@@ -250,7 +250,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	ASSERT_RTNL();
+  	lockdep_assert_wiphy(local->hw.wiphy);
+  
+-@@ -1362,7 +1373,8 @@ int ieee80211_do_open(struct wireless_de
++@@ -1345,7 +1356,8 @@ int ieee80211_do_open(struct wireless_de
+  			break;
+  		}
+  
+diff --git a/package/kernel/mac80211/patches/subsys/337-wifi-mac80211-add-support-for-the-monitor-SKIP_TX-fl.patch b/package/kernel/mac80211/patches/subsys/337-wifi-mac80211-add-support-for-the-monitor-SKIP_TX-fl.patch
+index f25ed44c80..3cd8baefe1 100644
+--- a/package/kernel/mac80211/patches/subsys/337-wifi-mac80211-add-support-for-the-monitor-SKIP_TX-fl.patch
++++ b/package/kernel/mac80211/patches/subsys/337-wifi-mac80211-add-support-for-the-monitor-SKIP_TX-fl.patch
+@@ -11,7 +11,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/net/mac80211/ieee80211_i.h
+ +++ b/net/mac80211/ieee80211_i.h
+-@@ -1384,7 +1384,7 @@ struct ieee80211_local {
++@@ -1382,7 +1382,7 @@ struct ieee80211_local {
+  	spinlock_t queue_stop_reason_lock;
+  
+  	int open_count;
+@@ -22,7 +22,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	    fif_probe_req;
+ --- a/net/mac80211/iface.c
+ +++ b/net/mac80211/iface.c
+-@@ -1120,6 +1120,8 @@ void ieee80211_adjust_monitor_flags(stru
++@@ -1103,6 +1103,8 @@ void ieee80211_adjust_monitor_flags(stru
+  	ADJUST(CONTROL, control);
+  	ADJUST(CONTROL, pspoll);
+  	ADJUST(OTHER_BSS, other_bss);
+diff --git a/package/kernel/mac80211/patches/subsys/341-wifi-mac80211-fix-vif-addr-when-switching-from-monit.patch b/package/kernel/mac80211/patches/subsys/341-wifi-mac80211-fix-vif-addr-when-switching-from-monit.patch
+index a803736c4c..4e6d2ee5e9 100644
+--- a/package/kernel/mac80211/patches/subsys/341-wifi-mac80211-fix-vif-addr-when-switching-from-monit.patch
++++ b/package/kernel/mac80211/patches/subsys/341-wifi-mac80211-fix-vif-addr-when-switching-from-monit.patch
+@@ -36,7 +36,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	u8 cab_queue;
+ --- a/net/mac80211/iface.c
+ +++ b/net/mac80211/iface.c
+-@@ -296,13 +296,8 @@ static int _ieee80211_change_mac(struct
++@@ -279,13 +279,8 @@ static int _ieee80211_change_mac(struct
+  	ret = eth_mac_addr(sdata->dev, sa);
+  
+  	if (ret == 0) {
+@@ -52,7 +52,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	}
+  
+  	/* Regardless of eth_mac_addr() return we still want to add the
+-@@ -1353,6 +1348,8 @@ int ieee80211_do_open(struct wireless_de
++@@ -1336,6 +1331,8 @@ int ieee80211_do_open(struct wireless_de
+  		}
+  	}
+  
+diff --git a/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-Support-EHT-1024-aggregation-size-in-T.patch b/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-Support-EHT-1024-aggregation-size-in-T.patch
+index ec5255c20c..e4159d2b3d 100644
+--- a/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-Support-EHT-1024-aggregation-size-in-T.patch
++++ b/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-Support-EHT-1024-aggregation-size-in-T.patch
+@@ -284,7 +284,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  				       sta->ampdu_mlme.tid_rx_manage_offl))
+ --- a/net/mac80211/ieee80211_i.h
+ +++ b/net/mac80211/ieee80211_i.h
+-@@ -2133,14 +2133,19 @@ int ieee80211_send_smps_action(struct ie
++@@ -2131,14 +2131,19 @@ int ieee80211_send_smps_action(struct ie
+  			       const u8 *bssid, int link_id);
+  bool ieee80211_smps_is_restrictive(enum ieee80211_smps_mode smps_mode_old,
+  				   enum ieee80211_smps_mode smps_mode_new);
+diff --git a/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch b/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+index e2cd61962b..fd6e5dc169 100644
+--- a/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
++++ b/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+@@ -25,7 +25,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ 
+ --- a/net/mac80211/ieee80211_i.h
+ +++ b/net/mac80211/ieee80211_i.h
+-@@ -1222,6 +1222,19 @@ struct ieee80211_sub_if_data *vif_to_sda
++@@ -1220,6 +1220,19 @@ struct ieee80211_sub_if_data *vif_to_sda
+  		    ((__link) = sdata_dereference((__sdata)->link[__link_id],	\
+  						  (__sdata))))
+  
+diff --git a/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch b/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+index c45dcec3e3..7722bcf64c 100644
+--- a/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
++++ b/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+@@ -23,7 +23,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ 
+ --- a/net/mac80211/mlme.c
+ +++ b/net/mac80211/mlme.c
+-@@ -2168,6 +2168,21 @@ static void ieee80211_csa_switch_work(st
++@@ -2167,6 +2167,21 @@ static void ieee80211_csa_switch_work(st
+  		}
+  	}
+  
+@@ -45,7 +45,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  	ieee80211_sta_reset_beacon_monitor(sdata);
+  	ieee80211_sta_reset_conn_monitor(sdata);
+  }
+-@@ -7893,6 +7908,29 @@ void ieee80211_sta_work(struct ieee80211
++@@ -7892,6 +7907,29 @@ void ieee80211_sta_work(struct ieee80211
+  	}
+  }
+  
+diff --git a/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch b/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
+index 10ba0cb06d..9f16bea626 100644
+--- a/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
++++ b/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
+@@ -25,7 +25,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ 
+ --- a/net/mac80211/mlme.c
+ +++ b/net/mac80211/mlme.c
+-@@ -3842,9 +3842,6 @@ static void ieee80211_mgd_probe_ap_send(
++@@ -3841,9 +3841,6 @@ static void ieee80211_mgd_probe_ap_send(
+  
+  	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+  
+@@ -35,7 +35,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  	/*
+  	 * Try sending broadcast probe requests for the last three
+  	 * probe requests after the first ones failed since some
+-@@ -3890,9 +3887,6 @@ static void ieee80211_mgd_probe_ap(struc
++@@ -3889,9 +3886,6 @@ static void ieee80211_mgd_probe_ap(struc
+  
+  	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+  
+@@ -45,7 +45,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  	if (!ieee80211_sdata_running(sdata))
+  		return;
+  
+-@@ -7951,36 +7945,73 @@ static void ieee80211_sta_bcn_mon_timer(
++@@ -7950,36 +7944,73 @@ static void ieee80211_sta_bcn_mon_timer(
+  			 &sdata->u.mgd.beacon_connection_loss_work);
+  }
+  
+-- 
+2.43.0
+
