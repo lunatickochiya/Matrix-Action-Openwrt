@@ -134,6 +134,7 @@ function init_openwrt_patch_common() {
 	if [ "$MAC80211_616" = "1" ]; then
 		[ -d $OpenWrt_PATCH_FILE_DIR/mac80211-616 ] && cp -r $OpenWrt_PATCH_FILE_DIR/mac80211-616/* $OpenWrt_PATCH_FILE_DIR/mypatch-2410-$Matrix_Target
 		rm -rf openwrt/package/kernel/mt76/patches/100-api_compat.patch
+		rm -rf openwrt/package/kernel/mac80211/patches/ath12k/002-wifi-ath12k-correctly-handle-mcast-packets-for-clien.patch
 		echo "----$Matrix_Target----mac80211-6-16---"
 		echo "MAC80211_616_NAME=_MAC80211_616" >> $GITHUB_ENV
 	fi
