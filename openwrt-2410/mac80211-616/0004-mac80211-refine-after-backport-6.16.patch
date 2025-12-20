@@ -1,0 +1,2097 @@
+From 4a694f0630a324c4220280bb7ce0355652ae5e8a Mon Sep 17 00:00:00 2001
+From: Scott Mercer <TheRootEd24@gmail.com>
+Date: Tue, 25 Nov 2025 07:31:12 -0500
+Subject: [PATCH 4/6] mac80211: refine after backport 6.16 mac80211: ath11k:
+ fix rssi for IPQ5018 and QCN6122
+
+Add pending patch to fix RSSI station data on IPQ5018 and QCN6122.
+
+Signed-off-by: Scott Mercer <TheRootEd24@gmail.com>
+[ improve commit description, replace patch ]
+Link: https://github.com/openwrt/openwrt/pull/20834
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+mac80211: fix netns crash
+
+[  201.286070] CPU: 0 UID: 0 PID: 34 Comm: kworker/u8:1 Tainted: G S         O       6.12.51 #0
+[  201.294509] Tainted: [S]=CPU_OUT_OF_SPEC, [O]=OOT_MODULE
+[  201.299812] Hardware name: Bananapi BPI-R64 (DT)
+[  201.304422] Workqueue: netns cleanup_net
+[  201.308347] pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+[  201.315304] pc : cfg80211_switch_netns+0x270/0x2d0 [cfg80211]
+[  201.321086] lr : cfg80211_switch_netns+0x26c/0x2d0 [cfg80211]
+[  201.326846] sp : ffffffc081143ca0
+[  201.330153] x29: ffffffc081143ca0 x28: 61c8864680b583eb x27: 0000000000000000
+[  201.337287] x26: ffffffc080c46000 x25: ffffff8000d28800 x24: ffffffc081143d80
+[  201.344421] x23: ffffff800834e360 x22: ffffffc080d6b280 x21: ffffffc07904aeb8
+[  201.351554] x20: ffffff800834c200 x19: ffffff8005e90000 x18: 0000000000000000
+[  201.358688] x17: 0000000000000000 x16: 000000000000001d x15: ffffffc081143cf8
+[  201.365821] x14: ffffff8005703600 x13: 00000000000003bb x12: 0000000000000000
+[  201.372955] x11: 00000000000000c0 x10: 0000000000000000 x9 : ffffffc081143bd0
+[  201.380088] x8 : 0000000000000000 x7 : 7f7f7f7f7f7f7f7f x6 : 1f1f1f1f1f1f6348
+[  201.387222] x5 : 0000000000000004 x4 : ffffff8000ce8000 x3 : 0000000000000000
+[  201.394355] x2 : 0000000000000000 x1 : ffffff8005e90800 x0 : 00000000ffffffea
+[  201.401489] Call trace:
+[  201.403926]  cfg80211_switch_netns+0x270/0x2d0 [cfg80211]
+[  201.409340]  ops_exit_list+0x40/0x80
+[  201.412910]  cleanup_net+0x344/0x558
+[  201.416480]  process_one_work+0x174/0x300
+[  201.420489]  worker_thread+0x278/0x430
+[  201.424234]  kthread+0xd8/0xdc
+[  201.427283]  ret_from_fork+0x10/0x20
+
+Fixes: e005cdea1028 ("mac80211: update to version 6.16")
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Link: https://github.com/openwrt/openwrt/pull/20829
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+mac80211: mwl8k: inject DSSS Parameter Set element into beacons if missing
+
+Some Marvell AP firmware used with mwl8k misbehaves when beacons do not
+contain the DSSS Parameter Set (WLAN_EID_DS_PARAMS) with the current
+channel. When hostapd/mac80211 omits this element (which is valid on
+some bands), the firmware may report bogus RX channel information and AP
+mode becomes unusable.
+
+Backport the upstream fix that ensures beacons always carry the DSSS
+Parameter Set for mwl8k: when setting the beacon, detect if the element
+is missing and inject it after SSID and Supported Rates (per spec
+ordering). This mirrors behaviour in newer Marvell drivers and restores
+stable operation.
+
+Tested on Linksys EA4500 (88W8366).
+
+Fixes: openwrt/openwrt#19088
+Link: https://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless.git/commit/?id=c4e1ac09ee1c750890e36cb1f841f25518f23589
+
+Signed-off-by: Pawel Dembicki <paweldembicki@gmail.com>
+Link: https://github.com/openwrt/openwrt/pull/20757
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+ath11k: fix transmit queue flushing through flush_sta implementation for main
+
+warning print "ath11k c000000.wifi: failed to flush transmit queue 0"
+is observed during busy times.
+
+The mac80211 fallback implementation of `flush_sta` does not handle the per STA queues well.
+This is fixed by providing a ath11k specific implementation of flush_sta telling the firmware to flush a given station.
+The draining of the transmit queues should therefore stop correctly, even if new packets arrive in the mean time.
+
+An upstream ath11k RFC is available at:
+https://patchwork.kernel.org/project/linux-wireless/patch/GV1P250MB14333A5BF24623C4753A10E1E8E0A@GV1P250MB1433.EURP250.PROD.OUTLOOK.COM/
+
+The patch was tested on a Xiaomi AX3600.
+
+Signed-off-by: Florian Maurer <f.maurer@outlook.de>
+Tested-by: Florian Maurer  <f.maurer@outlook.de>
+Co-authored-by: Benjamin Berg <benjamin@sipsolutions.net>
+Tested-by: Flole <flole@flole.de>
+Link: https://github.com/openwrt/openwrt/pull/20293
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+mac80211: ath11k: backport of the latest changes applied for ath11k in 6.16.12
+
+This includes the following commits from upstream Linux between 6.16 and 6.16.12:
+
+wifi: ath11k: clear initialized flag for deinit-ed srng lists
+wifi: ath11k: fix sleeping-in-atomic in ath11k_mac_op_set_bitrate_mask()
+wifi: ath11k: fix dest ring-buffer corruption
+wifi: ath11k: fix source ring-buffer corruption
+wifi: ath11k: fix dest ring-buffer corruption when ring is full
+wifi: ath11k: fix group data packet drops during rekey [1]
+wifi: ath11k: fix NULL dereference in ath11k_qmi_m3_load()
+
+[1] The patch "940-ath11k-Revert-clear-the-keys-properly-when-DISABLE_K.patch" has been removed, as it has been fixed upstream in "wifi: ath11k: fix group data packet drops during rekey" and is added in 945 patch.
+Related: https://github.com/openwrt/openwrt/pull/18705
+Related: https://github.com/openwrt/openwrt/issues/9555
+Related: https://github.com/openwrt/openwrt/issues/14117
+
+Signed-off-by: Agustin Lorenzo <agustin.lorenzo@thinco.es>
+Link: https://github.com/openwrt/openwrt/pull/20395
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+mac80211: ath11k: reordered the patches 906 and 907 and refreshed, no functional changes
+
+Remove leading 0 from filename.
+
+Signed-off-by: Agustin Lorenzo <agustin.lorenzo@thinco.es>
+Link: https://github.com/openwrt/openwrt/pull/20395
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+mac80211: realtek: rtw88: add RTL8822CS support
+
+Add Realtek RTL8822CS support to the rtw88 package.
+
+Signed-off-by: Tianling Shen <cnsztl@immortalwrt.org>
+Link: https://github.com/openwrt/openwrt/pull/20423
+Signed-off-by: Nick Hainke <vincent@systemli.org>
+mac80211: realtek: add support for RTL8814AE/RTL8814AU
+
+This adds support for RTL8814AE/RTL8814AU PCI/USB adapters.
+Run-tested: x86/64/rockchip
+USB adapter tested: Hawking HW17ACU Wireless-AC1750.
+
+Signed-off-by: Marty Jones <mj8263788@gmail.com>
+Link: https://github.com/openwrt/openwrt/pull/19052
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+mac80211: use https instead of http
+
+Use CDN first, if fails, it will use https://mirror2.openwrt.org/sources
+
+Signed-off-by: Andy Chiang <AndyChiang_git@outlook.com>
+Link: https://github.com/openwrt/openwrt/pull/19979
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+mac80211: Fix compilation of iwlwifi driver
+
+The Intel iwlwifi mld driver uses some updated thermal functions. Adapt
+the driver to compile again kernel 6.6 again.
+
+Fixes: 9c82d499995b ("mac80211: iwlwifi fix BE200 probe")
+Link: https://github.com/openwrt/openwrt/pull/19948
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+mac80211: iwlwifi: Add DRIVER_11BE_SUPPORT
+
+The driver support Wifi 7, add dependency to DRIVER_11BE_SUPPORT.
+
+Link: https://github.com/openwrt/openwrt/pull/19948
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+mac80211: Refresh patches
+
+Automatically Refresh the patches.
+
+Fixes: 4d3a35f3689 ("mac80211: remove rt2x00_platform_data")
+Link: https://github.com/openwrt/openwrt/pull/19948
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+mac80211: iwlwifi fix BE200 probe
+
+Fix probing and load correct drivers
+when using last backports.
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+Link: https://github.com/openwrt/openwrt/pull/19927
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+mac80211: add support for MLD AP client probing
+
+Select a link for outgoing probe packets
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+mac80211: extend connection monitoring for MLO
+
+Required for latest mt76
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Revert "mac80211: extend connection monitoring for MLO"
+
+This reverts commit d73ec79a6b31ae4684f30f5dc01f2f073aba2ce8.
+mac80211: remove rt2x00_platform_data
+
+All of this uses OF now. No need to keep platform data around.
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+Link: https://github.com/openwrt/openwrt/pull/19804
+Signed-off-by: Robert Marko <robimarko@gmail.com>
+---
+ package/kernel/mac80211/Makefile              |   3 +-
+ package/kernel/mac80211/intel.mk              |   9 +-
+ ...k_mac_op_flush_sta-to-properly-flush.patch |   4 +-
+ ...ath11k-disable-coldboot-for-ipq6018.patch} |   2 +-
+ ...le-coldboot-calibration-for-ipq5018.patch} |   2 +-
+ ...ear-the-keys-properly-when-DISABLE_K.patch |  48 ----
+ ...alized_flag_for_deinit-ed_srng_lists.patch |  92 +++++++
+ ...ic_in_ath11k_mac_op_set_bitrate_mask.patch |  67 +++++
+ ...h11k-fix_dest_ring-buffer_corruption.patch |  83 ++++++
+ ...1k-fix_source_ring-buffer_corruption.patch |  56 +++++
+ ...-buffer_corruption_when_ring_is_full.patch |  61 +++++
+ ...group_data_packet_drops_during_rekey.patch | 237 ++++++++++++++++++
+ ...LL_dereference_in_ath11k_qmi_m3_load.patch |  40 +++
+ ...rssi-station-dump-for-IPQ5018-and-QC.patch |  32 +++
+ .../patches/build/020-intel-mld-compile.patch |  54 ++++
+ .../210-wireless_netns_local_backport.patch   |   5 +-
+ ...DS-Params-IE-into-beacons-if-missing.patch | 116 +++++++++
+ ...700-mwl8k-missing-pci-id-for-WNR854T.patch |   2 +-
+ ...940-mwl8k_init_devices_synchronously.patch |   4 +-
+ ...1-rt2x00-introduce-rt2x00_platform_h.patch |  32 ---
+ ...support-for-loading-EEPROM-from-user.patch |  14 +-
+ ...option-to-pass-EEPROM-file-name-from.patch |  43 ----
+ ...-support-for-loading-EEPROM-from-MTD.patch |  13 +-
+ ...i-rt2x00-Support-EEPROM-swap-binding.patch |   6 +-
+ ...port-loading-eeprom-from-NVMEM-cells.patch |   9 +-
+ ...EEPROM-from-devicetree-embedded-data.patch |   2 +-
+ ...isabling_bands_through_platform_data.patch |  47 ----
+ ...07-rt2x00-add_platform_data_mac_addr.patch |  25 --
+ ...00-allow_disabling_bands_through_dts.patch |   8 +-
+ .../611-rt2x00-add-AP+STA-support.patch       |   2 +-
+ ...t-support-for-external-LNA-on-MT7620.patch |   4 +-
+ ...-link-iteration-macro-for-link-data.patch} |  17 +-
+ ...11-extend-beacon-monitoring-for-MLO.patch} |  28 ++-
+ ...xtend-connection-monitoring-for-MLO.patch} |  37 ++-
+ ...e-CONNECTION_MONITOR-optional-for-M.patch} |   2 +-
+ ...d-MLO-support-to-ieee80211_probe_cli.patch |  64 +++++
+ package/kernel/mac80211/realtek.mk            |  42 +++-
+ .../files/include/linux/rt2x00_platform.h     |  23 --
+ 38 files changed, 1022 insertions(+), 313 deletions(-)
+ rename package/kernel/mac80211/patches/ath11k/{0906-wifi-ath11k-disable-coldboot-for-ipq6018.patch => 906-wifi-ath11k-disable-coldboot-for-ipq6018.patch} (93%)
+ rename package/kernel/mac80211/patches/ath11k/{0907-wifi-ath11k-disable-coldboot-calibration-for-ipq5018.patch => 907-wifi-ath11k-disable-coldboot-calibration-for-ipq5018.patch} (94%)
+ delete mode 100644 package/kernel/mac80211/patches/ath11k/940-ath11k-Revert-clear-the-keys-properly-when-DISABLE_K.patch
+ create mode 100644 package/kernel/mac80211/patches/ath11k/940-ath11k-clear_initialized_flag_for_deinit-ed_srng_lists.patch
+ create mode 100644 package/kernel/mac80211/patches/ath11k/941-ath11k-fix_sleeping-in-atomic_in_ath11k_mac_op_set_bitrate_mask.patch
+ create mode 100644 package/kernel/mac80211/patches/ath11k/942-ath11k-fix_dest_ring-buffer_corruption.patch
+ create mode 100644 package/kernel/mac80211/patches/ath11k/943-ath11k-fix_source_ring-buffer_corruption.patch
+ create mode 100644 package/kernel/mac80211/patches/ath11k/944-ath11k-fix_dest_ring-buffer_corruption_when_ring_is_full.patch
+ create mode 100644 package/kernel/mac80211/patches/ath11k/945-ath11k-fix_group_data_packet_drops_during_rekey.patch
+ create mode 100644 package/kernel/mac80211/patches/ath11k/946-ath11k-fix_NULL_dereference_in_ath11k_qmi_m3_load.patch
+ create mode 100644 package/kernel/mac80211/patches/ath11k/947-wifi-ath11k-fix-rssi-station-dump-for-IPQ5018-and-QC.patch
+ create mode 100644 package/kernel/mac80211/patches/build/020-intel-mld-compile.patch
+ create mode 100644 package/kernel/mac80211/patches/mwl/001-mwl8k-inject-DS-Params-IE-into-beacons-if-missing.patch
+ delete mode 100644 package/kernel/mac80211/patches/rt2x00/601-rt2x00-introduce-rt2x00_platform_h.patch
+ delete mode 100644 package/kernel/mac80211/patches/rt2x00/602-02-wifi-rt2x00-Add-option-to-pass-EEPROM-file-name-from.patch
+ delete mode 100644 package/kernel/mac80211/patches/rt2x00/606-rt2x00-allow_disabling_bands_through_platform_data.patch
+ delete mode 100644 package/kernel/mac80211/patches/rt2x00/607-rt2x00-add_platform_data_mac_addr.patch
+ rename package/kernel/mac80211/patches/subsys/{350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch => 340-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch} (73%)
+ rename package/kernel/mac80211/patches/subsys/{351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch => 341-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch} (79%)
+ rename package/kernel/mac80211/patches/subsys/{352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch => 342-wifi-mac80211-extend-connection-monitoring-for-MLO.patch} (89%)
+ rename package/kernel/mac80211/patches/subsys/{353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch => 343-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch} (92%)
+ create mode 100644 package/kernel/mac80211/patches/subsys/370-wifi-mac80211-add-MLO-support-to-ieee80211_probe_cli.patch
+ delete mode 100644 target/linux/generic/files/include/linux/rt2x00_platform.h
+
+diff --git a/package/kernel/mac80211/Makefile b/package/kernel/mac80211/Makefile
+index d5aee28430..5b183f68e5 100644
+--- a/package/kernel/mac80211/Makefile
++++ b/package/kernel/mac80211/Makefile
+@@ -15,7 +15,7 @@ PKG_RELEASE:=1
+ PKG_LICENSE:=GPL-2.0-only
+ PKG_LICENSE_FILES:=COPYING
+ 
+-PKG_SOURCE_URL:=http://mirror2.openwrt.org/sources/
++PKG_SOURCE_URL:=@OPENWRT
+ PKG_HASH:=67f11320509dd18e5e2c58cb81e9f6c7d19b09f5229baa5880ed4dab71c19052
+ 
+ PKG_SOURCE:=backports-$(PKG_VERSION).tar.xz
+@@ -334,7 +334,6 @@ ifeq ($(strip $(CONFIG_EXTERNAL_KERNEL_TREE)),"")
+   ifeq ($(strip $(CONFIG_KERNEL_GIT_CLONE_URI)),"")
+     define Build/Configure
+ 	  cmp $(PKG_BUILD_DIR)/include/linux/ath5k_platform.h $(LINUX_DIR)/include/linux/ath5k_platform.h
+-	  cmp $(PKG_BUILD_DIR)/include/linux/rt2x00_platform.h $(LINUX_DIR)/include/linux/rt2x00_platform.h
+     endef
+   endif
+ endif
+diff --git a/package/kernel/mac80211/intel.mk b/package/kernel/mac80211/intel.mk
+index f2aceb96cd..3097ec50fe 100644
+--- a/package/kernel/mac80211/intel.mk
++++ b/package/kernel/mac80211/intel.mk
+@@ -1,18 +1,19 @@
+ PKG_DRIVERS += iwlwifi
+ 
+-config-$(call config_package,iwlwifi) += IWLWIFI IWLDVM IWLMVM
++config-$(call config_package,iwlwifi) += IWLWIFI IWLDVM IWLMVM IWLMLD
+ config-$(CONFIG_PACKAGE_IWLWIFI_DEBUG)+= IWLWIFI_DEBUG
+ config-$(CONFIG_PACKAGE_IWLWIFI_DEBUGFS)+= IWLWIFI_DEBUGFS
+ 
+ define KernelPackage/iwlwifi
+   $(call KernelPackage/mac80211/Default)
+-  DEPENDS:= +kmod-mac80211 +kmod-ptp @PCI_SUPPORT +@DRIVER_11AC_SUPPORT +@DRIVER_11AX_SUPPORT
++  DEPENDS:= +kmod-mac80211 +kmod-ptp @PCI_SUPPORT +@DRIVER_11AC_SUPPORT +@DRIVER_11AX_SUPPORT +@DRIVER_11BE_SUPPORT
+   TITLE:=Intel AGN Wireless support
+   FILES:= \
+ 	$(PKG_BUILD_DIR)/drivers/net/wireless/intel/iwlwifi/iwlwifi.ko \
+ 	$(PKG_BUILD_DIR)/drivers/net/wireless/intel/iwlwifi/dvm/iwldvm.ko \
+-	$(PKG_BUILD_DIR)/drivers/net/wireless/intel/iwlwifi/mvm/iwlmvm.ko
+-  AUTOLOAD:=$(call AutoProbe,iwlwifi iwldvm iwlmvm)
++	$(PKG_BUILD_DIR)/drivers/net/wireless/intel/iwlwifi/mvm/iwlmvm.ko \
++	$(PKG_BUILD_DIR)/drivers/net/wireless/intel/iwlwifi/mld/iwlmld.ko
++  AUTOLOAD:=$(call AutoProbe,iwlwifi iwldvm iwlmvm iwlmld)
+   MENU:=1
+ endef
+ 
+diff --git a/package/kernel/mac80211/patches/ath11k/453-ath11k-add-ath11k_mac_op_flush_sta-to-properly-flush.patch b/package/kernel/mac80211/patches/ath11k/453-ath11k-add-ath11k_mac_op_flush_sta-to-properly-flush.patch
+index 0612150f3c..baba7ef3c6 100644
+--- a/package/kernel/mac80211/patches/ath11k/453-ath11k-add-ath11k_mac_op_flush_sta-to-properly-flush.patch
++++ b/package/kernel/mac80211/patches/ath11k/453-ath11k-add-ath11k_mac_op_flush_sta-to-properly-flush.patch
+@@ -31,7 +31,7 @@ Signed-off-by: Florian Maurer <f.maurer@outlook.de>
+ 
+ --- a/drivers/net/wireless/ath/ath11k/mac.c
+ +++ b/drivers/net/wireless/ath/ath11k/mac.c
+-@@ -8278,6 +8278,23 @@ static void ath11k_mac_op_flush(struct i
++@@ -8248,6 +8248,23 @@ static void ath11k_mac_op_flush(struct i
+  	ath11k_mac_flush_tx_complete(ar);
+  }
+  
+@@ -55,7 +55,7 @@ Signed-off-by: Florian Maurer <f.maurer@outlook.de>
+  static bool
+  ath11k_mac_has_single_legacy_rate(struct ath11k *ar,
+  				  enum nl80211_band band,
+-@@ -9910,6 +9927,7 @@ static const struct ieee80211_ops ath11k
++@@ -9823,6 +9840,7 @@ static const struct ieee80211_ops ath11k
+  	.set_bitrate_mask		= ath11k_mac_op_set_bitrate_mask,
+  	.get_survey			= ath11k_mac_op_get_survey,
+  	.flush				= ath11k_mac_op_flush,
+diff --git a/package/kernel/mac80211/patches/ath11k/0906-wifi-ath11k-disable-coldboot-for-ipq6018.patch b/package/kernel/mac80211/patches/ath11k/906-wifi-ath11k-disable-coldboot-for-ipq6018.patch
+similarity index 93%
+rename from package/kernel/mac80211/patches/ath11k/0906-wifi-ath11k-disable-coldboot-for-ipq6018.patch
+rename to package/kernel/mac80211/patches/ath11k/906-wifi-ath11k-disable-coldboot-for-ipq6018.patch
+index 132f5359b0..d98d24a2ef 100644
+--- a/package/kernel/mac80211/patches/ath11k/0906-wifi-ath11k-disable-coldboot-for-ipq6018.patch
++++ b/package/kernel/mac80211/patches/ath11k/906-wifi-ath11k-disable-coldboot-for-ipq6018.patch
+@@ -13,7 +13,7 @@ Signed-off-by: Mantas Pucka <mantas@8devices.com>
+ 
+ --- a/drivers/net/wireless/ath/ath11k/core.c
+ +++ b/drivers/net/wireless/ath/ath11k/core.c
+-@@ -171,8 +171,8 @@ static const struct ath11k_hw_params ath
++@@ -171,8 +171,8 @@ static struct ath11k_hw_params ath11k_hw
+  		.supports_shadow_regs = false,
+  		.idle_ps = false,
+  		.supports_sta_ps = false,
+diff --git a/package/kernel/mac80211/patches/ath11k/0907-wifi-ath11k-disable-coldboot-calibration-for-ipq5018.patch b/package/kernel/mac80211/patches/ath11k/907-wifi-ath11k-disable-coldboot-calibration-for-ipq5018.patch
+similarity index 94%
+rename from package/kernel/mac80211/patches/ath11k/0907-wifi-ath11k-disable-coldboot-calibration-for-ipq5018.patch
+rename to package/kernel/mac80211/patches/ath11k/907-wifi-ath11k-disable-coldboot-calibration-for-ipq5018.patch
+index 597d6aa445..ab8e517839 100644
+--- a/package/kernel/mac80211/patches/ath11k/0907-wifi-ath11k-disable-coldboot-calibration-for-ipq5018.patch
++++ b/package/kernel/mac80211/patches/ath11k/907-wifi-ath11k-disable-coldboot-calibration-for-ipq5018.patch
+@@ -14,7 +14,7 @@ Signed-off-by: George Moussalem <george.moussalem@outlook.com>
+ 
+ --- a/drivers/net/wireless/ath/ath11k/core.c
+ +++ b/drivers/net/wireless/ath/ath11k/core.c
+-@@ -698,8 +698,8 @@ static const struct ath11k_hw_params ath
++@@ -698,8 +698,8 @@ static struct ath11k_hw_params ath11k_hw
+  		.supports_suspend = false,
+  		.hal_params = &ath11k_hw_hal_params_ipq8074,
+  		.single_pdev_only = false,
+diff --git a/package/kernel/mac80211/patches/ath11k/940-ath11k-Revert-clear-the-keys-properly-when-DISABLE_K.patch b/package/kernel/mac80211/patches/ath11k/940-ath11k-Revert-clear-the-keys-properly-when-DISABLE_K.patch
+deleted file mode 100644
+index 1f0b63c81b..0000000000
+--- a/package/kernel/mac80211/patches/ath11k/940-ath11k-Revert-clear-the-keys-properly-when-DISABLE_K.patch
++++ /dev/null
+@@ -1,48 +0,0 @@
+-From 52393e2ae12f18fb1a60578c24c46ebab292ddb6 Mon Sep 17 00:00:00 2001
+-From: Rameshkumar Sundaram <quic_ramess@quicinc.com>
+-Date: Mon, 28 Mar 2022 13:21:04 +0530
+-Subject: [PATCH] ath11k: Revert: clear the keys properly when DISABLE_KEY
+-MIME-Version: 1.0
+-Content-Type: text/plain; charset=UTF-8
+-Content-Transfer-Encoding: 8bit
+-
+-Reverting the Upstream clear key change added as a part of
+-436a4e886598 ("ath11k: clear the keys properly
+-when DISABLE_KEY")
+-This change exposed a race in WLAN Firmware where target asserts
+-are seen frequently due FW not synchronizing ath11k host’s clear
+-key commands(CIPHER changes to NONE) with frames in TX queue.
+-Hence reverting this change untill FW fixes to synchronize
+-ath11k host’s clear key command are available.
+-
+-Signed-off-by: Rameshkumar Sundaram <quic_ramess@quicinc.com>
+----
+- drivers/net/wireless/ath/ath11k/mac.c | 4 +++-
+- drivers/net/wireless/ath/ath11k/wmi.c | 3 +--
+- 2 files changed, 4 insertions(+), 3 deletions(-)
+-
+---- a/drivers/net/wireless/ath/ath11k/mac.c
+-+++ b/drivers/net/wireless/ath/ath11k/mac.c
+-@@ -4232,7 +4232,9 @@ static int ath11k_install_key(struct ath
+- 		return 0;
+- 
+- 	if (cmd == DISABLE_KEY) {
+--		arg.key_cipher = WMI_CIPHER_NONE;
+-+		/* TODO: Check if FW expects  value other than NONE for del */
+-+		/* arg.key_cipher = WMI_CIPHER_NONE; */
+-+		arg.key_len = 0;
+- 		arg.key_data = NULL;
+- 		goto install;
+- 	}
+---- a/drivers/net/wireless/ath/ath11k/wmi.c
+-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
+-@@ -1854,8 +1854,7 @@ int ath11k_wmi_vdev_install_key(struct a
+- 	tlv = (struct wmi_tlv *)(skb->data + sizeof(*cmd));
+- 	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_BYTE) |
+- 		      FIELD_PREP(WMI_TLV_LEN, key_len_aligned);
+--	if (arg->key_data)
+--		memcpy(tlv->value, (u8 *)arg->key_data, key_len_aligned);
+-+	memcpy(tlv->value, (u8 *)arg->key_data, key_len_aligned);
+- 
+- 	ret = ath11k_wmi_cmd_send(wmi, skb, WMI_VDEV_INSTALL_KEY_CMDID);
+- 	if (ret) {
+diff --git a/package/kernel/mac80211/patches/ath11k/940-ath11k-clear_initialized_flag_for_deinit-ed_srng_lists.patch b/package/kernel/mac80211/patches/ath11k/940-ath11k-clear_initialized_flag_for_deinit-ed_srng_lists.patch
+new file mode 100644
+index 0000000000..e092e9d2aa
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath11k/940-ath11k-clear_initialized_flag_for_deinit-ed_srng_lists.patch
+@@ -0,0 +1,92 @@
++From 16872194c80f2724472fc207991712895ac8a230 Mon Sep 17 00:00:00 2001
++From: Sergey Senozhatsky <senozhatsky@chromium.org>
++Date: Thu, 12 Jun 2025 17:45:06 +0900
++Subject: wifi: ath11k: clear initialized flag for deinit-ed srng lists
++
++[ Upstream commit a5b46aa7cf5f05c213316a018e49a8e086efd98e ]
++
++In a number of cases we see kernel panics on resume due
++to ath11k kernel page fault, which happens under the
++following circumstances:
++
++1) First ath11k_hal_dump_srng_stats() call
++
++ Last interrupt received for each group:
++ ath11k_pci 0000:01:00.0: group_id 0 22511ms before
++ ath11k_pci 0000:01:00.0: group_id 1 14440788ms before
++ [..]
++ ath11k_pci 0000:01:00.0: failed to receive control response completion, polling..
++ ath11k_pci 0000:01:00.0: Service connect timeout
++ ath11k_pci 0000:01:00.0: failed to connect to HTT: -110
++ ath11k_pci 0000:01:00.0: failed to start core: -110
++ ath11k_pci 0000:01:00.0: firmware crashed: MHI_CB_EE_RDDM
++ ath11k_pci 0000:01:00.0: already resetting count 2
++ ath11k_pci 0000:01:00.0: failed to wait wlan mode request (mode 4): -110
++ ath11k_pci 0000:01:00.0: qmi failed to send wlan mode off: -110
++ ath11k_pci 0000:01:00.0: failed to reconfigure driver on crash recovery
++ [..]
++
++2) At this point reconfiguration fails (we have 2 resets) and
++  ath11k_core_reconfigure_on_crash() calls ath11k_hal_srng_deinit()
++  which destroys srng lists.  However, it does not reset per-list
++  ->initialized flag.
++
++3) Second ath11k_hal_dump_srng_stats() call sees stale ->initialized
++  flag and attempts to dump srng stats:
++
++ Last interrupt received for each group:
++ ath11k_pci 0000:01:00.0: group_id 0 66785ms before
++ ath11k_pci 0000:01:00.0: group_id 1 14485062ms before
++ ath11k_pci 0000:01:00.0: group_id 2 14485062ms before
++ ath11k_pci 0000:01:00.0: group_id 3 14485062ms before
++ ath11k_pci 0000:01:00.0: group_id 4 14780845ms before
++ ath11k_pci 0000:01:00.0: group_id 5 14780845ms before
++ ath11k_pci 0000:01:00.0: group_id 6 14485062ms before
++ ath11k_pci 0000:01:00.0: group_id 7 66814ms before
++ ath11k_pci 0000:01:00.0: group_id 8 68997ms before
++ ath11k_pci 0000:01:00.0: group_id 9 67588ms before
++ ath11k_pci 0000:01:00.0: group_id 10 69511ms before
++ BUG: unable to handle page fault for address: ffffa007404eb010
++ #PF: supervisor read access in kernel mode
++ #PF: error_code(0x0000) - not-present page
++ PGD 100000067 P4D 100000067 PUD 10022d067 PMD 100b01067 PTE 0
++ Oops: 0000 [#1] PREEMPT SMP NOPTI
++ RIP: 0010:ath11k_hal_dump_srng_stats+0x2b4/0x3b0 [ath11k]
++ Call Trace:
++ <TASK>
++ ? __die_body+0xae/0xb0
++ ? page_fault_oops+0x381/0x3e0
++ ? exc_page_fault+0x69/0xa0
++ ? asm_exc_page_fault+0x22/0x30
++ ? ath11k_hal_dump_srng_stats+0x2b4/0x3b0 [ath11k (HASH:6cea 4)]
++ ath11k_qmi_driver_event_work+0xbd/0x1050 [ath11k (HASH:6cea 4)]
++ worker_thread+0x389/0x930
++ kthread+0x149/0x170
++
++Clear per-list ->initialized flag in ath11k_hal_srng_deinit().
++
++Signed-off-by: Sergey Senozhatsky <senozhatsky@chromium.org>
++Reviewed-by: Baochen Qiang <quic_bqiang@quicinc.com>
++Fixes: 5118935b1bc2 ("ath11k: dump SRNG stats during FW assert")
++Link: https://patch.msgid.link/20250612084551.702803-1-senozhatsky@chromium.org
++Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
++Signed-off-by: Sasha Levin <sashal@kernel.org>
++---
++ drivers/net/wireless/ath/ath11k/hal.c | 4 ++++
++ 1 file changed, 4 insertions(+)
++
++(limited to 'drivers/net/wireless/ath/ath11k')
++
++--- a/drivers/net/wireless/ath/ath11k/hal.c
+++++ b/drivers/net/wireless/ath/ath11k/hal.c
++@@ -1341,6 +1341,10 @@ EXPORT_SYMBOL(ath11k_hal_srng_init);
++ void ath11k_hal_srng_deinit(struct ath11k_base *ab)
++ {
++ 	struct ath11k_hal *hal = &ab->hal;
+++	int i;
+++
+++	for (i = 0; i < HAL_SRNG_RING_ID_MAX; i++)
+++		ab->hal.srng_list[i].initialized = 0;
++ 
++ 	ath11k_hal_unregister_srng_key(ab);
++ 	ath11k_hal_free_cont_rdp(ab);
+diff --git a/package/kernel/mac80211/patches/ath11k/941-ath11k-fix_sleeping-in-atomic_in_ath11k_mac_op_set_bitrate_mask.patch b/package/kernel/mac80211/patches/ath11k/941-ath11k-fix_sleeping-in-atomic_in_ath11k_mac_op_set_bitrate_mask.patch
+new file mode 100644
+index 0000000000..2fa7123b6d
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath11k/941-ath11k-fix_sleeping-in-atomic_in_ath11k_mac_op_set_bitrate_mask.patch
+@@ -0,0 +1,67 @@
++From 6bdef22d540258ca06f079f7b6ae100669a19b47 Mon Sep 17 00:00:00 2001
++From: Baochen Qiang <quic_bqiang@quicinc.com>
++Date: Tue, 3 Jun 2025 10:25:28 +0800
++Subject: wifi: ath11k: fix sleeping-in-atomic in
++ ath11k_mac_op_set_bitrate_mask()
++
++[ Upstream commit 65c12b104cb942d588a1a093acc4537fb3d3b129 ]
++
++ath11k_mac_disable_peer_fixed_rate() is passed as the iterator to
++ieee80211_iterate_stations_atomic(). Note in this case the iterator is
++required to be atomic, however ath11k_mac_disable_peer_fixed_rate() does
++not follow it as it might sleep. Consequently below warning is seen:
++
++BUG: sleeping function called from invalid context at wmi.c:304
++Call Trace:
++ <TASK>
++ dump_stack_lvl
++ __might_resched.cold
++ ath11k_wmi_cmd_send
++ ath11k_wmi_set_peer_param
++ ath11k_mac_disable_peer_fixed_rate
++ ieee80211_iterate_stations_atomic
++ ath11k_mac_op_set_bitrate_mask.cold
++
++Change to ieee80211_iterate_stations_mtx() to fix this issue.
++
++Tested-on: WCN6855 hw2.0 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.30
++
++Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
++Signed-off-by: Baochen Qiang <quic_bqiang@quicinc.com>
++Link: https://patch.msgid.link/20250603-ath11k-use-non-atomic-iterator-v1-1-d75762068d56@quicinc.com
++Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
++Signed-off-by: Sasha Levin <sashal@kernel.org>
++---
++ drivers/net/wireless/ath/ath11k/mac.c | 12 ++++++------
++ 1 file changed, 6 insertions(+), 6 deletions(-)
++
++(limited to 'drivers/net/wireless/ath/ath11k')
++
++--- a/drivers/net/wireless/ath/ath11k/mac.c
+++++ b/drivers/net/wireless/ath/ath11k/mac.c
++@@ -8757,9 +8757,9 @@ ath11k_mac_op_set_bitrate_mask(struct ie
++ 				    arvif->vdev_id, ret);
++ 			return ret;
++ 		}
++-		ieee80211_iterate_stations_atomic(ar->hw,
++-						  ath11k_mac_disable_peer_fixed_rate,
++-						  arvif);
+++		ieee80211_iterate_stations_mtx(ar->hw,
+++					       ath11k_mac_disable_peer_fixed_rate,
+++					       arvif);
++ 	} else if (ath11k_mac_bitrate_mask_get_single_nss(ar, arvif, band, mask,
++ 							  &single_nss)) {
++ 		rate = WMI_FIXED_RATE_NONE;
++@@ -8826,9 +8826,9 @@ ath11k_mac_op_set_bitrate_mask(struct ie
++ 		}
++ 
++ 		mutex_lock(&ar->conf_mutex);
++-		ieee80211_iterate_stations_atomic(ar->hw,
++-						  ath11k_mac_disable_peer_fixed_rate,
++-						  arvif);
+++		ieee80211_iterate_stations_mtx(ar->hw,
+++					       ath11k_mac_disable_peer_fixed_rate,
+++					       arvif);
++ 
++ 		arvif->bitrate_mask = *mask;
++ 		ieee80211_iterate_stations_atomic(ar->hw,
+diff --git a/package/kernel/mac80211/patches/ath11k/942-ath11k-fix_dest_ring-buffer_corruption.patch b/package/kernel/mac80211/patches/ath11k/942-ath11k-fix_dest_ring-buffer_corruption.patch
+new file mode 100644
+index 0000000000..e477103050
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath11k/942-ath11k-fix_dest_ring-buffer_corruption.patch
+@@ -0,0 +1,83 @@
++From 0f708ced89758247f5d2d70def00e7c1c80ff557 Mon Sep 17 00:00:00 2001
++From: Johan Hovold <johan+linaro@kernel.org>
++Date: Wed, 4 Jun 2025 16:34:53 +0200
++Subject: wifi: ath11k: fix dest ring-buffer corruption
++
++commit 8c1ba5091fa9a2d1478da63173b16a701bdf86bb upstream.
++
++Add the missing memory barrier to make sure that destination ring
++descriptors are read after the head pointers to avoid using stale data
++on weakly ordered architectures like aarch64.
++
++The barrier is added to the ath11k_hal_srng_access_begin() helper for
++symmetry with follow-on fixes for source ring buffer corruption which
++will add barriers to ath11k_hal_srng_access_end().
++
++Tested-on: WCN6855 hw2.1 WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.41
++
++Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
++Cc: stable@vger.kernel.org	# 5.6
++Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
++Reviewed-by: Baochen Qiang <quic_bqiang@quicinc.com>
++Link: https://patch.msgid.link/20250604143457.26032-2-johan+linaro@kernel.org
++Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
++Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
++---
++ drivers/net/wireless/ath/ath11k/ce.c    |  3 ---
++ drivers/net/wireless/ath/ath11k/dp_rx.c |  3 ---
++ drivers/net/wireless/ath/ath11k/hal.c   | 12 +++++++++++-
++ 3 files changed, 11 insertions(+), 7 deletions(-)
++
++(limited to 'drivers/net/wireless/ath/ath11k')
++
++--- a/drivers/net/wireless/ath/ath11k/ce.c
+++++ b/drivers/net/wireless/ath/ath11k/ce.c
++@@ -393,9 +393,6 @@ static int ath11k_ce_completed_recv_next
++ 		goto err;
++ 	}
++ 
++-	/* Make sure descriptor is read after the head pointer. */
++-	dma_rmb();
++-
++ 	*nbytes = ath11k_hal_ce_dst_status_get_length(desc);
++ 
++ 	*skb = pipe->dest_ring->skb[sw_index];
++--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
+++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
++@@ -2650,9 +2650,6 @@ int ath11k_dp_process_rx(struct ath11k_b
++ try_again:
++ 	ath11k_hal_srng_access_begin(ab, srng);
++ 
++-	/* Make sure descriptor is read after the head pointer. */
++-	dma_rmb();
++-
++ 	while (likely(desc =
++ 	      (struct hal_reo_dest_ring *)ath11k_hal_srng_dst_get_next_entry(ab,
++ 									     srng))) {
++--- a/drivers/net/wireless/ath/ath11k/hal.c
+++++ b/drivers/net/wireless/ath/ath11k/hal.c
++@@ -823,13 +823,23 @@ u32 *ath11k_hal_srng_src_peek(struct ath
++ 
++ void ath11k_hal_srng_access_begin(struct ath11k_base *ab, struct hal_srng *srng)
++ {
+++	u32 hp;
+++
++ 	lockdep_assert_held(&srng->lock);
++ 
++ 	if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
++ 		srng->u.src_ring.cached_tp =
++ 			*(volatile u32 *)srng->u.src_ring.tp_addr;
++ 	} else {
++-		srng->u.dst_ring.cached_hp = READ_ONCE(*srng->u.dst_ring.hp_addr);
+++		hp = READ_ONCE(*srng->u.dst_ring.hp_addr);
+++
+++		if (hp != srng->u.dst_ring.cached_hp) {
+++			srng->u.dst_ring.cached_hp = hp;
+++			/* Make sure descriptor is read after the head
+++			 * pointer.
+++			 */
+++			dma_rmb();
+++		}
++ 
++ 		/* Try to prefetch the next descriptor in the ring */
++ 		if (srng->flags & HAL_SRNG_FLAGS_CACHED)
+diff --git a/package/kernel/mac80211/patches/ath11k/943-ath11k-fix_source_ring-buffer_corruption.patch b/package/kernel/mac80211/patches/ath11k/943-ath11k-fix_source_ring-buffer_corruption.patch
+new file mode 100644
+index 0000000000..f9cbe10b6b
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath11k/943-ath11k-fix_source_ring-buffer_corruption.patch
+@@ -0,0 +1,56 @@
++From eed5fcf4a3d20fdbd9af2e602eab2b581264822f Mon Sep 17 00:00:00 2001
++From: Johan Hovold <johan+linaro@kernel.org>
++Date: Wed, 4 Jun 2025 16:34:56 +0200
++Subject: wifi: ath11k: fix source ring-buffer corruption
++
++commit 6efa0df54022c6c9fd4d294b87622c7fcdc418c8 upstream.
++
++Add the missing memory barrier to make sure that LMAC source ring
++descriptors are written before updating the head pointer to avoid
++passing stale data to the firmware on weakly ordered architectures like
++aarch64.
++
++Note that non-LMAC rings use MMIO write accessors which have the
++required write memory barrier.
++
++Tested-on: WCN6855 hw2.1 WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.41
++
++Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
++Cc: stable@vger.kernel.org      # 5.6
++Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
++Reviewed-by: Baochen Qiang <quic_bqiang@quicinc.com>
++Link: https://patch.msgid.link/20250604143457.26032-5-johan+linaro@kernel.org
++Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
++Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
++---
++ drivers/net/wireless/ath/ath11k/hal.c | 10 +++++++++-
++ 1 file changed, 9 insertions(+), 1 deletion(-)
++
++(limited to 'drivers/net/wireless/ath/ath11k')
++
++--- a/drivers/net/wireless/ath/ath11k/hal.c
+++++ b/drivers/net/wireless/ath/ath11k/hal.c
++@@ -862,7 +862,11 @@ void ath11k_hal_srng_access_end(struct a
++ 		if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
++ 			srng->u.src_ring.last_tp =
++ 				*(volatile u32 *)srng->u.src_ring.tp_addr;
++-			*srng->u.src_ring.hp_addr = srng->u.src_ring.hp;
+++			/* Make sure descriptor is written before updating the
+++			 * head pointer.
+++			 */
+++			dma_wmb();
+++			WRITE_ONCE(*srng->u.src_ring.hp_addr, srng->u.src_ring.hp);
++ 		} else {
++ 			srng->u.dst_ring.last_hp = *srng->u.dst_ring.hp_addr;
++ 			*srng->u.dst_ring.tp_addr = srng->u.dst_ring.tp;
++@@ -871,6 +875,10 @@ void ath11k_hal_srng_access_end(struct a
++ 		if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
++ 			srng->u.src_ring.last_tp =
++ 				*(volatile u32 *)srng->u.src_ring.tp_addr;
+++			/* Assume implementation use an MMIO write accessor
+++			 * which has the required wmb() so that the descriptor
+++			 * is written before the updating the head pointer.
+++			 */
++ 			ath11k_hif_write32(ab,
++ 					   (unsigned long)srng->u.src_ring.hp_addr -
++ 					   (unsigned long)ab->mem,
+diff --git a/package/kernel/mac80211/patches/ath11k/944-ath11k-fix_dest_ring-buffer_corruption_when_ring_is_full.patch b/package/kernel/mac80211/patches/ath11k/944-ath11k-fix_dest_ring-buffer_corruption_when_ring_is_full.patch
+new file mode 100644
+index 0000000000..e0e5348392
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath11k/944-ath11k-fix_dest_ring-buffer_corruption_when_ring_is_full.patch
+@@ -0,0 +1,61 @@
++From 6fc2589aae91818dd1183a589ab97d8e5c25364e Mon Sep 17 00:00:00 2001
++From: Johan Hovold <johan+linaro@kernel.org>
++Date: Wed, 4 Jun 2025 16:34:57 +0200
++Subject: wifi: ath11k: fix dest ring-buffer corruption when ring is full
++
++commit aa6956150f820e6a6deba44be325ddfcb5b10f88 upstream.
++
++Add the missing memory barriers to make sure that destination ring
++descriptors are read before updating the tail pointer (and passing
++ownership to the device) to avoid memory corruption on weakly ordered
++architectures like aarch64 when the ring is full.
++
++Tested-on: WCN6855 hw2.1 WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.41
++
++Fixes: d5c65159f289 ("ath11k: driver for Qualcomm IEEE 802.11ax devices")
++Cc: stable@vger.kernel.org      # 5.6
++Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
++Reviewed-by: Baochen Qiang <quic_bqiang@quicinc.com>
++Link: https://patch.msgid.link/20250604143457.26032-6-johan+linaro@kernel.org
++Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
++Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
++---
++ drivers/net/wireless/ath/ath11k/hal.c | 11 +++++++++--
++ 1 file changed, 9 insertions(+), 2 deletions(-)
++
++(limited to 'drivers/net/wireless/ath/ath11k')
++
++--- a/drivers/net/wireless/ath/ath11k/hal.c
+++++ b/drivers/net/wireless/ath/ath11k/hal.c
++@@ -854,7 +854,6 @@ void ath11k_hal_srng_access_end(struct a
++ {
++ 	lockdep_assert_held(&srng->lock);
++ 
++-	/* TODO: See if we need a write memory barrier here */
++ 	if (srng->flags & HAL_SRNG_FLAGS_LMAC_RING) {
++ 		/* For LMAC rings, ring pointer updates are done through FW and
++ 		 * hence written to a shared memory location that is read by FW
++@@ -869,7 +868,11 @@ void ath11k_hal_srng_access_end(struct a
++ 			WRITE_ONCE(*srng->u.src_ring.hp_addr, srng->u.src_ring.hp);
++ 		} else {
++ 			srng->u.dst_ring.last_hp = *srng->u.dst_ring.hp_addr;
++-			*srng->u.dst_ring.tp_addr = srng->u.dst_ring.tp;
+++			/* Make sure descriptor is read before updating the
+++			 * tail pointer.
+++			 */
+++			dma_mb();
+++			WRITE_ONCE(*srng->u.dst_ring.tp_addr, srng->u.dst_ring.tp);
++ 		}
++ 	} else {
++ 		if (srng->ring_dir == HAL_SRNG_DIR_SRC) {
++@@ -885,6 +888,10 @@ void ath11k_hal_srng_access_end(struct a
++ 					   srng->u.src_ring.hp);
++ 		} else {
++ 			srng->u.dst_ring.last_hp = *srng->u.dst_ring.hp_addr;
+++			/* Make sure descriptor is read before updating the
+++			 * tail pointer.
+++			 */
+++			mb();
++ 			ath11k_hif_write32(ab,
++ 					   (unsigned long)srng->u.dst_ring.tp_addr -
++ 					   (unsigned long)ab->mem,
+diff --git a/package/kernel/mac80211/patches/ath11k/945-ath11k-fix_group_data_packet_drops_during_rekey.patch b/package/kernel/mac80211/patches/ath11k/945-ath11k-fix_group_data_packet_drops_during_rekey.patch
+new file mode 100644
+index 0000000000..8e7e8b9b00
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath11k/945-ath11k-fix_group_data_packet_drops_during_rekey.patch
+@@ -0,0 +1,237 @@
++From 9a394fd149502394c20dc2ebecb8acfde6f6aeac Mon Sep 17 00:00:00 2001
++From: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
++Date: Sun, 10 Aug 2025 22:30:18 +0530
++Subject: wifi: ath11k: fix group data packet drops during rekey
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++[ Upstream commit 97acb0259cc9cbfbd7ab689e25684f3d8ce10e26 ]
++
++During GTK rekey, mac80211 issues a clear key (if the old key exists)
++followed by an install key operation in the same context. This causes
++ath11k to send two WMI commands in quick succession: one to clear the
++old key and another to install the new key in the same slot.
++
++Under certain conditions—especially under high load or time sensitive
++scenarios, firmware may process these commands asynchronously in a way
++that firmware assumes the key is cleared whereas hardware has a valid key.
++This inconsistency between hardware and firmware leads to group addressed
++packet drops. Only setting the same key again can restore a valid key in
++firmware and allow packets to be transmitted.
++
++This issue remained latent because the host's clear key commands were
++not effective in firmware until commit 436a4e886598 ("ath11k: clear the
++keys properly via DISABLE_KEY"). That commit enabled the host to
++explicitly clear group keys, which inadvertently exposed the race.
++
++To mitigate this, restrict group key clearing across all modes (AP, STA,
++MESH). During rekey, the new key can simply be set on top of the previous
++one, avoiding the need for a clear followed by a set.
++
++However, in AP mode specifically, permit group key clearing when no
++stations are associated. This exception supports transitions from secure
++modes (e.g., WPA2/WPA3) to open mode, during which all associated peers
++are removed and the group key is cleared as part of the transition.
++
++Add a per-BSS station counter to track the presence of stations during
++set key operations. Also add a reset_group_keys flag to track the key
++re-installation state and avoid repeated installation of the same key
++when the number of connected stations transitions to non-zero within a
++rekey period.
++
++Additionally, for AP and Mesh modes, when the first station associates,
++reinstall the same group key that was last set. This ensures that the
++firmware recovers from any race that may have occurred during a previous
++key clear when no stations were associated.
++
++This change ensures that key clearing is permitted only when no clients
++are connected, avoiding packet loss while enabling dynamic security mode
++transitions.
++
++Tested-on: QCN9074 hw1.0 PCI WLAN.HK.2.9.0.1-02146-QCAHKSWPL_SILICONZ-1
++Tested-on: WCN6855 hw2.1 PCI WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.41
++
++Reported-by: Steffen Moser <lists@steffen-moser.de>
++Closes: https://lore.kernel.org/linux-wireless/c6366409-9928-4dd7-bf7b-ba7fcf20eabf@steffen-moser.de
++Fixes: 436a4e886598 ("ath11k: clear the keys properly via DISABLE_KEY")
++Signed-off-by: Rameshkumar Sundaram <rameshkumar.sundaram@oss.qualcomm.com>
++Tested-by: Nicolas Escande <nico.escande@gmail.com>
++Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
++Link: https://patch.msgid.link/20250810170018.1124014-1-rameshkumar.sundaram@oss.qualcomm.com
++Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
++Signed-off-by: Sasha Levin <sashal@kernel.org>
++---
++ drivers/net/wireless/ath/ath11k/core.h |   2 +
++ drivers/net/wireless/ath/ath11k/mac.c  | 111 ++++++++++++++++++++++++++++++---
++ 2 files changed, 104 insertions(+), 9 deletions(-)
++
++(limited to 'drivers/net/wireless/ath/ath11k')
++
++--- a/drivers/net/wireless/ath/ath11k/core.h
+++++ b/drivers/net/wireless/ath/ath11k/core.h
++@@ -414,6 +414,8 @@ struct ath11k_vif {
++ 	bool do_not_send_tmpl;
++ 	struct ath11k_arp_ns_offload arp_ns_offload;
++ 	struct ath11k_rekey_data rekey_data;
+++	u32 num_stations;
+++	bool reinstall_group_keys;
++ 
++ 	struct ath11k_reg_tpc_power_info reg_tpc_info;
++ 
++--- a/drivers/net/wireless/ath/ath11k/mac.c
+++++ b/drivers/net/wireless/ath/ath11k/mac.c
++@@ -4317,6 +4317,40 @@ static int ath11k_clear_peer_keys(struct
++ 	return first_errno;
++ }
++ 
+++static int ath11k_set_group_keys(struct ath11k_vif *arvif)
+++{
+++	struct ath11k *ar = arvif->ar;
+++	struct ath11k_base *ab = ar->ab;
+++	const u8 *addr = arvif->bssid;
+++	int i, ret, first_errno = 0;
+++	struct ath11k_peer *peer;
+++
+++	spin_lock_bh(&ab->base_lock);
+++	peer = ath11k_peer_find(ab, arvif->vdev_id, addr);
+++	spin_unlock_bh(&ab->base_lock);
+++
+++	if (!peer)
+++		return -ENOENT;
+++
+++	for (i = 0; i < ARRAY_SIZE(peer->keys); i++) {
+++		struct ieee80211_key_conf *key = peer->keys[i];
+++
+++		if (!key || (key->flags & IEEE80211_KEY_FLAG_PAIRWISE))
+++			continue;
+++
+++		ret = ath11k_install_key(arvif, key, SET_KEY, addr,
+++					 WMI_KEY_GROUP);
+++		if (ret < 0 && first_errno == 0)
+++			first_errno = ret;
+++
+++		if (ret < 0)
+++			ath11k_warn(ab, "failed to set group key of idx %d for vdev %d: %d\n",
+++				    i, arvif->vdev_id, ret);
+++	}
+++
+++	return first_errno;
+++}
+++
++ static int ath11k_mac_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
++ 				 struct ieee80211_vif *vif, struct ieee80211_sta *sta,
++ 				 struct ieee80211_key_conf *key)
++@@ -4326,6 +4360,7 @@ static int ath11k_mac_op_set_key(struct
++ 	struct ath11k_vif *arvif = ath11k_vif_to_arvif(vif);
++ 	struct ath11k_peer *peer;
++ 	struct ath11k_sta *arsta;
+++	bool is_ap_with_no_sta;
++ 	const u8 *peer_addr;
++ 	int ret = 0;
++ 	u32 flags = 0;
++@@ -4386,16 +4421,57 @@ static int ath11k_mac_op_set_key(struct
++ 	else
++ 		flags |= WMI_KEY_GROUP;
++ 
++-	ret = ath11k_install_key(arvif, key, cmd, peer_addr, flags);
++-	if (ret) {
++-		ath11k_warn(ab, "ath11k_install_key failed (%d)\n", ret);
++-		goto exit;
++-	}
+++	ath11k_dbg(ar->ab, ATH11K_DBG_MAC,
+++		   "%s for peer %pM on vdev %d flags 0x%X, type = %d, num_sta %d\n",
+++		   cmd == SET_KEY ? "SET_KEY" : "DEL_KEY", peer_addr, arvif->vdev_id,
+++		   flags, arvif->vdev_type, arvif->num_stations);
+++
+++	/* Allow group key clearing only in AP mode when no stations are
+++	 * associated. There is a known race condition in firmware where
+++	 * group addressed packets may be dropped if the key is cleared
+++	 * and immediately set again during rekey.
+++	 *
+++	 * During GTK rekey, mac80211 issues a clear key (if the old key
+++	 * exists) followed by an install key operation for same key
+++	 * index. This causes ath11k to send two WMI commands in quick
+++	 * succession: one to clear the old key and another to install the
+++	 * new key in the same slot.
+++	 *
+++	 * Under certain conditions—especially under high load or time
+++	 * sensitive scenarios, firmware may process these commands
+++	 * asynchronously in a way that firmware assumes the key is
+++	 * cleared whereas hardware has a valid key. This inconsistency
+++	 * between hardware and firmware leads to group addressed packet
+++	 * drops after rekey.
+++	 * Only setting the same key again can restore a valid key in
+++	 * firmware and allow packets to be transmitted.
+++	 *
+++	 * There is a use case where an AP can transition from Secure mode
+++	 * to open mode without a vdev restart by just deleting all
+++	 * associated peers and clearing key, Hence allow clear key for
+++	 * that case alone. Mark arvif->reinstall_group_keys in such cases
+++	 * and reinstall the same key when the first peer is added,
+++	 * allowing firmware to recover from the race if it had occurred.
+++	 */
++ 
++-	ret = ath11k_dp_peer_rx_pn_replay_config(arvif, peer_addr, cmd, key);
++-	if (ret) {
++-		ath11k_warn(ab, "failed to offload PN replay detection %d\n", ret);
++-		goto exit;
+++	is_ap_with_no_sta = (vif->type == NL80211_IFTYPE_AP &&
+++			     !arvif->num_stations);
+++	if ((flags & WMI_KEY_PAIRWISE) || cmd == SET_KEY || is_ap_with_no_sta) {
+++		ret = ath11k_install_key(arvif, key, cmd, peer_addr, flags);
+++		if (ret) {
+++			ath11k_warn(ab, "ath11k_install_key failed (%d)\n", ret);
+++			goto exit;
+++		}
+++
+++		ret = ath11k_dp_peer_rx_pn_replay_config(arvif, peer_addr, cmd, key);
+++		if (ret) {
+++			ath11k_warn(ab, "failed to offload PN replay detection %d\n",
+++				    ret);
+++			goto exit;
+++		}
+++
+++		if ((flags & WMI_KEY_GROUP) && cmd == SET_KEY && is_ap_with_no_sta)
+++			arvif->reinstall_group_keys = true;
++ 	}
++ 
++ 	spin_lock_bh(&ab->base_lock);
++@@ -4994,6 +5070,7 @@ static int ath11k_mac_inc_num_stations(s
++ 		return -ENOBUFS;
++ 
++ 	ar->num_stations++;
+++	arvif->num_stations++;
++ 
++ 	return 0;
++ }
++@@ -5009,6 +5086,7 @@ static void ath11k_mac_dec_num_stations(
++ 		return;
++ 
++ 	ar->num_stations--;
+++	arvif->num_stations--;
++ }
++ 
++ static u32 ath11k_mac_ieee80211_sta_bw_to_wmi(struct ath11k *ar,
++@@ -9553,6 +9631,21 @@ static int ath11k_mac_station_add(struct
++ 		goto exit;
++ 	}
++ 
+++	/* Driver allows the DEL KEY followed by SET KEY sequence for
+++	 * group keys for only when there is no clients associated, if at
+++	 * all firmware has entered the race during that window,
+++	 * reinstalling the same key when the first sta connects will allow
+++	 * firmware to recover from the race.
+++	 */
+++	if (arvif->num_stations == 1 && arvif->reinstall_group_keys) {
+++		ath11k_dbg(ab, ATH11K_DBG_MAC, "set group keys on 1st station add for vdev %d\n",
+++			   arvif->vdev_id);
+++		ret = ath11k_set_group_keys(arvif);
+++		if (ret)
+++			goto dec_num_station;
+++		arvif->reinstall_group_keys = false;
+++	}
+++
++ 	arsta->rx_stats = kzalloc(sizeof(*arsta->rx_stats), GFP_KERNEL);
++ 	if (!arsta->rx_stats) {
++ 		ret = -ENOMEM;
+diff --git a/package/kernel/mac80211/patches/ath11k/946-ath11k-fix_NULL_dereference_in_ath11k_qmi_m3_load.patch b/package/kernel/mac80211/patches/ath11k/946-ath11k-fix_NULL_dereference_in_ath11k_qmi_m3_load.patch
+new file mode 100644
+index 0000000000..258a94c8b7
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath11k/946-ath11k-fix_NULL_dereference_in_ath11k_qmi_m3_load.patch
+@@ -0,0 +1,40 @@
++From 888830b2cbc035838bebefe94502976da94332a5 Mon Sep 17 00:00:00 2001
++From: Matvey Kovalev <matvey.kovalev@ispras.ru>
++Date: Wed, 17 Sep 2025 22:20:01 +0300
++Subject: wifi: ath11k: fix NULL dereference in ath11k_qmi_m3_load()
++
++commit 3fd2ef2ae2b5c955584a3bee8e83ae7d7a98f782 upstream.
++
++If ab->fw.m3_data points to data, then fw pointer remains null.
++Further, if m3_mem is not allocated, then fw is dereferenced to be
++passed to ath11k_err function.
++
++Replace fw->size by m3_len.
++
++Found by Linux Verification Center (linuxtesting.org) with SVACE.
++
++Fixes: 7db88b962f06 ("wifi: ath11k: add firmware-2.bin support")
++Cc: stable@vger.kernel.org
++Signed-off-by: Matvey Kovalev <matvey.kovalev@ispras.ru>
++Reviewed-by: Baochen Qiang <baochen.qiang@oss.qualcomm.com>
++Reviewed-by: Vasanthakumar Thiagarajan <vasanthakumar.thiagarajan@oss.qualcomm.com>
++Link: https://patch.msgid.link/20250917192020.1340-1-matvey.kovalev@ispras.ru
++Signed-off-by: Jeff Johnson <jeff.johnson@oss.qualcomm.com>
++Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
++---
++ drivers/net/wireless/ath/ath11k/qmi.c | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++(limited to 'drivers/net/wireless/ath/ath11k')
++
++--- a/drivers/net/wireless/ath/ath11k/qmi.c
+++++ b/drivers/net/wireless/ath/ath11k/qmi.c
++@@ -2576,7 +2576,7 @@ static int ath11k_qmi_m3_load(struct ath
++ 					   GFP_KERNEL);
++ 	if (!m3_mem->vaddr) {
++ 		ath11k_err(ab, "failed to allocate memory for M3 with size %zu\n",
++-			   fw->size);
+++			   m3_len);
++ 		ret = -ENOMEM;
++ 		goto out;
++ 	}
+diff --git a/package/kernel/mac80211/patches/ath11k/947-wifi-ath11k-fix-rssi-station-dump-for-IPQ5018-and-QC.patch b/package/kernel/mac80211/patches/ath11k/947-wifi-ath11k-fix-rssi-station-dump-for-IPQ5018-and-QC.patch
+new file mode 100644
+index 0000000000..1caac86207
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath11k/947-wifi-ath11k-fix-rssi-station-dump-for-IPQ5018-and-QC.patch
+@@ -0,0 +1,32 @@
++From 8fd48529849310a68500d1d546f246d44697bbed Mon Sep 17 00:00:00 2001
++From: Christian Marangi <ansuelsmth@gmail.com>
++Date: Tue, 25 Nov 2025 14:56:08 +0100
++Subject: [PATCH] wifi: ath11k: fix rssi station dump for IPQ5018 and QCN6122
++
++Commit 031ffa6c2cd3 ("wifi: ath11k: fix rssi station dump not updated in
++QCN9074") didn't account for IPQ5018 and QCN6122 WiFi card that are
++based on QCN9074.
++
++Update the .mpdu_info_get_peerid to use the QCN9074 variant to correctly
++receive consistent RSSI station data.
++
++Reported-by: Scott Mercer <TheRootEd24@gmail.com>
++Suggested-by: Scott Mercer <TheRootEd24@gmail.com>
++Tested-by: Scott Mercer <TheRootEd24@gmail.com>
++Fixes: 031ffa6c2cd3 ("wifi: ath11k: fix rssi station dump not updated in QCN9074")
++Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
++---
++ drivers/net/wireless/ath/ath11k/hw.c | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/drivers/net/wireless/ath/ath11k/hw.c
+++++ b/drivers/net/wireless/ath/ath11k/hw.c
++@@ -1175,7 +1175,7 @@ const struct ath11k_hw_ops ipq5018_ops =
++ 	.rx_desc_get_attention = ath11k_hw_qcn9074_rx_desc_get_attention,
++ 	.reo_setup = ath11k_hw_ipq5018_reo_setup,
++ 	.rx_desc_get_msdu_payload = ath11k_hw_qcn9074_rx_desc_get_msdu_payload,
++-	.mpdu_info_get_peerid = ath11k_hw_ipq8074_mpdu_info_get_peerid,
+++	.mpdu_info_get_peerid = ath11k_hw_qcn9074_mpdu_info_get_peerid,
++ 	.rx_desc_mac_addr2_valid = ath11k_hw_ipq9074_rx_desc_mac_addr2_valid,
++ 	.rx_desc_mpdu_start_addr2 = ath11k_hw_ipq9074_rx_desc_mpdu_start_addr2,
++ 	.get_ring_selector = ath11k_hw_ipq8074_get_tcl_ring_selector,
+diff --git a/package/kernel/mac80211/patches/build/020-intel-mld-compile.patch b/package/kernel/mac80211/patches/build/020-intel-mld-compile.patch
+new file mode 100644
+index 0000000000..b501ec770f
+--- /dev/null
++++ b/package/kernel/mac80211/patches/build/020-intel-mld-compile.patch
+@@ -0,0 +1,54 @@
++Fix Intel mld thermal compilation
++
++Do the same changes done also in iwlwifi/mvm/tt.c in the iwlwifi/mld/thermal.c file.
++
++This fixes the compilation.
++
++--- a/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
+++++ b/drivers/net/wireless/intel/iwlwifi/mld/thermal.c
++@@ -209,9 +209,15 @@ unlock:
++ 	return ret;
++ }
++ 
+++#if LINUX_VERSION_IS_GEQ(6,11,0)
++ static int iwl_mld_tzone_set_trip_temp(struct thermal_zone_device *device,
++ 				       const struct thermal_trip *trip,
++ 				       int temp)
+++#else
+++static int iwl_mld_tzone_set_trip_temp(struct thermal_zone_device *device,
+++				       int trip,
+++				       int temp)
+++#endif
++ {
++ 	struct iwl_mld *mld = thermal_zone_device_priv(device);
++ 	int ret;
++@@ -248,18 +254,29 @@ static void iwl_mld_thermal_zone_registe
++ 		[0 ... IWL_MAX_DTS_TRIPS - 1] = {
++ 			.temperature = THERMAL_TEMP_INVALID,
++ 			.type = THERMAL_TRIP_PASSIVE,
+++#if LINUX_VERSION_IS_GEQ(6,9,0)
++ 			.flags = THERMAL_TRIP_FLAG_RW_TEMP,
+++#endif
++ 		},
++ 	};
++ 
++ 	BUILD_BUG_ON(ARRAY_SIZE(name) >= THERMAL_NAME_LENGTH);
++ 
++ 	sprintf(name, "iwlwifi_%u", atomic_inc_return(&counter) & 0xFF);
+++#if LINUX_VERSION_IS_GEQ(6,9,0)
++ 	mld->tzone =
++ 		thermal_zone_device_register_with_trips(name, trips,
++ 							IWL_MAX_DTS_TRIPS,
++ 							mld, &tzone_ops,
++ 							NULL, 0, 0);
+++#else
+++	mld->tzone =
+++		thermal_zone_device_register_with_trips(name, trips,
+++							IWL_MAX_DTS_TRIPS, 0,
+++							mld, &tzone_ops,
+++							NULL, 0, 0);
+++#endif
+++
++ 	if (IS_ERR(mld->tzone)) {
++ 		IWL_DEBUG_TEMP(mld,
++ 			       "Failed to register to thermal zone (err = %ld)\n",
+diff --git a/package/kernel/mac80211/patches/build/210-wireless_netns_local_backport.patch b/package/kernel/mac80211/patches/build/210-wireless_netns_local_backport.patch
+index 9e027fecb6..af51220c47 100644
+--- a/package/kernel/mac80211/patches/build/210-wireless_netns_local_backport.patch
++++ b/package/kernel/mac80211/patches/build/210-wireless_netns_local_backport.patch
+@@ -4,11 +4,10 @@
+  	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
+  		if (!wdev->netdev)
+  			continue;
+--		wdev->netdev->netns_immutable = false;
+ +#if LINUX_VERSION_IS_GEQ(6,15,0)
+-+		wdev->netdev->netns_immutable = true;
++ 		wdev->netdev->netns_immutable = false;
+ +#elif LINUX_VERSION_IS_GEQ(6,12,0)
+-+		wdev->netdev->netns_local = true;
+++		wdev->netdev->netns_local = false;
+ +#endif
+  		err = dev_change_net_namespace(wdev->netdev, net, "wlan%d");
+  		if (err)
+diff --git a/package/kernel/mac80211/patches/mwl/001-mwl8k-inject-DS-Params-IE-into-beacons-if-missing.patch b/package/kernel/mac80211/patches/mwl/001-mwl8k-inject-DS-Params-IE-into-beacons-if-missing.patch
+new file mode 100644
+index 0000000000..ca66c9c302
+--- /dev/null
++++ b/package/kernel/mac80211/patches/mwl/001-mwl8k-inject-DS-Params-IE-into-beacons-if-missing.patch
+@@ -0,0 +1,116 @@
++From f4e661a75cdfa7eb88ac0fa832edd4a90775805d Mon Sep 17 00:00:00 2001
++From: Pawel Dembicki <paweldembicki@gmail.com>
++Date: Fri, 7 Nov 2025 23:05:56 +0100
++Subject: [PATCH] mwl8k: inject DS Params IE into beacons if missing
++
++Some Marvell AP firmware used with mwl8k misbehaves when beacon frames
++do not contain a WLAN_EID_DS_PARAMS information element with the current
++channel. It was reported on OpenWrt Github issues [0].
++
++When hostapd/mac80211 omits DS Params from the beacon (which is valid on
++some bands), the firmware stops transmitting sane frames and RX status
++starts reporting bogus channel information. This makes AP mode unusable.
++
++Newer Marvell drivers (mwlwifi [1]) hard-code DS Params IE into AP beacons
++for all chips, which suggests this is a firmware requirement rather than
++a mwl8k-specific quirk.
++
++Mirror that behaviour in mwl8k: when setting the beacon, check if
++WLAN_EID_DS_PARAMS is present, and if not, extend the beacon and inject
++a DS Params IE at the beginning of the IE list, using the current
++channel from hw->conf.chandef.chan.
++
++Tested on Linksys EA4500 (88W8366).
++
++[0] https://github.com/openwrt/openwrt/issues/19088
++[1] https://github.com/kaloz/mwlwifi/blob/db97edf20fadea2617805006f5230665fadc6a8c/hif/fwcmd.c#L675
++
++Tested-by: Antony Kolitsos <zeusomighty@hotmail.com>
++Signed-off-by: Pawel Dembicki <paweldembicki@gmail.com>
++---
++ drivers/net/wireless/marvell/mwl8k.c | 61 +++++++++++++++++++++++++---
++ 1 file changed, 56 insertions(+), 5 deletions(-)
++
++--- a/drivers/net/wireless/marvell/mwl8k.c
+++++ b/drivers/net/wireless/marvell/mwl8k.c
++@@ -2962,6 +2962,42 @@ mwl8k_cmd_rf_antenna(struct ieee80211_hw
++ /*
++  * CMD_SET_BEACON.
++  */
+++
+++static bool mwl8k_beacon_has_ds_params(const u8 *buf, int len)
+++{
+++	const struct ieee80211_mgmt *mgmt = (const void *)buf;
+++	int ies_len;
+++
+++	if (len <= offsetof(struct ieee80211_mgmt, u.beacon.variable))
+++		return false;
+++
+++	ies_len = len - offsetof(struct ieee80211_mgmt, u.beacon.variable);
+++
+++	return cfg80211_find_ie(WLAN_EID_DS_PARAMS, mgmt->u.beacon.variable,
+++				ies_len) != NULL;
+++}
+++
+++static void mwl8k_beacon_copy_inject_ds_params(struct ieee80211_hw *hw,
+++					       u8 *buf_dst, const u8 *buf_src,
+++					       int src_len)
+++{
+++	const struct ieee80211_mgmt *mgmt = (const void *)buf_src;
+++	const u8 *ies;
+++	int hdr_len, left;
+++
+++	ies = mgmt->u.beacon.variable;
+++	hdr_len = ies - buf_src;
+++	left = src_len - hdr_len;
+++
+++	memcpy(buf_dst, buf_src, hdr_len);
+++
+++	/* Inject a DS Params IE at the beginning of the IE list */
+++	buf_dst[hdr_len + 0] = WLAN_EID_DS_PARAMS;
+++	buf_dst[hdr_len + 1] = 1;
+++	buf_dst[hdr_len + 2] = hw->conf.chandef.chan->hw_value;
+++
+++	memcpy(buf_dst + hdr_len + 3, buf_src + hdr_len, left);
+++}
++ struct mwl8k_cmd_set_beacon {
++ 	struct mwl8k_cmd_pkt_hdr header;
++ 	__le16 beacon_len;
++@@ -2971,17 +3007,32 @@ struct mwl8k_cmd_set_beacon {
++ static int mwl8k_cmd_set_beacon(struct ieee80211_hw *hw,
++ 				struct ieee80211_vif *vif, u8 *beacon, int len)
++ {
+++	bool ds_params_present = mwl8k_beacon_has_ds_params(beacon, len);
++ 	struct mwl8k_cmd_set_beacon *cmd;
++-	int rc;
+++	int rc, final_len = len;
+++
+++	if (!ds_params_present)
+++		/*
+++		 * mwl8k firmware requires a DS Params IE with the current
+++		 * channel in AP beacons. If mac80211/hostapd does not
+++		 * include it, inject one here. IE ID + length + channel
+++		 * number = 3 bytes.
+++		 */
+++		final_len += 3;
++ 
++-	cmd = kzalloc(sizeof(*cmd) + len, GFP_KERNEL);
+++	cmd = kzalloc(sizeof(*cmd) + final_len, GFP_KERNEL);
++ 	if (cmd == NULL)
++ 		return -ENOMEM;
++ 
++ 	cmd->header.code = cpu_to_le16(MWL8K_CMD_SET_BEACON);
++-	cmd->header.length = cpu_to_le16(sizeof(*cmd) + len);
++-	cmd->beacon_len = cpu_to_le16(len);
++-	memcpy(cmd->beacon, beacon, len);
+++	cmd->header.length = cpu_to_le16(sizeof(*cmd) + final_len);
+++	cmd->beacon_len = cpu_to_le16(final_len);
+++
+++	if (ds_params_present)
+++		memcpy(cmd->beacon, beacon, len);
+++	else
+++		mwl8k_beacon_copy_inject_ds_params(hw, cmd->beacon, beacon,
+++						   len);
++ 
++ 	rc = mwl8k_post_pervif_cmd(hw, vif, &cmd->header);
++ 	kfree(cmd);
+diff --git a/package/kernel/mac80211/patches/mwl/700-mwl8k-missing-pci-id-for-WNR854T.patch b/package/kernel/mac80211/patches/mwl/700-mwl8k-missing-pci-id-for-WNR854T.patch
+index cfb7dcf738..3998afcfbc 100644
+--- a/package/kernel/mac80211/patches/mwl/700-mwl8k-missing-pci-id-for-WNR854T.patch
++++ b/package/kernel/mac80211/patches/mwl/700-mwl8k-missing-pci-id-for-WNR854T.patch
+@@ -1,6 +1,6 @@
+ --- a/drivers/net/wireless/marvell/mwl8k.c
+ +++ b/drivers/net/wireless/marvell/mwl8k.c
+-@@ -5712,6 +5712,7 @@ MODULE_FIRMWARE("mwl8k/fmimage_8366.fw")
++@@ -5763,6 +5763,7 @@ MODULE_FIRMWARE("mwl8k/fmimage_8366.fw")
+  MODULE_FIRMWARE(MWL8K_8366_AP_FW(MWL8K_8366_AP_FW_API));
+  
+  static const struct pci_device_id mwl8k_pci_id_table[] = {
+diff --git a/package/kernel/mac80211/patches/mwl/940-mwl8k_init_devices_synchronously.patch b/package/kernel/mac80211/patches/mwl/940-mwl8k_init_devices_synchronously.patch
+index d09cfac448..a229be9961 100644
+--- a/package/kernel/mac80211/patches/mwl/940-mwl8k_init_devices_synchronously.patch
++++ b/package/kernel/mac80211/patches/mwl/940-mwl8k_init_devices_synchronously.patch
+@@ -1,6 +1,6 @@
+ --- a/drivers/net/wireless/marvell/mwl8k.c
+ +++ b/drivers/net/wireless/marvell/mwl8k.c
+-@@ -6298,6 +6298,8 @@ static int mwl8k_probe(struct pci_dev *p
++@@ -6349,6 +6349,8 @@ static int mwl8k_probe(struct pci_dev *p
+  
+  	priv->running_bsses = 0;
+  
+@@ -9,7 +9,7 @@
+  	return rc;
+  
+  err_stop_firmware:
+-@@ -6331,8 +6333,6 @@ static void mwl8k_remove(struct pci_dev
++@@ -6382,8 +6384,6 @@ static void mwl8k_remove(struct pci_dev
+  		return;
+  	priv = hw->priv;
+  
+diff --git a/package/kernel/mac80211/patches/rt2x00/601-rt2x00-introduce-rt2x00_platform_h.patch b/package/kernel/mac80211/patches/rt2x00/601-rt2x00-introduce-rt2x00_platform_h.patch
+deleted file mode 100644
+index 1e6211a470..0000000000
+--- a/package/kernel/mac80211/patches/rt2x00/601-rt2x00-introduce-rt2x00_platform_h.patch
++++ /dev/null
+@@ -1,32 +0,0 @@
+---- /dev/null
+-+++ b/include/linux/rt2x00_platform.h
+-@@ -0,0 +1,19 @@
+-+/*
+-+ * Platform data definition for the rt2x00 driver
+-+ *
+-+ * Copyright (C) 2011 Gabor Juhos <juhosg@openwrt.org>
+-+ *
+-+ * This program is free software; you can redistribute it and/or modify it
+-+ * under the terms of the GNU General Public License version 2 as published
+-+ * by the Free Software Foundation.
+-+ *
+-+ */
+-+
+-+#ifndef _RT2X00_PLATFORM_H
+-+#define _RT2X00_PLATFORM_H
+-+
+-+struct rt2x00_platform_data {
+-+	char *eeprom_file_name;
+-+};
+-+
+-+#endif /* _RT2X00_PLATFORM_H */
+---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+-@@ -28,6 +28,7 @@
+- #include <linux/average.h>
+- #include <linux/usb.h>
+- #include <linux/clk.h>
+-+#include <linux/rt2x00_platform.h>
+- 
+- #include <net/mac80211.h>
+- 
+diff --git a/package/kernel/mac80211/patches/rt2x00/602-01-wifi-rt2x00-Add-support-for-loading-EEPROM-from-user.patch b/package/kernel/mac80211/patches/rt2x00/602-01-wifi-rt2x00-Add-support-for-loading-EEPROM-from-user.patch
+index 39d8edb998..1eba6a79db 100644
+--- a/package/kernel/mac80211/patches/rt2x00/602-01-wifi-rt2x00-Add-support-for-loading-EEPROM-from-user.patch
++++ b/package/kernel/mac80211/patches/rt2x00/602-01-wifi-rt2x00-Add-support-for-loading-EEPROM-from-user.patch
+@@ -100,7 +100,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	.drv_init_registers	= rt2800mmio_init_registers,
+ --- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+-@@ -693,6 +693,7 @@ enum rt2x00_capability_flags {
++@@ -692,6 +692,7 @@ enum rt2x00_capability_flags {
+  	REQUIRE_HT_TX_DESC,
+  	REQUIRE_PS_AUTOWAKE,
+  	REQUIRE_DELAYED_RFKILL,
+@@ -108,7 +108,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  
+  	/*
+  	 * Capabilities
+-@@ -1505,4 +1506,13 @@ void rt2x00lib_remove_dev(struct rt2x00_
++@@ -1504,4 +1505,13 @@ void rt2x00lib_remove_dev(struct rt2x00_
+  int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev);
+  int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev);
+  
+@@ -124,7 +124,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  #endif /* RT2X00_H */
+ --- /dev/null
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+-@@ -0,0 +1,77 @@
++@@ -0,0 +1,79 @@
+ +// SPDX-License-Identifier: GPL-2.0-or-later
+ +/*	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
+ + *	Copyright (C) 2004 - 2009 Gertjan van Wingerde <gwingerde@gmail.com>
+@@ -137,6 +137,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +
+ +#include <linux/kernel.h>
+ +#include <linux/module.h>
+++#include <linux/of.h>
+ +
+ +#include "rt2x00.h"
+ +#include "rt2x00soc.h"
+@@ -144,10 +145,11 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +static const char *
+ +rt2x00lib_get_eeprom_file_name(struct rt2x00_dev *rt2x00dev)
+ +{
+-+	struct rt2x00_platform_data *pdata = rt2x00dev->dev->platform_data;
+++	struct device_node *np = rt2x00dev->dev->of_node;
+++	const char *eep;
+ +
+-+	if (pdata && pdata->eeprom_file_name)
+-+		return pdata->eeprom_file_name;
+++	if (np && !of_property_read_string(np, "ralink,eeprom", &eep))
+++		return eep;
+ +
+ +	return NULL;
+ +}
+diff --git a/package/kernel/mac80211/patches/rt2x00/602-02-wifi-rt2x00-Add-option-to-pass-EEPROM-file-name-from.patch b/package/kernel/mac80211/patches/rt2x00/602-02-wifi-rt2x00-Add-option-to-pass-EEPROM-file-name-from.patch
+deleted file mode 100644
+index 90055b911f..0000000000
+--- a/package/kernel/mac80211/patches/rt2x00/602-02-wifi-rt2x00-Add-option-to-pass-EEPROM-file-name-from.patch
++++ /dev/null
+@@ -1,43 +0,0 @@
+-From 15329d8b206d9c04ffad49aecd37f5d0bfb85768 Mon Sep 17 00:00:00 2001
+-From: Christian Marangi <ansuelsmth@gmail.com>
+-Date: Sun, 15 Oct 2023 14:23:19 +0200
+-Subject: [PATCH 2/5] wifi: rt2x00: Add option to pass EEPROM file name from DT
+-
+-Add option to pass EEPROM file name from DT using ralink,eeprom binding.
+-
+-Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+----
+- drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c | 11 +++++++++++
+- 1 file changed, 11 insertions(+)
+-
+---- a/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+-@@ -10,6 +10,7 @@
+- 
+- #include <linux/kernel.h>
+- #include <linux/module.h>
+-+#include <linux/of.h>
+- 
+- #include "rt2x00.h"
+- #include "rt2x00soc.h"
+-@@ -18,10 +19,20 @@ static const char *
+- rt2x00lib_get_eeprom_file_name(struct rt2x00_dev *rt2x00dev)
+- {
+- 	struct rt2x00_platform_data *pdata = rt2x00dev->dev->platform_data;
+-+#ifdef CONFIG_OF
+-+	struct device_node *np;
+-+	const char *eep;
+-+#endif
+- 
+- 	if (pdata && pdata->eeprom_file_name)
+- 		return pdata->eeprom_file_name;
+- 
+-+#ifdef CONFIG_OF
+-+	np = rt2x00dev->dev->of_node;
+-+	if (np && !of_property_read_string(np, "ralink,eeprom", &eep))
+-+		return eep;
+-+#endif
+-+
+- 	return NULL;
+- }
+- 
+diff --git a/package/kernel/mac80211/patches/rt2x00/602-03-wifi-rt2x00-Add-support-for-loading-EEPROM-from-MTD.patch b/package/kernel/mac80211/patches/rt2x00/602-03-wifi-rt2x00-Add-support-for-loading-EEPROM-from-MTD.patch
+index fab4bf39c0..befd59491f 100644
+--- a/package/kernel/mac80211/patches/rt2x00/602-03-wifi-rt2x00-Add-support-for-loading-EEPROM-from-MTD.patch
++++ b/package/kernel/mac80211/patches/rt2x00/602-03-wifi-rt2x00-Add-support-for-loading-EEPROM-from-MTD.patch
+@@ -24,15 +24,14 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	  Supported chips: RT2880, RT3050, RT3052, RT3350, RT3352.
+ --- a/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+-@@ -10,11 +10,69 @@
+- 
++@@ -11,10 +11,66 @@
+  #include <linux/kernel.h>
+  #include <linux/module.h>
++ #include <linux/of.h>
+ +#if IS_ENABLED(CONFIG_MTD)
+ +#include <linux/mtd/mtd.h>
+ +#include <linux/mtd/partitions.h>
+ +#endif
+- #include <linux/of.h>
+  
+  #include "rt2x00.h"
+  #include "rt2x00soc.h"
+@@ -40,8 +39,6 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +#if IS_ENABLED(CONFIG_MTD)
+ +static int rt2800lib_read_eeprom_mtd(struct rt2x00_dev *rt2x00dev)
+ +{
+-+	int ret = -EINVAL;
+-+#ifdef CONFIG_OF
+ +	struct device_node *np = rt2x00dev->dev->of_node, *mtd_np = NULL;
+ +	int size, offset = 0;
+ +	struct mtd_info *mtd;
+@@ -49,6 +46,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +	const __be32 *list;
+ +	phandle phandle;
+ +	size_t retlen;
+++	int ret;
+ +
+ +	list = of_get_property(np, "ralink,mtd-eeprom", &size);
+ +	if (!list)
+@@ -79,13 +77,12 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +		       &retlen, (u_char *)rt2x00dev->eeprom);
+ +	put_mtd_device(mtd);
+ +
+-+	if (retlen != rt2x00dev->ops->eeprom_size || ret) {
+++	if (ret || retlen != rt2x00dev->ops->eeprom_size) {
+ +		dev_err(rt2x00dev->dev, "failed to load eeprom from device \"%s\"\n", part);
+ +		return ret;
+ +	}
+ +
+ +	dev_info(rt2x00dev->dev, "loaded eeprom from mtd device \"%s\"\n", part);
+-+#endif
+ +
+ +	return ret;
+ +}
+@@ -94,7 +91,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  static const char *
+  rt2x00lib_get_eeprom_file_name(struct rt2x00_dev *rt2x00dev)
+  {
+-@@ -83,6 +141,14 @@ err_exit:
++@@ -74,6 +130,14 @@ err_exit:
+  
+  int rt2x00lib_read_eeprom(struct rt2x00_dev *rt2x00dev)
+  {
+diff --git a/package/kernel/mac80211/patches/rt2x00/602-04-wifi-rt2x00-Support-EEPROM-swap-binding.patch b/package/kernel/mac80211/patches/rt2x00/602-04-wifi-rt2x00-Support-EEPROM-swap-binding.patch
+index 392910d224..960b5c09bb 100644
+--- a/package/kernel/mac80211/patches/rt2x00/602-04-wifi-rt2x00-Support-EEPROM-swap-binding.patch
++++ b/package/kernel/mac80211/patches/rt2x00/602-04-wifi-rt2x00-Support-EEPROM-swap-binding.patch
+@@ -32,13 +32,13 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +
+  static int rt2800lib_read_eeprom_mtd(struct rt2x00_dev *rt2x00dev)
+  {
+- 	int ret = -EINVAL;
+-@@ -66,6 +79,8 @@ static int rt2800lib_read_eeprom_mtd(str
++ 	struct device_node *np = rt2x00dev->dev->of_node, *mtd_np = NULL;
++@@ -65,6 +78,8 @@ static int rt2800lib_read_eeprom_mtd(str
+  		return ret;
+  	}
+  
+ +	rt2800lib_eeprom_swap(rt2x00dev);
+ +
+  	dev_info(rt2x00dev->dev, "loaded eeprom from mtd device \"%s\"\n", part);
+- #endif
+  
++ 	return ret;
+diff --git a/package/kernel/mac80211/patches/rt2x00/602-05-wifi-rt2x00-support-loading-eeprom-from-NVMEM-cells.patch b/package/kernel/mac80211/patches/rt2x00/602-05-wifi-rt2x00-support-loading-eeprom-from-NVMEM-cells.patch
+index e6633363bd..b649890e93 100644
+--- a/package/kernel/mac80211/patches/rt2x00/602-05-wifi-rt2x00-support-loading-eeprom-from-NVMEM-cells.patch
++++ b/package/kernel/mac80211/patches/rt2x00/602-05-wifi-rt2x00-support-loading-eeprom-from-NVMEM-cells.patch
+@@ -21,12 +21,11 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ 
+ --- a/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+-@@ -14,12 +14,12 @@
++@@ -15,11 +15,11 @@
+  #include <linux/mtd/mtd.h>
+  #include <linux/mtd/partitions.h>
+  #endif
+ +#include <linux/nvmem-consumer.h>
+- #include <linux/of.h>
+  
+  #include "rt2x00.h"
+  #include "rt2x00soc.h"
+@@ -42,8 +41,8 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +#if IS_ENABLED(CONFIG_MTD)
+  static int rt2800lib_read_eeprom_mtd(struct rt2x00_dev *rt2x00dev)
+  {
+- 	int ret = -EINVAL;
+-@@ -88,6 +89,40 @@ static int rt2800lib_read_eeprom_mtd(str
++ 	struct device_node *np = rt2x00dev->dev->of_node, *mtd_np = NULL;
++@@ -86,6 +87,40 @@ static int rt2800lib_read_eeprom_mtd(str
+  }
+  #endif
+  
+@@ -84,7 +83,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  static const char *
+  rt2x00lib_get_eeprom_file_name(struct rt2x00_dev *rt2x00dev)
+  {
+-@@ -164,6 +199,10 @@ int rt2x00lib_read_eeprom(struct rt2x00_
++@@ -153,6 +188,10 @@ int rt2x00lib_read_eeprom(struct rt2x00_
+  		return 0;
+  #endif
+  
+diff --git a/package/kernel/mac80211/patches/rt2x00/603-wifi-rt2x00-Add-support-for-loading-EEPROM-from-devicetree-embedded-data.patch b/package/kernel/mac80211/patches/rt2x00/603-wifi-rt2x00-Add-support-for-loading-EEPROM-from-devicetree-embedded-data.patch
+index 0ef946a6cb..9e6cfb4d07 100644
+--- a/package/kernel/mac80211/patches/rt2x00/603-wifi-rt2x00-Add-support-for-loading-EEPROM-from-devicetree-embedded-data.patch
++++ b/package/kernel/mac80211/patches/rt2x00/603-wifi-rt2x00-Add-support-for-loading-EEPROM-from-devicetree-embedded-data.patch
+@@ -63,7 +63,7 @@ Signed-off-by: Coia Prant <coiaprant@gmail.com>
+  #if IS_ENABLED(CONFIG_MTD)
+  static int rt2800lib_read_eeprom_mtd(struct rt2x00_dev *rt2x00dev)
+  {
+-@@ -193,6 +214,10 @@ int rt2x00lib_read_eeprom(struct rt2x00_
++@@ -182,6 +203,10 @@ int rt2x00lib_read_eeprom(struct rt2x00_
+  {
+  	int ret;
+  
+diff --git a/package/kernel/mac80211/patches/rt2x00/606-rt2x00-allow_disabling_bands_through_platform_data.patch b/package/kernel/mac80211/patches/rt2x00/606-rt2x00-allow_disabling_bands_through_platform_data.patch
+deleted file mode 100644
+index a554707bda..0000000000
+--- a/package/kernel/mac80211/patches/rt2x00/606-rt2x00-allow_disabling_bands_through_platform_data.patch
++++ /dev/null
+@@ -1,47 +0,0 @@
+---- a/include/linux/rt2x00_platform.h
+-+++ b/include/linux/rt2x00_platform.h
+-@@ -14,6 +14,9 @@
+- 
+- struct rt2x00_platform_data {
+- 	char *eeprom_file_name;
+-+
+-+	int disable_2ghz;
+-+	int disable_5ghz;
+- };
+- 
+- #endif /* _RT2X00_PLATFORM_H */
+---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-@@ -1008,6 +1008,22 @@ static int rt2x00lib_probe_hw_modes(stru
+- 	unsigned int num_rates;
+- 	unsigned int i;
+- 
+-+	if (rt2x00dev->dev->platform_data) {
+-+		struct rt2x00_platform_data *pdata;
+-+
+-+		pdata = rt2x00dev->dev->platform_data;
+-+		if (pdata->disable_2ghz)
+-+			spec->supported_bands &= ~SUPPORT_BAND_2GHZ;
+-+		if (pdata->disable_5ghz)
+-+			spec->supported_bands &= ~SUPPORT_BAND_5GHZ;
+-+	}
+-+
+-+	if ((spec->supported_bands & SUPPORT_BAND_BOTH) == 0) {
+-+		rt2x00_err(rt2x00dev, "No supported bands\n");
+-+		return -EINVAL;
+-+	}
+-+
+-+
+- 	num_rates = 0;
+- 	if (spec->supported_rates & SUPPORT_RATE_CCK)
+- 		num_rates += 4;
+---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+-@@ -398,6 +398,7 @@ struct hw_mode_spec {
+- 	unsigned int supported_bands;
+- #define SUPPORT_BAND_2GHZ	0x00000001
+- #define SUPPORT_BAND_5GHZ	0x00000002
+-+#define SUPPORT_BAND_BOTH	(SUPPORT_BAND_2GHZ | SUPPORT_BAND_5GHZ)
+- 
+- 	unsigned int supported_rates;
+- #define SUPPORT_RATE_CCK	0x00000001
+diff --git a/package/kernel/mac80211/patches/rt2x00/607-rt2x00-add_platform_data_mac_addr.patch b/package/kernel/mac80211/patches/rt2x00/607-rt2x00-add_platform_data_mac_addr.patch
+deleted file mode 100644
+index 79f99ffdf4..0000000000
+--- a/package/kernel/mac80211/patches/rt2x00/607-rt2x00-add_platform_data_mac_addr.patch
++++ /dev/null
+@@ -1,25 +0,0 @@
+---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-@@ -990,6 +990,12 @@ static void rt2x00lib_rate(struct ieee80
+- 
+- void rt2x00lib_set_mac_address(struct rt2x00_dev *rt2x00dev, u8 *eeprom_mac_addr)
+- {
+-+	struct rt2x00_platform_data *pdata;
+-+
+-+	pdata = rt2x00dev->dev->platform_data;
+-+	if (pdata && pdata->mac_address)
+-+		ether_addr_copy(eeprom_mac_addr, pdata->mac_address);
+-+
+- 	of_get_mac_address(rt2x00dev->dev->of_node, eeprom_mac_addr);
+- 
+- 	if (!is_valid_ether_addr(eeprom_mac_addr)) {
+---- a/include/linux/rt2x00_platform.h
+-+++ b/include/linux/rt2x00_platform.h
+-@@ -14,6 +14,7 @@
+- 
+- struct rt2x00_platform_data {
+- 	char *eeprom_file_name;
+-+	const u8 *mac_address;
+- 
+- 	int disable_2ghz;
+- 	int disable_5ghz;
+diff --git a/package/kernel/mac80211/patches/rt2x00/608-rt2x00-allow_disabling_bands_through_dts.patch b/package/kernel/mac80211/patches/rt2x00/608-rt2x00-allow_disabling_bands_through_dts.patch
+index 31f2f0261f..7a44d1725f 100644
+--- a/package/kernel/mac80211/patches/rt2x00/608-rt2x00-allow_disabling_bands_through_dts.patch
++++ b/package/kernel/mac80211/patches/rt2x00/608-rt2x00-allow_disabling_bands_through_dts.patch
+@@ -1,10 +1,9 @@
+ --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-@@ -1013,6 +1013,16 @@ static int rt2x00lib_probe_hw_modes(stru
++@@ -1007,6 +1007,14 @@ static int rt2x00lib_probe_hw_modes(stru
+  	struct ieee80211_rate *rates;
+  	unsigned int num_rates;
+  	unsigned int i;
+-+#ifdef CONFIG_OF
+ +	struct device_node *np = rt2x00dev->dev->of_node;
+ +	unsigned int enabled;
+ +	if (!of_property_read_u32(np, "ralink,2ghz",
+@@ -13,7 +12,6 @@
+ +	if (!of_property_read_u32(np, "ralink,5ghz",
+ +                                          &enabled) && !enabled)
+ +		spec->supported_bands &= ~SUPPORT_BAND_5GHZ;
+-+#endif /* CONFIG_OF */
+  
+- 	if (rt2x00dev->dev->platform_data) {
+- 		struct rt2x00_platform_data *pdata;
++ 	num_rates = 0;
++ 	if (spec->supported_rates & SUPPORT_RATE_CCK)
+diff --git a/package/kernel/mac80211/patches/rt2x00/611-rt2x00-add-AP+STA-support.patch b/package/kernel/mac80211/patches/rt2x00/611-rt2x00-add-AP+STA-support.patch
+index 9564f02edd..64291e8f89 100644
+--- a/package/kernel/mac80211/patches/rt2x00/611-rt2x00-add-AP+STA-support.patch
++++ b/package/kernel/mac80211/patches/rt2x00/611-rt2x00-add-AP+STA-support.patch
+@@ -1,6 +1,6 @@
+ --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-@@ -1362,7 +1362,7 @@ static inline void rt2x00lib_set_if_comb
++@@ -1338,7 +1338,7 @@ static inline void rt2x00lib_set_if_comb
+  	 */
+  	if_limit = &rt2x00dev->if_limits_ap;
+  	if_limit->max = rt2x00dev->ops->max_ap_intf;
+diff --git a/package/kernel/mac80211/patches/rt2x00/994-rt2x00-import-support-for-external-LNA-on-MT7620.patch b/package/kernel/mac80211/patches/rt2x00/994-rt2x00-import-support-for-external-LNA-on-MT7620.patch
+index 7b63c7ab5f..c1889401b9 100644
+--- a/package/kernel/mac80211/patches/rt2x00/994-rt2x00-import-support-for-external-LNA-on-MT7620.patch
++++ b/package/kernel/mac80211/patches/rt2x00/994-rt2x00-import-support-for-external-LNA-on-MT7620.patch
+@@ -80,10 +80,10 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+  #include <linux/usb.h>
+  #include <linux/clk.h>
+ +#include <linux/pinctrl/consumer.h>
+- #include <linux/rt2x00_platform.h>
+  
+  #include <net/mac80211.h>
+-@@ -1017,6 +1018,11 @@ struct rt2x00_dev {
++ 
++@@ -1015,6 +1016,11 @@ struct rt2x00_dev {
+  
+  	/* Clock for System On Chip devices. */
+  	struct clk *clk;
+diff --git a/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch b/package/kernel/mac80211/patches/subsys/340-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+similarity index 73%
+rename from package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+rename to package/kernel/mac80211/patches/subsys/340-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+index d78a72d246..1c3bb784dd 100644
+--- a/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
++++ b/package/kernel/mac80211/patches/subsys/340-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+@@ -22,21 +22,10 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ 
+ --- a/net/mac80211/ieee80211_i.h
+ +++ b/net/mac80211/ieee80211_i.h
+-@@ -1211,6 +1211,30 @@ struct ieee80211_sub_if_data *vif_to_sda
+- 	if ((_link = wiphy_dereference((local)->hw.wiphy,		\
+- 				       ___sdata->link[___link_id])))
++@@ -1237,6 +1237,19 @@ struct ieee80211_sub_if_data *vif_to_sda
++ 		    ((__link) = sdata_dereference((__sdata)->link[__link_id],	\
++ 						  (__sdata))))
+  
+-+#define for_each_link_data(sdata, __link)					\
+-+	/* outer loop just to define the variable ... */			\
+-+	for (struct ieee80211_sub_if_data *__sdata = (sdata); __sdata;		\
+-+		__sdata = NULL /* always stop */)				\
+-+	for (int __link_id = 0;							\
+-+	     __link_id < ARRAY_SIZE((__sdata)->link); __link_id++)		\
+-+		if ((!(__sdata)->vif.valid_links ||				\
+-+		     (__sdata)->vif.valid_links & BIT(__link_id)) &&		\
+-+		    ((__link) = sdata_dereference((__sdata)->link[__link_id],	\
+-+						  (__sdata))))
+-+
+ +/*
+ + * for_each_link_data_rcu should be used under RCU read lock.
+ + */
+diff --git a/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch b/package/kernel/mac80211/patches/subsys/341-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+similarity index 79%
+rename from package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+rename to package/kernel/mac80211/patches/subsys/341-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+index b1986dc8aa..f0226fdff1 100644
+--- a/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
++++ b/package/kernel/mac80211/patches/subsys/341-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+@@ -23,7 +23,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ 
+ --- a/net/mac80211/mlme.c
+ +++ b/net/mac80211/mlme.c
+-@@ -2159,6 +2159,21 @@ static void ieee80211_csa_switch_work(st
++@@ -2439,6 +2439,21 @@ static void ieee80211_csa_switch_work(st
+  		}
+  	}
+  
+@@ -45,7 +45,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  	ieee80211_sta_reset_beacon_monitor(sdata);
+  	ieee80211_sta_reset_conn_monitor(sdata);
+  }
+-@@ -7863,6 +7878,29 @@ void ieee80211_sta_work(struct ieee80211
++@@ -8389,16 +8404,32 @@ void ieee80211_sta_work(struct ieee80211
+  	}
+  }
+  
+@@ -57,21 +57,29 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ +	 * the links.
+ +	 */
+ +	struct ieee80211_link_data *link;
+-+	bool ret = true;
+ +
+-+	rcu_read_lock();
+++	guard(rcu)();
+++
+ +	for_each_link_data_rcu(sdata, link) {
+ +		if (!(link->conf->csa_active &&
+-+		      !link->u.mgd.csa.waiting_bcn)) {
+-+			ret = false;
+-+			break;
+-+		}
+++		      !link->u.mgd.csa.waiting_bcn))
+++			return false;
+ +	}
+-+	rcu_read_unlock();
+ +
+-+	return ret;
+++	return true;
+ +}
+ +
+  static void ieee80211_sta_bcn_mon_timer(struct timer_list *t)
+  {
+  	struct ieee80211_sub_if_data *sdata =
++ 		timer_container_of(sdata, t, u.mgd.bcn_mon_timer);
++ 
++-	if (WARN_ON(ieee80211_vif_is_mld(&sdata->vif)))
++-		return;
++-
++-	if (sdata->vif.bss_conf.csa_active &&
++-	    !sdata->deflink.u.mgd.csa.waiting_bcn)
+++	if (ieee80211_is_csa_in_progress(sdata))
++ 		return;
++ 
++ 	if (sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)
+diff --git a/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch b/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
+similarity index 89%
+rename from package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
+rename to package/kernel/mac80211/patches/subsys/342-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
+index e6227b97ea..3da06793de 100644
+--- a/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
++++ b/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
+@@ -25,7 +25,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ 
+ --- a/net/mac80211/mlme.c
+ +++ b/net/mac80211/mlme.c
+-@@ -3831,9 +3831,6 @@ static void ieee80211_mgd_probe_ap_send(
++@@ -4300,9 +4300,6 @@ static void ieee80211_mgd_probe_ap_send(
+  
+  	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+  
+@@ -35,7 +35,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  	/*
+  	 * Try sending broadcast probe requests for the last three
+  	 * probe requests after the first ones failed since some
+-@@ -3879,9 +3876,6 @@ static void ieee80211_mgd_probe_ap(struc
++@@ -4348,9 +4345,6 @@ static void ieee80211_mgd_probe_ap(struc
+  
+  	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+  
+@@ -45,22 +45,22 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  	if (!ieee80211_sdata_running(sdata))
+  		return;
+  
+-@@ -7921,36 +7915,73 @@ static void ieee80211_sta_bcn_mon_timer(
++@@ -8440,36 +8434,70 @@ static void ieee80211_sta_bcn_mon_timer(
+  			 &sdata->u.mgd.beacon_connection_loss_work);
+  }
+  
+ +static unsigned long
+ +ieee80211_latest_active_link_conn_timeout(struct ieee80211_sub_if_data *sdata)
+ +{
+-+	unsigned long latest_timeout = 0;
+++	unsigned long latest_timeout;
+ +	unsigned int link_id;
+ +	struct sta_info *sta;
+ +
+-+	rcu_read_lock();
+++	guard(rcu)();
+ +
+ +	sta = sta_info_get(sdata, sdata->vif.cfg.ap_addr);
+ +	if (!sta)
+-+		goto out;
+++		return 0;
+ +
+ +	for (link_id = 0; link_id < ARRAY_SIZE(sta->link);
+ +	     link_id++) {
+@@ -90,16 +90,13 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ +			latest_timeout = timeout;
+ +	}
+ +
+-+out:
+-+	rcu_read_unlock();
+-+
+ +	return latest_timeout;
+ +}
+ +
+  static void ieee80211_sta_conn_mon_timer(struct timer_list *t)
+  {
+  	struct ieee80211_sub_if_data *sdata =
+- 		from_timer(sdata, t, u.mgd.conn_mon_timer);
++ 		timer_container_of(sdata, t, u.mgd.conn_mon_timer);
+  	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+  	struct ieee80211_local *local = sdata->local;
+ -	struct sta_info *sta;
+@@ -107,17 +104,17 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ +	unsigned long latest_timeout;
+  
+ -	if (WARN_ON(ieee80211_vif_is_mld(&sdata->vif)))
+-+	if (ieee80211_is_csa_in_progress(sdata))
+- 		return;
+- 
++-		return;
++-
+ -	if (sdata->vif.bss_conf.csa_active &&
+ -	    !sdata->deflink.u.mgd.csa.waiting_bcn)
+ -		return;
+ -
+ -	sta = sta_info_get(sdata, sdata->vif.cfg.ap_addr);
+ -	if (!sta)
+--		return;
+--
+++	if (ieee80211_is_csa_in_progress(sdata))
++ 		return;
++ 
+ -	timeout = sta->deflink.status_stats.last_ack;
+ -	if (time_before(sta->deflink.status_stats.last_ack, sta->deflink.rx_stats.last_rx))
+ -		timeout = sta->deflink.rx_stats.last_rx;
+@@ -125,14 +122,12 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+ +	latest_timeout = ieee80211_latest_active_link_conn_timeout(sdata);
+  
+ -	/* If timeout is after now, then update timer to fire at
+--	 * the later date, but do not actually probe at this time.
+--	 */
+--	if (time_is_after_jiffies(timeout)) {
+--		mod_timer(&ifmgd->conn_mon_timer, round_jiffies_up(timeout));
+ +	/*
+ +	 * If latest timeout is after now, then update timer to fire at
+-+ 	 * the later date, but do not actually probe at this time.
+-+ 	 */
++ 	 * the later date, but do not actually probe at this time.
++ 	 */
++-	if (time_is_after_jiffies(timeout)) {
++-		mod_timer(&ifmgd->conn_mon_timer, round_jiffies_up(timeout));
+ +	if (latest_timeout) {
+ +		mod_timer(&ifmgd->conn_mon_timer,
+ +			  round_jiffies_up(latest_timeout));
+diff --git a/package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch b/package/kernel/mac80211/patches/subsys/343-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
+similarity index 92%
+rename from package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
+rename to package/kernel/mac80211/patches/subsys/343-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
+index bbc02cc21d..457a8894f2 100644
+--- a/package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
++++ b/package/kernel/mac80211/patches/subsys/343-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
+@@ -13,7 +13,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+ 
+ --- a/net/mac80211/main.c
+ +++ b/net/mac80211/main.c
+-@@ -1174,9 +1174,6 @@ int ieee80211_register_hw(struct ieee802
++@@ -1179,9 +1179,6 @@ int ieee80211_register_hw(struct ieee802
+  		if (WARN_ON(!ieee80211_hw_check(hw, MFP_CAPABLE)))
+  			return -EINVAL;
+  
+diff --git a/package/kernel/mac80211/patches/subsys/370-wifi-mac80211-add-MLO-support-to-ieee80211_probe_cli.patch b/package/kernel/mac80211/patches/subsys/370-wifi-mac80211-add-MLO-support-to-ieee80211_probe_cli.patch
+new file mode 100644
+index 0000000000..1f9d6a104b
+--- /dev/null
++++ b/package/kernel/mac80211/patches/subsys/370-wifi-mac80211-add-MLO-support-to-ieee80211_probe_cli.patch
+@@ -0,0 +1,64 @@
++From: Felix Fietkau <nbd@nbd.name>
++Date: Thu, 28 Aug 2025 14:41:57 +0200
++Subject: [PATCH] wifi: mac80211: add MLO support to ieee80211_probe_client
++
++Use the first available link to probe the client.
++
++Signed-off-by: Felix Fietkau <nbd@nbd.name>
++---
++
++--- a/net/mac80211/cfg.c
+++++ b/net/mac80211/cfg.c
++@@ -4320,7 +4320,9 @@ static int ieee80211_probe_client(struct
++ 	struct ieee80211_tx_info *info;
++ 	struct sta_info *sta;
++ 	struct ieee80211_chanctx_conf *chanctx_conf;
+++	struct ieee80211_bss_conf *link_conf;
++ 	enum nl80211_band band;
+++	u8 link_id;
++ 	int ret;
++ 
++ 	/* the lock is needed to assign the cookie later */
++@@ -4335,7 +4337,23 @@ static int ieee80211_probe_client(struct
++ 
++ 	qos = sta->sta.wme;
++ 
++-	chanctx_conf = rcu_dereference(sdata->vif.bss_conf.chanctx_conf);
+++	if (ieee80211_vif_is_mld(&sdata->vif)) {
+++		if (sta->sta.valid_links)
+++			link_id = ffs(sta->sta.valid_links) - 1;
+++		else
+++			link_id = sta->deflink.link_id;
+++
+++		link_conf = rcu_dereference(sdata->vif.link_conf[link_id]);
+++		if (unlikely(!link_conf)) {
+++			ret = -ENOLINK;
+++			goto unlock;
+++		}
+++	} else {
+++		link_id = IEEE80211_LINK_UNSPECIFIED;
+++		link_conf = &sdata->vif.bss_conf;
+++	}
+++
+++	chanctx_conf = rcu_dereference(link_conf->chanctx_conf);
++ 	if (WARN_ON(!chanctx_conf)) {
++ 		ret = -EINVAL;
++ 		goto unlock;
++@@ -4367,14 +4385,15 @@ static int ieee80211_probe_client(struct
++ 	nullfunc->frame_control = fc;
++ 	nullfunc->duration_id = 0;
++ 	memcpy(nullfunc->addr1, sta->sta.addr, ETH_ALEN);
++-	memcpy(nullfunc->addr2, sdata->vif.addr, ETH_ALEN);
++-	memcpy(nullfunc->addr3, sdata->vif.addr, ETH_ALEN);
+++	memcpy(nullfunc->addr2, link_conf->addr, ETH_ALEN);
+++	memcpy(nullfunc->addr3, link_conf->addr, ETH_ALEN);
++ 	nullfunc->seq_ctrl = 0;
++ 
++ 	info = IEEE80211_SKB_CB(skb);
++ 
++ 	info->flags |= IEEE80211_TX_CTL_REQ_TX_STATUS |
++ 		       IEEE80211_TX_INTFL_NL80211_FRAME_TX;
+++	info->control.flags |= u32_encode_bits(link_id, IEEE80211_TX_CTRL_MLO_LINK);
++ 	info->band = band;
++ 
++ 	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
+
+diff --git a/target/linux/generic/files/include/linux/rt2x00_platform.h b/target/linux/generic/files/include/linux/rt2x00_platform.h
+deleted file mode 100644
+index e10377e21b..0000000000
+--- a/target/linux/generic/files/include/linux/rt2x00_platform.h
++++ /dev/null
+@@ -1,23 +0,0 @@
+-/*
+- * Platform data definition for the rt2x00 driver
+- *
+- * Copyright (C) 2011 Gabor Juhos <juhosg@openwrt.org>
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License version 2 as published
+- * by the Free Software Foundation.
+- *
+- */
+-
+-#ifndef _RT2X00_PLATFORM_H
+-#define _RT2X00_PLATFORM_H
+-
+-struct rt2x00_platform_data {
+-	char *eeprom_file_name;
+-	const u8 *mac_address;
+-
+-	int disable_2ghz;
+-	int disable_5ghz;
+-};
+-
+-#endif /* _RT2X00_PLATFORM_H */
+-- 
+2.43.0
+

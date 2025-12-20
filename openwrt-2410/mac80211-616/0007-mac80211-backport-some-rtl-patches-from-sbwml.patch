@@ -1,0 +1,331 @@
+From 58baff8a56ce4e01aee91da54f5110269adc67da Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 20 Dec 2025 15:57:04 +0800
+Subject: [PATCH] mac80211:backport some rtl patches from sbwml
+ https://github.com/sbwml/package_kernel_mac80211
+
+---
+ ...-rtw88-Fix-an-unreachable-code-issue.patch | 25 +++++++
+ ...VID-PID-0bda-b812-for-Techkey-AC1200.patch | 21 ++++++
+ ...-rtw88-8812au-Add-CF-912AC-device-ID.patch | 21 ++++++
+ ...-disable-call-trace-when-write-RF-mo.patch | 30 +++++++++
+ ...201-wifi-rtw88-usb-unbreak-multicast.patch | 31 +++++++++
+ ...02-wifi-rtw88-Enable-AP-mode-on-SDIO.patch | 21 ++++++
+ ...use-indirect-IO-for-device-registers.patch | 39 +++++++++++
+ ...fi-rtw88-adjust-gain-before-scanning.patch | 67 +++++++++++++++++++
+ 8 files changed, 255 insertions(+)
+ create mode 100644 package/kernel/mac80211/patches/rtl/033-v6.13-wifi-rtw88-Fix-an-unreachable-code-issue.patch
+ create mode 100644 package/kernel/mac80211/patches/rtl/100-wifi-rtw88-Add-VID-PID-0bda-b812-for-Techkey-AC1200.patch
+ create mode 100644 package/kernel/mac80211/patches/rtl/101-wifi-rtw88-8812au-Add-CF-912AC-device-ID.patch
+ create mode 100644 package/kernel/mac80211/patches/rtl/200-wifi-rtw88-8822b-disable-call-trace-when-write-RF-mo.patch
+ create mode 100644 package/kernel/mac80211/patches/rtl/201-wifi-rtw88-usb-unbreak-multicast.patch
+ create mode 100644 package/kernel/mac80211/patches/rtl/202-wifi-rtw88-Enable-AP-mode-on-SDIO.patch
+ create mode 100644 package/kernel/mac80211/patches/rtl/302-v6.17-wifi-rtw88-sdio-use-indirect-IO-for-device-registers.patch
+ create mode 100644 package/kernel/mac80211/patches/rtl/900-wifi-rtw88-adjust-gain-before-scanning.patch
+
+diff --git a/package/kernel/mac80211/patches/rtl/033-v6.13-wifi-rtw88-Fix-an-unreachable-code-issue.patch b/package/kernel/mac80211/patches/rtl/033-v6.13-wifi-rtw88-Fix-an-unreachable-code-issue.patch
+new file mode 100644
+index 0000000000..d335ba1ee2
+--- /dev/null
++++ b/package/kernel/mac80211/patches/rtl/033-v6.13-wifi-rtw88-Fix-an-unreachable-code-issue.patch
+@@ -0,0 +1,25 @@
++From fff1c8f7956ce46172d6a82097fe983a184531c8 Mon Sep 17 00:00:00 2001
++From: Dheeraj Reddy Jonnalagadda <dheeraj.linuxdev@gmail.com>
++Date: Fri, 22 Nov 2024 17:44:59 +0530
++Subject: [PATCH 3/3] wifi: rtw88: Fix an unreachable code issue
++
++The error handling in rtw8821a_iqk_tx_vdf_true() contained unreachable
++code due to tx_fail being explicitly set to false before the error check.
++This prevented proper handling of failures and resulted in dead code.
++
++Signed-off-by: Dheeraj Reddy Jonnalagadda <dheeraj.linuxdev@gmail.com>
++---
++ drivers/net/wireless/realtek/rtw88/rtw8821a.c | 2 --
++ 1 file changed, 2 deletions(-)
++
++--- a/drivers/net/wireless/realtek/rtw88/rtw8821a.c
+++++ b/drivers/net/wireless/realtek/rtw88/rtw8821a.c
++@@ -221,8 +221,6 @@ static void rtw8821a_iqk_tx_vdf_true(str
++ 				/* Originally: if (~tx_fail) {
++ 				 * It looks like a typo, so make it more explicit.
++ 				 */
++-				tx_fail = false;
++-
++ 				if (!tx_fail) {
++ 					rtw_write32(rtwdev, REG_RFECTL_A,
++ 						    0x02000000);
+diff --git a/package/kernel/mac80211/patches/rtl/100-wifi-rtw88-Add-VID-PID-0bda-b812-for-Techkey-AC1200.patch b/package/kernel/mac80211/patches/rtl/100-wifi-rtw88-Add-VID-PID-0bda-b812-for-Techkey-AC1200.patch
+new file mode 100644
+index 0000000000..2600bc3b3e
+--- /dev/null
++++ b/package/kernel/mac80211/patches/rtl/100-wifi-rtw88-Add-VID-PID-0bda-b812-for-Techkey-AC1200.patch
+@@ -0,0 +1,21 @@
++From 3aa3f5c616bdafea55fd9778d8fb35b67fc728ee Mon Sep 17 00:00:00 2001
++From: sbwml <admin@cooluc.com>
++Date: Wed, 20 Nov 2024 00:37:58 +0800
++Subject: [PATCH] wifi: rtw88: Add VID/PID 0bda:b812 for Techkey AC1200
++
++Signed-off-by: sbwml <admin@cooluc.com>
++---
++ drivers/net/wireless/realtek/rtw88/rtw8822bu.c | 2 ++
++ 1 file changed, 2 insertions(+)
++
++--- a/drivers/net/wireless/realtek/rtw88/rtw8822bu.c
+++++ b/drivers/net/wireless/realtek/rtw88/rtw8822bu.c
++@@ -79,6 +79,8 @@ static const struct usb_device_id rtw_88
++ 	  .driver_info = (kernel_ulong_t)&(rtw8822b_hw_spec) }, /* D-Link DWA-T185 rev. A1 */
++ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x0411, 0x03d1, 0xff, 0xff, 0xff),
++ 	  .driver_info = (kernel_ulong_t)&(rtw8822b_hw_spec) }, /* BUFFALO WI-U2-866DM */
+++	{ USB_DEVICE_AND_INTERFACE_INFO(0x0bda, 0xb812, 0xff, 0xff, 0xff),
+++	  .driver_info = (kernel_ulong_t)&(rtw8822b_hw_spec) }, /* Techkey AC1200 */
++ 	{},
++ };
++ MODULE_DEVICE_TABLE(usb, rtw_8822bu_id_table);
+diff --git a/package/kernel/mac80211/patches/rtl/101-wifi-rtw88-8812au-Add-CF-912AC-device-ID.patch b/package/kernel/mac80211/patches/rtl/101-wifi-rtw88-8812au-Add-CF-912AC-device-ID.patch
+new file mode 100644
+index 0000000000..ce3dc3afe3
+--- /dev/null
++++ b/package/kernel/mac80211/patches/rtl/101-wifi-rtw88-8812au-Add-CF-912AC-device-ID.patch
+@@ -0,0 +1,21 @@
++From c6ecd55782a51964a36249fdf043846ddcdd6550 Mon Sep 17 00:00:00 2001
++From: sbwml <admin@cooluc.com>
++Date: Wed, 20 Nov 2024 01:43:50 +0800
++Subject: [PATCH] wifi: rtw88: 8812au: Add CF-912AC device ID
++
++Signed-off-by: sbwml <admin@cooluc.com>
++---
++ drivers/net/wireless/realtek/rtw88/rtw8812au.c | 2 ++
++ 1 file changed, 2 insertions(+)
++
++--- a/drivers/net/wireless/realtek/rtw88/rtw8812au.c
+++++ b/drivers/net/wireless/realtek/rtw88/rtw8812au.c
++@@ -77,6 +77,8 @@ static const struct usb_device_id rtw_88
++ 	  .driver_info = (kernel_ulong_t)&(rtw8812a_hw_spec) }, /* Tenda */
++ 	{ USB_DEVICE_AND_INTERFACE_INFO(0x7392, 0xa822, 0xff, 0xff, 0xff),
++ 	  .driver_info = (kernel_ulong_t)&(rtw8812a_hw_spec) }, /* Edimax */
+++	{ USB_DEVICE_AND_INTERFACE_INFO(0x0bda, 0x8812, 0xff, 0xff, 0xff),
+++	  .driver_info = (kernel_ulong_t)&(rtw8812a_hw_spec) }, /* CF-912AC */
++ 	{},
++ };
++ MODULE_DEVICE_TABLE(usb, rtw_8812au_id_table);
+diff --git a/package/kernel/mac80211/patches/rtl/200-wifi-rtw88-8822b-disable-call-trace-when-write-RF-mo.patch b/package/kernel/mac80211/patches/rtl/200-wifi-rtw88-8822b-disable-call-trace-when-write-RF-mo.patch
+new file mode 100644
+index 0000000000..6cc44c2c95
+--- /dev/null
++++ b/package/kernel/mac80211/patches/rtl/200-wifi-rtw88-8822b-disable-call-trace-when-write-RF-mo.patch
+@@ -0,0 +1,30 @@
++From f42b63871e0db6a2c8db5dc8aa33e462bb561571 Mon Sep 17 00:00:00 2001
++From: Chukun Pan <amadeus@jmu.edu.cn>
++Date: Thu, 12 Oct 2023 22:01:20 +0800
++Subject: [PATCH] wifi: rtw88: 8822b: disable call trace when write RF mode
++ table fail
++
++The rtw88 driver throws a useless Call Trace when the rtl8812bu
++or rtl8822be wifi modules fail to write the RF mode table.
++Since this does not affect normal use of the wifi modules,
++replace WARN() with driver warning to avoid useless panic.
++
++Signed-off-by: Chukun Pan <amadeus@jmu.edu.cn>
++---
++ drivers/net/wireless/realtek/rtw88/rtw8822b.c | 4 +++-
++ 1 file changed, 3 insertions(+), 1 deletion(-)
++
++--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++@@ -821,8 +821,10 @@ static void rtw8822b_config_trx_mode(str
++ 			break;
++ 	}
++ 
++-	if (WARN(counter <= 0, "write RF mode table fail\n"))
+++	if (counter <= 0) {
+++		rtw_warn(rtwdev, "write RF mode table fail\n");
++ 		return;
+++	}
++ 
++ 	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWE, RFREG_MASK, 0x80000);
++ 	rtw_write_rf(rtwdev, RF_PATH_A, RF_LUTWA, RFREG_MASK, 0x00001);
+diff --git a/package/kernel/mac80211/patches/rtl/201-wifi-rtw88-usb-unbreak-multicast.patch b/package/kernel/mac80211/patches/rtl/201-wifi-rtw88-usb-unbreak-multicast.patch
+new file mode 100644
+index 0000000000..f8bcf587b1
+--- /dev/null
++++ b/package/kernel/mac80211/patches/rtl/201-wifi-rtw88-usb-unbreak-multicast.patch
+@@ -0,0 +1,31 @@
++From 334c855832e190007fa61385cc91377e22320493 Mon Sep 17 00:00:00 2001
++From: =?UTF-8?q?Marcin=20=C5=9Alusarz?= <marcin.slusarz@gmail.com>
++Date: Fri, 14 Jun 2024 12:28:35 +0200
++Subject: [PATCH] wifi: rtw88: usb: unbreak multicast
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++High queue is not functioning, for some reason.
++Broken by 076f786a0ae14a81f40314b96a2d815e264bc213
++
++Signed-off-by: Marcin Ślusarz <mslusarz@renau.com>
++Cc: Po-Hao Huang <phhuang@realtek.com>
++Cc: Ping-Ke Shih <pkshih@realtek.com>
++Cc: Kalle Valo <kvalo@kernel.org>
++---
++ drivers/net/wireless/realtek/rtw88/usb.c | 3 ---
++ 1 file changed, 3 deletions(-)
++
++--- a/drivers/net/wireless/realtek/rtw88/usb.c
+++++ b/drivers/net/wireless/realtek/rtw88/usb.c
++@@ -556,9 +556,6 @@ static u8 rtw_usb_tx_queue_mapping_to_qs
++ 
++ 	if (unlikely(ieee80211_is_mgmt(fc) || ieee80211_is_ctl(fc)))
++ 		qsel = TX_DESC_QSEL_MGMT;
++-	else if (is_broadcast_ether_addr(hdr->addr1) ||
++-		 is_multicast_ether_addr(hdr->addr1))
++-		qsel = TX_DESC_QSEL_HIGH;
++ 	else if (skb_get_queue_mapping(skb) <= IEEE80211_AC_BK)
++ 		qsel = skb->priority;
++ 	else
+diff --git a/package/kernel/mac80211/patches/rtl/202-wifi-rtw88-Enable-AP-mode-on-SDIO.patch b/package/kernel/mac80211/patches/rtl/202-wifi-rtw88-Enable-AP-mode-on-SDIO.patch
+new file mode 100644
+index 0000000000..39027b6d29
+--- /dev/null
++++ b/package/kernel/mac80211/patches/rtl/202-wifi-rtw88-Enable-AP-mode-on-SDIO.patch
+@@ -0,0 +1,21 @@
++From 3709cc2f36f80738e071bddb1d477c0bbe16008f Mon Sep 17 00:00:00 2001
++From: sbwml <admin@cooluc.com>
++Date: Wed, 23 Jul 2025 01:30:55 +0800
++Subject: [PATCH] wifi: rtw88: Enable AP mode on SDIO
++
++Signed-off-by: sbwml <admin@cooluc.com>
++---
++ drivers/net/wireless/realtek/rtw88/main.c | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/drivers/net/wireless/realtek/rtw88/main.c
+++++ b/drivers/net/wireless/realtek/rtw88/main.c
++@@ -2218,7 +2218,7 @@ EXPORT_SYMBOL(rtw_core_deinit);
++ 
++ int rtw_register_hw(struct rtw_dev *rtwdev, struct ieee80211_hw *hw)
++ {
++-	bool sta_mode_only = rtwdev->hci.type == RTW_HCI_TYPE_SDIO;
+++	bool sta_mode_only = false;
++ 	struct rtw_hal *hal = &rtwdev->hal;
++ 	int max_tx_headroom = 0;
++ 	int ret;
+diff --git a/package/kernel/mac80211/patches/rtl/302-v6.17-wifi-rtw88-sdio-use-indirect-IO-for-device-registers.patch b/package/kernel/mac80211/patches/rtl/302-v6.17-wifi-rtw88-sdio-use-indirect-IO-for-device-registers.patch
+new file mode 100644
+index 0000000000..2ee4a50a32
+--- /dev/null
++++ b/package/kernel/mac80211/patches/rtl/302-v6.17-wifi-rtw88-sdio-use-indirect-IO-for-device-registers.patch
+@@ -0,0 +1,39 @@
++From 19e515ac86d0da0b74735fcc79f1018602f26aba Mon Sep 17 00:00:00 2001
++From: Ping-Ke Shih <pkshih@realtek.com>
++Date: Thu, 24 Jul 2025 08:48:15 +0800
++Subject: [PATCH] wifi: rtw88: sdio: use indirect IO for device registers
++ before power-on
++
++The register REG_SYS_CFG1 is used to determine chip basic information
++as arguments of following flows, such as download firmware and load PHY
++parameters, so driver read the value early (before power-on).
++
++However, the direct IO is disallowed before power-on, or it causes wrong
++values, which driver recognizes a chip as a wrong type RF_1T1R, but
++actually RF_2T2R, causing driver warns:
++
++  rtw88_8822cs mmc1:0001:1: unsupported rf path (1)
++
++Fix it by using indirect IO before power-on.
++
++Reported-by: Piotr Oniszczuk <piotr.oniszczuk@gmail.com>
++Closes: https://lore.kernel.org/linux-wireless/699C22B4-A3E3-4206-97D0-22AB3348EBF6@gmail.com/T/#t
++Suggested-by: Bitterblue Smith <rtl8821cerfe2@gmail.com>
++Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
++---
++ drivers/net/wireless/realtek/rtw88/sdio.c | 4 ++++
++ 1 file changed, 4 insertions(+)
++
++--- a/drivers/net/wireless/realtek/rtw88/sdio.c
+++++ b/drivers/net/wireless/realtek/rtw88/sdio.c
++@@ -144,6 +144,10 @@ static u32 rtw_sdio_to_io_address(struct
++ 
++ static bool rtw_sdio_use_direct_io(struct rtw_dev *rtwdev, u32 addr)
++ {
+++	if (!test_bit(RTW_FLAG_POWERON, rtwdev->flags) &&
+++	    !rtw_sdio_is_bus_addr(addr))
+++		return false;
+++
++ 	return !rtw_sdio_is_sdio30_supported(rtwdev) ||
++ 		rtw_sdio_is_bus_addr(addr);
++ }
+diff --git a/package/kernel/mac80211/patches/rtl/900-wifi-rtw88-adjust-gain-before-scanning.patch b/package/kernel/mac80211/patches/rtl/900-wifi-rtw88-adjust-gain-before-scanning.patch
+new file mode 100644
+index 0000000000..dbdc6c1385
+--- /dev/null
++++ b/package/kernel/mac80211/patches/rtl/900-wifi-rtw88-adjust-gain-before-scanning.patch
+@@ -0,0 +1,67 @@
++From c1f51993ca74199d2cc3cb7ec0a77e47b3a1a1af Mon Sep 17 00:00:00 2001
++From: sbwml <admin@cooluc.com>
++Date: Sat, 2 Aug 2025 05:49:24 +0800
++Subject: [PATCH] wifi: rtw88: adjust gain before scanning
++
++Signed-off-by: sbwml <admin@cooluc.com>
++Signed-off-by: MartinHruza <martin.hruza123@gmail.com>
++---
++ drivers/net/wireless/realtek/rtw88/main.c |  3 +++
++ drivers/net/wireless/realtek/rtw88/phy.c  | 15 +++++++++++++++
++ drivers/net/wireless/realtek/rtw88/phy.h  |  2 ++
++ 3 files changed, 20 insertions(+)
++
++--- a/drivers/net/wireless/realtek/rtw88/main.c
+++++ b/drivers/net/wireless/realtek/rtw88/main.c
++@@ -1476,6 +1476,8 @@ void rtw_core_scan_start(struct rtw_dev
++ 
++ 	set_bit(RTW_FLAG_DIG_DISABLE, rtwdev->flags);
++ 	set_bit(RTW_FLAG_SCANNING, rtwdev->flags);
+++
+++	rtw_phy_dig_set_max_coverage(rtwdev);
++ }
++ 
++ void rtw_core_scan_complete(struct rtw_dev *rtwdev, struct ieee80211_vif *vif,
++@@ -1487,6 +1489,7 @@ void rtw_core_scan_complete(struct rtw_d
++ 	if (!rtwvif)
++ 		return;
++ 
+++	rtw_phy_dig_reset(rtwdev);
++ 	clear_bit(RTW_FLAG_SCANNING, rtwdev->flags);
++ 	clear_bit(RTW_FLAG_DIG_DISABLE, rtwdev->flags);
++ 
++--- a/drivers/net/wireless/realtek/rtw88/phy.c
+++++ b/drivers/net/wireless/realtek/rtw88/phy.c
++@@ -370,6 +370,21 @@ static void rtw_phy_statistics(struct rt
++ #define DIG_CVRG_MIN				0x1c
++ #define DIG_RSSI_GAIN_OFFSET			15
++ 
+++void rtw_phy_dig_set_max_coverage(struct rtw_dev *rtwdev) {
+++	rtw_dbg(rtwdev, RTW_DBG_PHY, "Setting IGI to max coverage\n");
+++	rtw_phy_dig_write(rtwdev, DIG_CVRG_MAX);
+++}
+++
+++void rtw_phy_dig_reset(struct rtw_dev *rtwdev) {
+++	struct rtw_dm_info *dm_info = &rtwdev->dm_info;
+++	u8 last_igi;
+++
+++	last_igi = dm_info->igi_history[0];
+++	rtw_dbg(rtwdev, RTW_DBG_PHY, "Resetting IGI=%u\n", last_igi);
+++
+++	rtw_phy_dig_write(rtwdev, last_igi);
+++}
+++
++ static bool
++ rtw_phy_dig_check_damping(struct rtw_dm_info *dm_info)
++ {
++--- a/drivers/net/wireless/realtek/rtw88/phy.h
+++++ b/drivers/net/wireless/realtek/rtw88/phy.h
++@@ -146,6 +146,8 @@ static inline int rtw_check_supported_rf
++ }
++ 
++ void rtw_phy_dig_write(struct rtw_dev *rtwdev, u8 igi);
+++void rtw_phy_dig_reset(struct rtw_dev *rtwdev);
+++void rtw_phy_dig_set_max_coverage(struct rtw_dev *rtwdev);
++ 
++ struct rtw_power_params {
++ 	u8 pwr_base;
+-- 
+2.43.0
+
