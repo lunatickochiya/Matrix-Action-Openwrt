@@ -80,7 +80,7 @@ on:
       patch_repo:
         description: 'Use json patch repo true(1) or false(0) See ReadME'
         required: true
-        default: '{"OPENSSL_3_5": "1", "BCM_FULLCONE": "1", "MAC80211_616": "0", "TRY_BBR_V3": "1"}'
+        default: '{"OPENSSL_3_5": "1", "BCM_FULLCONE": "1", "MAC80211_616": "0", "MAC80211_618": "0", "TRY_BBR_V3": "1"}'
 
       config_repo:
         description: 'Use json config repo true(1) or false(0) See ReadME'
@@ -188,6 +188,10 @@ jobs:
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
         bash tpm312/cus.sh
+        if [ ${{ env.MAC80211_618 }} = 1 ]; then
+        mv -f tpm312/mac80211-618-patch-for-2410 $GITHUB_WORKSPACE/mac80211-618
+        mv -f tpm312/batman-with-backport6.18-2410 $GITHUB_WORKSPACE/batman-2410
+        fi
         $GITHUB_WORKSPACE/$DIY_SH rockpatch
         echo "status=success" >> $GITHUB_OUTPUT
 
@@ -257,15 +261,15 @@ jobs:
       if: steps.feeds.outputs.status == 'success'
       id: config
       run: |
-        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
-        mv -f openwrt-2410/K61/tele openwrt/feeds/telephony
-        mv -f openwrt-2410/K61/packages/* openwrt-2410/feeds-package-patch-2410
+        if [ ${{ env.MAC80211_618 }} = 1 ]; then
+        $GITHUB_WORKSPACE/core.sh mac80211-618-pkg
         fi
         if [ "${{ matrix.repo }}" == "openwrt-24.10" ]; then
         [ -d openwrt-2410/lunatic7-revert ] && mv -f openwrt-2410/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-2410/luci-patch-2410 ] && mv -f openwrt-2410/luci-patch-2410 openwrt/feeds/luci/luci-patch-2410
         [ -d openwrt-2410/feeds-package-patch-2410 ] && mv -f openwrt-2410/feeds-package-patch-2410 openwrt/feeds/packages/feeds-package-patch-2410
         [ -d openwrt-2410/feeds-telephony-patch ] && mv -f openwrt-2410/feeds-telephony-patch openwrt/feeds/telephony/feeds-telephony-patch
+        [ -d openwrt-2410/feeds-routing-patch ] && mv -f openwrt-2410/feeds-routing-patch openwrt/feeds/routing/feeds-routing-patch
         elif [ "${{ matrix.repo }}" == "main" ]; then
         [ -d openwrt-main/lunatic7-revert ] && mv -f openwrt-main/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-main/luci-patch ] && mv -f openwrt-main/luci-patch openwrt/feeds/luci/luci-patch

@@ -122,7 +122,7 @@ done
 function patch_openwrt() {
         for i in $( ls mypatch ); do
             echo Applying mypatch $i
-            patch -p1 --no-backup-if-mismatch < mypatch/$i
+            patch -p1 --no-backup-if-mismatch --quiet < mypatch/$i
         done
         }
 
@@ -180,6 +180,15 @@ function patch_tele() {
     cd feeds/telephony/
     echo Applying feeds-telephony-patch $telepatch
         patch -p1 --no-backup-if-mismatch < feeds-telephony-patch/$telepatch
+    cd ../..
+    done
+        }
+
+function patch_routing() {
+    for routingpatch in $( ls feeds/routing/feeds-routing-patch ); do
+    cd feeds/routing/
+    echo Applying feeds-routing-patch $routingpatch
+        patch -p1 --no-backup-if-mismatch --quiet < feeds-routing-patch/$routingpatch
     cd ../..
     done
         }
@@ -575,6 +584,7 @@ patch_package
 patch_luci
 patch_lunatic7
 patch_tele
+patch_routing
 add_rockchip_ipt_packages
 elif [ "$1" == "rockchip-nft" ]; then
 autosetver
@@ -583,6 +593,7 @@ patch_package
 patch_luci
 patch_lunatic7
 patch_tele
+patch_routing
 add_rockchip_nft_packages
 elif [ "$1" == "patch-openwrt" ]; then
 patch_openwrt_2410

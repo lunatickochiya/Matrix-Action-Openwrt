@@ -59,6 +59,7 @@ function patch_json_input_set() {
 	echo -e "ADD_IB=$(echo $PATCH_JSON_INPUT | jq -r ".ADD_IB")" >> "$GITHUB_ENV"
 	echo -e "ADD_SDK=$(echo $PATCH_JSON_INPUT | jq -r ".ADD_SDK")" >> "$GITHUB_ENV"
 	echo -e "MAC80211_616=$(echo $PATCH_JSON_INPUT | jq -r ".MAC80211_616")" >> "$GITHUB_ENV"
+	echo -e "MAC80211_618=$(echo $PATCH_JSON_INPUT | jq -r ".MAC80211_618")" >> "$GITHUB_ENV"
 }
 
 function init_gh_env_common() {
@@ -139,6 +140,16 @@ function init_openwrt_patch_common() {
 		rm -rf openwrt/package/kernel/mt76/patches/100-api_update.patch
 		echo "----$Matrix_Target----mac80211-6-16---"
 		echo "MAC80211_616_NAME=_MAC80211_616" >> $GITHUB_ENV
+	fi
+
+	if [ "$MAC80211_618" = "1" ]; then
+		[ -d mac80211-618 ] && cp -r mac80211-618/* $OpenWrt_PATCH_FILE_DIR/mypatch-2410-$Matrix_Target
+		[ -d $OpenWrt_PATCH_FILE_DIR/mac80211-616 ] && cp -r $OpenWrt_PATCH_FILE_DIR/mac80211-616/* $OpenWrt_PATCH_FILE_DIR/mypatch-2410-$Matrix_Target
+		[ -d $OpenWrt_PATCH_FILE_DIR/mac80211-618 ] && cp -r $OpenWrt_PATCH_FILE_DIR/mac80211-618/* $OpenWrt_PATCH_FILE_DIR/mypatch-2410-$Matrix_Target
+		mkdir -p $OpenWrt_PATCH_FILE_DIR/feeds-routing-patch
+		[ -d batman-2410 ] && cp -r batman-2410/* $OpenWrt_PATCH_FILE_DIR/feeds-routing-patch
+		echo "----$Matrix_Target----mac80211-6-18---"
+		echo "MAC80211_616_NAME=_MAC80211_618" >> $GITHUB_ENV
 	fi
 
 	if [ "$AG71XX_FIX" = "1" ]; then
@@ -488,10 +499,19 @@ function awk_openwrt_config() {
 	awk '/turboacc/ { print }' .config
 }
 
-
+function mac80211_618_pkg() {
+		rm -rf openwrt/package/kernel/mt76
+		rm -rf openwrt/package/kernel/mwlwifi
+		rm -rf openwrt/package/kernel/rtl8812au-ct
+		rm -rf openwrt/package/kernel/ath10k-ct
+		rm -rf openwrt/package/kernel/mac80211/patches
+		cp -r $OpenWrt_PATCH_FILE_DIR/kernel_package_for_mac80211_618/* openwrt/package/kernel
+}
 
 if [ "$1" == "init-pkg-env" ]; then
 init_pkg_env
+elif [ "$1" == "mac80211-618-pkg" ]; then
+mac80211_618_pkg
 elif [ "$1" == "init-gh-env-2410" ]; then
 init_gh_env_2410
 config_json_input_set
