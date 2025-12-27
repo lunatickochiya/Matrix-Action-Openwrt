@@ -1,0 +1,792 @@
+From 486730dd06ba2598ab1743a564e443dcb3c49f7e Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 27 Dec 2025 19:43:49 +0800
+Subject: [PATCH 07/11] Revert "kernel: bump 6.6 to 6.6.114"
+
+This reverts commit 984a2197817e7c6e7266ebfa5cde305029d18b1b.
+---
+ include/kernel-6.6                            |  4 +--
+ ...8xx-Enable-LEDs-and-auto-negotiation.patch |  6 ++--
+ ...all-the-downstream-rpi-sound-card-dr.patch |  2 +-
+ ...78xx-Read-initial-EEE-status-from-DT.patch |  2 +-
+ ...Disable-TCP-Segmentation-Offload-TSO.patch |  2 +-
+ ...e-enabling-of-EEE-into-PHY-init-code.patch |  4 +--
+ ...e-link-events-to-minimize-poll-storm.patch |  2 +-
+ ...xx-EEE-support-is-now-a-PHY-property.patch |  2 +-
+ ...-for-SOF_TIMESTAMPING_TX_SOFTWARE-su.patch |  2 +-
+ ...64-numa-Add-NUMA-emulation-for-ARM64.patch |  2 +-
+ ...s-list-on-FSCTL_QUERY_INTERFACE_INFO.patch | 36 +++++++++++++++++++
+ ...support-for-LED-s-on-RTL8168-RTL8101.patch |  4 +--
+ ...ix-building-with-CONFIG_LEDS_CLASS-m.patch |  2 +-
+ ...-07-v6.9-r8169-simplify-EEE-handling.patch |  4 +--
+ ...-v6.9-r8169-add-support-for-RTL8126A.patch |  2 +-
+ ...ode-by-using-core-provided-pcpu-stat.patch |  4 +--
+ ...-add-LED-support-for-RTL8125-RTL8126.patch |  2 +-
+ ...D-related-deadlock-on-module-removal.patch |  4 +--
+ ...g-conditional-compiling-for-call-to-.patch |  2 +-
+ ...-disable-interrupt-source-RxOverflow.patch |  2 +-
+ ...r8169-add-support-for-RTL8126A-rev.b.patch |  2 +-
+ ...TSO-on-selected-chip-versions-per-de.patch |  4 +--
+ ...leftover-locks-after-reverted-change.patch |  2 +-
+ ...r-driver-2.5G-5G-EEE-advertisement-c.patch |  2 +-
+ ...9-remove-support-for-chip-version-11.patch |  4 +--
+ ...adjust-version-numbering-for-RTL8126.patch |  2 +-
+ ...5-ops-for-MDIO_MMD_VENDOR2-registers.patch |  4 +--
+ ...ax-jumbo-packet-size-on-RTL8125-RTL8.patch |  2 +-
+ ...8168H-RTL8168EP-RTL8168FP-ASPM-suppo.patch |  2 +-
+ ...8169-refactor-chip-version-detection.patch |  8 ++---
+ ...GA_MAC_VER_LAST-to-facilitate-adding.patch |  4 +--
+ ...pci_prepare_to_sleep-in-rtl_shutdown.patch |  2 +-
+ ...erge-chip-versions-52-and-53-RTL8117.patch |  2 +-
+ ...Add-support-for-MAP-E-FMRs-mesh-mode.patch | 22 ++++++------
+ ...Fix-DMA-allocations-on-57766-devices.patch |  2 +-
+ .../0001-MIPS-lantiq-add-pcie-driver.patch    |  2 +-
+ .../901-arm-add-cmdline-override.patch        |  2 +-
+ ...-Rockchip-3568002-erratum-workaround.patch |  4 +--
+ 38 files changed, 99 insertions(+), 63 deletions(-)
+ create mode 100644 target/linux/generic/backport-6.6/540-v6.12-ksmbd-browse-interfaces-list-on-FSCTL_QUERY_INTERFACE_INFO.patch
+
+diff --git a/include/kernel-6.6 b/include/kernel-6.6
+index fac976bfec..9affd5932c 100644
+--- a/include/kernel-6.6
++++ b/include/kernel-6.6
+@@ -1,2 +1,2 @@
+-LINUX_VERSION-6.6 = .114
+-LINUX_KERNEL_HASH-6.6.114 = ca4175a03ce2943ae192d77ad91e37ee292f1f1bb7b2954b062b0ef7eb0cb97c
++LINUX_VERSION-6.6 = .113
++LINUX_KERNEL_HASH-6.6.113 = 1f95cfd2e461d192dd9c6130e47aefc9856529a74ace4191ad8e56ba1849c41e
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0081-lan78xx-Enable-LEDs-and-auto-negotiation.patch b/target/linux/bcm27xx/patches-6.6/950-0081-lan78xx-Enable-LEDs-and-auto-negotiation.patch
+index 3c06a9783e..fb248b0889 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0081-lan78xx-Enable-LEDs-and-auto-negotiation.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0081-lan78xx-Enable-LEDs-and-auto-negotiation.patch
+@@ -14,7 +14,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+ 
+ --- a/drivers/net/usb/lan78xx.c
+ +++ b/drivers/net/usb/lan78xx.c
+-@@ -2902,6 +2902,11 @@ static int lan78xx_reset(struct lan78xx_
++@@ -2884,6 +2884,11 @@ static int lan78xx_reset(struct lan78xx_
+  	int ret;
+  	u32 buf;
+  	u8 sig;
+@@ -26,7 +26,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  
+  	ret = lan78xx_read_reg(dev, HW_CFG, &buf);
+  	if (ret < 0)
+-@@ -2968,6 +2973,10 @@ static int lan78xx_reset(struct lan78xx_
++@@ -2948,6 +2953,10 @@ static int lan78xx_reset(struct lan78xx_
+  
+  	buf |= HW_CFG_MEF_;
+  
+@@ -37,7 +37,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  	ret = lan78xx_write_reg(dev, HW_CFG, buf);
+  	if (ret < 0)
+  		return ret;
+-@@ -3067,6 +3076,9 @@ static int lan78xx_reset(struct lan78xx_
++@@ -3047,6 +3056,9 @@ static int lan78xx_reset(struct lan78xx_
+  			buf |= MAC_CR_AUTO_DUPLEX_ | MAC_CR_AUTO_SPEED_;
+  		}
+  	}
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch b/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
+index 09ad4d0ac7..e3ca201449 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
+@@ -17565,7 +17565,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	}
+ --- a/sound/usb/card.c
+ +++ b/sound/usb/card.c
+-@@ -869,8 +869,14 @@ static int usb_audio_probe(struct usb_in
++@@ -863,8 +863,14 @@ static int usb_audio_probe(struct usb_in
+  	if (ignore_ctl_error)
+  		chip->quirk_flags |= QUIRK_FLAG_IGNORE_CTL_ERROR;
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0120-lan78xx-Read-initial-EEE-status-from-DT.patch b/target/linux/bcm27xx/patches-6.6/950-0120-lan78xx-Read-initial-EEE-status-from-DT.patch
+index 36d8bb9d4f..7aa05b0abc 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0120-lan78xx-Read-initial-EEE-status-from-DT.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0120-lan78xx-Read-initial-EEE-status-from-DT.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+ 
+ --- a/drivers/net/usb/lan78xx.c
+ +++ b/drivers/net/usb/lan78xx.c
+-@@ -3132,6 +3132,22 @@ static int lan78xx_open(struct net_devic
++@@ -3112,6 +3112,22 @@ static int lan78xx_open(struct net_devic
+  
+  	netif_dbg(dev, ifup, dev->net, "phy initialised successfully");
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0125-net-lan78xx-Disable-TCP-Segmentation-Offload-TSO.patch b/target/linux/bcm27xx/patches-6.6/950-0125-net-lan78xx-Disable-TCP-Segmentation-Offload-TSO.patch
+index 555d7f9471..1b6643508b 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0125-net-lan78xx-Disable-TCP-Segmentation-Offload-TSO.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0125-net-lan78xx-Disable-TCP-Segmentation-Offload-TSO.patch
+@@ -38,7 +38,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+  static int lan78xx_read_reg(struct lan78xx_net *dev, u32 index, u32 *data)
+  {
+  	u32 *buf;
+-@@ -3492,8 +3501,14 @@ static int lan78xx_bind(struct lan78xx_n
++@@ -3472,8 +3481,14 @@ static int lan78xx_bind(struct lan78xx_n
+  	if (DEFAULT_RX_CSUM_ENABLE)
+  		dev->net->features |= NETIF_F_RXCSUM;
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0127-lan78xx-Move-enabling-of-EEE-into-PHY-init-code.patch b/target/linux/bcm27xx/patches-6.6/950-0127-lan78xx-Move-enabling-of-EEE-into-PHY-init-code.patch
+index 7cccfd5986..f98d2c7dd6 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0127-lan78xx-Move-enabling-of-EEE-into-PHY-init-code.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0127-lan78xx-Move-enabling-of-EEE-into-PHY-init-code.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+ 
+ --- a/drivers/net/usb/lan78xx.c
+ +++ b/drivers/net/usb/lan78xx.c
+-@@ -2438,6 +2438,22 @@ static int lan78xx_phy_init(struct lan78
++@@ -2420,6 +2420,22 @@ static int lan78xx_phy_init(struct lan78
+  	mii_adv_to_linkmode_adv_t(fc, mii_adv);
+  	linkmode_or(phydev->advertising, fc, phydev->advertising);
+  
+@@ -39,7 +39,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  	if (phydev->mdio.dev.of_node) {
+  		u32 reg;
+  		int len;
+-@@ -3141,22 +3157,6 @@ static int lan78xx_open(struct net_devic
++@@ -3121,22 +3137,6 @@ static int lan78xx_open(struct net_devic
+  
+  	netif_dbg(dev, ifup, dev->net, "phy initialised successfully");
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0133-lan78xx-Debounce-link-events-to-minimize-poll-storm.patch b/target/linux/bcm27xx/patches-6.6/950-0133-lan78xx-Debounce-link-events-to-minimize-poll-storm.patch
+index e0cdc65652..46bfe50f1a 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0133-lan78xx-Debounce-link-events-to-minimize-poll-storm.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0133-lan78xx-Debounce-link-events-to-minimize-poll-storm.patch
+@@ -29,7 +29,7 @@ See: https://github.com/raspberrypi/linux/issues/2447
+  static int lan78xx_read_reg(struct lan78xx_net *dev, u32 index, u32 *data)
+  {
+  	u32 *buf;
+-@@ -4476,7 +4481,13 @@ static int lan78xx_probe(struct usb_inte
++@@ -4456,7 +4461,13 @@ static int lan78xx_probe(struct usb_inte
+  	if (ret < 0)
+  		goto out4;
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0134-lan78xx-EEE-support-is-now-a-PHY-property.patch b/target/linux/bcm27xx/patches-6.6/950-0134-lan78xx-EEE-support-is-now-a-PHY-property.patch
+index e1cdc17b90..b5e0095d97 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0134-lan78xx-EEE-support-is-now-a-PHY-property.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0134-lan78xx-EEE-support-is-now-a-PHY-property.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+ 
+ --- a/drivers/net/usb/lan78xx.c
+ +++ b/drivers/net/usb/lan78xx.c
+-@@ -2443,7 +2443,7 @@ static int lan78xx_phy_init(struct lan78
++@@ -2425,7 +2425,7 @@ static int lan78xx_phy_init(struct lan78
+  	mii_adv_to_linkmode_adv_t(fc, mii_adv);
+  	linkmode_or(phydev->advertising, fc, phydev->advertising);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0339-Patching-lan78xx-for-SOF_TIMESTAMPING_TX_SOFTWARE-su.patch b/target/linux/bcm27xx/patches-6.6/950-0339-Patching-lan78xx-for-SOF_TIMESTAMPING_TX_SOFTWARE-su.patch
+index 7525a18e0c..085e063598 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0339-Patching-lan78xx-for-SOF_TIMESTAMPING_TX_SOFTWARE-su.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0339-Patching-lan78xx-for-SOF_TIMESTAMPING_TX_SOFTWARE-su.patch
+@@ -17,4 +17,4 @@ Subject: [PATCH 0339/1085] Patching lan78xx for SOF_TIMESTAMPING_TX_SOFTWARE
+ +	.get_ts_info    = ethtool_op_get_ts_info,
+  };
+  
+- static int lan78xx_init_mac_address(struct lan78xx_net *dev)
++ static void lan78xx_init_mac_address(struct lan78xx_net *dev)
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1339-arm64-numa-Add-NUMA-emulation-for-ARM64.patch b/target/linux/bcm27xx/patches-6.6/950-1339-arm64-numa-Add-NUMA-emulation-for-ARM64.patch
+index 93fbbfc47f..169706de8c 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1339-arm64-numa-Add-NUMA-emulation-for-ARM64.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1339-arm64-numa-Add-NUMA-emulation-for-ARM64.patch
+@@ -20,7 +20,7 @@ Cc: “Rafael J. Wysocki" <rafael@kernel.org>
+ 
+ --- a/arch/arm64/Kconfig
+ +++ b/arch/arm64/Kconfig
+-@@ -1501,6 +1501,16 @@ config NODES_SHIFT
++@@ -1500,6 +1500,16 @@ config NODES_SHIFT
+  	  Specify the maximum number of NUMA Nodes available on the target
+  	  system.  Increases memory reserved to accommodate various tables.
+  
+diff --git a/target/linux/generic/backport-6.6/540-v6.12-ksmbd-browse-interfaces-list-on-FSCTL_QUERY_INTERFACE_INFO.patch b/target/linux/generic/backport-6.6/540-v6.12-ksmbd-browse-interfaces-list-on-FSCTL_QUERY_INTERFACE_INFO.patch
+new file mode 100644
+index 0000000000..f81362f906
+--- /dev/null
++++ b/target/linux/generic/backport-6.6/540-v6.12-ksmbd-browse-interfaces-list-on-FSCTL_QUERY_INTERFACE_INFO.patch
+@@ -0,0 +1,36 @@
++From 0fc403192dcc8def1f6284959141608ac4c86699 Mon Sep 17 00:00:00 2001
++From: Namjae Jeon <linkinjeon@kernel.org>
++Date: Fri, 10 Jan 2025 13:37:05 +0900
++Subject: ksmbd: browse interfaces list on FSCTL_QUERY_INTERFACE_INFO IOCTL
++
++[ Upstream commit b2d99376c5d61eb60ffdb6c503e4b6c8f9712ddd ]
++
++ksmbd.mount will give each interfaces list and bind_interfaces_only flags
++to ksmbd server. Previously, the interfaces list was sent only
++when bind_interfaces_only was enabled.
++ksmbd server browse only interfaces list given from ksmbd.conf on
++FSCTL_QUERY_INTERFACE_INFO IOCTL.
++
++Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
++Signed-off-by: Steve French <stfrench@microsoft.com>
++Stable-dep-of: 21a4e47578d4 ("ksmbd: fix use-after-free in __smb2_lease_break_noti()")
++Signed-off-by: Sasha Levin <sashal@kernel.org>
++---
++ fs/smb/server/ksmbd_netlink.h | 3 ++-
++ 1 file changed, 2 insertions(+), 1 deletion(-)
++
++(limited to 'fs/smb/server/ksmbd_netlink.h')
++
++--- a/fs/smb/server/ksmbd_netlink.h
+++++ b/fs/smb/server/ksmbd_netlink.h
++@@ -108,8 +108,9 @@ struct ksmbd_startup_request {
++ 	__u32	smb2_max_credits;	/* MAX credits */
++ 	__u32	smbd_max_io_size;	/* smbd read write size */
++ 	__u32	max_connections;	/* Number of maximum simultaneous connections */
+++	__s8	bind_interfaces_only;
++ 	__u32	max_ip_connections;	/* Number of maximum connection per ip address */
++-	__u32	reserved[125];		/* Reserved room */
+++	__s8	reserved[499];		/* Reserved room */
++ 	__u32	ifc_list_sz;		/* interfaces list size */
++ 	__s8	____payload[];
++ } __packed;
+diff --git a/target/linux/generic/backport-6.6/780-05-v6.8-r8169-add-support-for-LED-s-on-RTL8168-RTL8101.patch b/target/linux/generic/backport-6.6/780-05-v6.8-r8169-add-support-for-LED-s-on-RTL8168-RTL8101.patch
+index eb896deed1..8bb543b9d6 100644
+--- a/target/linux/generic/backport-6.6/780-05-v6.8-r8169-add-support-for-LED-s-on-RTL8168-RTL8101.patch
++++ b/target/linux/generic/backport-6.6/780-05-v6.8-r8169-add-support-for-LED-s-on-RTL8168-RTL8101.patch
+@@ -296,7 +296,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  static void r8168fp_adjust_ocp_cmd(struct rtl8169_private *tp, u32 *cmd, int type)
+  {
+  	/* based on RTL8168FP_OOBMAC_BASE in vendor driver */
+-@@ -5205,6 +5263,7 @@ static int rtl_init_one(struct pci_dev *
++@@ -5204,6 +5262,7 @@ static int rtl_init_one(struct pci_dev *
+  	raw_spin_lock_init(&tp->cfg9346_usage_lock);
+  	raw_spin_lock_init(&tp->config25_lock);
+  	raw_spin_lock_init(&tp->mac_ocp_lock);
+@@ -304,7 +304,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  
+  	dev->tstats = devm_netdev_alloc_pcpu_stats(&pdev->dev,
+  						   struct pcpu_sw_netstats);
+-@@ -5361,6 +5420,12 @@ static int rtl_init_one(struct pci_dev *
++@@ -5360,6 +5419,12 @@ static int rtl_init_one(struct pci_dev *
+  	if (rc)
+  		return rc;
+  
+diff --git a/target/linux/generic/backport-6.6/780-06-v6.8-r8169-fix-building-with-CONFIG_LEDS_CLASS-m.patch b/target/linux/generic/backport-6.6/780-06-v6.8-r8169-fix-building-with-CONFIG_LEDS_CLASS-m.patch
+index 5255689a7a..fa79d91129 100644
+--- a/target/linux/generic/backport-6.6/780-06-v6.8-r8169-fix-building-with-CONFIG_LEDS_CLASS-m.patch
++++ b/target/linux/generic/backport-6.6/780-06-v6.8-r8169-fix-building-with-CONFIG_LEDS_CLASS-m.patch
+@@ -59,7 +59,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  obj-$(CONFIG_R8169) += r8169.o
+ --- a/drivers/net/ethernet/realtek/r8169_main.c
+ +++ b/drivers/net/ethernet/realtek/r8169_main.c
+-@@ -5420,11 +5420,10 @@ static int rtl_init_one(struct pci_dev *
++@@ -5419,11 +5419,10 @@ static int rtl_init_one(struct pci_dev *
+  	if (rc)
+  		return rc;
+  
+diff --git a/target/linux/generic/backport-6.6/780-07-v6.9-r8169-simplify-EEE-handling.patch b/target/linux/generic/backport-6.6/780-07-v6.9-r8169-simplify-EEE-handling.patch
+index 4a6965346f..e1fcb00b1d 100644
+--- a/target/linux/generic/backport-6.6/780-07-v6.9-r8169-simplify-EEE-handling.patch
++++ b/target/linux/generic/backport-6.6/780-07-v6.9-r8169-simplify-EEE-handling.patch
+@@ -75,7 +75,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	genphy_soft_reset(tp->phydev);
+  }
+  
+-@@ -5122,7 +5097,9 @@ static int r8169_mdio_register(struct rt
++@@ -5121,7 +5096,9 @@ static int r8169_mdio_register(struct rt
+  	}
+  
+  	tp->phydev->mac_managed_pm = true;
+@@ -86,7 +86,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	phy_support_asym_pause(tp->phydev);
+  
+  	/* PHY will be woken up in rtl_open() */
+-@@ -5257,7 +5234,6 @@ static int rtl_init_one(struct pci_dev *
++@@ -5256,7 +5233,6 @@ static int rtl_init_one(struct pci_dev *
+  	tp->dev = dev;
+  	tp->pci_dev = pdev;
+  	tp->supports_gmii = ent->driver_data == RTL_CFG_NO_GBIT ? 0 : 1;
+diff --git a/target/linux/generic/backport-6.6/780-08-v6.9-r8169-add-support-for-RTL8126A.patch b/target/linux/generic/backport-6.6/780-08-v6.9-r8169-add-support-for-RTL8126A.patch
+index 27f9637f1b..80b64d3bed 100644
+--- a/target/linux/generic/backport-6.6/780-08-v6.9-r8169-add-support-for-RTL8126A.patch
++++ b/target/linux/generic/backport-6.6/780-08-v6.9-r8169-add-support-for-RTL8126A.patch
+@@ -321,7 +321,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  		padto = max_t(unsigned int, padto, ETH_ZLEN);
+  		break;
+  	default:
+-@@ -5149,7 +5206,7 @@ static void rtl_hw_initialize(struct rtl
++@@ -5148,7 +5205,7 @@ static void rtl_hw_initialize(struct rtl
+  	case RTL_GIGA_MAC_VER_40 ... RTL_GIGA_MAC_VER_48:
+  		rtl_hw_init_8168g(tp);
+  		break;
+diff --git a/target/linux/generic/backport-6.6/780-10-v6.9-r8169-simplify-code-by-using-core-provided-pcpu-stat.patch b/target/linux/generic/backport-6.6/780-10-v6.9-r8169-simplify-code-by-using-core-provided-pcpu-stat.patch
+index 19f1963ee1..60f0cbf06c 100644
+--- a/target/linux/generic/backport-6.6/780-10-v6.9-r8169-simplify-code-by-using-core-provided-pcpu-stat.patch
++++ b/target/linux/generic/backport-6.6/780-10-v6.9-r8169-simplify-code-by-using-core-provided-pcpu-stat.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/ethernet/realtek/r8169_main.c
+ +++ b/drivers/net/ethernet/realtek/r8169_main.c
+-@@ -5298,11 +5298,6 @@ static int rtl_init_one(struct pci_dev *
++@@ -5297,11 +5297,6 @@ static int rtl_init_one(struct pci_dev *
+  	raw_spin_lock_init(&tp->mac_ocp_lock);
+  	mutex_init(&tp->led_lock);
+  
+@@ -28,7 +28,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	/* Get the *optional* external "ether_clk" used on some boards */
+  	tp->clk = devm_clk_get_optional_enabled(&pdev->dev, "ether_clk");
+  	if (IS_ERR(tp->clk))
+-@@ -5417,6 +5412,8 @@ static int rtl_init_one(struct pci_dev *
++@@ -5416,6 +5411,8 @@ static int rtl_init_one(struct pci_dev *
+  	dev->hw_features |= NETIF_F_RXALL;
+  	dev->hw_features |= NETIF_F_RXFCS;
+  
+diff --git a/target/linux/generic/backport-6.6/780-11-v6.9-r8169-add-LED-support-for-RTL8125-RTL8126.patch b/target/linux/generic/backport-6.6/780-11-v6.9-r8169-add-LED-support-for-RTL8125-RTL8126.patch
+index 0ca92ba791..cd33fc1d75 100644
+--- a/target/linux/generic/backport-6.6/780-11-v6.9-r8169-add-LED-support-for-RTL8125-RTL8126.patch
++++ b/target/linux/generic/backport-6.6/780-11-v6.9-r8169-add-LED-support-for-RTL8125-RTL8126.patch
+@@ -225,7 +225,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  void r8169_get_led_name(struct rtl8169_private *tp, int idx,
+  			char *buf, int buf_len)
+  {
+-@@ -5450,10 +5501,12 @@ static int rtl_init_one(struct pci_dev *
++@@ -5449,10 +5500,12 @@ static int rtl_init_one(struct pci_dev *
+  	if (rc)
+  		return rc;
+  
+diff --git a/target/linux/generic/backport-6.6/780-16-v6.9-r8169-fix-LED-related-deadlock-on-module-removal.patch b/target/linux/generic/backport-6.6/780-16-v6.9-r8169-fix-LED-related-deadlock-on-module-removal.patch
+index bdc799354b..857c2171d5 100644
+--- a/target/linux/generic/backport-6.6/780-16-v6.9-r8169-fix-LED-related-deadlock-on-module-removal.patch
++++ b/target/linux/generic/backport-6.6/780-16-v6.9-r8169-fix-LED-related-deadlock-on-module-removal.patch
+@@ -124,7 +124,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  	u32 ocp_base;
+  };
+  
+-@@ -5076,6 +5078,8 @@ static void rtl_remove_one(struct pci_de
++@@ -5075,6 +5077,8 @@ static void rtl_remove_one(struct pci_de
+  
+  	cancel_work_sync(&tp->wk.work);
+  
+@@ -133,7 +133,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  	unregister_netdev(tp->dev);
+  
+  	if (tp->dash_type != RTL_DASH_NONE)
+-@@ -5535,9 +5539,9 @@ static int rtl_init_one(struct pci_dev *
++@@ -5534,9 +5538,9 @@ static int rtl_init_one(struct pci_dev *
+  
+  	if (IS_ENABLED(CONFIG_R8169_LEDS)) {
+  		if (rtl_is_8125(tp))
+diff --git a/target/linux/generic/backport-6.6/780-17-v6.9-r8169-add-missing-conditional-compiling-for-call-to-.patch b/target/linux/generic/backport-6.6/780-17-v6.9-r8169-add-missing-conditional-compiling-for-call-to-.patch
+index 2967b57e30..265c715f5e 100644
+--- a/target/linux/generic/backport-6.6/780-17-v6.9-r8169-add-missing-conditional-compiling-for-call-to-.patch
++++ b/target/linux/generic/backport-6.6/780-17-v6.9-r8169-add-missing-conditional-compiling-for-call-to-.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/ethernet/realtek/r8169_main.c
+ +++ b/drivers/net/ethernet/realtek/r8169_main.c
+-@@ -5078,7 +5078,8 @@ static void rtl_remove_one(struct pci_de
++@@ -5077,7 +5077,8 @@ static void rtl_remove_one(struct pci_de
+  
+  	cancel_work_sync(&tp->wk.work);
+  
+diff --git a/target/linux/generic/backport-6.6/780-20-v6.11-r8169-disable-interrupt-source-RxOverflow.patch b/target/linux/generic/backport-6.6/780-20-v6.11-r8169-disable-interrupt-source-RxOverflow.patch
+index fca73b7fd3..9ded598665 100644
+--- a/target/linux/generic/backport-6.6/780-20-v6.11-r8169-disable-interrupt-source-RxOverflow.patch
++++ b/target/linux/generic/backport-6.6/780-20-v6.11-r8169-disable-interrupt-source-RxOverflow.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/ethernet/realtek/r8169_main.c
+ +++ b/drivers/net/ethernet/realtek/r8169_main.c
+-@@ -5119,12 +5119,10 @@ static void rtl_set_irq_mask(struct rtl8
++@@ -5118,12 +5118,10 @@ static void rtl_set_irq_mask(struct rtl8
+  	tp->irq_mask = RxOK | RxErr | TxOK | TxErr | LinkChg;
+  
+  	if (tp->mac_version <= RTL_GIGA_MAC_VER_06)
+diff --git a/target/linux/generic/backport-6.6/780-22-v6.12-r8169-add-support-for-RTL8126A-rev.b.patch b/target/linux/generic/backport-6.6/780-22-v6.12-r8169-add-support-for-RTL8126A-rev.b.patch
+index bbe6928885..628664b2f0 100644
+--- a/target/linux/generic/backport-6.6/780-22-v6.12-r8169-add-support-for-RTL8126A-rev.b.patch
++++ b/target/linux/generic/backport-6.6/780-22-v6.12-r8169-add-support-for-RTL8126A-rev.b.patch
+@@ -224,7 +224,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		padto = max_t(unsigned int, padto, ETH_ZLEN);
+  		break;
+  	default:
+-@@ -5296,7 +5308,7 @@ static void rtl_hw_initialize(struct rtl
++@@ -5295,7 +5307,7 @@ static void rtl_hw_initialize(struct rtl
+  	case RTL_GIGA_MAC_VER_40 ... RTL_GIGA_MAC_VER_48:
+  		rtl_hw_init_8168g(tp);
+  		break;
+diff --git a/target/linux/generic/backport-6.6/780-26-v6.13-r8169-enable-SG-TSO-on-selected-chip-versions-per-de.patch b/target/linux/generic/backport-6.6/780-26-v6.13-r8169-enable-SG-TSO-on-selected-chip-versions-per-de.patch
+index 739b8e3a23..15bdb43356 100644
+--- a/target/linux/generic/backport-6.6/780-26-v6.13-r8169-enable-SG-TSO-on-selected-chip-versions-per-de.patch
++++ b/target/linux/generic/backport-6.6/780-26-v6.13-r8169-enable-SG-TSO-on-selected-chip-versions-per-de.patch
+@@ -20,7 +20,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+ 
+ --- a/drivers/net/ethernet/realtek/r8169_main.c
+ +++ b/drivers/net/ethernet/realtek/r8169_main.c
+-@@ -5493,11 +5493,6 @@ static int rtl_init_one(struct pci_dev *
++@@ -5492,11 +5492,6 @@ static int rtl_init_one(struct pci_dev *
+  
+  	dev->features |= dev->hw_features;
+  
+@@ -32,7 +32,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  	if (rtl_chip_supports_csum_v2(tp)) {
+  		dev->hw_features |= NETIF_F_SG | NETIF_F_TSO | NETIF_F_TSO6;
+  		netif_set_tso_max_size(dev, RTL_GSO_MAX_SIZE_V2);
+-@@ -5508,6 +5503,17 @@ static int rtl_init_one(struct pci_dev *
++@@ -5507,6 +5502,17 @@ static int rtl_init_one(struct pci_dev *
+  		netif_set_tso_max_segs(dev, RTL_GSO_MAX_SEGS_V1);
+  	}
+  
+diff --git a/target/linux/generic/backport-6.6/780-39-v6.13-r8169-remove-leftover-locks-after-reverted-change.patch b/target/linux/generic/backport-6.6/780-39-v6.13-r8169-remove-leftover-locks-after-reverted-change.patch
+index 81c0ac251e..90b7c8c767 100644
+--- a/target/linux/generic/backport-6.6/780-39-v6.13-r8169-remove-leftover-locks-after-reverted-change.patch
++++ b/target/linux/generic/backport-6.6/780-39-v6.13-r8169-remove-leftover-locks-after-reverted-change.patch
+@@ -102,7 +102,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  	switch (tp->mac_version) {
+  	case RTL_GIGA_MAC_VER_02 ... RTL_GIGA_MAC_VER_06:
+-@@ -5462,8 +5439,6 @@ static int rtl_init_one(struct pci_dev *
++@@ -5461,8 +5438,6 @@ static int rtl_init_one(struct pci_dev *
+  	tp->supports_gmii = ent->driver_data == RTL_CFG_NO_GBIT ? 0 : 1;
+  	tp->ocp_base = OCP_STD_PHY_BASE;
+  
+diff --git a/target/linux/generic/backport-6.6/780-44-v6.13-r8169-copy-vendor-driver-2.5G-5G-EEE-advertisement-c.patch b/target/linux/generic/backport-6.6/780-44-v6.13-r8169-copy-vendor-driver-2.5G-5G-EEE-advertisement-c.patch
+index 0de30ceed5..6da3bf59a8 100644
+--- a/target/linux/generic/backport-6.6/780-44-v6.13-r8169-copy-vendor-driver-2.5G-5G-EEE-advertisement-c.patch
++++ b/target/linux/generic/backport-6.6/780-44-v6.13-r8169-copy-vendor-driver-2.5G-5G-EEE-advertisement-c.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/ethernet/realtek/r8169_main.c
+ +++ b/drivers/net/ethernet/realtek/r8169_main.c
+-@@ -5238,6 +5238,11 @@ static int r8169_mdio_register(struct rt
++@@ -5237,6 +5237,11 @@ static int r8169_mdio_register(struct rt
+  			      tp->phydev->supported_eee);
+  	phy_support_asym_pause(tp->phydev);
+  
+diff --git a/target/linux/generic/backport-6.6/780-46-v6.14-r8169-remove-support-for-chip-version-11.patch b/target/linux/generic/backport-6.6/780-46-v6.14-r8169-remove-support-for-chip-version-11.patch
+index 6f2a538893..e4af737edc 100644
+--- a/target/linux/generic/backport-6.6/780-46-v6.14-r8169-remove-support-for-chip-version-11.patch
++++ b/target/linux/generic/backport-6.6/780-46-v6.14-r8169-remove-support-for-chip-version-11.patch
+@@ -68,7 +68,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	rtl_irq_disable(tp);
+  	napi_schedule(&tp->napi);
+  out:
+-@@ -5108,9 +5100,6 @@ static void rtl_set_irq_mask(struct rtl8
++@@ -5107,9 +5099,6 @@ static void rtl_set_irq_mask(struct rtl8
+  
+  	if (tp->mac_version <= RTL_GIGA_MAC_VER_06)
+  		tp->irq_mask |= SYSErr | RxFIFOOver;
+@@ -78,7 +78,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  }
+  
+  static int rtl_alloc_irq(struct rtl8169_private *tp)
+-@@ -5306,7 +5295,6 @@ static int rtl_jumbo_max(struct rtl8169_
++@@ -5305,7 +5294,6 @@ static int rtl_jumbo_max(struct rtl8169_
+  	case RTL_GIGA_MAC_VER_02 ... RTL_GIGA_MAC_VER_06:
+  		return JUMBO_7K;
+  	/* RTL8168b */
+diff --git a/target/linux/generic/backport-6.6/780-47-v6.14-r8169-adjust-version-numbering-for-RTL8126.patch b/target/linux/generic/backport-6.6/780-47-v6.14-r8169-adjust-version-numbering-for-RTL8126.patch
+index 6f1f9c177a..8c30506904 100644
+--- a/target/linux/generic/backport-6.6/780-47-v6.14-r8169-adjust-version-numbering-for-RTL8126.patch
++++ b/target/linux/generic/backport-6.6/780-47-v6.14-r8169-adjust-version-numbering-for-RTL8126.patch
+@@ -233,7 +233,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		padto = max_t(unsigned int, padto, ETH_ZLEN);
+  		break;
+  	default:
+-@@ -5276,7 +5276,7 @@ static void rtl_hw_initialize(struct rtl
++@@ -5275,7 +5275,7 @@ static void rtl_hw_initialize(struct rtl
+  	case RTL_GIGA_MAC_VER_40 ... RTL_GIGA_MAC_VER_48:
+  		rtl_hw_init_8168g(tp);
+  		break;
+diff --git a/target/linux/generic/backport-6.6/780-53-v6.15-r8169-add-PHY-c45-ops-for-MDIO_MMD_VENDOR2-registers.patch b/target/linux/generic/backport-6.6/780-53-v6.15-r8169-add-PHY-c45-ops-for-MDIO_MMD_VENDOR2-registers.patch
+index 34de78536e..010a8abc02 100644
+--- a/target/linux/generic/backport-6.6/780-53-v6.15-r8169-add-PHY-c45-ops-for-MDIO_MMD_VENDOR2-registers.patch
++++ b/target/linux/generic/backport-6.6/780-53-v6.15-r8169-add-PHY-c45-ops-for-MDIO_MMD_VENDOR2-registers.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/ethernet/realtek/r8169_main.c
+ +++ b/drivers/net/ethernet/realtek/r8169_main.c
+-@@ -5209,6 +5209,33 @@ static int r8169_mdio_write_reg(struct m
++@@ -5208,6 +5208,33 @@ static int r8169_mdio_write_reg(struct m
+  	return 0;
+  }
+  
+@@ -53,7 +53,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  static int r8169_mdio_register(struct rtl8169_private *tp)
+  {
+  	struct pci_dev *pdev = tp->pci_dev;
+-@@ -5239,6 +5266,11 @@ static int r8169_mdio_register(struct rt
++@@ -5238,6 +5265,11 @@ static int r8169_mdio_register(struct rt
+  	new_bus->read = r8169_mdio_read_reg;
+  	new_bus->write = r8169_mdio_write_reg;
+  
+diff --git a/target/linux/generic/backport-6.6/780-54-v6.15-r8169-increase-max-jumbo-packet-size-on-RTL8125-RTL8.patch b/target/linux/generic/backport-6.6/780-54-v6.15-r8169-increase-max-jumbo-packet-size-on-RTL8125-RTL8.patch
+index a25bf9e8eb..f8d7e8008a 100644
+--- a/target/linux/generic/backport-6.6/780-54-v6.15-r8169-increase-max-jumbo-packet-size-on-RTL8125-RTL8.patch
++++ b/target/linux/generic/backport-6.6/780-54-v6.15-r8169-increase-max-jumbo-packet-size-on-RTL8125-RTL8.patch
+@@ -28,7 +28,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  static const struct {
+  	const char *name;
+-@@ -5369,6 +5370,9 @@ static int rtl_jumbo_max(struct rtl8169_
++@@ -5368,6 +5369,9 @@ static int rtl_jumbo_max(struct rtl8169_
+  	/* RTL8168c */
+  	case RTL_GIGA_MAC_VER_18 ... RTL_GIGA_MAC_VER_24:
+  		return JUMBO_6K;
+diff --git a/target/linux/generic/backport-6.6/780-55-v6.15-r8169-enable-RTL8168H-RTL8168EP-RTL8168FP-ASPM-suppo.patch b/target/linux/generic/backport-6.6/780-55-v6.15-r8169-enable-RTL8168H-RTL8168EP-RTL8168FP-ASPM-suppo.patch
+index 385c390cb8..32623e2358 100644
+--- a/target/linux/generic/backport-6.6/780-55-v6.15-r8169-enable-RTL8168H-RTL8168EP-RTL8168FP-ASPM-suppo.patch
++++ b/target/linux/generic/backport-6.6/780-55-v6.15-r8169-enable-RTL8168H-RTL8168EP-RTL8168FP-ASPM-suppo.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/ethernet/realtek/r8169_main.c
+ +++ b/drivers/net/ethernet/realtek/r8169_main.c
+-@@ -5407,7 +5407,7 @@ done:
++@@ -5406,7 +5406,7 @@ done:
+  /* register is set if system vendor successfully tested ASPM 1.2 */
+  static bool rtl_aspm_is_safe(struct rtl8169_private *tp)
+  {
+diff --git a/target/linux/generic/backport-6.6/780-59-v6.16-r8169-refactor-chip-version-detection.patch b/target/linux/generic/backport-6.6/780-59-v6.16-r8169-refactor-chip-version-detection.patch
+index 1bf6e10db2..7ffff5dc9b 100644
+--- a/target/linux/generic/backport-6.6/780-59-v6.16-r8169-refactor-chip-version-detection.patch
++++ b/target/linux/generic/backport-6.6/780-59-v6.16-r8169-refactor-chip-version-detection.patch
+@@ -353,7 +353,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  }
+  
+  static void rtl_release_firmware(struct rtl8169_private *tp)
+-@@ -5449,9 +5381,9 @@ static bool rtl_aspm_is_safe(struct rtl8
++@@ -5448,9 +5380,9 @@ static bool rtl_aspm_is_safe(struct rtl8
+  
+  static int rtl_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+  {
+@@ -364,7 +364,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	struct net_device *dev;
+  	u32 txconfig;
+  	u16 xid;
+-@@ -5502,12 +5434,13 @@ static int rtl_init_one(struct pci_dev *
++@@ -5501,12 +5433,13 @@ static int rtl_init_one(struct pci_dev *
+  	xid = (txconfig >> 20) & 0xfcf;
+  
+  	/* Identify chip attached to board */
+@@ -381,7 +381,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  	/* Disable ASPM L1 as that cause random device stop working
+  	 * problems as well as full system hangs for some PCIe devices users.
+-@@ -5611,8 +5544,6 @@ static int rtl_init_one(struct pci_dev *
++@@ -5610,8 +5543,6 @@ static int rtl_init_one(struct pci_dev *
+  
+  	rtl_set_irq_mask(tp);
+  
+@@ -390,7 +390,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	tp->counters = dmam_alloc_coherent (&pdev->dev, sizeof(*tp->counters),
+  					    &tp->counters_phys_addr,
+  					    GFP_KERNEL);
+-@@ -5637,7 +5568,7 @@ static int rtl_init_one(struct pci_dev *
++@@ -5636,7 +5567,7 @@ static int rtl_init_one(struct pci_dev *
+  	}
+  
+  	netdev_info(dev, "%s, %pM, XID %03x, IRQ %d\n",
+diff --git a/target/linux/generic/backport-6.6/780-60-v6.16-r8169-add-RTL_GIGA_MAC_VER_LAST-to-facilitate-adding.patch b/target/linux/generic/backport-6.6/780-60-v6.16-r8169-add-RTL_GIGA_MAC_VER_LAST-to-facilitate-adding.patch
+index eb05db30e7..b46d331a3c 100644
+--- a/target/linux/generic/backport-6.6/780-60-v6.16-r8169-add-RTL_GIGA_MAC_VER_LAST-to-facilitate-adding.patch
++++ b/target/linux/generic/backport-6.6/780-60-v6.16-r8169-add-RTL_GIGA_MAC_VER_LAST-to-facilitate-adding.patch
+@@ -139,7 +139,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		padto = max_t(unsigned int, padto, ETH_ZLEN);
+  		break;
+  	default:
+-@@ -5311,7 +5311,7 @@ static void rtl_hw_initialize(struct rtl
++@@ -5310,7 +5310,7 @@ static void rtl_hw_initialize(struct rtl
+  	case RTL_GIGA_MAC_VER_40 ... RTL_GIGA_MAC_VER_48:
+  		rtl_hw_init_8168g(tp);
+  		break;
+@@ -148,7 +148,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		rtl_hw_init_8125(tp);
+  		break;
+  	default:
+-@@ -5336,7 +5336,7 @@ static int rtl_jumbo_max(struct rtl8169_
++@@ -5335,7 +5335,7 @@ static int rtl_jumbo_max(struct rtl8169_
+  	case RTL_GIGA_MAC_VER_18 ... RTL_GIGA_MAC_VER_24:
+  		return JUMBO_6K;
+  	/* RTL8125/8126 */
+diff --git a/target/linux/generic/backport-6.6/780-61-v6.16-r8169-use-pci_prepare_to_sleep-in-rtl_shutdown.patch b/target/linux/generic/backport-6.6/780-61-v6.16-r8169-use-pci_prepare_to_sleep-in-rtl_shutdown.patch
+index d04bb0b611..21fdca1031 100644
+--- a/target/linux/generic/backport-6.6/780-61-v6.16-r8169-use-pci_prepare_to_sleep-in-rtl_shutdown.patch
++++ b/target/linux/generic/backport-6.6/780-61-v6.16-r8169-use-pci_prepare_to_sleep-in-rtl_shutdown.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/ethernet/realtek/r8169_main.c
+ +++ b/drivers/net/ethernet/realtek/r8169_main.c
+-@@ -5048,10 +5048,8 @@ static void rtl_shutdown(struct pci_dev
++@@ -5047,10 +5047,8 @@ static void rtl_shutdown(struct pci_dev
+  	/* Restore original MAC address */
+  	rtl_rar_set(tp, tp->dev->perm_addr);
+  
+diff --git a/target/linux/generic/backport-6.6/780-64-v6.16-r8169-merge-chip-versions-52-and-53-RTL8117.patch b/target/linux/generic/backport-6.6/780-64-v6.16-r8169-merge-chip-versions-52-and-53-RTL8117.patch
+index 2fcf13573c..a03eb9f208 100644
+--- a/target/linux/generic/backport-6.6/780-64-v6.16-r8169-merge-chip-versions-52-and-53-RTL8117.patch
++++ b/target/linux/generic/backport-6.6/780-64-v6.16-r8169-merge-chip-versions-52-and-53-RTL8117.patch
+@@ -92,7 +92,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		[RTL_GIGA_MAC_VER_61] = rtl_hw_start_8125a_2,
+  		[RTL_GIGA_MAC_VER_63] = rtl_hw_start_8125b,
+  		[RTL_GIGA_MAC_VER_64] = rtl_hw_start_8125d,
+-@@ -5294,7 +5291,7 @@ static void rtl_hw_init_8125(struct rtl8
++@@ -5293,7 +5290,7 @@ static void rtl_hw_init_8125(struct rtl8
+  static void rtl_hw_initialize(struct rtl8169_private *tp)
+  {
+  	switch (tp->mac_version) {
+diff --git a/target/linux/generic/pending-6.6/666-Add-support-for-MAP-E-FMRs-mesh-mode.patch b/target/linux/generic/pending-6.6/666-Add-support-for-MAP-E-FMRs-mesh-mode.patch
+index 53b78b70da..863372ea87 100644
+--- a/target/linux/generic/pending-6.6/666-Add-support-for-MAP-E-FMRs-mesh-mode.patch
++++ b/target/linux/generic/pending-6.6/666-Add-support-for-MAP-E-FMRs-mesh-mode.patch
+@@ -311,7 +311,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  /**
+   * ip6_tnl_addr_conflict - compare packet addresses to tunnel's own
+   *   @t: the outgoing tunnel device
+-@@ -1291,6 +1439,7 @@ ipxip6_tnl_xmit(struct sk_buff *skb, str
++@@ -1292,6 +1440,7 @@ ipxip6_tnl_xmit(struct sk_buff *skb, str
+  		u8 protocol)
+  {
+  	struct ip6_tnl *t = netdev_priv(dev);
+@@ -319,7 +319,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	struct ipv6hdr *ipv6h;
+  	const struct iphdr  *iph;
+  	int encap_limit = -1;
+-@@ -1390,6 +1539,18 @@ ipxip6_tnl_xmit(struct sk_buff *skb, str
++@@ -1391,6 +1540,18 @@ ipxip6_tnl_xmit(struct sk_buff *skb, str
+  	fl6.flowi6_uid = sock_net_uid(dev_net(dev), NULL);
+  	dsfield = INET_ECN_encapsulate(dsfield, orig_dsfield);
+  
+@@ -338,7 +338,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	if (iptunnel_handle_offloads(skb, SKB_GSO_IPXIP6))
+  		return -1;
+  
+-@@ -1543,6 +1704,14 @@ ip6_tnl_change(struct ip6_tnl *t, const
++@@ -1544,6 +1705,14 @@ ip6_tnl_change(struct ip6_tnl *t, const
+  	t->parms.link = p->link;
+  	t->parms.proto = p->proto;
+  	t->parms.fwmark = p->fwmark;
+@@ -353,7 +353,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	dst_cache_reset(&t->dst_cache);
+  	ip6_tnl_link_config(t);
+  }
+-@@ -1577,6 +1746,7 @@ ip6_tnl_parm_from_user(struct __ip6_tnl_
++@@ -1578,6 +1747,7 @@ ip6_tnl_parm_from_user(struct __ip6_tnl_
+  	p->flowinfo = u->flowinfo;
+  	p->link = u->link;
+  	p->proto = u->proto;
+@@ -361,7 +361,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	memcpy(p->name, u->name, sizeof(u->name));
+  }
+  
+-@@ -1965,6 +2135,15 @@ static int ip6_tnl_validate(struct nlatt
++@@ -1966,6 +2136,15 @@ static int ip6_tnl_validate(struct nlatt
+  	return 0;
+  }
+  
+@@ -377,7 +377,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  static void ip6_tnl_netlink_parms(struct nlattr *data[],
+  				  struct __ip6_tnl_parm *parms)
+  {
+-@@ -2002,6 +2181,46 @@ static void ip6_tnl_netlink_parms(struct
++@@ -2003,6 +2182,46 @@ static void ip6_tnl_netlink_parms(struct
+  
+  	if (data[IFLA_IPTUN_FWMARK])
+  		parms->fwmark = nla_get_u32(data[IFLA_IPTUN_FWMARK]);
+@@ -424,7 +424,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  }
+  
+  static int ip6_tnl_newlink(struct net *src_net, struct net_device *dev,
+-@@ -2085,6 +2304,12 @@ static void ip6_tnl_dellink(struct net_d
++@@ -2086,6 +2305,12 @@ static void ip6_tnl_dellink(struct net_d
+  
+  static size_t ip6_tnl_get_size(const struct net_device *dev)
+  {
+@@ -437,7 +437,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	return
+  		/* IFLA_IPTUN_LINK */
+  		nla_total_size(4) +
+-@@ -2114,6 +2339,24 @@ static size_t ip6_tnl_get_size(const str
++@@ -2115,6 +2340,24 @@ static size_t ip6_tnl_get_size(const str
+  		nla_total_size(0) +
+  		/* IFLA_IPTUN_FWMARK */
+  		nla_total_size(4) +
+@@ -462,7 +462,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  		0;
+  }
+  
+-@@ -2121,6 +2364,9 @@ static int ip6_tnl_fill_info(struct sk_b
++@@ -2122,6 +2365,9 @@ static int ip6_tnl_fill_info(struct sk_b
+  {
+  	struct ip6_tnl *tunnel = netdev_priv(dev);
+  	struct __ip6_tnl_parm *parm = &tunnel->parms;
+@@ -472,7 +472,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  
+  	if (nla_put_u32(skb, IFLA_IPTUN_LINK, parm->link) ||
+  	    nla_put_in6_addr(skb, IFLA_IPTUN_LOCAL, &parm->laddr) ||
+-@@ -2130,9 +2376,27 @@ static int ip6_tnl_fill_info(struct sk_b
++@@ -2131,9 +2377,27 @@ static int ip6_tnl_fill_info(struct sk_b
+  	    nla_put_be32(skb, IFLA_IPTUN_FLOWINFO, parm->flowinfo) ||
+  	    nla_put_u32(skb, IFLA_IPTUN_FLAGS, parm->flags) ||
+  	    nla_put_u8(skb, IFLA_IPTUN_PROTO, parm->proto) ||
+@@ -501,7 +501,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	if (nla_put_u16(skb, IFLA_IPTUN_ENCAP_TYPE, tunnel->encap.type) ||
+  	    nla_put_be16(skb, IFLA_IPTUN_ENCAP_SPORT, tunnel->encap.sport) ||
+  	    nla_put_be16(skb, IFLA_IPTUN_ENCAP_DPORT, tunnel->encap.dport) ||
+-@@ -2172,6 +2436,7 @@ static const struct nla_policy ip6_tnl_p
++@@ -2173,6 +2437,7 @@ static const struct nla_policy ip6_tnl_p
+  	[IFLA_IPTUN_ENCAP_DPORT]	= { .type = NLA_U16 },
+  	[IFLA_IPTUN_COLLECT_METADATA]	= { .type = NLA_FLAG },
+  	[IFLA_IPTUN_FWMARK]		= { .type = NLA_U32 },
+diff --git a/target/linux/generic/pending-6.6/791-tg3-Fix-DMA-allocations-on-57766-devices.patch b/target/linux/generic/pending-6.6/791-tg3-Fix-DMA-allocations-on-57766-devices.patch
+index f2302432cb..9d219d13e5 100644
+--- a/target/linux/generic/pending-6.6/791-tg3-Fix-DMA-allocations-on-57766-devices.patch
++++ b/target/linux/generic/pending-6.6/791-tg3-Fix-DMA-allocations-on-57766-devices.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Pavan Chebbi <pavan.chebbi@broadcom.com>
+ 
+ --- a/drivers/net/ethernet/broadcom/tg3.c
+ +++ b/drivers/net/ethernet/broadcom/tg3.c
+-@@ -17729,8 +17729,10 @@ static int tg3_init_one(struct pci_dev *
++@@ -17732,8 +17732,10 @@ static int tg3_init_one(struct pci_dev *
+  	} else
+  		persist_dma_mask = dma_mask = DMA_BIT_MASK(64);
+  
+diff --git a/target/linux/lantiq/patches-6.6/0001-MIPS-lantiq-add-pcie-driver.patch b/target/linux/lantiq/patches-6.6/0001-MIPS-lantiq-add-pcie-driver.patch
+index 018960be83..4ba92226ac 100644
+--- a/target/linux/lantiq/patches-6.6/0001-MIPS-lantiq-add-pcie-driver.patch
++++ b/target/linux/lantiq/patches-6.6/0001-MIPS-lantiq-add-pcie-driver.patch
+@@ -5524,7 +5524,7 @@ Signed-off-by: John Crispin <blogic@openwrt.org>
+  	  (transaction layer end-to-end CRC checking).
+ --- a/include/linux/pci.h
+ +++ b/include/linux/pci.h
+-@@ -1626,6 +1626,8 @@ void pci_walk_bus_locked(struct pci_bus
++@@ -1612,6 +1612,8 @@ void pci_walk_bus_locked(struct pci_bus
+  			 void *userdata);
+  int pci_cfg_space_size(struct pci_dev *dev);
+  unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+diff --git a/target/linux/mediatek/patches-6.6/901-arm-add-cmdline-override.patch b/target/linux/mediatek/patches-6.6/901-arm-add-cmdline-override.patch
+index 2c1ff1c994..7b7c905a0f 100644
+--- a/target/linux/mediatek/patches-6.6/901-arm-add-cmdline-override.patch
++++ b/target/linux/mediatek/patches-6.6/901-arm-add-cmdline-override.patch
+@@ -37,7 +37,7 @@
+  	 * CONFIG_CMDLINE is meant to be a default in case nothing else
+ --- a/arch/arm64/Kconfig
+ +++ b/arch/arm64/Kconfig
+-@@ -2310,6 +2310,14 @@ config CMDLINE_FORCE
++@@ -2309,6 +2309,14 @@ config CMDLINE_FORCE
+  
+  endchoice
+  
+diff --git a/target/linux/rockchip/patches-6.6/022-v6.15-irqchip-gic-v3-Add-Rockchip-3568002-erratum-workaround.patch b/target/linux/rockchip/patches-6.6/022-v6.15-irqchip-gic-v3-Add-Rockchip-3568002-erratum-workaround.patch
+index b5c548ecce..9c9e643ff9 100644
+--- a/target/linux/rockchip/patches-6.6/022-v6.15-irqchip-gic-v3-Add-Rockchip-3568002-erratum-workaround.patch
++++ b/target/linux/rockchip/patches-6.6/022-v6.15-irqchip-gic-v3-Add-Rockchip-3568002-erratum-workaround.patch
+@@ -24,7 +24,7 @@ Link: https://lore.kernel.org/all/20250216221634.364158-2-dmitry.osipenko@collab
+ 
+ --- a/Documentation/arch/arm64/silicon-errata.rst
+ +++ b/Documentation/arch/arm64/silicon-errata.rst
+-@@ -272,6 +272,8 @@ stable kernels.
++@@ -270,6 +270,8 @@ stable kernels.
+  +----------------+-----------------+-----------------+-----------------------------+
+  | Rockchip       | RK3588          | #3588001        | ROCKCHIP_ERRATUM_3588001    |
+  +----------------+-----------------+-----------------+-----------------------------+
+@@ -35,7 +35,7 @@ Link: https://lore.kernel.org/all/20250216221634.364158-2-dmitry.osipenko@collab
+  | Fujitsu        | A64FX           | E#010001        | FUJITSU_ERRATUM_010001      |
+ --- a/arch/arm64/Kconfig
+ +++ b/arch/arm64/Kconfig
+-@@ -1268,6 +1268,15 @@ config NVIDIA_CARMEL_CNP_ERRATUM
++@@ -1267,6 +1267,15 @@ config NVIDIA_CARMEL_CNP_ERRATUM
+  
+  	  If unsure, say Y.
+  
+-- 
+2.43.0
+

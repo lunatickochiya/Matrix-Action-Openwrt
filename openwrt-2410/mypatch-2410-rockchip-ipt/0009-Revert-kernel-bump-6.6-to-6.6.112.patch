@@ -1,0 +1,226 @@
+From a11daec305130b9002e066e88b4e0b8319cfe787 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 27 Dec 2025 19:43:49 +0800
+Subject: [PATCH 09/11] Revert "kernel: bump 6.6 to 6.6.112"
+
+This reverts commit 59029175883fb7cb7586eeec2417401719734953.
+---
+ include/kernel-6.6                                          | 4 ++--
+ ...41-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch | 4 ++--
+ .../950-0485-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch       | 6 +++---
+ ...0-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch | 2 +-
+ target/linux/generic/hack-6.6/253-ksmbd-config.patch        | 2 +-
+ .../generic/pending-6.6/203-kallsyms_uncompressed.patch     | 2 +-
+ target/linux/generic/pending-6.6/920-mangle_bootargs.patch  | 2 +-
+ .../855-i2c-mt65xx-allow-optional-pmic-clock.patch          | 2 +-
+ ...rng-rockchip-add-hwrng-driver-for-Rockchip-RK3568-.patch | 2 +-
+ ...2-04-v6.10-phy-rockchip-Fix-typo-in-function-names.patch | 4 ++--
+ ...rng-rockchip-add-support-for-rk3588-s-standalone-T.patch | 2 +-
+ ...b-xhci-To-improve-performance-usb-using-lowmem-for.patch | 2 +-
+ ...rng-Add-StarFive-JH7100-Random-Number-Generator-dr.patch | 2 +-
+ 13 files changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/include/kernel-6.6 b/include/kernel-6.6
+index a489c9f12d..04111e0155 100644
+--- a/include/kernel-6.6
++++ b/include/kernel-6.6
+@@ -1,2 +1,2 @@
+-LINUX_VERSION-6.6 = .112
+-LINUX_KERNEL_HASH-6.6.112 = 6c7d92bf316a56e91de41cb60da1f63d94a4f8aafaef6a13055df0c291138a22
++LINUX_VERSION-6.6 = .111
++LINUX_KERNEL_HASH-6.6.111 = 04c470e130d659ef05217ac695422c28d817d19daa50643fe28b945e6ab646c7
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch b/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
+index 8bcb5cccf2..5f532aa9fc 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/net/bluetooth/hci_sync.c
+ +++ b/net/bluetooth/hci_sync.c
+-@@ -4936,6 +4936,7 @@ static const struct {
++@@ -4934,6 +4934,7 @@ static const struct {
+   */
+  static int hci_dev_setup_sync(struct hci_dev *hdev)
+  {
+@@ -28,7 +28,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	int ret = 0;
+  	bool invalid_bdaddr;
+  	size_t i;
+-@@ -4964,7 +4965,8 @@ static int hci_dev_setup_sync(struct hci
++@@ -4962,7 +4963,8 @@ static int hci_dev_setup_sync(struct hci
+  			 test_bit(HCI_QUIRK_USE_BDADDR_PROPERTY, &hdev->quirks);
+  	if (!ret) {
+  		if (test_bit(HCI_QUIRK_USE_BDADDR_PROPERTY, &hdev->quirks) &&
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0485-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch b/target/linux/bcm27xx/patches-6.6/950-0485-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch
+index 35bd56565e..5bc3e8fda8 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0485-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0485-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch
+@@ -75,7 +75,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.com>
+  	if (pdev->vendor == PCI_VENDOR_ID_ASMEDIA &&
+ --- a/drivers/usb/host/xhci-ring.c
+ +++ b/drivers/usb/host/xhci-ring.c
+-@@ -3733,6 +3733,48 @@ static int xhci_align_td(struct xhci_hcd
++@@ -3736,6 +3736,48 @@ static int xhci_align_td(struct xhci_hcd
+  	return 1;
+  }
+  
+@@ -124,7 +124,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.com>
+  /* This is very similar to what ehci-q.c qtd_fill() does */
+  int xhci_queue_bulk_tx(struct xhci_hcd *xhci, gfp_t mem_flags,
+  		struct urb *urb, int slot_id, unsigned int ep_index)
+-@@ -3889,6 +3931,8 @@ int xhci_queue_bulk_tx(struct xhci_hcd *
++@@ -3892,6 +3934,8 @@ int xhci_queue_bulk_tx(struct xhci_hcd *
+  	}
+  
+  	check_trb_math(urb, enqd_len);
+@@ -133,7 +133,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.com>
+  	giveback_first_trb(xhci, slot_id, ep_index, urb->stream_id,
+  			start_cycle, start_trb);
+  	return 0;
+-@@ -4038,6 +4082,8 @@ int xhci_queue_ctrl_tx(struct xhci_hcd *
++@@ -4041,6 +4085,8 @@ int xhci_queue_ctrl_tx(struct xhci_hcd *
+  			/* Event on completion */
+  			field | TRB_IOC | TRB_TYPE(TRB_STATUS) | ep_ring->cycle_state);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch b/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
+index a14c5389c0..50b09c744e 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/net/bluetooth/hci_sync.c
+ +++ b/net/bluetooth/hci_sync.c
+-@@ -4936,7 +4936,8 @@ static const struct {
++@@ -4934,7 +4934,8 @@ static const struct {
+   */
+  static int hci_dev_setup_sync(struct hci_dev *hdev)
+  {
+diff --git a/target/linux/generic/hack-6.6/253-ksmbd-config.patch b/target/linux/generic/hack-6.6/253-ksmbd-config.patch
+index 3d642e2b65..d54b48895e 100644
+--- a/target/linux/generic/hack-6.6/253-ksmbd-config.patch
++++ b/target/linux/generic/hack-6.6/253-ksmbd-config.patch
+@@ -10,7 +10,7 @@ Subject: [PATCH] Kconfig: add tristate for OID and ASNI string
+ 
+ --- a/init/Kconfig
+ +++ b/init/Kconfig
+-@@ -2003,7 +2003,7 @@ config PADATA
++@@ -2002,7 +2002,7 @@ config PADATA
+  	bool
+  
+  config ASN1
+diff --git a/target/linux/generic/pending-6.6/203-kallsyms_uncompressed.patch b/target/linux/generic/pending-6.6/203-kallsyms_uncompressed.patch
+index b067d57362..94b22603d8 100644
+--- a/target/linux/generic/pending-6.6/203-kallsyms_uncompressed.patch
++++ b/target/linux/generic/pending-6.6/203-kallsyms_uncompressed.patch
+@@ -13,7 +13,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/init/Kconfig
+ +++ b/init/Kconfig
+-@@ -1461,6 +1461,17 @@ config SYSCTL_ARCH_UNALIGN_ALLOW
++@@ -1460,6 +1460,17 @@ config SYSCTL_ARCH_UNALIGN_ALLOW
+  	  the unaligned access emulation.
+  	  see arch/parisc/kernel/unaligned.c for reference
+  
+diff --git a/target/linux/generic/pending-6.6/920-mangle_bootargs.patch b/target/linux/generic/pending-6.6/920-mangle_bootargs.patch
+index 8bf6183044..36e7c18324 100644
+--- a/target/linux/generic/pending-6.6/920-mangle_bootargs.patch
++++ b/target/linux/generic/pending-6.6/920-mangle_bootargs.patch
+@@ -13,7 +13,7 @@ Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+ 
+ --- a/init/Kconfig
+ +++ b/init/Kconfig
+-@@ -1821,6 +1821,15 @@ config DEBUG_RSEQ
++@@ -1820,6 +1820,15 @@ config DEBUG_RSEQ
+  
+  	  If unsure, say N.
+  
+diff --git a/target/linux/mediatek/patches-6.6/855-i2c-mt65xx-allow-optional-pmic-clock.patch b/target/linux/mediatek/patches-6.6/855-i2c-mt65xx-allow-optional-pmic-clock.patch
+index ba46b8671a..544bd4cce0 100644
+--- a/target/linux/mediatek/patches-6.6/855-i2c-mt65xx-allow-optional-pmic-clock.patch
++++ b/target/linux/mediatek/patches-6.6/855-i2c-mt65xx-allow-optional-pmic-clock.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+ 
+ --- a/drivers/i2c/busses/i2c-mt65xx.c
+ +++ b/drivers/i2c/busses/i2c-mt65xx.c
+-@@ -1445,15 +1445,19 @@ static int mtk_i2c_probe(struct platform
++@@ -1442,15 +1442,19 @@ static int mtk_i2c_probe(struct platform
+  	if (IS_ERR(i2c->clocks[I2C_MT65XX_CLK_ARB].clk))
+  		return PTR_ERR(i2c->clocks[I2C_MT65XX_CLK_ARB].clk);
+  
+diff --git a/target/linux/rockchip/patches-6.6/016-v6.12-hwrng-rockchip-add-hwrng-driver-for-Rockchip-RK3568-.patch b/target/linux/rockchip/patches-6.6/016-v6.12-hwrng-rockchip-add-hwrng-driver-for-Rockchip-RK3568-.patch
+index 94b76b18ec..7eed8cc877 100644
+--- a/target/linux/rockchip/patches-6.6/016-v6.12-hwrng-rockchip-add-hwrng-driver-for-Rockchip-RK3568-.patch
++++ b/target/linux/rockchip/patches-6.6/016-v6.12-hwrng-rockchip-add-hwrng-driver-for-Rockchip-RK3568-.patch
+@@ -30,7 +30,7 @@ Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+ 
+ --- a/drivers/char/hw_random/Kconfig
+ +++ b/drivers/char/hw_random/Kconfig
+-@@ -574,6 +574,20 @@ config HW_RANDOM_JH7110
++@@ -573,6 +573,20 @@ config HW_RANDOM_JH7110
+  	  To compile this driver as a module, choose M here.
+  	  The module will be called jh7110-trng.
+  
+diff --git a/target/linux/rockchip/patches-6.6/032-04-v6.10-phy-rockchip-Fix-typo-in-function-names.patch b/target/linux/rockchip/patches-6.6/032-04-v6.10-phy-rockchip-Fix-typo-in-function-names.patch
+index b2f5460d01..08620d66ec 100644
+--- a/target/linux/rockchip/patches-6.6/032-04-v6.10-phy-rockchip-Fix-typo-in-function-names.patch
++++ b/target/linux/rockchip/patches-6.6/032-04-v6.10-phy-rockchip-Fix-typo-in-function-names.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Vinod Koul <vkoul@kernel.org>
+ 
+ --- a/drivers/phy/rockchip/phy-rockchip-naneng-combphy.c
+ +++ b/drivers/phy/rockchip/phy-rockchip-naneng-combphy.c
+-@@ -250,7 +250,7 @@ static int rockchip_combphy_exit(struct
++@@ -248,7 +248,7 @@ static int rockchip_combphy_exit(struct
+  	return 0;
+  }
+  
+@@ -26,7 +26,7 @@ Signed-off-by: Vinod Koul <vkoul@kernel.org>
+  	.init = rockchip_combphy_init,
+  	.exit = rockchip_combphy_exit,
+  	.owner = THIS_MODULE,
+-@@ -369,7 +369,7 @@ static int rockchip_combphy_probe(struct
++@@ -367,7 +367,7 @@ static int rockchip_combphy_probe(struct
+  		return ret;
+  	}
+  
+diff --git a/target/linux/rockchip/patches-6.6/033-05-v6.15-hwrng-rockchip-add-support-for-rk3588-s-standalone-T.patch b/target/linux/rockchip/patches-6.6/033-05-v6.15-hwrng-rockchip-add-support-for-rk3588-s-standalone-T.patch
+index 1ad406cd6f..9ae621a54a 100644
+--- a/target/linux/rockchip/patches-6.6/033-05-v6.15-hwrng-rockchip-add-support-for-rk3588-s-standalone-T.patch
++++ b/target/linux/rockchip/patches-6.6/033-05-v6.15-hwrng-rockchip-add-support-for-rk3588-s-standalone-T.patch
+@@ -52,7 +52,7 @@ Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+ 
+ --- a/drivers/char/hw_random/Kconfig
+ +++ b/drivers/char/hw_random/Kconfig
+-@@ -581,7 +581,8 @@ config HW_RANDOM_ROCKCHIP
++@@ -580,7 +580,8 @@ config HW_RANDOM_ROCKCHIP
+  	default HW_RANDOM
+  	help
+  	  This driver provides kernel-side support for the True Random Number
+diff --git a/target/linux/starfive/patches-6.6/0109-usb-xhci-To-improve-performance-usb-using-lowmem-for.patch b/target/linux/starfive/patches-6.6/0109-usb-xhci-To-improve-performance-usb-using-lowmem-for.patch
+index 95d83d46bb..e514e4e47b 100644
+--- a/target/linux/starfive/patches-6.6/0109-usb-xhci-To-improve-performance-usb-using-lowmem-for.patch
++++ b/target/linux/starfive/patches-6.6/0109-usb-xhci-To-improve-performance-usb-using-lowmem-for.patch
+@@ -160,7 +160,7 @@ Signed-off-by: minda.chen <minda.chen@starfivetech.com>
+  	}
+ --- a/drivers/usb/host/xhci-ring.c
+ +++ b/drivers/usb/host/xhci-ring.c
+-@@ -3726,7 +3726,8 @@ int xhci_queue_bulk_tx(struct xhci_hcd *
++@@ -3729,7 +3729,8 @@ int xhci_queue_bulk_tx(struct xhci_hcd *
+  
+  	full_len = urb->transfer_buffer_length;
+  	/* If we have scatter/gather list, we use it. */
+diff --git a/target/linux/starfive/patches-6.6/1010-hwrng-Add-StarFive-JH7100-Random-Number-Generator-dr.patch b/target/linux/starfive/patches-6.6/1010-hwrng-Add-StarFive-JH7100-Random-Number-Generator-dr.patch
+index 47c1237bf8..b625014dd9 100644
+--- a/target/linux/starfive/patches-6.6/1010-hwrng-Add-StarFive-JH7100-Random-Number-Generator-dr.patch
++++ b/target/linux/starfive/patches-6.6/1010-hwrng-Add-StarFive-JH7100-Random-Number-Generator-dr.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Emil Renner Berthing <kernel@esmil.dk>
+ 
+ --- a/drivers/char/hw_random/Kconfig
+ +++ b/drivers/char/hw_random/Kconfig
+-@@ -323,6 +323,19 @@ config HW_RANDOM_POWERNV
++@@ -322,6 +322,19 @@ config HW_RANDOM_POWERNV
+  
+  	  If unsure, say Y.
+  
+-- 
+2.43.0
+

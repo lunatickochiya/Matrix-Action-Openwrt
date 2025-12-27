@@ -1,0 +1,266 @@
+From 63f57c6a451f4a1db59428e423f1d0e07a61fcb2 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 27 Dec 2025 19:43:49 +0800
+Subject: [PATCH 08/11] Revert "kernel: bump 6.6 to 6.6.113"
+
+This reverts commit 8d90e178b1e7ee9a4954dcbfa21bf0913ba400c4.
+---
+ include/kernel-6.6                            |   4 +-
+ ...s-list-on-FSCTL_QUERY_INTERFACE_INFO.patch |   9 +-
+ ...mbd-add-max-ip-connections-parameter.patch | 119 ++++++++++++++++++
+ ...-a-separate-timeout-parameter-for-wa.patch |   2 +-
+ ...ow_offload-handle-netdevice-events-f.patch |   2 +-
+ ...les-ignore-EOPNOTSUPP-on-flowtable-d.patch |   2 +-
+ .../pending-6.6/920-mangle_bootargs.patch     |   4 +-
+ ...-support-for-ATAGs-rootblock-parsing.patch |   2 +-
+ ...Mangle-bootloader-s-kernel-arguments.patch |   2 +-
+ 9 files changed, 132 insertions(+), 14 deletions(-)
+ create mode 100644 target/linux/generic/backport-6.6/541-v6.18-ksmbd-add-max-ip-connections-parameter.patch
+
+diff --git a/include/kernel-6.6 b/include/kernel-6.6
+index 9affd5932c..a489c9f12d 100644
+--- a/include/kernel-6.6
++++ b/include/kernel-6.6
+@@ -1,2 +1,2 @@
+-LINUX_VERSION-6.6 = .113
+-LINUX_KERNEL_HASH-6.6.113 = 1f95cfd2e461d192dd9c6130e47aefc9856529a74ace4191ad8e56ba1849c41e
++LINUX_VERSION-6.6 = .112
++LINUX_KERNEL_HASH-6.6.112 = 6c7d92bf316a56e91de41cb60da1f63d94a4f8aafaef6a13055df0c291138a22
+diff --git a/target/linux/generic/backport-6.6/540-v6.12-ksmbd-browse-interfaces-list-on-FSCTL_QUERY_INTERFACE_INFO.patch b/target/linux/generic/backport-6.6/540-v6.12-ksmbd-browse-interfaces-list-on-FSCTL_QUERY_INTERFACE_INFO.patch
+index f81362f906..3c24f6315c 100644
+--- a/target/linux/generic/backport-6.6/540-v6.12-ksmbd-browse-interfaces-list-on-FSCTL_QUERY_INTERFACE_INFO.patch
++++ b/target/linux/generic/backport-6.6/540-v6.12-ksmbd-browse-interfaces-list-on-FSCTL_QUERY_INTERFACE_INFO.patch
+@@ -23,14 +23,13 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
+ 
+ --- a/fs/smb/server/ksmbd_netlink.h
+ +++ b/fs/smb/server/ksmbd_netlink.h
+-@@ -108,8 +108,9 @@ struct ksmbd_startup_request {
++@@ -108,7 +108,8 @@ struct ksmbd_startup_request {
+  	__u32	smb2_max_credits;	/* MAX credits */
+  	__u32	smbd_max_io_size;	/* smbd read write size */
+  	__u32	max_connections;	/* Number of maximum simultaneous connections */
++-	__u32	reserved[126];		/* Reserved room */
+ +	__s8	bind_interfaces_only;
+- 	__u32	max_ip_connections;	/* Number of maximum connection per ip address */
+--	__u32	reserved[125];		/* Reserved room */
+-+	__s8	reserved[499];		/* Reserved room */
+++	__s8	reserved[503];		/* Reserved room */
+  	__u32	ifc_list_sz;		/* interfaces list size */
+  	__s8	____payload[];
+- } __packed;
++ };
+diff --git a/target/linux/generic/backport-6.6/541-v6.18-ksmbd-add-max-ip-connections-parameter.patch b/target/linux/generic/backport-6.6/541-v6.18-ksmbd-add-max-ip-connections-parameter.patch
+new file mode 100644
+index 0000000000..473bfd2f15
+--- /dev/null
++++ b/target/linux/generic/backport-6.6/541-v6.18-ksmbd-add-max-ip-connections-parameter.patch
+@@ -0,0 +1,119 @@
++From d8b6dc9256762293048bf122fc11c4e612d0ef5d Mon Sep 17 00:00:00 2001
++From: Namjae Jeon <linkinjeon@kernel.org>
++Date: Wed, 1 Oct 2025 09:25:35 +0900
++Subject: ksmbd: add max ip connections parameter
++
++This parameter set the maximum number of connections per ip address.
++The default is 8.
++
++Cc: stable@vger.kernel.org
++Fixes: c0d41112f1a5 ("ksmbd: extend the connection limiting mechanism to support IPv6")
++Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
++Signed-off-by: Steve French <stfrench@microsoft.com>
++---
++ fs/smb/server/ksmbd_netlink.h |  5 +++--
++ fs/smb/server/server.h        |  1 +
++ fs/smb/server/transport_ipc.c |  3 +++
++ fs/smb/server/transport_tcp.c | 27 ++++++++++++++++-----------
++ 4 files changed, 23 insertions(+), 13 deletions(-)
++
++(limited to 'fs/smb')
++
++--- a/fs/smb/server/ksmbd_netlink.h
+++++ b/fs/smb/server/ksmbd_netlink.h
++@@ -109,10 +109,11 @@ struct ksmbd_startup_request {
++ 	__u32	smbd_max_io_size;	/* smbd read write size */
++ 	__u32	max_connections;	/* Number of maximum simultaneous connections */
++ 	__s8	bind_interfaces_only;
++-	__s8	reserved[503];		/* Reserved room */
+++	__u32	max_ip_connections;	/* Number of maximum connection per ip address */
+++	__s8	reserved[499];		/* Reserved room */
++ 	__u32	ifc_list_sz;		/* interfaces list size */
++ 	__s8	____payload[];
++-};
+++} __packed;
++ 
++ #define KSMBD_STARTUP_CONFIG_INTERFACES(s)	((s)->____payload)
++ 
++--- a/fs/smb/server/server.h
+++++ b/fs/smb/server/server.h
++@@ -43,6 +43,7 @@ struct ksmbd_server_config {
++ 	unsigned int		auth_mechs;
++ 	unsigned int		max_connections;
++ 	unsigned int		max_inflight_req;
+++	unsigned int		max_ip_connections;
++ 
++ 	char			*conf[SERVER_CONF_WORK_GROUP + 1];
++ };
++--- a/fs/smb/server/transport_ipc.c
+++++ b/fs/smb/server/transport_ipc.c
++@@ -321,6 +321,9 @@ static int ipc_server_config_on_startup(
++ 	if (req->max_connections)
++ 		server_conf.max_connections = req->max_connections;
++ 
+++	if (req->max_ip_connections)
+++		server_conf.max_ip_connections = req->max_ip_connections;
+++
++ 	ret = ksmbd_set_netbios_name(req->netbios_name);
++ 	ret |= ksmbd_set_server_string(req->server_string);
++ 	ret |= ksmbd_set_work_group(req->work_group);
++--- a/fs/smb/server/transport_tcp.c
+++++ b/fs/smb/server/transport_tcp.c
++@@ -240,6 +240,7 @@ static int ksmbd_kthread_fn(void *p)
++ 	struct interface *iface = (struct interface *)p;
++ 	struct ksmbd_conn *conn;
++ 	int ret;
+++	unsigned int max_ip_conns;
++ 
++ 	while (!kthread_should_stop()) {
++ 		mutex_lock(&iface->sock_release_lock);
++@@ -257,34 +258,38 @@ static int ksmbd_kthread_fn(void *p)
++ 			continue;
++ 		}
++ 
+++		if (!server_conf.max_ip_connections)
+++			goto skip_max_ip_conns_limit;
+++
++ 		/*
++ 		 * Limits repeated connections from clients with the same IP.
++ 		 */
+++		max_ip_conns = 0;
++ 		down_read(&conn_list_lock);
++-		list_for_each_entry(conn, &conn_list, conns_list)
+++		list_for_each_entry(conn, &conn_list, conns_list) {
++ #if IS_ENABLED(CONFIG_IPV6)
++ 			if (client_sk->sk->sk_family == AF_INET6) {
++ 				if (memcmp(&client_sk->sk->sk_v6_daddr,
++-					   &conn->inet6_addr, 16) == 0) {
++-					ret = -EAGAIN;
++-					break;
++-				}
+++					   &conn->inet6_addr, 16) == 0)
+++					max_ip_conns++;
++ 			} else if (inet_sk(client_sk->sk)->inet_daddr ==
++-				 conn->inet_addr) {
++-				ret = -EAGAIN;
++-				break;
++-			}
+++				 conn->inet_addr)
+++				max_ip_conns++;
++ #else
++ 			if (inet_sk(client_sk->sk)->inet_daddr ==
++-			    conn->inet_addr) {
+++			    conn->inet_addr)
+++				max_ip_conns++;
+++#endif
+++			if (server_conf.max_ip_connections <= max_ip_conns) {
++ 				ret = -EAGAIN;
++ 				break;
++ 			}
++-#endif
+++		}
++ 		up_read(&conn_list_lock);
++ 		if (ret == -EAGAIN)
++ 			continue;
++ 
+++skip_max_ip_conns_limit:
++ 		if (server_conf.max_connections &&
++ 		    atomic_inc_return(&active_num_conn) >= server_conf.max_connections) {
++ 			pr_info_ratelimited("Limit the maximum number of connections(%u)\n",
+diff --git a/target/linux/generic/backport-6.6/850-v6.8-bus-mhi-host-Add-a-separate-timeout-parameter-for-wa.patch b/target/linux/generic/backport-6.6/850-v6.8-bus-mhi-host-Add-a-separate-timeout-parameter-for-wa.patch
+index ddde0118e8..4aad22248a 100644
+--- a/target/linux/generic/backport-6.6/850-v6.8-bus-mhi-host-Add-a-separate-timeout-parameter-for-wa.patch
++++ b/target/linux/generic/backport-6.6/850-v6.8-bus-mhi-host-Add-a-separate-timeout-parameter-for-wa.patch
+@@ -23,7 +23,7 @@ Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+ 
+ --- a/drivers/bus/mhi/host/init.c
+ +++ b/drivers/bus/mhi/host/init.c
+-@@ -881,6 +881,7 @@ static int parse_config(struct mhi_contr
++@@ -882,6 +882,7 @@ static int parse_config(struct mhi_contr
+  	if (!mhi_cntrl->timeout_ms)
+  		mhi_cntrl->timeout_ms = MHI_TIMEOUT_MS;
+  
+diff --git a/target/linux/generic/pending-6.6/700-netfilter-nft_flow_offload-handle-netdevice-events-f.patch b/target/linux/generic/pending-6.6/700-netfilter-nft_flow_offload-handle-netdevice-events-f.patch
+index a538687b25..c69be593f9 100644
+--- a/target/linux/generic/pending-6.6/700-netfilter-nft_flow_offload-handle-netdevice-events-f.patch
++++ b/target/linux/generic/pending-6.6/700-netfilter-nft_flow_offload-handle-netdevice-events-f.patch
+@@ -59,7 +59,7 @@ Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+  }
+ --- a/net/netfilter/nft_flow_offload.c
+ +++ b/net/netfilter/nft_flow_offload.c
+-@@ -485,47 +485,14 @@ static struct nft_expr_type nft_flow_off
++@@ -486,47 +486,14 @@ static struct nft_expr_type nft_flow_off
+  	.owner		= THIS_MODULE,
+  };
+  
+diff --git a/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch b/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
+index e0c3e206da..7a5413700a 100644
+--- a/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
++++ b/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/net/netfilter/nf_tables_api.c
+ +++ b/net/netfilter/nf_tables_api.c
+-@@ -8448,7 +8448,7 @@ static int nft_register_flowtable_net_ho
++@@ -8449,7 +8449,7 @@ static int nft_register_flowtable_net_ho
+  		err = flowtable->data.type->setup(&flowtable->data,
+  						  hook->ops.dev,
+  						  FLOW_BLOCK_BIND);
+diff --git a/target/linux/generic/pending-6.6/920-mangle_bootargs.patch b/target/linux/generic/pending-6.6/920-mangle_bootargs.patch
+index af3653d676..8bf6183044 100644
+--- a/target/linux/generic/pending-6.6/920-mangle_bootargs.patch
++++ b/target/linux/generic/pending-6.6/920-mangle_bootargs.patch
+@@ -31,7 +31,7 @@ Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+  	help
+ --- a/init/main.c
+ +++ b/init/main.c
+-@@ -620,6 +620,29 @@ static inline void setup_nr_cpu_ids(void
++@@ -608,6 +608,29 @@ static inline void setup_nr_cpu_ids(void
+  static inline void smp_prepare_cpus(unsigned int maxcpus) { }
+  #endif
+  
+@@ -61,7 +61,7 @@ Signed-off-by: Imre Kaloz <kaloz@openwrt.org>
+  /*
+   * We need to store the untouched command line for future reference.
+   * We also need to store the touched command line since the parameter
+-@@ -909,6 +932,7 @@ void start_kernel(void)
++@@ -897,6 +920,7 @@ void start_kernel(void)
+  	pr_notice("%s", linux_banner);
+  	early_security_init();
+  	setup_arch(&command_line);
+diff --git a/target/linux/ipq806x/patches-6.6/902-ARM-decompressor-support-for-ATAGs-rootblock-parsing.patch b/target/linux/ipq806x/patches-6.6/902-ARM-decompressor-support-for-ATAGs-rootblock-parsing.patch
+index dee6f044d0..f501514e0b 100644
+--- a/target/linux/ipq806x/patches-6.6/902-ARM-decompressor-support-for-ATAGs-rootblock-parsing.patch
++++ b/target/linux/ipq806x/patches-6.6/902-ARM-decompressor-support-for-ATAGs-rootblock-parsing.patch
+@@ -177,7 +177,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  #include <linux/bootconfig.h>
+  #include <linux/console.h>
+  #include <linux/nmi.h>
+-@@ -943,6 +944,17 @@ void start_kernel(void)
++@@ -931,6 +932,17 @@ void start_kernel(void)
+  	pr_notice("Kernel command line: %s\n", saved_command_line);
+  	/* parameters may set static keys */
+  	jump_label_init();
+diff --git a/target/linux/mvebu/patches-6.6/300-mvebu-Mangle-bootloader-s-kernel-arguments.patch b/target/linux/mvebu/patches-6.6/300-mvebu-Mangle-bootloader-s-kernel-arguments.patch
+index c44930a3f7..8f5b9dee40 100644
+--- a/target/linux/mvebu/patches-6.6/300-mvebu-Mangle-bootloader-s-kernel-arguments.patch
++++ b/target/linux/mvebu/patches-6.6/300-mvebu-Mangle-bootloader-s-kernel-arguments.patch
+@@ -258,7 +258,7 @@ Signed-off-by: Michael Gray <michael.gray@lantisproject.com>
+  static int kernel_init(void *);
+  
+  /*
+-@@ -941,6 +945,18 @@ void start_kernel(void)
++@@ -929,6 +933,18 @@ void start_kernel(void)
+  	boot_cpu_hotplug_init();
+  
+  	pr_notice("Kernel command line: %s\n", saved_command_line);
+-- 
+2.43.0
+

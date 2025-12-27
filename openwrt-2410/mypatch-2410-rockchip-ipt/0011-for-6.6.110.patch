@@ -1,0 +1,1742 @@
+From d832425afbf3101cfabbbc6fa98dbab26c4e574f Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 27 Dec 2025 19:51:34 +0800
+Subject: [PATCH 11/11] for 6.6.110
+
+---
+ ...v6.13-jiffies-Define-secs_to_jiffies.patch |  60 +++
+ ...unsigned-long-in-secs_to_jiffies-con.patch |  35 ++
+ ...-resource-set-range-and-size-helpers.patch |  73 ++++
+ ...nctions-to-parse-memory-region.patch.patch | 163 ++++++++
+ ...v6.13-jiffies-Define-secs_to_jiffies.patch |  60 +++
+ ...unsigned-long-in-secs_to_jiffies-con.patch |  35 ++
+ ...msh-remove-QE-bit-for-FM25S01A-flash.patch |  28 --
+ ...nand-esmt-add-support-for-F50L1G41LC.patch |  84 ----
+ ...e-proper-wed-reference-in-mt76-wed-d.patch |  79 ----
+ ...dma-mask-limitation-and-GFP_DMA32-fo.patch |  50 ---
+ ...a-faux-bus-for-use-when-a-simple-dev.patch | 386 ++++++++++++++++++
+ ...m_clk_get_optional_enabled_with_rate.patch | 104 +++++
+ ...wrong-resource_size-value-on-zero-st.patch |  80 ++++
+ ...malloc-tlb_vpn-array-to-avoid-stack-.patch |  60 ---
+ ...revent-a-TLB-shutdown-on-initial-uni.patch | 146 -------
+ ...dd-support-for-FudanMicro-FM25S01BI3.patch | 117 ------
+ ...flip_threshold-to-75-of-ECC-strength.patch |   2 +-
+ ...nd-Add-support-for-Etron-EM73D044VCx.patch |   8 +-
+ 18 files changed, 1001 insertions(+), 569 deletions(-)
+ create mode 100644 target/linux/generic/backport-6.12/330-v6.13-jiffies-Define-secs_to_jiffies.patch
+ create mode 100644 target/linux/generic/backport-6.12/331-v6.14-jiffies-Cast-to-unsigned-long-in-secs_to_jiffies-con.patch
+ create mode 100644 target/linux/generic/backport-6.6/204-v6.13-resource-Add-resource-set-range-and-size-helpers.patch
+ create mode 100644 target/linux/generic/backport-6.6/205-v6.16-of-reserved_mem-Add-functions-to-parse-memory-region.patch.patch
+ create mode 100644 target/linux/generic/backport-6.6/330-v6.13-jiffies-Define-secs_to_jiffies.patch
+ create mode 100644 target/linux/generic/backport-6.6/331-v6.14-jiffies-Cast-to-unsigned-long-in-secs_to_jiffies-con.patch
+ delete mode 100644 target/linux/generic/backport-6.6/420-v6.19-mtd-spinand-fmsh-remove-QE-bit-for-FM25S01A-flash.patch
+ delete mode 100644 target/linux/generic/backport-6.6/422-v6.19-mtd-spinand-esmt-add-support-for-F50L1G41LC.patch
+ delete mode 100644 target/linux/generic/backport-6.6/752-32-v6.18-wifi-mt76-wed-use-proper-wed-reference-in-mt76-wed-d.patch
+ delete mode 100644 target/linux/generic/backport-6.6/752-33-v6.18-net-mtk-wed-add-dma-mask-limitation-and-GFP_DMA32-fo.patch
+ create mode 100644 target/linux/generic/backport-6.6/900-v6.14-driver-core-add-a-faux-bus-for-use-when-a-simple-dev.patch
+ create mode 100644 target/linux/generic/backport-6.6/920-v6.12-clk-provide-devm_clk_get_optional_enabled_with_rate.patch
+ create mode 100644 target/linux/generic/pending-6.6/210-resource-handle-wrong-resource_size-value-on-zero-st.patch
+ delete mode 100644 target/linux/generic/pending-6.6/360-Revert-MIPS-mm-kmalloc-tlb_vpn-array-to-avoid-stack-.patch
+ delete mode 100644 target/linux/generic/pending-6.6/361-Revert-MIPS-mm-Prevent-a-TLB-shutdown-on-initial-uni.patch
+ delete mode 100644 target/linux/generic/pending-6.6/403-mtd-spinand-add-support-for-FudanMicro-FM25S01BI3.patch
+
+diff --git a/target/linux/generic/backport-6.12/330-v6.13-jiffies-Define-secs_to_jiffies.patch b/target/linux/generic/backport-6.12/330-v6.13-jiffies-Define-secs_to_jiffies.patch
+new file mode 100644
+index 0000000000..ad9af1d4bb
+--- /dev/null
++++ b/target/linux/generic/backport-6.12/330-v6.13-jiffies-Define-secs_to_jiffies.patch
+@@ -0,0 +1,60 @@
++From b35108a51cf7bab58d7eace1267d7965978bcdb8 Mon Sep 17 00:00:00 2001
++From: Easwar Hariharan <eahariha@linux.microsoft.com>
++Date: Wed, 30 Oct 2024 17:47:35 +0000
++Subject: [PATCH] jiffies: Define secs_to_jiffies()
++
++secs_to_jiffies() is defined in hci_event.c and cannot be reused by
++other call sites. Hoist it into the core code to allow conversion of the
++~1150 usages of msecs_to_jiffies() that either:
++
++ - use a multiplier value of 1000 or equivalently MSEC_PER_SEC, or
++ - have timeouts that are denominated in seconds (i.e. end in 000)
++
++It's implemented as a macro to allow usage in static initializers.
++
++This will also allow conversion of yet more sites that use (sec * HZ)
++directly, and improve their readability.
++
++Suggested-by: Michael Kelley <mhklinux@outlook.com>
++Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
++Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
++Reviewed-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
++Link: https://lore.kernel.org/all/20241030-open-coded-timeouts-v3-1-9ba123facf88@linux.microsoft.com
++---
++ include/linux/jiffies.h   | 13 +++++++++++++
++ net/bluetooth/hci_event.c |  2 --
++ 2 files changed, 13 insertions(+), 2 deletions(-)
++
++--- a/include/linux/jiffies.h
+++++ b/include/linux/jiffies.h
++@@ -526,6 +526,19 @@ static __always_inline unsigned long mse
++ 	}
++ }
++ 
+++/**
+++ * secs_to_jiffies: - convert seconds to jiffies
+++ * @_secs: time in seconds
+++ *
+++ * Conversion is done by simple multiplication with HZ
+++ *
+++ * secs_to_jiffies() is defined as a macro rather than a static inline
+++ * function so it can be used in static initializers.
+++ *
+++ * Return: jiffies value
+++ */
+++#define secs_to_jiffies(_secs) ((_secs) * HZ)
+++
++ extern unsigned long __usecs_to_jiffies(const unsigned int u);
++ #if !(USEC_PER_SEC % HZ)
++ static inline unsigned long _usecs_to_jiffies(const unsigned int u)
++--- a/net/bluetooth/hci_event.c
+++++ b/net/bluetooth/hci_event.c
++@@ -42,8 +42,6 @@
++ #define ZERO_KEY "\x00\x00\x00\x00\x00\x00\x00\x00" \
++ 		 "\x00\x00\x00\x00\x00\x00\x00\x00"
++ 
++-#define secs_to_jiffies(_secs) msecs_to_jiffies((_secs) * 1000)
++-
++ /* Handle HCI Event packets */
++ 
++ static void *hci_ev_skb_pull(struct hci_dev *hdev, struct sk_buff *skb,
+diff --git a/target/linux/generic/backport-6.12/331-v6.14-jiffies-Cast-to-unsigned-long-in-secs_to_jiffies-con.patch b/target/linux/generic/backport-6.12/331-v6.14-jiffies-Cast-to-unsigned-long-in-secs_to_jiffies-con.patch
+new file mode 100644
+index 0000000000..cddd558dee
+--- /dev/null
++++ b/target/linux/generic/backport-6.12/331-v6.14-jiffies-Cast-to-unsigned-long-in-secs_to_jiffies-con.patch
+@@ -0,0 +1,35 @@
++From bb2784d9ab49587ba4fbff37a319fff2924db289 Mon Sep 17 00:00:00 2001
++From: Easwar Hariharan <eahariha@linux.microsoft.com>
++Date: Thu, 30 Jan 2025 19:26:58 +0000
++Subject: [PATCH] jiffies: Cast to unsigned long in secs_to_jiffies()
++ conversion
++
++While converting users of msecs_to_jiffies(), lkp reported that some range
++checks would always be true because of the mismatch between the implied int
++value of secs_to_jiffies() vs the unsigned long return value of the
++msecs_to_jiffies() calls it was replacing.
++
++Fix this by casting the secs_to_jiffies() input value to unsigned long.
++
++Fixes: b35108a51cf7ba ("jiffies: Define secs_to_jiffies()")
++Reported-by: kernel test robot <lkp@intel.com>
++Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
++Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
++Cc: stable@vger.kernel.org
++Link: https://lore.kernel.org/all/20250130192701.99626-1-eahariha@linux.microsoft.com
++Closes: https://lore.kernel.org/oe-kbuild-all/202501301334.NB6NszQR-lkp@intel.com/
++---
++ include/linux/jiffies.h | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/include/linux/jiffies.h
+++++ b/include/linux/jiffies.h
++@@ -537,7 +537,7 @@ static __always_inline unsigned long mse
++  *
++  * Return: jiffies value
++  */
++-#define secs_to_jiffies(_secs) ((_secs) * HZ)
+++#define secs_to_jiffies(_secs) (unsigned long)((_secs) * HZ)
++ 
++ extern unsigned long __usecs_to_jiffies(const unsigned int u);
++ #if !(USEC_PER_SEC % HZ)
+diff --git a/target/linux/generic/backport-6.6/204-v6.13-resource-Add-resource-set-range-and-size-helpers.patch b/target/linux/generic/backport-6.6/204-v6.13-resource-Add-resource-set-range-and-size-helpers.patch
+new file mode 100644
+index 0000000000..36a5300ad0
+--- /dev/null
++++ b/target/linux/generic/backport-6.6/204-v6.13-resource-Add-resource-set-range-and-size-helpers.patch
+@@ -0,0 +1,73 @@
++From 9fb6fef0fb49124291837af1da5028f79d53f98e Mon Sep 17 00:00:00 2001
++From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
++Date: Fri, 14 Jun 2024 13:06:03 +0300
++Subject: [PATCH] resource: Add resource set range and size helpers
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++Setting the end address for a resource with a given size lacks a helper and
++is therefore coded manually unlike the getter side which has a helper for
++resource size calculation. Also, almost all callsites that calculate the
++end address for a resource also set the start address right before it like
++this:
++
++  res->start = start_addr;
++  res->end = res->start + size - 1;
++
++Add resource_set_range(res, start_addr, size) that sets the start address
++and calculates the end address to simplify this often repeated fragment.
++
++Also add resource_set_size() for the cases where setting the start address
++of the resource is not necessary but mention in its kerneldoc that
++resource_set_range() is preferred when setting both addresses.
++
++Link: https://lore.kernel.org/r/20240614100606.15830-2-ilpo.jarvinen@linux.intel.com
++Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
++Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
++Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
++---
++ include/linux/ioport.h | 32 ++++++++++++++++++++++++++++++++
++ 1 file changed, 32 insertions(+)
++
++--- a/include/linux/ioport.h
+++++ b/include/linux/ioport.h
++@@ -216,6 +216,38 @@ struct resource *lookup_resource(struct
++ int adjust_resource(struct resource *res, resource_size_t start,
++ 		    resource_size_t size);
++ resource_size_t resource_alignment(struct resource *res);
+++
+++/**
+++ * resource_set_size - Calculate resource end address from size and start
+++ * @res: Resource descriptor
+++ * @size: Size of the resource
+++ *
+++ * Calculate the end address for @res based on @size.
+++ *
+++ * Note: The start address of @res must be set when calling this function.
+++ * Prefer resource_set_range() if setting both the start address and @size.
+++ */
+++static inline void resource_set_size(struct resource *res, resource_size_t size)
+++{
+++	res->end = res->start + size - 1;
+++}
+++
+++/**
+++ * resource_set_range - Set resource start and end addresses
+++ * @res: Resource descriptor
+++ * @start: Start address for the resource
+++ * @size: Size of the resource
+++ *
+++ * Set @res start address and calculate the end address based on @size.
+++ */
+++static inline void resource_set_range(struct resource *res,
+++				      resource_size_t start,
+++				      resource_size_t size)
+++{
+++	res->start = start;
+++	resource_set_size(res, size);
+++}
+++
++ static inline resource_size_t resource_size(const struct resource *res)
++ {
++ 	return res->end - res->start + 1;
+diff --git a/target/linux/generic/backport-6.6/205-v6.16-of-reserved_mem-Add-functions-to-parse-memory-region.patch.patch b/target/linux/generic/backport-6.6/205-v6.16-of-reserved_mem-Add-functions-to-parse-memory-region.patch.patch
+new file mode 100644
+index 0000000000..cbfec9a391
+--- /dev/null
++++ b/target/linux/generic/backport-6.6/205-v6.16-of-reserved_mem-Add-functions-to-parse-memory-region.patch.patch
+@@ -0,0 +1,163 @@
++From f4fcfdda2fd8834c62dcb9bfddcf1f89d190b70e Mon Sep 17 00:00:00 2001
++From: "Rob Herring (Arm)" <robh@kernel.org>
++Date: Wed, 23 Apr 2025 14:42:13 -0500
++Subject: [PATCH] of: reserved_mem: Add functions to parse "memory-region"
++
++Drivers with "memory-region" properties currently have to do their own
++parsing of "memory-region" properties. The result is all the drivers
++have similar patterns of a call to parse "memory-region" and then get
++the region's address and size. As this is a standard property, it should
++have common functions for drivers to use. Add new functions to count the
++number of regions and retrieve the region's address as a resource.
++
++Reviewed-by: Daniel Baluta <daniel.baluta@nxp.com>
++Acked-by: Arnaud Pouliquen <arnaud.pouliquen@foss.st.com>
++Link: https://lore.kernel.org/r/20250423-dt-memory-region-v2-v2-1-2fbd6ebd3c88@kernel.org
++Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
++---
++ drivers/of/of_reserved_mem.c    | 80 +++++++++++++++++++++++++++++++++
++ include/linux/of_reserved_mem.h | 26 +++++++++++
++ 2 files changed, 106 insertions(+)
++
++--- a/drivers/of/of_reserved_mem.c
+++++ b/drivers/of/of_reserved_mem.c
++@@ -12,6 +12,7 @@
++ #define pr_fmt(fmt)	"OF: reserved mem: " fmt
++ 
++ #include <linux/err.h>
+++#include <linux/ioport.h>
++ #include <linux/of.h>
++ #include <linux/of_fdt.h>
++ #include <linux/of_platform.h>
++@@ -514,3 +515,82 @@ struct reserved_mem *of_reserved_mem_loo
++ 	return NULL;
++ }
++ EXPORT_SYMBOL_GPL(of_reserved_mem_lookup);
+++
+++/**
+++ * of_reserved_mem_region_to_resource() - Get a reserved memory region as a resource
+++ * @np:		node containing 'memory-region' property
+++ * @idx:	index of 'memory-region' property to lookup
+++ * @res:	Pointer to a struct resource to fill in with reserved region
+++ *
+++ * This function allows drivers to lookup a node's 'memory-region' property
+++ * entries by index and return a struct resource for the entry.
+++ *
+++ * Returns 0 on success with @res filled in. Returns -ENODEV if 'memory-region'
+++ * is missing or unavailable, -EINVAL for any other error.
+++ */
+++int of_reserved_mem_region_to_resource(const struct device_node *np,
+++				       unsigned int idx, struct resource *res)
+++{
+++	struct reserved_mem *rmem;
+++
+++	if (!np)
+++		return -EINVAL;
+++
+++	struct device_node __free(device_node) *target = of_parse_phandle(np, "memory-region", idx);
+++	if (!target || !of_device_is_available(target))
+++		return -ENODEV;
+++
+++	rmem = of_reserved_mem_lookup(target);
+++	if (!rmem)
+++		return -EINVAL;
+++
+++	resource_set_range(res, rmem->base, rmem->size);
+++	res->name = rmem->name;
+++	return 0;
+++}
+++EXPORT_SYMBOL_GPL(of_reserved_mem_region_to_resource);
+++
+++/**
+++ * of_reserved_mem_region_to_resource_byname() - Get a reserved memory region as a resource
+++ * @np:		node containing 'memory-region' property
+++ * @name:	name of 'memory-region' property entry to lookup
+++ * @res:	Pointer to a struct resource to fill in with reserved region
+++ *
+++ * This function allows drivers to lookup a node's 'memory-region' property
+++ * entries by name and return a struct resource for the entry.
+++ *
+++ * Returns 0 on success with @res filled in, or a negative error-code on
+++ * failure.
+++ */
+++int of_reserved_mem_region_to_resource_byname(const struct device_node *np,
+++					      const char *name,
+++					      struct resource *res)
+++{
+++	int idx;
+++
+++	if (!name)
+++		return -EINVAL;
+++
+++	idx = of_property_match_string(np, "memory-region-names", name);
+++	if (idx < 0)
+++		return idx;
+++
+++	return of_reserved_mem_region_to_resource(np, idx, res);
+++}
+++EXPORT_SYMBOL_GPL(of_reserved_mem_region_to_resource_byname);
+++
+++/**
+++ * of_reserved_mem_region_count() - Return the number of 'memory-region' entries
+++ * @np:		node containing 'memory-region' property
+++ *
+++ * This function allows drivers to retrieve the number of entries for a node's
+++ * 'memory-region' property.
+++ *
+++ * Returns the number of entries on success, or negative error code on a
+++ * malformed property.
+++ */
+++int of_reserved_mem_region_count(const struct device_node *np)
+++{
+++	return of_count_phandle_with_args(np, "memory-region", NULL);
+++}
+++EXPORT_SYMBOL_GPL(of_reserved_mem_region_count);
++--- a/include/linux/of_reserved_mem.h
+++++ b/include/linux/of_reserved_mem.h
++@@ -7,6 +7,7 @@
++ 
++ struct of_phandle_args;
++ struct reserved_mem_ops;
+++struct resource;
++ 
++ struct reserved_mem {
++ 	const char			*name;
++@@ -40,6 +41,12 @@ int of_reserved_mem_device_init_by_name(
++ void of_reserved_mem_device_release(struct device *dev);
++ 
++ struct reserved_mem *of_reserved_mem_lookup(struct device_node *np);
+++int of_reserved_mem_region_to_resource(const struct device_node *np,
+++				       unsigned int idx, struct resource *res);
+++int of_reserved_mem_region_to_resource_byname(const struct device_node *np,
+++					      const char *name, struct resource *res);
+++int of_reserved_mem_region_count(const struct device_node *np);
+++
++ #else
++ 
++ #define RESERVEDMEM_OF_DECLARE(name, compat, init)			\
++@@ -64,6 +71,25 @@ static inline struct reserved_mem *of_re
++ {
++ 	return NULL;
++ }
+++
+++static inline int of_reserved_mem_region_to_resource(const struct device_node *np,
+++						     unsigned int idx,
+++						     struct resource *res)
+++{
+++	return -ENOSYS;
+++}
+++
+++static inline int of_reserved_mem_region_to_resource_byname(const struct device_node *np,
+++							    const char *name,
+++							    struct resource *res)
+++{
+++	return -ENOSYS;
+++}
+++
+++static inline int of_reserved_mem_region_count(const struct device_node *np)
+++{
+++	return 0;
+++}
++ #endif
++ 
++ /**
+diff --git a/target/linux/generic/backport-6.6/330-v6.13-jiffies-Define-secs_to_jiffies.patch b/target/linux/generic/backport-6.6/330-v6.13-jiffies-Define-secs_to_jiffies.patch
+new file mode 100644
+index 0000000000..117409abfb
+--- /dev/null
++++ b/target/linux/generic/backport-6.6/330-v6.13-jiffies-Define-secs_to_jiffies.patch
+@@ -0,0 +1,60 @@
++From b35108a51cf7bab58d7eace1267d7965978bcdb8 Mon Sep 17 00:00:00 2001
++From: Easwar Hariharan <eahariha@linux.microsoft.com>
++Date: Wed, 30 Oct 2024 17:47:35 +0000
++Subject: [PATCH] jiffies: Define secs_to_jiffies()
++
++secs_to_jiffies() is defined in hci_event.c and cannot be reused by
++other call sites. Hoist it into the core code to allow conversion of the
++~1150 usages of msecs_to_jiffies() that either:
++
++ - use a multiplier value of 1000 or equivalently MSEC_PER_SEC, or
++ - have timeouts that are denominated in seconds (i.e. end in 000)
++
++It's implemented as a macro to allow usage in static initializers.
++
++This will also allow conversion of yet more sites that use (sec * HZ)
++directly, and improve their readability.
++
++Suggested-by: Michael Kelley <mhklinux@outlook.com>
++Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
++Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
++Reviewed-by: Luiz Augusto von Dentz <luiz.von.dentz@intel.com>
++Link: https://lore.kernel.org/all/20241030-open-coded-timeouts-v3-1-9ba123facf88@linux.microsoft.com
++---
++ include/linux/jiffies.h   | 13 +++++++++++++
++ net/bluetooth/hci_event.c |  2 --
++ 2 files changed, 13 insertions(+), 2 deletions(-)
++
++--- a/include/linux/jiffies.h
+++++ b/include/linux/jiffies.h
++@@ -523,6 +523,19 @@ static __always_inline unsigned long mse
++ 	}
++ }
++ 
+++/**
+++ * secs_to_jiffies: - convert seconds to jiffies
+++ * @_secs: time in seconds
+++ *
+++ * Conversion is done by simple multiplication with HZ
+++ *
+++ * secs_to_jiffies() is defined as a macro rather than a static inline
+++ * function so it can be used in static initializers.
+++ *
+++ * Return: jiffies value
+++ */
+++#define secs_to_jiffies(_secs) ((_secs) * HZ)
+++
++ extern unsigned long __usecs_to_jiffies(const unsigned int u);
++ #if !(USEC_PER_SEC % HZ)
++ static inline unsigned long _usecs_to_jiffies(const unsigned int u)
++--- a/net/bluetooth/hci_event.c
+++++ b/net/bluetooth/hci_event.c
++@@ -43,8 +43,6 @@
++ #define ZERO_KEY "\x00\x00\x00\x00\x00\x00\x00\x00" \
++ 		 "\x00\x00\x00\x00\x00\x00\x00\x00"
++ 
++-#define secs_to_jiffies(_secs) msecs_to_jiffies((_secs) * 1000)
++-
++ /* Handle HCI Event packets */
++ 
++ static void *hci_ev_skb_pull(struct hci_dev *hdev, struct sk_buff *skb,
+diff --git a/target/linux/generic/backport-6.6/331-v6.14-jiffies-Cast-to-unsigned-long-in-secs_to_jiffies-con.patch b/target/linux/generic/backport-6.6/331-v6.14-jiffies-Cast-to-unsigned-long-in-secs_to_jiffies-con.patch
+new file mode 100644
+index 0000000000..9e15195ab5
+--- /dev/null
++++ b/target/linux/generic/backport-6.6/331-v6.14-jiffies-Cast-to-unsigned-long-in-secs_to_jiffies-con.patch
+@@ -0,0 +1,35 @@
++From bb2784d9ab49587ba4fbff37a319fff2924db289 Mon Sep 17 00:00:00 2001
++From: Easwar Hariharan <eahariha@linux.microsoft.com>
++Date: Thu, 30 Jan 2025 19:26:58 +0000
++Subject: [PATCH] jiffies: Cast to unsigned long in secs_to_jiffies()
++ conversion
++
++While converting users of msecs_to_jiffies(), lkp reported that some range
++checks would always be true because of the mismatch between the implied int
++value of secs_to_jiffies() vs the unsigned long return value of the
++msecs_to_jiffies() calls it was replacing.
++
++Fix this by casting the secs_to_jiffies() input value to unsigned long.
++
++Fixes: b35108a51cf7ba ("jiffies: Define secs_to_jiffies()")
++Reported-by: kernel test robot <lkp@intel.com>
++Signed-off-by: Easwar Hariharan <eahariha@linux.microsoft.com>
++Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
++Cc: stable@vger.kernel.org
++Link: https://lore.kernel.org/all/20250130192701.99626-1-eahariha@linux.microsoft.com
++Closes: https://lore.kernel.org/oe-kbuild-all/202501301334.NB6NszQR-lkp@intel.com/
++---
++ include/linux/jiffies.h | 2 +-
++ 1 file changed, 1 insertion(+), 1 deletion(-)
++
++--- a/include/linux/jiffies.h
+++++ b/include/linux/jiffies.h
++@@ -534,7 +534,7 @@ static __always_inline unsigned long mse
++  *
++  * Return: jiffies value
++  */
++-#define secs_to_jiffies(_secs) ((_secs) * HZ)
+++#define secs_to_jiffies(_secs) (unsigned long)((_secs) * HZ)
++ 
++ extern unsigned long __usecs_to_jiffies(const unsigned int u);
++ #if !(USEC_PER_SEC % HZ)
+diff --git a/target/linux/generic/backport-6.6/420-v6.19-mtd-spinand-fmsh-remove-QE-bit-for-FM25S01A-flash.patch b/target/linux/generic/backport-6.6/420-v6.19-mtd-spinand-fmsh-remove-QE-bit-for-FM25S01A-flash.patch
+deleted file mode 100644
+index 7f9ec6aca4..0000000000
+--- a/target/linux/generic/backport-6.6/420-v6.19-mtd-spinand-fmsh-remove-QE-bit-for-FM25S01A-flash.patch
++++ /dev/null
+@@ -1,28 +0,0 @@
+-From a1d3bc606bf5c3b3ea811cc2019df6285d75b00f Mon Sep 17 00:00:00 2001
+-From: Mikhail Kshevetskiy <mikhail.kshevetskiy@iopsys.eu>
+-Date: Mon, 3 Nov 2025 04:01:48 +0300
+-Subject: [PATCH] mtd: spinand: fmsh: remove QE bit for FM25S01A flash
+-
+-According to datasheet (http://eng.fmsh.com/nvm/FM25S01A_ds_eng.pdf)
+-there is no QE (Quad Enable) bit for FM25S01A flash, so remove it.
+-
+-Fixes: 5f284dc15ca86 ("mtd: spinand: add support for FudanMicro FM25S01A")
+-Signed-off-by: Mikhail Kshevetskiy <mikhail.kshevetskiy@iopsys.eu>
+-Tested-by: Tianling Shen <cnsztl@gmail.com>
+-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+-Link: Link: https://lore.kernel.org/linux-mtd/176216634975.908445.2776312239779833518.b4-ty@bootlin.com
+----
+- drivers/mtd/nand/spi/fmsh.c | 2 +-
+- 1 file changed, 1 insertion(+), 1 deletion(-)
+-
+---- a/drivers/mtd/nand/spi/fmsh.c
+-+++ b/drivers/mtd/nand/spi/fmsh.c
+-@@ -58,7 +58,7 @@ static const struct spinand_info fmsh_sp
+- 		     SPINAND_INFO_OP_VARIANTS(&read_cache_variants,
+- 					      &write_cache_variants,
+- 					      &update_cache_variants),
+--		     SPINAND_HAS_QE_BIT,
+-+		     0,
+- 		     SPINAND_ECCINFO(&fm25s01a_ooblayout, NULL)),
+- };
+- 
+diff --git a/target/linux/generic/backport-6.6/422-v6.19-mtd-spinand-esmt-add-support-for-F50L1G41LC.patch b/target/linux/generic/backport-6.6/422-v6.19-mtd-spinand-esmt-add-support-for-F50L1G41LC.patch
+deleted file mode 100644
+index f260d2ba8e..0000000000
+--- a/target/linux/generic/backport-6.6/422-v6.19-mtd-spinand-esmt-add-support-for-F50L1G41LC.patch
++++ /dev/null
+@@ -1,84 +0,0 @@
+-From b98994cb9bc24f5c7575c86650f96c384576fdfa Mon Sep 17 00:00:00 2001
+-From: Daniel Golle <daniel@makrotopia.org>
+-Date: Mon, 17 Nov 2025 02:54:19 +0000
+-Subject: [PATCH] mtd: spinand: esmt: add support for F50L1G41LC
+-
+-This adds support for ESMT F50L1G41LC, which appears to be an updated
+-version of the already supported F50L1G41LB.
+-Add esmt_8c SPI_NAND manufacturer to account for the newly used vendor
+-ID with support for the ESMT F50L1G41LC chip.
+-
+-Link: https://github.com/openwrt/openwrt/pull/15214#issuecomment-3514824435
+-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+----
+- drivers/mtd/nand/spi/core.c |  1 +
+- drivers/mtd/nand/spi/esmt.c | 24 ++++++++++++++++++++++++
+- include/linux/mtd/spinand.h |  1 +
+- 3 files changed, 26 insertions(+)
+-
+---- a/drivers/mtd/nand/spi/core.c
+-+++ b/drivers/mtd/nand/spi/core.c
+-@@ -942,6 +942,7 @@ static const struct nand_ops spinand_ops
+- static const struct spinand_manufacturer *spinand_manufacturers[] = {
+- 	&alliancememory_spinand_manufacturer,
+- 	&ato_spinand_manufacturer,
+-+	&esmt_8c_spinand_manufacturer,
+- 	&esmt_c8_spinand_manufacturer,
+- 	&fmsh_spinand_manufacturer,
+- 	&foresee_spinand_manufacturer,
+---- a/drivers/mtd/nand/spi/esmt.c
+-+++ b/drivers/mtd/nand/spi/esmt.c
+-@@ -11,6 +11,7 @@
+- 
+- /* ESMT uses GigaDevice 0xc8 JECDEC ID on some SPI NANDs */
+- #define SPINAND_MFR_ESMT_C8			0xc8
+-+#define SPINAND_MFR_ESMT_8C			0x8c
+- 
+- static SPINAND_OP_VARIANTS(read_cache_variants,
+- 			   SPINAND_PAGE_READ_FROM_CACHE_X4_OP(0, 1, NULL, 0),
+-@@ -102,6 +103,19 @@ static const struct mtd_ooblayout_ops f5
+- 	.free = f50l1g41lb_ooblayout_free,
+- };
+- 
+-+
+-+static const struct spinand_info esmt_8c_spinand_table[] = {
+-+	SPINAND_INFO("F50L1G41LC",
+-+		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_ADDR, 0x2C),
+-+		     NAND_MEMORG(1, 2048, 64, 64, 1024, 20, 1, 1, 1),
+-+		     NAND_ECCREQ(1, 512),
+-+		     SPINAND_INFO_OP_VARIANTS(&read_cache_variants,
+-+					      &write_cache_variants,
+-+					      &update_cache_variants),
+-+		     0,
+-+		     SPINAND_ECCINFO(&f50l1g41lb_ooblayout, NULL)),
+-+};
+-+
+- static const struct spinand_info esmt_c8_spinand_table[] = {
+- 	SPINAND_INFO("F50L1G41LB",
+- 		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_ADDR, 0x01, 0x7f,
+-@@ -138,6 +152,14 @@ static const struct spinand_info esmt_c8
+- static const struct spinand_manufacturer_ops esmt_spinand_manuf_ops = {
+- };
+- 
+-+const struct spinand_manufacturer esmt_8c_spinand_manufacturer = {
+-+	.id = SPINAND_MFR_ESMT_8C,
+-+	.name = "ESMT",
+-+	.chips = esmt_8c_spinand_table,
+-+	.nchips = ARRAY_SIZE(esmt_8c_spinand_table),
+-+	.ops = &esmt_spinand_manuf_ops,
+-+};
+-+
+- const struct spinand_manufacturer esmt_c8_spinand_manufacturer = {
+- 	.id = SPINAND_MFR_ESMT_C8,
+- 	.name = "ESMT",
+---- a/include/linux/mtd/spinand.h
+-+++ b/include/linux/mtd/spinand.h
+-@@ -262,6 +262,7 @@ struct spinand_manufacturer {
+- /* SPI NAND manufacturers */
+- extern const struct spinand_manufacturer alliancememory_spinand_manufacturer;
+- extern const struct spinand_manufacturer ato_spinand_manufacturer;
+-+extern const struct spinand_manufacturer esmt_8c_spinand_manufacturer;
+- extern const struct spinand_manufacturer esmt_c8_spinand_manufacturer;
+- extern const struct spinand_manufacturer fmsh_spinand_manufacturer;
+- extern const struct spinand_manufacturer foresee_spinand_manufacturer;
+diff --git a/target/linux/generic/backport-6.6/752-32-v6.18-wifi-mt76-wed-use-proper-wed-reference-in-mt76-wed-d.patch b/target/linux/generic/backport-6.6/752-32-v6.18-wifi-mt76-wed-use-proper-wed-reference-in-mt76-wed-d.patch
+deleted file mode 100644
+index 883de549cd..0000000000
+--- a/target/linux/generic/backport-6.6/752-32-v6.18-wifi-mt76-wed-use-proper-wed-reference-in-mt76-wed-d.patch
++++ /dev/null
+@@ -1,79 +0,0 @@
+-From: Lorenzo Bianconi <lorenzo@kernel.org>
+-Date: Wed, 8 Oct 2025 12:41:48 +0200
+-Subject: [PATCH] wifi: mt76: wed: use proper wed reference in mt76 wed driver
+- callabacks
+-
+-MT7996 driver can use both wed and wed_hif2 devices to offload traffic
+-from/to the wireless NIC. In the current codebase we assume to always
+-use the primary wed device in wed callbacks resulting in the following
+-crash if the hw runs wed_hif2 (e.g. 6GHz link).
+-
+-[  297.455876] Unable to handle kernel read from unreadable memory at virtual address 000000000000080a
+-[  297.464928] Mem abort info:
+-[  297.467722]   ESR = 0x0000000096000005
+-[  297.471461]   EC = 0x25: DABT (current EL), IL = 32 bits
+-[  297.476766]   SET = 0, FnV = 0
+-[  297.479809]   EA = 0, S1PTW = 0
+-[  297.482940]   FSC = 0x05: level 1 translation fault
+-[  297.487809] Data abort info:
+-[  297.490679]   ISV = 0, ISS = 0x00000005, ISS2 = 0x00000000
+-[  297.496156]   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+-[  297.501196]   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+-[  297.506500] user pgtable: 4k pages, 39-bit VAs, pgdp=0000000107480000
+-[  297.512927] [000000000000080a] pgd=08000001097fb003, p4d=08000001097fb003, pud=08000001097fb003, pmd=0000000000000000
+-[  297.523532] Internal error: Oops: 0000000096000005 [#1] SMP
+-[  297.715393] CPU: 2 UID: 0 PID: 45 Comm: kworker/u16:2 Tainted: G           O       6.12.50 #0
+-[  297.723908] Tainted: [O]=OOT_MODULE
+-[  297.727384] Hardware name: Banana Pi BPI-R4 (2x SFP+) (DT)
+-[  297.732857] Workqueue: nf_ft_offload_del nf_flow_rule_route_ipv6 [nf_flow_table]
+-[  297.740254] pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+-[  297.747205] pc : mt76_wed_offload_disable+0x64/0xa0 [mt76]
+-[  297.752688] lr : mtk_wed_flow_remove+0x58/0x80
+-[  297.757126] sp : ffffffc080fe3ae0
+-[  297.760430] x29: ffffffc080fe3ae0 x28: ffffffc080fe3be0 x27: 00000000deadbef7
+-[  297.767557] x26: ffffff80c5ebca00 x25: 0000000000000001 x24: ffffff80c85f4c00
+-[  297.774683] x23: ffffff80c1875b78 x22: ffffffc080d42cd0 x21: ffffffc080660018
+-[  297.781809] x20: ffffff80c6a076d0 x19: ffffff80c6a043c8 x18: 0000000000000000
+-[  297.788935] x17: 0000000000000000 x16: 0000000000000001 x15: 0000000000000000
+-[  297.796060] x14: 0000000000000019 x13: ffffff80c0ad8ec0 x12: 00000000fa83b2da
+-[  297.803185] x11: ffffff80c02700c0 x10: ffffff80c0ad8ec0 x9 : ffffff81fef96200
+-[  297.810311] x8 : ffffff80c02700c0 x7 : ffffff80c02700d0 x6 : 0000000000000002
+-[  297.817435] x5 : 0000000000000400 x4 : 0000000000000000 x3 : 0000000000000000
+-[  297.824561] x2 : 0000000000000001 x1 : 0000000000000800 x0 : ffffff80c6a063c8
+-[  297.831686] Call trace:
+-[  297.834123]  mt76_wed_offload_disable+0x64/0xa0 [mt76]
+-[  297.839254]  mtk_wed_flow_remove+0x58/0x80
+-[  297.843342]  mtk_flow_offload_cmd+0x434/0x574
+-[  297.847689]  mtk_wed_setup_tc_block_cb+0x30/0x40
+-[  297.852295]  nf_flow_offload_ipv6_hook+0x7f4/0x964 [nf_flow_table]
+-[  297.858466]  nf_flow_rule_route_ipv6+0x438/0x4a4 [nf_flow_table]
+-[  297.864463]  process_one_work+0x174/0x300
+-[  297.868465]  worker_thread+0x278/0x430
+-[  297.872204]  kthread+0xd8/0xdc
+-[  297.875251]  ret_from_fork+0x10/0x20
+-[  297.878820] Code: 928b5ae0 8b000273 91400a60 f943fa61 (79401421)
+-[  297.884901] ---[ end trace 0000000000000000 ]---
+-
+-Fix the issue detecting the proper wed reference to use running wed
+-callabacks.
+-
+--- Partial backport for data structure change only (rest is in the mt76 package)
+-
+-Fixes: 83eafc9251d6 ("wifi: mt76: mt7996: add wed tx support")
+-Tested-by: Daniel Pawlik <pawlik.dan@gmail.com>
+-Tested-by: Matteo Croce <teknoraver@meta.com>
+-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+-Link: https://patch.msgid.link/20251008-wed-fixes-v1-1-8f7678583385@kernel.org
+-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+----
+-
+---- a/include/linux/soc/mediatek/mtk_wed.h
+-+++ b/include/linux/soc/mediatek/mtk_wed.h
+-@@ -154,6 +154,7 @@ struct mtk_wed_device {
+- 		bool wcid_512;
+- 		bool hw_rro;
+- 		bool msi;
+-+		bool hif2;
+- 
+- 		u16 token_start;
+- 		unsigned int nbuf;
+diff --git a/target/linux/generic/backport-6.6/752-33-v6.18-net-mtk-wed-add-dma-mask-limitation-and-GFP_DMA32-fo.patch b/target/linux/generic/backport-6.6/752-33-v6.18-net-mtk-wed-add-dma-mask-limitation-and-GFP_DMA32-fo.patch
+deleted file mode 100644
+index c1bb1b972b..0000000000
+--- a/target/linux/generic/backport-6.6/752-33-v6.18-net-mtk-wed-add-dma-mask-limitation-and-GFP_DMA32-fo.patch
++++ /dev/null
+@@ -1,50 +0,0 @@
+-From: Rex Lu <rex.lu@mediatek.com>
+-Date: Thu, 9 Oct 2025 08:29:34 +0200
+-Subject: [PATCH] net: mtk: wed: add dma mask limitation and GFP_DMA32 for
+- device with more than 4GB DRAM
+-
+-Limit tx/rx buffer address to 32-bit address space for board with more
+-than 4GB DRAM.
+-
+-Fixes: 804775dfc2885 ("net: ethernet: mtk_eth_soc: add support for Wireless Ethernet Dispatch (WED)")
+-Fixes: 6757d345dd7db ("net: ethernet: mtk_wed: introduce hw_rro support for MT7988")
+-Tested-by: Daniel Pawlik <pawlik.dan@gmail.com>
+-Tested-by: Matteo Croce <teknoraver@meta.com>
+-Signed-off-by: Rex Lu <rex.lu@mediatek.com>
+-Co-developed-by: Lorenzo Bianconi <lorenzo@kernel.org>
+-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+-Reviewed-by: Simon Horman <horms@kernel.org>
+-Signed-off-by: David S. Miller <davem@davemloft.net>
+----
+-
+---- a/drivers/net/ethernet/mediatek/mtk_wed.c
+-+++ b/drivers/net/ethernet/mediatek/mtk_wed.c
+-@@ -677,7 +677,7 @@ mtk_wed_tx_buffer_alloc(struct mtk_wed_d
+- 		void *buf;
+- 		int s;
+- 
+--		page = __dev_alloc_page(GFP_KERNEL);
+-+		page = __dev_alloc_page(GFP_KERNEL | GFP_DMA32);
+- 		if (!page)
+- 			return -ENOMEM;
+- 
+-@@ -800,7 +800,7 @@ mtk_wed_hwrro_buffer_alloc(struct mtk_we
+- 		struct page *page;
+- 		int s;
+- 
+--		page = __dev_alloc_page(GFP_KERNEL);
+-+		page = __dev_alloc_page(GFP_KERNEL | GFP_DMA32);
+- 		if (!page)
+- 			return -ENOMEM;
+- 
+-@@ -2438,6 +2438,10 @@ mtk_wed_attach(struct mtk_wed_device *de
+- 	dev->version = hw->version;
+- 	dev->hw->pcie_base = mtk_wed_get_pcie_base(dev);
+- 
+-+	ret = dma_set_mask_and_coherent(hw->dev, DMA_BIT_MASK(32));
+-+	if (ret)
+-+		goto out;
+-+
+- 	if (hw->eth->dma_dev == hw->eth->dev &&
+- 	    of_dma_is_coherent(hw->eth->dev->of_node))
+- 		mtk_eth_set_dma_device(hw->eth, hw->dev);
+diff --git a/target/linux/generic/backport-6.6/900-v6.14-driver-core-add-a-faux-bus-for-use-when-a-simple-dev.patch b/target/linux/generic/backport-6.6/900-v6.14-driver-core-add-a-faux-bus-for-use-when-a-simple-dev.patch
+new file mode 100644
+index 0000000000..f37e395c7f
+--- /dev/null
++++ b/target/linux/generic/backport-6.6/900-v6.14-driver-core-add-a-faux-bus-for-use-when-a-simple-dev.patch
+@@ -0,0 +1,386 @@
++From 35fa2d88ca9481e5caf533d58b99ca259c63b2fe Mon Sep 17 00:00:00 2001
++From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
++Date: Mon, 10 Feb 2025 13:30:25 +0100
++Subject: [PATCH] driver core: add a faux bus for use when a simple device/bus
++ is needed
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++Many drivers abuse the platform driver/bus system as it provides a
++simple way to create and bind a device to a driver-specific set of
++probe/release functions.  Instead of doing that, and wasting all of the
++memory associated with a platform device, here is a "faux" bus that
++can be used instead.
++
++Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
++Reviewed-by: Danilo Krummrich <dakr@kernel.org>
++Reviewed-by: Lyude Paul <lyude@redhat.com>
++Reviewed-by: Thomas Weißschuh <thomas.weissschuh@linutronix.de>
++Reviewed-by: Zijun Hu <quic_zijuhu@quicinc.com>
++Link: https://lore.kernel.org/r/2025021026-atlantic-gibberish-3f0c@gregkh
++Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
++---
++ Documentation/driver-api/infrastructure.rst |   6 +
++ drivers/base/Makefile                       |   2 +-
++ drivers/base/base.h                         |   1 +
++ drivers/base/faux.c                         | 232 ++++++++++++++++++++
++ drivers/base/init.c                         |   1 +
++ include/linux/device/faux.h                 |  69 ++++++
++ 6 files changed, 310 insertions(+), 1 deletion(-)
++ create mode 100644 drivers/base/faux.c
++ create mode 100644 include/linux/device/faux.h
++
++--- a/Documentation/driver-api/infrastructure.rst
+++++ b/Documentation/driver-api/infrastructure.rst
++@@ -41,6 +41,12 @@ Device Drivers Base
++ .. kernel-doc:: drivers/base/class.c
++    :export:
++ 
+++.. kernel-doc:: include/linux/device/faux.h
+++   :internal:
+++
+++.. kernel-doc:: drivers/base/faux.c
+++   :export:
+++
++ .. kernel-doc:: drivers/base/node.c
++    :internal:
++ 
++--- a/drivers/base/Makefile
+++++ b/drivers/base/Makefile
++@@ -6,7 +6,7 @@ obj-y			:= component.o core.o bus.o dd.o
++ 			   cpu.o firmware.o init.o map.o devres.o \
++ 			   attribute_container.o transport_class.o \
++ 			   topology.o container.o property.o cacheinfo.o \
++-			   swnode.o
+++			   swnode.o faux.o
++ obj-$(CONFIG_AUXILIARY_BUS) += auxiliary.o
++ obj-$(CONFIG_DEVTMPFS)	+= devtmpfs.o
++ obj-y			+= power/
++--- a/drivers/base/base.h
+++++ b/drivers/base/base.h
++@@ -138,6 +138,7 @@ int hypervisor_init(void);
++ static inline int hypervisor_init(void) { return 0; }
++ #endif
++ int platform_bus_init(void);
+++int faux_bus_init(void);
++ void cpu_dev_init(void);
++ void container_dev_init(void);
++ #ifdef CONFIG_AUXILIARY_BUS
++--- /dev/null
+++++ b/drivers/base/faux.c
++@@ -0,0 +1,232 @@
+++// SPDX-License-Identifier: GPL-2.0-only
+++/*
+++ * Copyright (c) 2025 Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+++ * Copyright (c) 2025 The Linux Foundation
+++ *
+++ * A "simple" faux bus that allows devices to be created and added
+++ * automatically to it.  This is to be used whenever you need to create a
+++ * device that is not associated with any "real" system resources, and do
+++ * not want to have to deal with a bus/driver binding logic.  It is
+++ * intended to be very simple, with only a create and a destroy function
+++ * available.
+++ */
+++#include <linux/err.h>
+++#include <linux/init.h>
+++#include <linux/slab.h>
+++#include <linux/string.h>
+++#include <linux/container_of.h>
+++#include <linux/device/faux.h>
+++#include "base.h"
+++
+++/*
+++ * Internal wrapper structure so we can hold a pointer to the
+++ * faux_device_ops for this device.
+++ */
+++struct faux_object {
+++	struct faux_device faux_dev;
+++	const struct faux_device_ops *faux_ops;
+++};
+++#define to_faux_object(dev) container_of_const(dev, struct faux_object, faux_dev.dev)
+++
+++static struct device faux_bus_root = {
+++	.init_name	= "faux",
+++};
+++
+++static int faux_match(struct device *dev, struct device_driver *drv)
+++{
+++	/* Match always succeeds, we only have one driver */
+++	return 1;
+++}
+++
+++static int faux_probe(struct device *dev)
+++{
+++	struct faux_object *faux_obj = to_faux_object(dev);
+++	struct faux_device *faux_dev = &faux_obj->faux_dev;
+++	const struct faux_device_ops *faux_ops = faux_obj->faux_ops;
+++	int ret = 0;
+++
+++	if (faux_ops && faux_ops->probe)
+++		ret = faux_ops->probe(faux_dev);
+++
+++	return ret;
+++}
+++
+++static void faux_remove(struct device *dev)
+++{
+++	struct faux_object *faux_obj = to_faux_object(dev);
+++	struct faux_device *faux_dev = &faux_obj->faux_dev;
+++	const struct faux_device_ops *faux_ops = faux_obj->faux_ops;
+++
+++	if (faux_ops && faux_ops->remove)
+++		faux_ops->remove(faux_dev);
+++}
+++
+++static const struct bus_type faux_bus_type = {
+++	.name		= "faux",
+++	.match		= faux_match,
+++	.probe		= faux_probe,
+++	.remove		= faux_remove,
+++};
+++
+++static struct device_driver faux_driver = {
+++	.name		= "faux_driver",
+++	.bus		= &faux_bus_type,
+++	.probe_type	= PROBE_FORCE_SYNCHRONOUS,
+++};
+++
+++static void faux_device_release(struct device *dev)
+++{
+++	struct faux_object *faux_obj = to_faux_object(dev);
+++
+++	kfree(faux_obj);
+++}
+++
+++/**
+++ * faux_device_create_with_groups - Create and register with the driver
+++ *		core a faux device and populate the device with an initial
+++ *		set of sysfs attributes.
+++ * @name:	The name of the device we are adding, must be unique for
+++ *		all faux devices.
+++ * @parent:	Pointer to a potential parent struct device.  If set to
+++ *		NULL, the device will be created in the "root" of the faux
+++ *		device tree in sysfs.
+++ * @faux_ops:	struct faux_device_ops that the new device will call back
+++ *		into, can be NULL.
+++ * @groups:	The set of sysfs attributes that will be created for this
+++ *		device when it is registered with the driver core.
+++ *
+++ * Create a new faux device and register it in the driver core properly.
+++ * If present, callbacks in @faux_ops will be called with the device that
+++ * for the caller to do something with at the proper time given the
+++ * device's lifecycle.
+++ *
+++ * Note, when this function is called, the functions specified in struct
+++ * faux_ops can be called before the function returns, so be prepared for
+++ * everything to be properly initialized before that point in time.
+++ *
+++ * Return:
+++ * * NULL if an error happened with creating the device
+++ * * pointer to a valid struct faux_device that is registered with sysfs
+++ */
+++struct faux_device *faux_device_create_with_groups(const char *name,
+++						   struct device *parent,
+++						   const struct faux_device_ops *faux_ops,
+++						   const struct attribute_group **groups)
+++{
+++	struct faux_object *faux_obj;
+++	struct faux_device *faux_dev;
+++	struct device *dev;
+++	int ret;
+++
+++	faux_obj = kzalloc(sizeof(*faux_obj), GFP_KERNEL);
+++	if (!faux_obj)
+++		return NULL;
+++
+++	/* Save off the callbacks so we can use them in the future */
+++	faux_obj->faux_ops = faux_ops;
+++
+++	/* Initialize the device portion and register it with the driver core */
+++	faux_dev = &faux_obj->faux_dev;
+++	dev = &faux_dev->dev;
+++
+++	device_initialize(dev);
+++	dev->release = faux_device_release;
+++	if (parent)
+++		dev->parent = parent;
+++	else
+++		dev->parent = &faux_bus_root;
+++	dev->bus = &faux_bus_type;
+++	dev->groups = groups;
+++	dev_set_name(dev, "%s", name);
+++
+++	ret = device_add(dev);
+++	if (ret) {
+++		pr_err("%s: device_add for faux device '%s' failed with %d\n",
+++		       __func__, name, ret);
+++		put_device(dev);
+++		return NULL;
+++	}
+++
+++	return faux_dev;
+++}
+++EXPORT_SYMBOL_GPL(faux_device_create_with_groups);
+++
+++/**
+++ * faux_device_create - create and register with the driver core a faux device
+++ * @name:	The name of the device we are adding, must be unique for all
+++ *		faux devices.
+++ * @parent:	Pointer to a potential parent struct device.  If set to
+++ *		NULL, the device will be created in the "root" of the faux
+++ *		device tree in sysfs.
+++ * @faux_ops:	struct faux_device_ops that the new device will call back
+++ *		into, can be NULL.
+++ *
+++ * Create a new faux device and register it in the driver core properly.
+++ * If present, callbacks in @faux_ops will be called with the device that
+++ * for the caller to do something with at the proper time given the
+++ * device's lifecycle.
+++ *
+++ * Note, when this function is called, the functions specified in struct
+++ * faux_ops can be called before the function returns, so be prepared for
+++ * everything to be properly initialized before that point in time.
+++ *
+++ * Return:
+++ * * NULL if an error happened with creating the device
+++ * * pointer to a valid struct faux_device that is registered with sysfs
+++ */
+++struct faux_device *faux_device_create(const char *name,
+++				       struct device *parent,
+++				       const struct faux_device_ops *faux_ops)
+++{
+++	return faux_device_create_with_groups(name, parent, faux_ops, NULL);
+++}
+++EXPORT_SYMBOL_GPL(faux_device_create);
+++
+++/**
+++ * faux_device_destroy - destroy a faux device
+++ * @faux_dev:	faux device to destroy
+++ *
+++ * Unregisters and cleans up a device that was created with a call to
+++ * faux_device_create()
+++ */
+++void faux_device_destroy(struct faux_device *faux_dev)
+++{
+++	struct device *dev = &faux_dev->dev;
+++
+++	if (!faux_dev)
+++		return;
+++
+++	device_del(dev);
+++
+++	/* The final put_device() will clean up the memory we allocated for this device. */
+++	put_device(dev);
+++}
+++EXPORT_SYMBOL_GPL(faux_device_destroy);
+++
+++int __init faux_bus_init(void)
+++{
+++	int ret;
+++
+++	ret = device_register(&faux_bus_root);
+++	if (ret) {
+++		put_device(&faux_bus_root);
+++		return ret;
+++	}
+++
+++	ret = bus_register(&faux_bus_type);
+++	if (ret)
+++		goto error_bus;
+++
+++	ret = driver_register(&faux_driver);
+++	if (ret)
+++		goto error_driver;
+++
+++	return ret;
+++
+++error_driver:
+++	bus_unregister(&faux_bus_type);
+++
+++error_bus:
+++	device_unregister(&faux_bus_root);
+++	return ret;
+++}
++--- a/drivers/base/init.c
+++++ b/drivers/base/init.c
++@@ -32,6 +32,7 @@ void __init driver_init(void)
++ 	/* These are also core pieces, but must come after the
++ 	 * core core pieces.
++ 	 */
+++	faux_bus_init();
++ 	of_core_init();
++ 	platform_bus_init();
++ 	auxiliary_bus_init();
++--- /dev/null
+++++ b/include/linux/device/faux.h
++@@ -0,0 +1,69 @@
+++/* SPDX-License-Identifier: GPL-2.0-only */
+++/*
+++ * Copyright (c) 2025 Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+++ * Copyright (c) 2025 The Linux Foundation
+++ *
+++ * A "simple" faux bus that allows devices to be created and added
+++ * automatically to it.  This is to be used whenever you need to create a
+++ * device that is not associated with any "real" system resources, and do
+++ * not want to have to deal with a bus/driver binding logic.  It is
+++ * intended to be very simple, with only a create and a destroy function
+++ * available.
+++ */
+++#ifndef _FAUX_DEVICE_H_
+++#define _FAUX_DEVICE_H_
+++
+++#include <linux/container_of.h>
+++#include <linux/device.h>
+++
+++/**
+++ * struct faux_device - a "faux" device
+++ * @dev:	internal struct device of the object
+++ *
+++ * A simple faux device that can be created/destroyed.  To be used when a
+++ * driver only needs to have a device to "hang" something off.  This can be
+++ * used for downloading firmware or other basic tasks.  Use this instead of
+++ * a struct platform_device if the device has no resources assigned to
+++ * it at all.
+++ */
+++struct faux_device {
+++	struct device dev;
+++};
+++#define to_faux_device(x) container_of_const((x), struct faux_device, dev)
+++
+++/**
+++ * struct faux_device_ops - a set of callbacks for a struct faux_device
+++ * @probe:	called when a faux device is probed by the driver core
+++ *		before the device is fully bound to the internal faux bus
+++ *		code.  If probe succeeds, return 0, otherwise return a
+++ *		negative error number to stop the probe sequence from
+++ *		succeeding.
+++ * @remove:	called when a faux device is removed from the system
+++ *
+++ * Both @probe and @remove are optional, if not needed, set to NULL.
+++ */
+++struct faux_device_ops {
+++	int (*probe)(struct faux_device *faux_dev);
+++	void (*remove)(struct faux_device *faux_dev);
+++};
+++
+++struct faux_device *faux_device_create(const char *name,
+++				       struct device *parent,
+++				       const struct faux_device_ops *faux_ops);
+++struct faux_device *faux_device_create_with_groups(const char *name,
+++						   struct device *parent,
+++						   const struct faux_device_ops *faux_ops,
+++						   const struct attribute_group **groups);
+++void faux_device_destroy(struct faux_device *faux_dev);
+++
+++static inline void *faux_device_get_drvdata(const struct faux_device *faux_dev)
+++{
+++	return dev_get_drvdata(&faux_dev->dev);
+++}
+++
+++static inline void faux_device_set_drvdata(struct faux_device *faux_dev, void *data)
+++{
+++	dev_set_drvdata(&faux_dev->dev, data);
+++}
+++
+++#endif /* _FAUX_DEVICE_H_ */
+diff --git a/target/linux/generic/backport-6.6/920-v6.12-clk-provide-devm_clk_get_optional_enabled_with_rate.patch b/target/linux/generic/backport-6.6/920-v6.12-clk-provide-devm_clk_get_optional_enabled_with_rate.patch
+new file mode 100644
+index 0000000000..4a8e5c4c6e
+--- /dev/null
++++ b/target/linux/generic/backport-6.6/920-v6.12-clk-provide-devm_clk_get_optional_enabled_with_rate.patch
+@@ -0,0 +1,104 @@
++From 9934a1bd45b2b03f6d1204a6ae2780d3b009799f Mon Sep 17 00:00:00 2001
++From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
++Date: Mon, 5 Aug 2024 10:57:31 +0200
++Subject: [PATCH] clk: provide devm_clk_get_optional_enabled_with_rate()
++
++There are clock users in the kernel that can't use
++devm_clk_get_optional_enabled() as they need to set rate after getting
++the clock and before enabling it. Provide a managed helper that wraps
++these operations in the correct order.
++
++Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
++Link: https://lore.kernel.org/r/20240805-clk-new-helper-v2-1-e5fdd1e1d729@linaro.org
++Signed-off-by: Stephen Boyd <sboyd@kernel.org>
++---
++ drivers/clk/clk-devres.c | 28 ++++++++++++++++++++++++++++
++ include/linux/clk.h      | 33 +++++++++++++++++++++++++++++++++
++ 2 files changed, 61 insertions(+)
++
++--- a/drivers/clk/clk-devres.c
+++++ b/drivers/clk/clk-devres.c
++@@ -99,6 +99,34 @@ struct clk *devm_clk_get_optional_enable
++ }
++ EXPORT_SYMBOL_GPL(devm_clk_get_optional_enabled);
++ 
+++struct clk *devm_clk_get_optional_enabled_with_rate(struct device *dev,
+++						    const char *id,
+++						    unsigned long rate)
+++{
+++	struct clk *clk;
+++	int ret;
+++
+++	clk = __devm_clk_get(dev, id, clk_get_optional, NULL,
+++			     clk_disable_unprepare);
+++	if (IS_ERR(clk))
+++		return ERR_CAST(clk);
+++
+++	ret = clk_set_rate(clk, rate);
+++	if (ret)
+++		goto out_put_clk;
+++
+++	ret = clk_prepare_enable(clk);
+++	if (ret)
+++		goto out_put_clk;
+++
+++	return clk;
+++
+++out_put_clk:
+++	devm_clk_put(dev, clk);
+++	return ERR_PTR(ret);
+++}
+++EXPORT_SYMBOL_GPL(devm_clk_get_optional_enabled_with_rate);
+++
++ struct clk_bulk_devres {
++ 	struct clk_bulk_data *clks;
++ 	int num_clks;
++--- a/include/linux/clk.h
+++++ b/include/linux/clk.h
++@@ -608,6 +608,32 @@ struct clk *devm_clk_get_optional_prepar
++ struct clk *devm_clk_get_optional_enabled(struct device *dev, const char *id);
++ 
++ /**
+++ * devm_clk_get_optional_enabled_with_rate - devm_clk_get_optional() +
+++ *                                           clk_set_rate() +
+++ *                                           clk_prepare_enable()
+++ * @dev: device for clock "consumer"
+++ * @id: clock consumer ID
+++ * @rate: new clock rate
+++ *
+++ * Context: May sleep.
+++ *
+++ * Return: a struct clk corresponding to the clock producer, or
+++ * valid IS_ERR() condition containing errno.  The implementation
+++ * uses @dev and @id to determine the clock consumer, and thereby
+++ * the clock producer.  If no such clk is found, it returns NULL
+++ * which serves as a dummy clk.  That's the only difference compared
+++ * to devm_clk_get_enabled().
+++ *
+++ * The returned clk (if valid) is prepared and enabled and rate was set.
+++ *
+++ * The clock will automatically be disabled, unprepared and freed
+++ * when the device is unbound from the bus.
+++ */
+++struct clk *devm_clk_get_optional_enabled_with_rate(struct device *dev,
+++						    const char *id,
+++						    unsigned long rate);
+++
+++/**
++  * devm_get_clk_from_child - lookup and obtain a managed reference to a
++  *			     clock producer from child node.
++  * @dev: device for clock "consumer"
++@@ -948,6 +974,13 @@ static inline struct clk *devm_clk_get_o
++ {
++ 	return NULL;
++ }
+++
+++static inline struct clk *
+++devm_clk_get_optional_enabled_with_rate(struct device *dev, const char *id,
+++					unsigned long rate)
+++{
+++	return NULL;
+++}
++ 
++ static inline int __must_check devm_clk_bulk_get(struct device *dev, int num_clks,
++ 						 struct clk_bulk_data *clks)
+diff --git a/target/linux/generic/pending-6.6/210-resource-handle-wrong-resource_size-value-on-zero-st.patch b/target/linux/generic/pending-6.6/210-resource-handle-wrong-resource_size-value-on-zero-st.patch
+new file mode 100644
+index 0000000000..af93a56d85
+--- /dev/null
++++ b/target/linux/generic/pending-6.6/210-resource-handle-wrong-resource_size-value-on-zero-st.patch
+@@ -0,0 +1,80 @@
++From 7e1241396c241f9b4fff2ff133806fef4ddd9ecc Mon Sep 17 00:00:00 2001
++From: Christian Marangi <ansuelsmth@gmail.com>
++Date: Sun, 7 Dec 2025 22:18:11 +0100
++Subject: [PATCH] resource: handle wrong resource_size value on zero start/end
++ resource
++
++Commit 900730dc4705 ("wifi: ath: Use
++of_reserved_mem_region_to_resource() for "memory-region"") uncovered a
++massive problem with the usage of resource_size() helper.
++
++The reported commit caused a regression with ath11k WiFi firmware
++loading and the change was just a simple replacement of duplicate code
++with a new helper of_reserved_mem_region_to_resource().
++
++On reworking this, in the commit also a check for the presence of the
++node was replaced with resource_size(&res). This was done following the
++logic that if the node wasn't present then it's expected that also the
++resource_size is zero, mimicking the same if-else logic.
++
++This was also the reason the regression was mostly hard to catch at
++first sight as the rework is correctly done given the assumption on the
++used helpers.
++
++BUT this is actually not the case. On further inspection on
++resource_size() it was found that it NEVER actually returns 0.
++
++Even if the resource value of start and end are 0, the return value of
++resource_size() will ALWAYS be 1, resulting in the broken if-else
++condition ALWAYS going in the first if condition.
++
++This was simply confirmed by reading the resource_size() logic:
++
++	return res->end - res->start + 1;
++
++Given the confusion, also other case of such usage were searched in the
++kernel and with great suprise it seems LOTS of place assume
++resource_size() should return zero in the context of the resource start
++and end set to 0.
++
++Quoting for example comments in drivers/vfio/pci/vfio_pci_core.c:
++
++		/*
++		 * The PCI core shouldn't set up a resource with a
++		 * type but zero size. But there may be bugs that
++		 * cause us to do that.
++		 */
++		if (!resource_size(res))
++			goto no_mmap;
++
++It really seems resource_size() was tought with the assumption that
++resource struct was always correctly initialized before calling it and
++never set to zero.
++
++But across the year this got lost and now there are lots of driver that
++assume resource_size() returns 0 if start and end are also 0.
++
++To better handle this and make resource_size() returns correct value in
++such case, add a simple check and return 0 if both resource start and
++resource end are zero.
++
++Cc: Rob Herring (Arm) <robh@kernel.org>
++Cc: stable@vger.kernel.org
++Fixes: 1a4e564b7db9 ("resource: add resource_size()")
++Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
++---
++ include/linux/ioport.h | 3 +++
++ 1 file changed, 3 insertions(+)
++
++--- a/include/linux/ioport.h
+++++ b/include/linux/ioport.h
++@@ -283,6 +283,9 @@ static inline void resource_set_range(st
++ 
++ static inline resource_size_t resource_size(const struct resource *res)
++ {
+++	if (!res->start && !res->end)
+++		return 0;
+++
++ 	return res->end - res->start + 1;
++ }
++ static inline unsigned long resource_type(const struct resource *res)
+diff --git a/target/linux/generic/pending-6.6/360-Revert-MIPS-mm-kmalloc-tlb_vpn-array-to-avoid-stack-.patch b/target/linux/generic/pending-6.6/360-Revert-MIPS-mm-kmalloc-tlb_vpn-array-to-avoid-stack-.patch
+deleted file mode 100644
+index 1b53919a0c..0000000000
+--- a/target/linux/generic/pending-6.6/360-Revert-MIPS-mm-kmalloc-tlb_vpn-array-to-avoid-stack-.patch
++++ /dev/null
+@@ -1,60 +0,0 @@
+-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+-From: Hauke Mehrtens <hauke@hauke-m.de>
+-Date: Mon, 15 Dec 2025 01:45:07 +0100
+-Subject: Revert "MIPS: mm: kmalloc tlb_vpn array to avoid stack overflow"
+-
+-This reverts commit 231ac951fabae2aaed8b2c00b4a097107be49c8c.
+----
+- arch/mips/mm/tlb-r4k.c | 18 ++----------------
+- 1 file changed, 2 insertions(+), 16 deletions(-)
+-
+---- a/arch/mips/mm/tlb-r4k.c
+-+++ b/arch/mips/mm/tlb-r4k.c
+-@@ -12,7 +12,6 @@
+- #include <linux/init.h>
+- #include <linux/sched.h>
+- #include <linux/smp.h>
+--#include <linux/memblock.h>
+- #include <linux/mm.h>
+- #include <linux/hugetlb.h>
+- #include <linux/export.h>
+-@@ -521,26 +520,17 @@ static int r4k_vpn_cmp(const void *a, co
+-  * Initialise all TLB entries with unique values that do not clash with
+-  * what we have been handed over and what we'll be using ourselves.
+-  */
+--static void __ref r4k_tlb_uniquify(void)
+-+static void r4k_tlb_uniquify(void)
+- {
+-+	unsigned long tlb_vpns[1 << MIPS_CONF1_TLBS_SIZE];
+- 	int tlbsize = current_cpu_data.tlbsize;
+--	bool use_slab = slab_is_available();
+- 	int start = num_wired_entries();
+--	phys_addr_t tlb_vpn_size;
+--	unsigned long *tlb_vpns;
+- 	unsigned long vpn_mask;
+- 	int cnt, ent, idx, i;
+- 
+- 	vpn_mask = GENMASK(cpu_vmbits - 1, 13);
+- 	vpn_mask |= IS_ENABLED(CONFIG_64BIT) ? 3ULL << 62 : 1 << 31;
+- 
+--	tlb_vpn_size = tlbsize * sizeof(*tlb_vpns);
+--	tlb_vpns = (use_slab ?
+--		    kmalloc(tlb_vpn_size, GFP_KERNEL) :
+--		    memblock_alloc_raw(tlb_vpn_size, sizeof(*tlb_vpns)));
+--	if (WARN_ON(!tlb_vpns))
+--		return; /* Pray local_flush_tlb_all() is good enough. */
+--
+- 	htw_stop();
+- 
+- 	for (i = start, cnt = 0; i < tlbsize; i++, cnt++) {
+-@@ -593,10 +583,6 @@ static void __ref r4k_tlb_uniquify(void)
+- 	tlbw_use_hazard();
+- 	htw_start();
+- 	flush_micro_tlb();
+--	if (use_slab)
+--		kfree(tlb_vpns);
+--	else
+--		memblock_free(tlb_vpns, tlb_vpn_size);
+- }
+- 
+- /*
+diff --git a/target/linux/generic/pending-6.6/361-Revert-MIPS-mm-Prevent-a-TLB-shutdown-on-initial-uni.patch b/target/linux/generic/pending-6.6/361-Revert-MIPS-mm-Prevent-a-TLB-shutdown-on-initial-uni.patch
+deleted file mode 100644
+index 17d0b50ad8..0000000000
+--- a/target/linux/generic/pending-6.6/361-Revert-MIPS-mm-Prevent-a-TLB-shutdown-on-initial-uni.patch
++++ /dev/null
+@@ -1,146 +0,0 @@
+-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+-From: Hauke Mehrtens <hauke@hauke-m.de>
+-Date: Mon, 15 Dec 2025 01:45:20 +0100
+-Subject: Revert "MIPS: mm: Prevent a TLB shutdown on initial uniquification"
+-
+-This reverts commit 135713cd0751bf296e515f5fdec234320f73bbd8.
+----
+- arch/mips/mm/tlb-r4k.c | 100 +++++++++++++++--------------------------
+- 1 file changed, 37 insertions(+), 63 deletions(-)
+-
+---- a/arch/mips/mm/tlb-r4k.c
+-+++ b/arch/mips/mm/tlb-r4k.c
+-@@ -15,7 +15,6 @@
+- #include <linux/mm.h>
+- #include <linux/hugetlb.h>
+- #include <linux/export.h>
+--#include <linux/sort.h>
+- 
+- #include <asm/cpu.h>
+- #include <asm/cpu-type.h>
+-@@ -507,79 +506,55 @@ static int __init set_ntlb(char *str)
+- 
+- __setup("ntlb=", set_ntlb);
+- 
+--
+--/* Comparison function for EntryHi VPN fields.  */
+--static int r4k_vpn_cmp(const void *a, const void *b)
+--{
+--	long v = *(unsigned long *)a - *(unsigned long *)b;
+--	int s = sizeof(long) > sizeof(int) ? sizeof(long) * 8 - 1: 0;
+--	return s ? (v != 0) | v >> s : v;
+--}
+--
+--/*
+-- * Initialise all TLB entries with unique values that do not clash with
+-- * what we have been handed over and what we'll be using ourselves.
+-- */
+-+/* Initialise all TLB entries with unique values */
+- static void r4k_tlb_uniquify(void)
+- {
+--	unsigned long tlb_vpns[1 << MIPS_CONF1_TLBS_SIZE];
+--	int tlbsize = current_cpu_data.tlbsize;
+--	int start = num_wired_entries();
+--	unsigned long vpn_mask;
+--	int cnt, ent, idx, i;
+--
+--	vpn_mask = GENMASK(cpu_vmbits - 1, 13);
+--	vpn_mask |= IS_ENABLED(CONFIG_64BIT) ? 3ULL << 62 : 1 << 31;
+-+	int entry = num_wired_entries();
+- 
+- 	htw_stop();
+-+	write_c0_entrylo0(0);
+-+	write_c0_entrylo1(0);
+- 
+--	for (i = start, cnt = 0; i < tlbsize; i++, cnt++) {
+--		unsigned long vpn;
+-+	while (entry < current_cpu_data.tlbsize) {
+-+		unsigned long asid_mask = cpu_asid_mask(&current_cpu_data);
+-+		unsigned long asid = 0;
+-+		int idx;
+- 
+--		write_c0_index(i);
+--		mtc0_tlbr_hazard();
+--		tlb_read();
+--		tlb_read_hazard();
+--		vpn = read_c0_entryhi();
+--		vpn &= vpn_mask & PAGE_MASK;
+--		tlb_vpns[cnt] = vpn;
+-+		/* Skip wired MMID to make ginvt_mmid work */
+-+		if (cpu_has_mmid)
+-+			asid = MMID_KERNEL_WIRED + 1;
+- 
+--		/* Prevent any large pages from overlapping regular ones.  */
+--		write_c0_pagemask(read_c0_pagemask() & PM_DEFAULT_MASK);
+-+		/* Check for match before using UNIQUE_ENTRYHI */
+-+		do {
+-+			if (cpu_has_mmid) {
+-+				write_c0_memorymapid(asid);
+-+				write_c0_entryhi(UNIQUE_ENTRYHI(entry));
+-+			} else {
+-+				write_c0_entryhi(UNIQUE_ENTRYHI(entry) | asid);
+-+			}
+-+			mtc0_tlbw_hazard();
+-+			tlb_probe();
+-+			tlb_probe_hazard();
+-+			idx = read_c0_index();
+-+			/* No match or match is on current entry */
+-+			if (idx < 0 || idx == entry)
+-+				break;
+-+			/*
+-+			 * If we hit a match, we need to try again with
+-+			 * a different ASID.
+-+			 */
+-+			asid++;
+-+		} while (asid < asid_mask);
+-+
+-+		if (idx >= 0 && idx != entry)
+-+			panic("Unable to uniquify TLB entry %d", idx);
+-+
+-+		write_c0_index(entry);
+- 		mtc0_tlbw_hazard();
+- 		tlb_write_indexed();
+--		tlbw_use_hazard();
+-+		entry++;
+- 	}
+- 
+--	sort(tlb_vpns, cnt, sizeof(tlb_vpns[0]), r4k_vpn_cmp, NULL);
+--
+--	write_c0_pagemask(PM_DEFAULT_MASK);
+--	write_c0_entrylo0(0);
+--	write_c0_entrylo1(0);
+--
+--	idx = 0;
+--	ent = tlbsize;
+--	for (i = start; i < tlbsize; i++)
+--		while (1) {
+--			unsigned long entryhi, vpn;
+--
+--			entryhi = UNIQUE_ENTRYHI(ent);
+--			vpn = entryhi & vpn_mask & PAGE_MASK;
+--
+--			if (idx >= cnt || vpn < tlb_vpns[idx]) {
+--				write_c0_entryhi(entryhi);
+--				write_c0_index(i);
+--				mtc0_tlbw_hazard();
+--				tlb_write_indexed();
+--				ent++;
+--				break;
+--			} else if (vpn == tlb_vpns[idx]) {
+--				ent++;
+--			} else {
+--				idx++;
+--			}
+--		}
+--
+- 	tlbw_use_hazard();
+- 	htw_start();
+- 	flush_micro_tlb();
+-@@ -625,7 +600,6 @@ static void r4k_tlb_configure(void)
+- 
+- 	/* From this point on the ARC firmware is dead.	 */
+- 	r4k_tlb_uniquify();
+--	local_flush_tlb_all();
+- 
+- 	/* Did I tell you that ARC SUCKS?  */
+- }
+diff --git a/target/linux/generic/pending-6.6/403-mtd-spinand-add-support-for-FudanMicro-FM25S01BI3.patch b/target/linux/generic/pending-6.6/403-mtd-spinand-add-support-for-FudanMicro-FM25S01BI3.patch
+deleted file mode 100644
+index f35344233f..0000000000
+--- a/target/linux/generic/pending-6.6/403-mtd-spinand-add-support-for-FudanMicro-FM25S01BI3.patch
++++ /dev/null
+@@ -1,117 +0,0 @@
+-To: Miquel Raynal <miquel.raynal@bootlin.com>,
+- Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>,
+- Tudor Ambarus <tudor.ambarus@linaro.org>, Mark Brown <broonie@kernel.org>
+-Cc: linux-kernel@vger.kernel.org, linux-mtd@lists.infradead.org
+-From: Mikhail Zhilkin <csharper2005@gmail.com>
+-Subject: [PATCH] mtd: spinand: add support for FudanMicro FM25S01BI3
+-
+-Add support for FudanMicro FM25S01BI3 SPI NAND.
+-
+-Link: https://www.fmsh.com/nvm/FM25S01BI3_ds_eng.pdf
+-
+-Signed-off-by: Mikhail Zhilkin <csharper2005@gmail.com>
+-Link: https://lore.kernel.org/linux-mtd/130e0f3f-93e4-47cf-82f0-93ba58a3a670@gmail.com
+----
+- drivers/mtd/nand/spi/fmsh.c | 72 +++++++++++++++++++++++++++++++++++++
+- 1 file changed, 72 insertions(+)
+-
+---- a/drivers/mtd/nand/spi/fmsh.c
+-+++ b/drivers/mtd/nand/spi/fmsh.c
+-@@ -9,6 +9,13 @@
+- #include <linux/kernel.h>
+- #include <linux/mtd/spinand.h>
+- 
+-+#define FM25S01BI3_STATUS_ECC_MASK		(7 << 4)
+-+	#define FM25S01BI3_STATUS_ECC_NO_BITFLIPS	(0 << 4)
+-+	#define FM25S01BI3_STATUS_ECC_1_3_BITFLIPS	(1 << 4)
+-+	#define FM25S01BI3_STATUS_ECC_UNCOR_ERROR	(2 << 4)
+-+	#define FM25S01BI3_STATUS_ECC_4_6_BITFLIPS	(3 << 4)
+-+	#define FM25S01BI3_STATUS_ECC_7_8_BITFLIPS	(5 << 4)
+-+
+- #define SPINAND_MFR_FMSH		0xA1
+- 
+- static SPINAND_OP_VARIANTS(read_cache_variants,
+-@@ -45,11 +52,66 @@ static int fm25s01a_ooblayout_free(struc
+- 	return 0;
+- }
+- 
+-+static int fm25s01bi3_ecc_get_status(struct spinand_device *spinand,
+-+				     u8 status)
+-+{
+-+	switch (status & FM25S01BI3_STATUS_ECC_MASK) {
+-+	case FM25S01BI3_STATUS_ECC_NO_BITFLIPS:
+-+		return 0;
+-+
+-+	case FM25S01BI3_STATUS_ECC_UNCOR_ERROR:
+-+		return -EBADMSG;
+-+
+-+	case FM25S01BI3_STATUS_ECC_1_3_BITFLIPS:
+-+		return 3;
+-+
+-+	case FM25S01BI3_STATUS_ECC_4_6_BITFLIPS:
+-+		return 6;
+-+
+-+	case FM25S01BI3_STATUS_ECC_7_8_BITFLIPS:
+-+		return 8;
+-+
+-+	default:
+-+		break;
+-+	}
+-+
+-+	return -EINVAL;
+-+}
+-+
+-+static int fm25s01bi3_ooblayout_ecc(struct mtd_info *mtd, int section,
+-+				    struct mtd_oob_region *region)
+-+{
+-+	if (section)
+-+		return -ERANGE;
+-+
+-+	region->offset = 64;
+-+	region->length = 64;
+-+
+-+	return 0;
+-+}
+-+
+-+static int fm25s01bi3_ooblayout_free(struct mtd_info *mtd, int section,
+-+				     struct mtd_oob_region *region)
+-+{
+-+	if (section > 3)
+-+		return -ERANGE;
+-+
+-+	region->offset = (16 * section) + 4;
+-+	region->length = 12;
+-+
+-+	return 0;
+-+}
+-+
+- static const struct mtd_ooblayout_ops fm25s01a_ooblayout = {
+- 	.ecc = fm25s01a_ooblayout_ecc,
+- 	.free = fm25s01a_ooblayout_free,
+- };
+- 
+-+static const struct mtd_ooblayout_ops fm25s01bi3_ooblayout = {
+-+	.ecc = fm25s01bi3_ooblayout_ecc,
+-+	.free = fm25s01bi3_ooblayout_free,
+-+};
+-+
+- static const struct spinand_info fmsh_spinand_table[] = {
+- 	SPINAND_INFO("FM25S01A",
+- 		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_DUMMY, 0xE4),
+-@@ -60,6 +122,16 @@ static const struct spinand_info fmsh_sp
+- 					      &update_cache_variants),
+- 		     0,
+- 		     SPINAND_ECCINFO(&fm25s01a_ooblayout, NULL)),
+-+	SPINAND_INFO("FM25S01BI3",
+-+		     SPINAND_ID(SPINAND_READID_METHOD_OPCODE_DUMMY, 0xd4),
+-+		     NAND_MEMORG(1, 2048, 128, 64, 1024, 20, 1, 1, 1),
+-+		     NAND_ECCREQ(8, 512),
+-+		     SPINAND_INFO_OP_VARIANTS(&read_cache_variants,
+-+					      &write_cache_variants,
+-+					      &update_cache_variants),
+-+		     SPINAND_HAS_QE_BIT,
+-+		     SPINAND_ECCINFO(&fm25s01bi3_ooblayout,
+-+				      fm25s01bi3_ecc_get_status)),
+- };
+- 
+- static const struct spinand_manufacturer_ops fmsh_spinand_manuf_ops = {
+diff --git a/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch b/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch
+index 814b50e19c..7f60c21a3a 100644
+--- a/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch
++++ b/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch
+@@ -53,7 +53,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+ 
+ --- a/drivers/mtd/nand/spi/core.c
+ +++ b/drivers/mtd/nand/spi/core.c
+-@@ -1292,6 +1292,7 @@ static int spinand_init(struct spinand_d
++@@ -1291,6 +1291,7 @@ static int spinand_init(struct spinand_d
+  	/* Propagate ECC information to mtd_info */
+  	mtd->ecc_strength = nanddev_get_ecc_conf(nand)->strength;
+  	mtd->ecc_step_size = nanddev_get_ecc_conf(nand)->step_size;
+diff --git a/target/linux/generic/pending-6.6/487-mtd-spinand-Add-support-for-Etron-EM73D044VCx.patch b/target/linux/generic/pending-6.6/487-mtd-spinand-Add-support-for-Etron-EM73D044VCx.patch
+index 7d7899ee59..65efad224d 100644
+--- a/target/linux/generic/pending-6.6/487-mtd-spinand-Add-support-for-Etron-EM73D044VCx.patch
++++ b/target/linux/generic/pending-6.6/487-mtd-spinand-Add-support-for-Etron-EM73D044VCx.patch
+@@ -49,9 +49,9 @@ Submitted-by: Daniel Danzberger <daniel@dd-wrt.com>
+  obj-$(CONFIG_MTD_SPI_NAND) += spinand.o
+ --- a/drivers/mtd/nand/spi/core.c
+ +++ b/drivers/mtd/nand/spi/core.c
+-@@ -944,6 +944,7 @@ static const struct spinand_manufacturer
++@@ -943,6 +943,7 @@ static const struct spinand_manufacturer
++ 	&alliancememory_spinand_manufacturer,
+  	&ato_spinand_manufacturer,
+- 	&esmt_8c_spinand_manufacturer,
+  	&esmt_c8_spinand_manufacturer,
+ +	&etron_spinand_manufacturer,
+  	&fmsh_spinand_manufacturer,
+@@ -160,9 +160,9 @@ Submitted-by: Daniel Danzberger <daniel@dd-wrt.com>
+ +};
+ --- a/include/linux/mtd/spinand.h
+ +++ b/include/linux/mtd/spinand.h
+-@@ -264,6 +264,7 @@ extern const struct spinand_manufacturer
++@@ -263,6 +263,7 @@ struct spinand_manufacturer {
++ extern const struct spinand_manufacturer alliancememory_spinand_manufacturer;
+  extern const struct spinand_manufacturer ato_spinand_manufacturer;
+- extern const struct spinand_manufacturer esmt_8c_spinand_manufacturer;
+  extern const struct spinand_manufacturer esmt_c8_spinand_manufacturer;
+ +extern const struct spinand_manufacturer etron_spinand_manufacturer;
+  extern const struct spinand_manufacturer fmsh_spinand_manufacturer;
+-- 
+2.43.0
+
