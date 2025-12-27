@@ -1,0 +1,1540 @@
+From 268aab6def5c81d01df48bad91c2399e0b0a9c82 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 27 Dec 2025 19:43:35 +0800
+Subject: [PATCH 04/11] Revert "kernel: bump 6.6 to 6.6.117"
+
+This reverts commit 648fa1b6d38bc6a7a242a4786081b739a4bfe91d.
+---
+ include/kernel-6.6                            |  4 +-
+ ...rl-airoha-Add-support-for-EN7581-SoC.patch |  2 +-
+ ...he-capability-to-consume-out-of-orde.patch | 26 +++++------
+ ...-airoha-deassert-XSI-line-on-hw-init.patch |  2 +-
+ ...nitial-fixup-for-GDM3-4-port-support.patch |  2 +-
+ ...7-airoha-ethernet-drop-xsi-mac-reset.patch |  4 +-
+ ...iroha-add-phylink-support-for-GDM2-4.patch | 16 +++----
+ ...oup-Disable-cgroup-memory-by-default.patch |  4 +-
+ ...180-Default-to-the-first-valid-input.patch |  4 +-
+ ...v7180-Add-YPrPb-support-for-ADV7282M.patch |  2 +-
+ ...ce-quirks-for-Freeway-Airmouse-T3-an.patch |  4 +-
+ ...7-Support-for-the-Sony-IMX477-sensor.patch |  2 +-
+ ...9-Support-for-the-Sony-IMX519-sensor.patch |  2 +-
+ ...vicetree-Add-documentation-for-imx37.patch |  2 +-
+ ...CS_HIGH-if-GPIO-descriptors-are-used.patch |  4 +-
+ ...-Nasty-hack-to-allow-input-selection.patch |  8 ++--
+ ...a-i2c-Add-IMX708-CMOS-sensor-binding.patch |  2 +-
+ ...a-i2c-Replace-IMX708-sensor-binding-.patch |  2 +-
+ ...ci_sync-Add-fallback-bd-address-prop.patch |  4 +-
+ ...a-imx258-Rename-to-include-vendor-pr.patch |  2 +-
+ ...nt-to-request-a-particular-dev-fbN-n.patch |  2 +-
+ ...ndings-i2c-Add-Rohm-BU64754-bindings.patch |  2 +-
+ ...2c-Add-driver-for-OmniVision-OV64A40.patch |  2 +-
+ ...0-Use-MEDIA_BUS_FMT_UYVY8_1X16-for-C.patch |  4 +-
+ ...0-Add-support-for-V4L2_CID_LINK_FREQ.patch | 46 +++++++++----------
+ ...ible-to-apply-PWM-changes-in-atomic-.patch |  2 +-
+ ...-Add-Raspberry-Pi-PiSP-Back-End-uAPI.patch |  2 +-
+ ...s-Add-bindings-for-Raspberry-Pi-PiSP.patch |  2 +-
+ ...-bindings-Add-RPI-RP2040-GPIO-Bridge.patch |  2 +-
+ ...river-for-the-RPI-RP2040-GPIO-bridge.patch |  2 +-
+ ...th-hci_sync-Fix-crash-on-NULL-parent.patch |  2 +-
+ ...edia-dt-bindings-i2c-Add-Sony-IMX500.patch |  2 +-
+ ...2c-Add-driver-for-Sony-IMX500-sensor.patch |  2 +-
+ ...n-Maintain-TLB-coherency-in-LRU-code.patch |  2 +-
+ ...l-command-line-to-disable-memory-cgr.patch |  4 +-
+ ...-kernel-command-line-to-disable-memo.patch |  2 +-
+ ...klog-NAPI-to-clean-up-the-defer_list.patch |  2 +-
+ ...nt-API-support-for-32-bit-arch-with-.patch |  4 +-
+ ...frag_count-handling-in-page_pool_is_.patch |  6 +--
+ ...ort-for-scanning-PHY-in-PHY-packages.patch |  4 +-
+ ...c-move-TX-timer-arm-after-DMA-enable.patch | 12 ++---
+ ...-v6.9-r8169-add-support-for-RTL8126A.patch |  2 +-
+ ...r8169-add-support-for-RTL8126A-rev.b.patch |  2 +-
+ ...adjust-version-numbering-for-RTL8126.patch |  2 +-
+ ...rge-chip-versions-70-and-71-RTL8126A.patch |  2 +-
+ ...v6.16-r8169-add-support-for-RTL8127A.patch |  2 +-
+ ...-nvmem-layouts-add-U-Boot-env-layout.patch |  2 +-
+ ...y-to-free-deferred-skbs-while-waitin.patch |  4 +-
+ .../721-net-add-packet-mangeling.patch        |  2 +-
+ .../780-usb-net-MeigLink_modem_support.patch  |  4 +-
+ .../generic/hack-6.6/902-debloat_proc.patch   |  4 +-
+ ...add-uImage.FIT-subimage-block-driver.patch |  2 +-
+ ...680-net-add-TCP-fraglist-GRO-support.patch |  4 +-
+ ...les-ignore-EOPNOTSUPP-on-flowtable-d.patch |  2 +-
+ ...d-knob-for-filtering-rx-tx-BPDU-pack.patch |  4 +-
+ .../810-pci_disable_common_quirks.patch       |  6 +--
+ ...msm-use-sdhci_set_clock-instead-of-s.patch |  2 +-
+ ...m-comment-unused-sdhci_msm_set_clock.patch |  2 +-
+ ...introduce-the-Qualcomm-IPQESS-driver.patch |  2 +-
+ ...dsa-add-out-of-band-tagging-protocol.patch |  4 +-
+ ...-negotiation-of-in-band-capabilities.patch |  6 +--
+ .../810-uvc-add-iPassion-iP2970-support.patch |  2 +-
+ ...NTAINERS-Update-all-StarFive-entries.patch | 18 ++++----
+ ...ove-performance-usb-using-lowmem-for.patch |  2 +-
+ ...ma_alloc_noncoherent-to-alloc-low-me.patch |  2 +-
+ .../1009-net-stmmac-use-GFP_DMA32.patch       |  2 +-
+ ...arfive-Add-JH7100-audio-reset-driver.patch |  2 +-
+ 67 files changed, 146 insertions(+), 148 deletions(-)
+
+diff --git a/include/kernel-6.6 b/include/kernel-6.6
+index 3a848b96e5..6bedc40098 100644
+--- a/include/kernel-6.6
++++ b/include/kernel-6.6
+@@ -1,2 +1,2 @@
+-LINUX_VERSION-6.6 = .117
+-LINUX_KERNEL_HASH-6.6.117 = 643b31079222fdbda70cfdd0b68c514f05a3926104be4762a4685f62818b43d1
++LINUX_VERSION-6.6 = .116
++LINUX_KERNEL_HASH-6.6.116 = a9a59742c29be284c205dc87cbe9b065f9688488132c8f5a6057a5539230a51d
+diff --git a/target/linux/airoha/patches-6.6/034-v6.13-pinctrl-airoha-Add-support-for-EN7581-SoC.patch b/target/linux/airoha/patches-6.6/034-v6.13-pinctrl-airoha-Add-support-for-EN7581-SoC.patch
+index a7d38881ed..502f89f26d 100644
+--- a/target/linux/airoha/patches-6.6/034-v6.13-pinctrl-airoha-Add-support-for-EN7581-SoC.patch
++++ b/target/linux/airoha/patches-6.6/034-v6.13-pinctrl-airoha-Add-support-for-EN7581-SoC.patch
+@@ -29,7 +29,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -16872,6 +16872,13 @@ F:	drivers/pinctrl/
++@@ -16871,6 +16871,13 @@ F:	drivers/pinctrl/
+  F:	include/dt-bindings/pinctrl/
+  F:	include/linux/pinctrl/
+  
+diff --git a/target/linux/airoha/patches-6.6/108-v6.19-net-airoha-Add-the-capability-to-consume-out-of-orde.patch b/target/linux/airoha/patches-6.6/108-v6.19-net-airoha-Add-the-capability-to-consume-out-of-orde.patch
+index 29bca55364..b09ebd57b4 100644
+--- a/target/linux/airoha/patches-6.6/108-v6.19-net-airoha-Add-the-capability-to-consume-out-of-orde.patch
++++ b/target/linux/airoha/patches-6.6/108-v6.19-net-airoha-Add-the-capability-to-consume-out-of-orde.patch
+@@ -23,7 +23,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/ethernet/airoha/airoha_eth.c
+ +++ b/drivers/net/ethernet/airoha/airoha_eth.c
+-@@ -893,19 +893,13 @@ static int airoha_qdma_tx_napi_poll(stru
++@@ -892,19 +892,13 @@ static int airoha_qdma_tx_napi_poll(stru
+  
+  		dma_unmap_single(eth->dev, e->dma_addr, e->dma_len,
+  				 DMA_TO_DEVICE);
+@@ -46,7 +46,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		if (skb) {
+  			u16 queue = skb_get_queue_mapping(skb);
+  			struct netdev_queue *txq;
+-@@ -950,6 +944,7 @@ static int airoha_qdma_init_tx_queue(str
++@@ -949,6 +943,7 @@ static int airoha_qdma_init_tx_queue(str
+  	q->ndesc = size;
+  	q->qdma = qdma;
+  	q->free_thr = 1 + MAX_SKB_FRAGS;
+@@ -54,7 +54,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  	q->entry = devm_kzalloc(eth->dev, q->ndesc * sizeof(*q->entry),
+  				GFP_KERNEL);
+-@@ -962,9 +957,9 @@ static int airoha_qdma_init_tx_queue(str
++@@ -961,9 +956,9 @@ static int airoha_qdma_init_tx_queue(str
+  		return -ENOMEM;
+  
+  	for (i = 0; i < q->ndesc; i++) {
+@@ -66,7 +66,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		WRITE_ONCE(q->desc[i].ctrl, cpu_to_le32(val));
+  	}
+  
+-@@ -974,9 +969,9 @@ static int airoha_qdma_init_tx_queue(str
++@@ -973,9 +968,9 @@ static int airoha_qdma_init_tx_queue(str
+  
+  	airoha_qdma_wr(qdma, REG_TX_RING_BASE(qid), dma_addr);
+  	airoha_qdma_rmw(qdma, REG_TX_CPU_IDX(qid), TX_RING_CPU_IDX_MASK,
+@@ -78,7 +78,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  	return 0;
+  }
+-@@ -1032,17 +1027,21 @@ static int airoha_qdma_init_tx(struct ai
++@@ -1031,17 +1026,21 @@ static int airoha_qdma_init_tx(struct ai
+  static void airoha_qdma_cleanup_tx_queue(struct airoha_queue *q)
+  {
+  	struct airoha_eth *eth = q->qdma->eth;
+@@ -104,7 +104,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		q->queued--;
+  	}
+  	spin_unlock_bh(&q->lock);
+-@@ -1884,20 +1883,6 @@ static u32 airoha_get_dsa_tag(struct sk_
++@@ -1883,20 +1882,6 @@ static u32 airoha_get_dsa_tag(struct sk_
+  #endif
+  }
+  
+@@ -125,7 +125,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  static int airoha_get_fe_port(struct airoha_gdm_port *port)
+  {
+  	struct airoha_qdma *qdma = port->qdma;
+-@@ -1920,8 +1905,10 @@ static netdev_tx_t airoha_dev_xmit(struc
++@@ -1919,8 +1904,10 @@ static netdev_tx_t airoha_dev_xmit(struc
+  	struct airoha_gdm_port *port = netdev_priv(dev);
+  	struct airoha_qdma *qdma = port->qdma;
+  	u32 nr_frags, tag, msg0, msg1, len;
+@@ -136,7 +136,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	void *data;
+  	int i, qid;
+  	u16 index;
+-@@ -1967,7 +1954,7 @@ static netdev_tx_t airoha_dev_xmit(struc
++@@ -1966,7 +1953,7 @@ static netdev_tx_t airoha_dev_xmit(struc
+  	txq = netdev_get_tx_queue(dev, qid);
+  	nr_frags = 1 + skb_shinfo(skb)->nr_frags;
+  
+@@ -145,7 +145,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		/* not enough space in the queue */
+  		netif_tx_stop_queue(txq);
+  		spin_unlock_bh(&q->lock);
+-@@ -1976,11 +1963,13 @@ static netdev_tx_t airoha_dev_xmit(struc
++@@ -1975,11 +1962,13 @@ static netdev_tx_t airoha_dev_xmit(struc
+  
+  	len = skb_headlen(skb);
+  	data = skb->data;
+@@ -161,7 +161,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
+  		dma_addr_t addr;
+  		u32 val;
+-@@ -1990,7 +1979,14 @@ static netdev_tx_t airoha_dev_xmit(struc
++@@ -1989,7 +1978,14 @@ static netdev_tx_t airoha_dev_xmit(struc
+  		if (unlikely(dma_mapping_error(dev->dev.parent, addr)))
+  			goto error_unmap;
+  
+@@ -177,7 +177,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  		val = FIELD_PREP(QDMA_DESC_LEN_MASK, len);
+  		if (i < nr_frags - 1)
+-@@ -2003,15 +1999,9 @@ static netdev_tx_t airoha_dev_xmit(struc
++@@ -2002,15 +1998,9 @@ static netdev_tx_t airoha_dev_xmit(struc
+  		WRITE_ONCE(desc->msg1, cpu_to_le32(msg1));
+  		WRITE_ONCE(desc->msg2, cpu_to_le32(0xffff));
+  
+@@ -193,7 +193,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	q->queued += i;
+  
+  	skb_tx_timestamp(skb);
+-@@ -2020,7 +2010,7 @@ static netdev_tx_t airoha_dev_xmit(struc
++@@ -2019,7 +2009,7 @@ static netdev_tx_t airoha_dev_xmit(struc
+  	if (netif_xmit_stopped(txq) || !netdev_xmit_more())
+  		airoha_qdma_rmw(qdma, REG_TX_CPU_IDX(qid),
+  				TX_RING_CPU_IDX_MASK,
+@@ -202,7 +202,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  	if (q->ndesc - q->queued < q->free_thr)
+  		netif_tx_stop_queue(txq);
+-@@ -2030,10 +2020,13 @@ static netdev_tx_t airoha_dev_xmit(struc
++@@ -2029,10 +2019,13 @@ static netdev_tx_t airoha_dev_xmit(struc
+  	return NETDEV_TX_OK;
+  
+  error_unmap:
+diff --git a/target/linux/airoha/patches-6.6/116-02-net-airoha-deassert-XSI-line-on-hw-init.patch b/target/linux/airoha/patches-6.6/116-02-net-airoha-deassert-XSI-line-on-hw-init.patch
+index d7e312dfcf..e1e6baed40 100644
+--- a/target/linux/airoha/patches-6.6/116-02-net-airoha-deassert-XSI-line-on-hw-init.patch
++++ b/target/linux/airoha/patches-6.6/116-02-net-airoha-deassert-XSI-line-on-hw-init.patch
+@@ -13,7 +13,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ 
+ --- a/drivers/net/ethernet/airoha/airoha_eth.c
+ +++ b/drivers/net/ethernet/airoha/airoha_eth.c
+-@@ -1383,6 +1383,10 @@ static int airoha_hw_init(struct platfor
++@@ -1384,6 +1384,10 @@ static int airoha_hw_init(struct platfor
+  	if (err)
+  		return err;
+  
+diff --git a/target/linux/airoha/patches-6.6/116-06-net-airoha-add-initial-fixup-for-GDM3-4-port-support.patch b/target/linux/airoha/patches-6.6/116-06-net-airoha-add-initial-fixup-for-GDM3-4-port-support.patch
+index 7b395bfcb7..5750bc3dbb 100644
+--- a/target/linux/airoha/patches-6.6/116-06-net-airoha-add-initial-fixup-for-GDM3-4-port-support.patch
++++ b/target/linux/airoha/patches-6.6/116-06-net-airoha-add-initial-fixup-for-GDM3-4-port-support.patch
+@@ -28,7 +28,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  
+  	airoha_fe_crsn_qsel_init(eth);
+  
+-@@ -1625,7 +1627,8 @@ static int airoha_dev_open(struct net_de
++@@ -1626,7 +1628,8 @@ static int airoha_dev_open(struct net_de
+  	if (err)
+  		return err;
+  
+diff --git a/target/linux/airoha/patches-6.6/116-07-airoha-ethernet-drop-xsi-mac-reset.patch b/target/linux/airoha/patches-6.6/116-07-airoha-ethernet-drop-xsi-mac-reset.patch
+index e6b7730db0..5da8a24a7e 100644
+--- a/target/linux/airoha/patches-6.6/116-07-airoha-ethernet-drop-xsi-mac-reset.patch
++++ b/target/linux/airoha/patches-6.6/116-07-airoha-ethernet-drop-xsi-mac-reset.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ 
+ --- a/drivers/net/ethernet/airoha/airoha_eth.c
+ +++ b/drivers/net/ethernet/airoha/airoha_eth.c
+-@@ -3089,7 +3089,6 @@ static void airoha_remove(struct platfor
++@@ -3096,7 +3096,6 @@ static void airoha_remove(struct platfor
+  }
+  
+  static const char * const en7581_xsi_rsts_names[] = {
+@@ -23,7 +23,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	"hsi0-mac",
+  	"hsi1-mac",
+  	"hsi-mac",
+-@@ -3121,7 +3120,6 @@ static int airoha_en7581_get_src_port_id
++@@ -3128,7 +3127,6 @@ static int airoha_en7581_get_src_port_id
+  }
+  
+  static const char * const an7583_xsi_rsts_names[] = {
+diff --git a/target/linux/airoha/patches-6.6/116-10-net-airoha-add-phylink-support-for-GDM2-4.patch b/target/linux/airoha/patches-6.6/116-10-net-airoha-add-phylink-support-for-GDM2-4.patch
+index 6e7b7dfa13..ac17676436 100644
+--- a/target/linux/airoha/patches-6.6/116-10-net-airoha-add-phylink-support-for-GDM2-4.patch
++++ b/target/linux/airoha/patches-6.6/116-10-net-airoha-add-phylink-support-for-GDM2-4.patch
+@@ -35,7 +35,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  static void airoha_set_macaddr(struct airoha_gdm_port *port, const u8 *addr)
+  {
+  	struct airoha_eth *eth = port->qdma->eth;
+-@@ -1622,6 +1628,17 @@ static int airoha_dev_open(struct net_de
++@@ -1623,6 +1629,17 @@ static int airoha_dev_open(struct net_de
+  	struct airoha_gdm_port *port = netdev_priv(dev);
+  	struct airoha_qdma *qdma = port->qdma;
+  
+@@ -53,7 +53,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	netif_tx_start_all_queues(dev);
+  	err = airoha_set_vip_for_gdm_port(port, true);
+  	if (err)
+-@@ -1675,6 +1692,11 @@ static int airoha_dev_stop(struct net_de
++@@ -1676,6 +1693,11 @@ static int airoha_dev_stop(struct net_de
+  		}
+  	}
+  
+@@ -65,7 +65,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	return 0;
+  }
+  
+-@@ -2817,6 +2839,20 @@ static const struct ethtool_ops airoha_e
++@@ -2824,6 +2846,20 @@ static const struct ethtool_ops airoha_e
+  	.get_link		= ethtool_op_get_link,
+  };
+  
+@@ -86,7 +86,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  static int airoha_metadata_dst_alloc(struct airoha_gdm_port *port)
+  {
+  	int i;
+-@@ -2861,6 +2897,99 @@ bool airoha_is_valid_gdm_port(struct air
++@@ -2868,6 +2904,99 @@ bool airoha_is_valid_gdm_port(struct air
+  	return false;
+  }
+  
+@@ -186,7 +186,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  static int airoha_alloc_gdm_port(struct airoha_eth *eth,
+  				 struct device_node *np, int index)
+  {
+-@@ -2939,6 +3068,12 @@ static int airoha_alloc_gdm_port(struct
++@@ -2946,6 +3075,12 @@ static int airoha_alloc_gdm_port(struct
+  	if (err)
+  		return err;
+  
+@@ -199,7 +199,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	err = register_netdev(dev);
+  	if (err)
+  		goto free_metadata_dst;
+-@@ -3054,6 +3189,10 @@ error_hw_cleanup:
++@@ -3061,6 +3196,10 @@ error_hw_cleanup:
+  		if (port && port->dev->reg_state == NETREG_REGISTERED) {
+  			unregister_netdev(port->dev);
+  			airoha_metadata_dst_free(port);
+@@ -210,7 +210,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  		}
+  	}
+  	free_netdev(eth->napi_dev);
+-@@ -3081,6 +3220,10 @@ static void airoha_remove(struct platfor
++@@ -3088,6 +3227,10 @@ static void airoha_remove(struct platfor
+  		airoha_dev_stop(port->dev);
+  		unregister_netdev(port->dev);
+  		airoha_metadata_dst_free(port);
+@@ -223,7 +223,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  
+ --- a/drivers/net/ethernet/airoha/airoha_eth.h
+ +++ b/drivers/net/ethernet/airoha/airoha_eth.h
+-@@ -536,6 +536,10 @@ struct airoha_gdm_port {
++@@ -531,6 +531,10 @@ struct airoha_gdm_port {
+  	struct net_device *dev;
+  	int id;
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch b/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch
+index b3cce67f3b..eb29af01c1 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0065-cgroup-Disable-cgroup-memory-by-default.patch
+@@ -40,7 +40,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  	for_each_subsys(ss, ssid) {
+  		if (ss->early_init) {
+  			struct cgroup_subsys_state *css =
+-@@ -6785,6 +6794,10 @@ static int __init cgroup_disable(char *s
++@@ -6769,6 +6778,10 @@ static int __init cgroup_disable(char *s
+  			    strcmp(token, ss->legacy_name))
+  				continue;
+  
+@@ -51,7 +51,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  			static_branch_disable(cgroup_subsys_enabled_key[i]);
+  			pr_info("Disabling %s control group subsystem\n",
+  				ss->name);
+-@@ -6803,6 +6816,31 @@ static int __init cgroup_disable(char *s
++@@ -6787,6 +6800,31 @@ static int __init cgroup_disable(char *s
+  }
+  __setup("cgroup_disable=", cgroup_disable);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0138-media-adv7180-Default-to-the-first-valid-input.patch b/target/linux/bcm27xx/patches-6.6/950-0138-media-adv7180-Default-to-the-first-valid-input.patch
+index 7669317e60..181b69b807 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0138-media-adv7180-Default-to-the-first-valid-input.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0138-media-adv7180-Default-to-the-first-valid-input.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+ 
+ --- a/drivers/media/i2c/adv7180.c
+ +++ b/drivers/media/i2c/adv7180.c
+-@@ -1340,6 +1340,7 @@ static const struct adv7180_chip_info ad
++@@ -1350,6 +1350,7 @@ static const struct adv7180_chip_info ad
+  static int init_device(struct adv7180_state *state)
+  {
+  	int ret;
+@@ -24,7 +24,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+  
+  	mutex_lock(&state->mutex);
+  
+-@@ -1387,6 +1388,18 @@ static int init_device(struct adv7180_st
++@@ -1397,6 +1398,18 @@ static int init_device(struct adv7180_st
+  			goto out_unlock;
+  	}
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0139-media-adv7180-Add-YPrPb-support-for-ADV7282M.patch b/target/linux/bcm27xx/patches-6.6/950-0139-media-adv7180-Add-YPrPb-support-for-ADV7282M.patch
+index faaf79f2ae..caa83f409f 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0139-media-adv7180-Add-YPrPb-support-for-ADV7282M.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0139-media-adv7180-Add-YPrPb-support-for-ADV7282M.patch
+@@ -14,7 +14,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+ 
+ --- a/drivers/media/i2c/adv7180.c
+ +++ b/drivers/media/i2c/adv7180.c
+-@@ -1329,6 +1329,7 @@ static const struct adv7180_chip_info ad
++@@ -1339,6 +1339,7 @@ static const struct adv7180_chip_info ad
+  		BIT(ADV7182_INPUT_SVIDEO_AIN1_AIN2) |
+  		BIT(ADV7182_INPUT_SVIDEO_AIN3_AIN4) |
+  		BIT(ADV7182_INPUT_SVIDEO_AIN7_AIN8) |
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0169-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch b/target/linux/bcm27xx/patches-6.6/950-0169-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch
+index c460bf78ff..96c04d52c7 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0169-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0169-hid-usb-Add-device-quirks-for-Freeway-Airmouse-T3-an.patch
+@@ -33,7 +33,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.org>
+  #define USB_VENDOR_ID_BELKIN		0x050d
+  #define USB_DEVICE_ID_FLIP_KVM		0x3201
+  
+-@@ -1453,6 +1456,9 @@
++@@ -1449,6 +1452,9 @@
+  #define USB_VENDOR_ID_XIAOMI		0x2717
+  #define USB_DEVICE_ID_MI_SILENT_MOUSE	0x5014
+  
+@@ -53,7 +53,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.org>
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_CHICONY, USB_DEVICE_ID_CHICONY_MULTI_TOUCH), HID_QUIRK_MULTI_INPUT },
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_CHICONY, USB_DEVICE_ID_CHICONY_PIXART_USB_OPTICAL_MOUSE), HID_QUIRK_ALWAYS_POLL },
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_CHICONY, USB_DEVICE_ID_CHICONY_PIXART_USB_OPTICAL_MOUSE2), HID_QUIRK_ALWAYS_POLL },
+-@@ -215,6 +216,7 @@ static const struct hid_device_id hid_qu
++@@ -213,6 +214,7 @@ static const struct hid_device_id hid_qu
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_WISEGROUP, USB_DEVICE_ID_QUAD_USB_JOYPAD), HID_QUIRK_NOGET | HID_QUIRK_MULTI_INPUT },
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_XIN_MO, USB_DEVICE_ID_XIN_MO_DUAL_ARCADE), HID_QUIRK_MULTI_INPUT },
+  	{ HID_USB_DEVICE(USB_VENDOR_ID_LOGITECH, USB_DEVICE_ID_LOGITECH_GROUP_AUDIO), HID_QUIRK_NOGET },
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0173-media-i2c-imx477-Support-for-the-Sony-IMX477-sensor.patch b/target/linux/bcm27xx/patches-6.6/950-0173-media-i2c-imx477-Support-for-the-Sony-IMX477-sensor.patch
+index 08ba072318..264b3ca376 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0173-media-i2c-imx477-Support-for-the-Sony-IMX477-sensor.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0173-media-i2c-imx477-Support-for-the-Sony-IMX477-sensor.patch
+@@ -343,7 +343,7 @@ Signed-off-by: Naushir Patuck <naush@raspberrypi.com>
+ +...
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -20059,6 +20059,14 @@ T:	git git://linuxtv.org/media_tree.git
++@@ -20058,6 +20058,14 @@ T:	git git://linuxtv.org/media_tree.git
+  F:	Documentation/devicetree/bindings/media/i2c/sony,imx415.yaml
+  F:	drivers/media/i2c/imx415.c
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0174-media-i2c-imx519-Support-for-the-Sony-IMX519-sensor.patch b/target/linux/bcm27xx/patches-6.6/950-0174-media-i2c-imx519-Support-for-the-Sony-IMX519-sensor.patch
+index 240c63509c..2ba00932c2 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0174-media-i2c-imx519-Support-for-the-Sony-IMX519-sensor.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0174-media-i2c-imx519-Support-for-the-Sony-IMX519-sensor.patch
+@@ -177,7 +177,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ +...
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -20067,6 +20067,14 @@ T:	git git://linuxtv.org/media_tree.git
++@@ -20066,6 +20066,14 @@ T:	git git://linuxtv.org/media_tree.git
+  F:	Documentation/devicetree/bindings/media/i2c/imx477.yaml
+  F:	drivers/media/i2c/imx477.c
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0175-Documentation-devicetree-Add-documentation-for-imx37.patch b/target/linux/bcm27xx/patches-6.6/950-0175-Documentation-devicetree-Add-documentation-for-imx37.patch
+index 3af5c0e95c..019ca418ae 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0175-Documentation-devicetree-Add-documentation-for-imx37.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0175-Documentation-devicetree-Add-documentation-for-imx37.patch
+@@ -132,7 +132,7 @@ Signed-off-by: David Plowman <david.plowman@raspberrypi.com>
+ +...
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -20064,6 +20064,7 @@ M:	Raspberry Pi Kernel Maintenance <kern
++@@ -20063,6 +20063,7 @@ M:	Raspberry Pi Kernel Maintenance <kern
+  L:	linux-media@vger.kernel.org
+  S:	Maintained
+  T:	git git://linuxtv.org/media_tree.git
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0204-spi-Force-CS_HIGH-if-GPIO-descriptors-are-used.patch b/target/linux/bcm27xx/patches-6.6/950-0204-spi-Force-CS_HIGH-if-GPIO-descriptors-are-used.patch
+index 000cad941d..7cbbeebf6d 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0204-spi-Force-CS_HIGH-if-GPIO-descriptors-are-used.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0204-spi-Force-CS_HIGH-if-GPIO-descriptors-are-used.patch
+@@ -32,7 +32,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/drivers/spi/spi.c
+ +++ b/drivers/spi/spi.c
+-@@ -3757,6 +3757,7 @@ static int spi_set_cs_timing(struct spi_
++@@ -3747,6 +3747,7 @@ static int spi_set_cs_timing(struct spi_
+   */
+  int spi_setup(struct spi_device *spi)
+  {
+@@ -40,7 +40,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	unsigned	bad_bits, ugly_bits;
+  	int		status = 0;
+  
+-@@ -3777,6 +3778,14 @@ int spi_setup(struct spi_device *spi)
++@@ -3767,6 +3768,14 @@ int spi_setup(struct spi_device *spi)
+  		(SPI_TX_DUAL | SPI_TX_QUAD | SPI_TX_OCTAL |
+  		 SPI_RX_DUAL | SPI_RX_QUAD | SPI_RX_OCTAL)))
+  		return -EINVAL;
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0395-media-adv7180-Nasty-hack-to-allow-input-selection.patch b/target/linux/bcm27xx/patches-6.6/950-0395-media-adv7180-Nasty-hack-to-allow-input-selection.patch
+index 7dc86ae220..22168e3c4e 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0395-media-adv7180-Nasty-hack-to-allow-input-selection.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0395-media-adv7180-Nasty-hack-to-allow-input-selection.patch
+@@ -31,7 +31,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+  struct adv7180_state;
+  
+  #define ADV7180_FLAG_RESET_POWERED	BIT(0)
+-@@ -402,10 +406,24 @@ out:
++@@ -407,10 +411,24 @@ out:
+  	return ret;
+  }
+  
+@@ -57,7 +57,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+  	if (ret)
+  		return ret;
+  
+-@@ -431,7 +449,11 @@ static int adv7180_program_std(struct ad
++@@ -436,7 +454,11 @@ static int adv7180_program_std(struct ad
+  static int adv7180_s_std(struct v4l2_subdev *sd, v4l2_std_id std)
+  {
+  	struct adv7180_state *state = to_state(sd);
+@@ -70,7 +70,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+  
+  	if (ret)
+  		return ret;
+-@@ -453,6 +475,8 @@ static int adv7180_g_std(struct v4l2_sub
++@@ -458,6 +480,8 @@ static int adv7180_g_std(struct v4l2_sub
+  {
+  	struct adv7180_state *state = to_state(sd);
+  
+@@ -79,7 +79,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.org>
+  	*norm = state->curr_norm;
+  
+  	return 0;
+-@@ -881,6 +905,8 @@ static int adv7180_s_stream(struct v4l2_
++@@ -891,6 +915,8 @@ static int adv7180_s_stream(struct v4l2_
+  		return 0;
+  	}
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0407-dtbindings-media-i2c-Add-IMX708-CMOS-sensor-binding.patch b/target/linux/bcm27xx/patches-6.6/950-0407-dtbindings-media-i2c-Add-IMX708-CMOS-sensor-binding.patch
+index 986922d799..5962bb3fbb 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0407-dtbindings-media-i2c-Add-IMX708-CMOS-sensor-binding.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0407-dtbindings-media-i2c-Add-IMX708-CMOS-sensor-binding.patch
+@@ -138,7 +138,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+ +...
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -20108,6 +20108,14 @@ T:	git git://linuxtv.org/media_tree.git
++@@ -20107,6 +20107,14 @@ T:	git git://linuxtv.org/media_tree.git
+  F:	Documentation/devicetree/bindings/media/i2c/imx519.yaml
+  F:	drivers/media/i2c/imx519.c
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0434-dt-bindings-media-i2c-Replace-IMX708-sensor-binding-.patch b/target/linux/bcm27xx/patches-6.6/950-0434-dt-bindings-media-i2c-Replace-IMX708-sensor-binding-.patch
+index f3d68c4546..5c8457c869 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0434-dt-bindings-media-i2c-Replace-IMX708-sensor-binding-.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0434-dt-bindings-media-i2c-Replace-IMX708-sensor-binding-.patch
+@@ -271,7 +271,7 @@ Signed-off-by: Naushir Patuck <naush@raspberrypi.com>
+ +...
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -20113,7 +20113,7 @@ M:	Raspberry Pi Kernel Maintenance <kern
++@@ -20112,7 +20112,7 @@ M:	Raspberry Pi Kernel Maintenance <kern
+  L:	linux-media@vger.kernel.org
+  S:	Maintained
+  T:	git git://linuxtv.org/media_tree.git
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch b/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
+index 64f734c016..8bcb5cccf2 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/net/bluetooth/hci_sync.c
+ +++ b/net/bluetooth/hci_sync.c
+-@@ -4941,6 +4941,7 @@ static const struct {
++@@ -4936,6 +4936,7 @@ static const struct {
+   */
+  static int hci_dev_setup_sync(struct hci_dev *hdev)
+  {
+@@ -28,7 +28,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	int ret = 0;
+  	bool invalid_bdaddr;
+  	size_t i;
+-@@ -4969,7 +4970,8 @@ static int hci_dev_setup_sync(struct hci
++@@ -4964,7 +4965,8 @@ static int hci_dev_setup_sync(struct hci
+  			 test_bit(HCI_QUIRK_USE_BDADDR_PROPERTY, &hdev->quirks);
+  	if (!ret) {
+  		if (test_bit(HCI_QUIRK_USE_BDADDR_PROPERTY, &hdev->quirks) &&
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0460-dt-bindings-media-imx258-Rename-to-include-vendor-pr.patch b/target/linux/bcm27xx/patches-6.6/950-0460-dt-bindings-media-imx258-Rename-to-include-vendor-pr.patch
+index 50ae214755..9a10fe7315 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0460-dt-bindings-media-imx258-Rename-to-include-vendor-pr.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0460-dt-bindings-media-imx258-Rename-to-include-vendor-pr.patch
+@@ -291,7 +291,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+ +    };
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -20014,7 +20014,7 @@ M:	Sakari Ailus <sakari.ailus@linux.inte
++@@ -20013,7 +20013,7 @@ M:	Sakari Ailus <sakari.ailus@linux.inte
+  L:	linux-media@vger.kernel.org
+  S:	Maintained
+  T:	git git://linuxtv.org/media_tree.git
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0678-fbdev-Allow-client-to-request-a-particular-dev-fbN-n.patch b/target/linux/bcm27xx/patches-6.6/950-0678-fbdev-Allow-client-to-request-a-particular-dev-fbN-n.patch
+index d194e4cda0..767ead3e2d 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0678-fbdev-Allow-client-to-request-a-particular-dev-fbN-n.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0678-fbdev-Allow-client-to-request-a-particular-dev-fbN-n.patch
+@@ -56,7 +56,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+  
+  #ifdef CONFIG_GUMSTIX_AM200EPD
+  	{
+-@@ -1047,6 +1050,12 @@ static void do_unregister_framebuffer(st
++@@ -1046,6 +1049,12 @@ static void do_unregister_framebuffer(st
+  	put_fb_info(fb_info);
+  }
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0767-media-dt-bindings-i2c-Add-Rohm-BU64754-bindings.patch b/target/linux/bcm27xx/patches-6.6/950-0767-media-dt-bindings-i2c-Add-Rohm-BU64754-bindings.patch
+index 607954b209..2d32590927 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0767-media-dt-bindings-i2c-Add-Rohm-BU64754-bindings.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0767-media-dt-bindings-i2c-Add-Rohm-BU64754-bindings.patch
+@@ -67,7 +67,7 @@ Signed-off-by: Jacopo Mondi <jacopo.mondi@ideasonboard.com>
+ +...
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -18621,6 +18621,13 @@ S:	Supported
++@@ -18620,6 +18620,13 @@ S:	Supported
+  F:	drivers/iio/light/rohm-bu27008.c
+  F:	drivers/iio/light/rohm-bu27034.c
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0768-media-i2c-Add-driver-for-OmniVision-OV64A40.patch b/target/linux/bcm27xx/patches-6.6/950-0768-media-i2c-Add-driver-for-OmniVision-OV64A40.patch
+index 6075a9d5e7..477ac8319f 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0768-media-i2c-Add-driver-for-OmniVision-OV64A40.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0768-media-i2c-Add-driver-for-OmniVision-OV64A40.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Jacopo Mondi <jacopo.mondi@ideasonboard.com>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -15873,6 +15873,14 @@ S:	Maintained
++@@ -15872,6 +15872,14 @@ S:	Maintained
+  T:	git git://linuxtv.org/media_tree.git
+  F:	drivers/media/i2c/ov5695.c
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0813-media-i2c-adv7180-Use-MEDIA_BUS_FMT_UYVY8_1X16-for-C.patch b/target/linux/bcm27xx/patches-6.6/950-0813-media-i2c-adv7180-Use-MEDIA_BUS_FMT_UYVY8_1X16-for-C.patch
+index 10c014b3bf..efb0fad7fe 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0813-media-i2c-adv7180-Use-MEDIA_BUS_FMT_UYVY8_1X16-for-C.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0813-media-i2c-adv7180-Use-MEDIA_BUS_FMT_UYVY8_1X16-for-C.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+ 
+ --- a/drivers/media/i2c/adv7180.c
+ +++ b/drivers/media/i2c/adv7180.c
+-@@ -723,10 +723,15 @@ static int adv7180_enum_mbus_code(struct
++@@ -728,10 +728,15 @@ static int adv7180_enum_mbus_code(struct
+  				  struct v4l2_subdev_state *sd_state,
+  				  struct v4l2_subdev_mbus_code_enum *code)
+  {
+@@ -34,7 +34,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+  
+  	return 0;
+  }
+-@@ -736,7 +741,10 @@ static int adv7180_mbus_fmt(struct v4l2_
++@@ -741,7 +746,10 @@ static int adv7180_mbus_fmt(struct v4l2_
+  {
+  	struct adv7180_state *state = to_state(sd);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0814-media-i2c-adv7180-Add-support-for-V4L2_CID_LINK_FREQ.patch b/target/linux/bcm27xx/patches-6.6/950-0814-media-i2c-adv7180-Add-support-for-V4L2_CID_LINK_FREQ.patch
+index 72f19418f0..20de51aabb 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0814-media-i2c-adv7180-Add-support-for-V4L2_CID_LINK_FREQ.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0814-media-i2c-adv7180-Add-support-for-V4L2_CID_LINK_FREQ.patch
+@@ -1,13 +1,18 @@
+-From 954129f16c200e41a00ebebe2e22efc01b243538 Mon Sep 17 00:00:00 2001
+-From: Dom Cobley <popcornmix@gmail.com>
+-Date: Fri, 14 Nov 2025 14:08:18 +0000
+-Subject: [PATCH] Revert "Revert "media: i2c: adv7180: Add support for
+- V4L2_CID_LINK_FREQ""
++From 3e7d0d9be5353186136c661e551ad442bba50e45 Mon Sep 17 00:00:00 2001
++From: Dave Stevenson <dave.stevenson@raspberrypi.com>
++Date: Thu, 21 Dec 2023 18:03:34 +0000
++Subject: [PATCH 0814/1085] media: i2c: adv7180: Add support for
++ V4L2_CID_LINK_FREQ
+ 
+-This reverts commit 00ecb85c58501f8f7ae75fcb069bbbad5542e853.
++For CSI2 receivers that need to know the link frequency,
++add it as a control to the driver.
++Interlaced modes are 216Mbp/s or 108MHz, whilst going through
++the I2P to deinterlace gives 432Mb/s or 216MHz.
++
++Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
+ ---
+- drivers/media/i2c/adv7180.c | 39 +++++++++++++++++++++++++++++++++++--
+- 1 file changed, 37 insertions(+), 2 deletions(-)
++ drivers/media/i2c/adv7180.c | 32 +++++++++++++++++++++++++++++++-
++ 1 file changed, 31 insertions(+), 1 deletion(-)
+ 
+ --- a/drivers/media/i2c/adv7180.c
+ +++ b/drivers/media/i2c/adv7180.c
+@@ -36,7 +41,7 @@ This reverts commit 00ecb85c58501f8f7ae75fcb069bbbad5542e853.
+  };
+  #define to_adv7180_sd(_ctrl) (&container_of(_ctrl->handler,		\
+  					    struct adv7180_state,	\
+-@@ -616,6 +627,9 @@ static int adv7180_s_ctrl(struct v4l2_ct
++@@ -621,6 +632,9 @@ static int adv7180_s_ctrl(struct v4l2_ct
+  
+  	if (ret)
+  		return ret;
+@@ -46,7 +51,7 @@ This reverts commit 00ecb85c58501f8f7ae75fcb069bbbad5542e853.
+  	val = ctrl->val;
+  	switch (ctrl->id) {
+  	case V4L2_CID_BRIGHTNESS:
+-@@ -657,6 +671,7 @@ static int adv7180_s_ctrl(struct v4l2_ct
++@@ -662,6 +676,7 @@ static int adv7180_s_ctrl(struct v4l2_ct
+  		ret = -EINVAL;
+  	}
+  
+@@ -54,7 +59,7 @@ This reverts commit 00ecb85c58501f8f7ae75fcb069bbbad5542e853.
+  	mutex_unlock(&state->mutex);
+  	return ret;
+  }
+-@@ -677,7 +692,7 @@ static const struct v4l2_ctrl_config adv
++@@ -682,7 +697,7 @@ static const struct v4l2_ctrl_config adv
+  
+  static int adv7180_init_controls(struct adv7180_state *state)
+  {
+@@ -63,7 +68,7 @@ This reverts commit 00ecb85c58501f8f7ae75fcb069bbbad5542e853.
+  
+  	v4l2_ctrl_new_std(&state->ctrl_hdl, &adv7180_ctrl_ops,
+  			  V4L2_CID_BRIGHTNESS, ADV7180_BRI_MIN,
+-@@ -703,6 +718,17 @@ static int adv7180_init_controls(struct
++@@ -708,6 +723,17 @@ static int adv7180_init_controls(struct
+  					     test_pattern_menu);
+  	}
+  
+@@ -81,21 +86,14 @@ This reverts commit 00ecb85c58501f8f7ae75fcb069bbbad5542e853.
+  	state->sd.ctrl_handler = &state->ctrl_hdl;
+  	if (state->ctrl_hdl.error) {
+  		int err = state->ctrl_hdl.error;
+-@@ -830,7 +856,16 @@ static int adv7180_set_pad_format(struct
+- 	ret = adv7180_mbus_fmt(sd,  &format->format);
+- 
+- 	if (format->which == V4L2_SUBDEV_FORMAT_ACTIVE) {
+--		state->field = format->format.field;
+-+		if (state->field != format->format.field) {
+-+			state->field = format->format.field;
+-+			adv7180_set_power(state, false);
+-+			adv7180_set_field_mode(state);
+-+			adv7180_set_power(state, true);
++@@ -840,6 +866,10 @@ static int adv7180_set_pad_format(struct
++ 			adv7180_set_power(state, false);
++ 			adv7180_set_field_mode(state);
++ 			adv7180_set_power(state, true);
+ +			if (state->chip_info->flags & ADV7180_FLAG_MIPI_CSI2)
+ +				__v4l2_ctrl_s_ctrl(state->link_freq,
+ +						   (state->field == V4L2_FIELD_NONE) ?
+ +						   I2P_IDX : INTERLACED_IDX);
+-+		}
++ 		}
+  	} else {
+  		framefmt = v4l2_subdev_get_try_format(sd, sd_state, 0);
+- 		*framefmt = format->format;
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1128-pwm-Make-it-possible-to-apply-PWM-changes-in-atomic-.patch b/target/linux/bcm27xx/patches-6.6/950-1128-pwm-Make-it-possible-to-apply-PWM-changes-in-atomic-.patch
+index 3377683128..2441e8223e 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1128-pwm-Make-it-possible-to-apply-PWM-changes-in-atomic-.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1128-pwm-Make-it-possible-to-apply-PWM-changes-in-atomic-.patch
+@@ -48,7 +48,7 @@ Signed-off-by: Thierry Reding <thierry.reding@gmail.com>
+  drivers cannot. If you rely on getting the inactive state, use .duty_cycle=0,
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -17439,7 +17439,7 @@ F:	drivers/video/backlight/pwm_bl.c
++@@ -17438,7 +17438,7 @@ F:	drivers/video/backlight/pwm_bl.c
+  F:	include/dt-bindings/pwm/
+  F:	include/linux/pwm.h
+  F:	include/linux/pwm_backlight.h
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1149-media-uapi-Add-Raspberry-Pi-PiSP-Back-End-uAPI.patch b/target/linux/bcm27xx/patches-6.6/950-1149-media-uapi-Add-Raspberry-Pi-PiSP-Back-End-uAPI.patch
+index a2e36d50d6..a95742b475 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1149-media-uapi-Add-Raspberry-Pi-PiSP-Back-End-uAPI.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1149-media-uapi-Add-Raspberry-Pi-PiSP-Back-End-uAPI.patch
+@@ -23,7 +23,7 @@ Signed-off-by: Jacopo Mondi <jacopo.mondi@ideasonboard.com>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -18034,6 +18034,13 @@ L:	linux-wireless@vger.kernel.org
++@@ -18033,6 +18033,13 @@ L:	linux-wireless@vger.kernel.org
+  S:	Orphan
+  F:	drivers/net/wireless/legacy/ray*
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1152-media-dt-bindings-Add-bindings-for-Raspberry-Pi-PiSP.patch b/target/linux/bcm27xx/patches-6.6/950-1152-media-dt-bindings-Add-bindings-for-Raspberry-Pi-PiSP.patch
+index 12f91d9784..e6f15fa471 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1152-media-dt-bindings-Add-bindings-for-Raspberry-Pi-PiSP.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1152-media-dt-bindings-Add-bindings-for-Raspberry-Pi-PiSP.patch
+@@ -87,7 +87,7 @@ Reviewed-by: Naushir Patuck <naush@raspberrypi.com>
+ +    };
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -18039,6 +18039,7 @@ M:	Jacopo Mondi <jacopo.mondi@ideasonboa
++@@ -18038,6 +18038,7 @@ M:	Jacopo Mondi <jacopo.mondi@ideasonboa
+  L:	Raspberry Pi Kernel Maintenance <kernel-list@raspberrypi.com>
+  L:	linux-media@vger.kernel.org
+  S:	Maintained
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1164-spi-dt-bindings-Add-RPI-RP2040-GPIO-Bridge.patch b/target/linux/bcm27xx/patches-6.6/950-1164-spi-dt-bindings-Add-RPI-RP2040-GPIO-Bridge.patch
+index 785b36e3cf..abdf8157a5 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1164-spi-dt-bindings-Add-RPI-RP2040-GPIO-Bridge.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1164-spi-dt-bindings-Add-RPI-RP2040-GPIO-Bridge.patch
+@@ -94,7 +94,7 @@ Signed-off-by: Richard Oliver <richard.oliver@raspberrypi.com>
+ +
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -18029,6 +18029,11 @@ F:	drivers/ras/
++@@ -18028,6 +18028,11 @@ F:	drivers/ras/
+  F:	include/linux/ras.h
+  F:	include/ras/ras_event.h
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1165-spi-Add-a-driver-for-the-RPI-RP2040-GPIO-bridge.patch b/target/linux/bcm27xx/patches-6.6/950-1165-spi-Add-a-driver-for-the-RPI-RP2040-GPIO-bridge.patch
+index 2ae7494e8e..3d977db80d 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1165-spi-Add-a-driver-for-the-RPI-RP2040-GPIO-bridge.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1165-spi-Add-a-driver-for-the-RPI-RP2040-GPIO-bridge.patch
+@@ -25,7 +25,7 @@ Signed-off-by: Richard Oliver <richard.oliver@raspberrypi.com>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -18033,6 +18033,7 @@ RASPBERRY PI RP2040 GPIO BRIDGE DRIVER
++@@ -18032,6 +18032,7 @@ RASPBERRY PI RP2040 GPIO BRIDGE DRIVER
+  M:	Raspberry Pi Kernel Maintenance <kernel-list@raspberrypi.com>
+  S:	Maintained
+  F:	Documentation/devicetree/bindings/spi/raspberrypi,rp2040-gpio-bridge.yaml
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch b/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
+index 5b254943b4..a14c5389c0 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/net/bluetooth/hci_sync.c
+ +++ b/net/bluetooth/hci_sync.c
+-@@ -4941,7 +4941,8 @@ static const struct {
++@@ -4936,7 +4936,8 @@ static const struct {
+   */
+  static int hci_dev_setup_sync(struct hci_dev *hdev)
+  {
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1243-media-dt-bindings-i2c-Add-Sony-IMX500.patch b/target/linux/bcm27xx/patches-6.6/950-1243-media-dt-bindings-i2c-Add-Sony-IMX500.patch
+index d4979f73e0..cfd4b46d4f 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1243-media-dt-bindings-i2c-Add-Sony-IMX500.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1243-media-dt-bindings-i2c-Add-Sony-IMX500.patch
+@@ -150,7 +150,7 @@ Signed-off-by: Richard Oliver <richard.oliver@raspberrypi.com>
+ +
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -20129,6 +20129,13 @@ F:	Documentation/devicetree/bindings/med
++@@ -20128,6 +20128,13 @@ F:	Documentation/devicetree/bindings/med
+  F:	Documentation/devicetree/bindings/media/i2c/imx477.yaml
+  F:	drivers/media/i2c/imx477.c
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1244-media-i2c-Add-driver-for-Sony-IMX500-sensor.patch b/target/linux/bcm27xx/patches-6.6/950-1244-media-i2c-Add-driver-for-Sony-IMX500-sensor.patch
+index 12e5e2b9e4..c6b9196a52 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1244-media-i2c-Add-driver-for-Sony-IMX500-sensor.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1244-media-i2c-Add-driver-for-Sony-IMX500-sensor.patch
+@@ -21,7 +21,7 @@ Signed-off-by: Richard Oliver <richard.oliver@raspberrypi.com>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -20135,6 +20135,7 @@ L:	linux-media@vger.kernel.org
++@@ -20134,6 +20134,7 @@ L:	linux-media@vger.kernel.org
+  S:	Maintained
+  T:	git git://linuxtv.org/media_tree.git
+  F:	Documentation/devicetree/bindings/media/i2c/sony,imx500.yaml
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1261-mm-vmscan-Maintain-TLB-coherency-in-LRU-code.patch b/target/linux/bcm27xx/patches-6.6/950-1261-mm-vmscan-Maintain-TLB-coherency-in-LRU-code.patch
+index bd5aff311b..3c60865aa7 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1261-mm-vmscan-Maintain-TLB-coherency-in-LRU-code.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1261-mm-vmscan-Maintain-TLB-coherency-in-LRU-code.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/mm/vmscan.c
+ +++ b/mm/vmscan.c
+-@@ -4724,7 +4724,7 @@ void lru_gen_look_around(struct page_vma
++@@ -4723,7 +4723,7 @@ void lru_gen_look_around(struct page_vma
+  		if (!folio)
+  			continue;
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch b/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch
+index af8543bb10..7946586d40 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1349-cgroup-Use-kernel-command-line-to-disable-memory-cgr.patch
+@@ -171,7 +171,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  	for_each_subsys(ss, ssid) {
+  		if (ss->early_init) {
+  			struct cgroup_subsys_state *css =
+-@@ -6794,10 +6785,6 @@ static int __init cgroup_disable(char *s
++@@ -6778,10 +6769,6 @@ static int __init cgroup_disable(char *s
+  			    strcmp(token, ss->legacy_name))
+  				continue;
+  
+@@ -182,7 +182,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  			static_branch_disable(cgroup_subsys_enabled_key[i]);
+  			pr_info("Disabling %s control group subsystem\n",
+  				ss->name);
+-@@ -6831,7 +6818,7 @@ static int __init cgroup_enable(char *st
++@@ -6815,7 +6802,7 @@ static int __init cgroup_enable(char *st
+  			    strcmp(token, ss->legacy_name))
+  				continue;
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1445-fixup-cgroup-Use-kernel-command-line-to-disable-memo.patch b/target/linux/bcm27xx/patches-6.6/950-1445-fixup-cgroup-Use-kernel-command-line-to-disable-memo.patch
+index 9a0f438e7a..5241744b2c 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1445-fixup-cgroup-Use-kernel-command-line-to-disable-memo.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1445-fixup-cgroup-Use-kernel-command-line-to-disable-memo.patch
+@@ -14,7 +14,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/kernel/cgroup/cgroup.c
+ +++ b/kernel/cgroup/cgroup.c
+-@@ -6818,11 +6818,19 @@ static int __init cgroup_enable(char *st
++@@ -6802,11 +6802,19 @@ static int __init cgroup_enable(char *st
+  			    strcmp(token, ss->legacy_name))
+  				continue;
+  
+diff --git a/target/linux/generic/backport-6.6/602-v6.10-net-Use-backlog-NAPI-to-clean-up-the-defer_list.patch b/target/linux/generic/backport-6.6/602-v6.10-net-Use-backlog-NAPI-to-clean-up-the-defer_list.patch
+index 90d1032cd0..d6ef75db69 100644
+--- a/target/linux/generic/backport-6.6/602-v6.10-net-Use-backlog-NAPI-to-clean-up-the-defer_list.patch
++++ b/target/linux/generic/backport-6.6/602-v6.10-net-Use-backlog-NAPI-to-clean-up-the-defer_list.patch
+@@ -108,7 +108,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  #endif
+ --- a/net/core/skbuff.c
+ +++ b/net/core/skbuff.c
+-@@ -6867,8 +6867,8 @@ nodefer:	__kfree_skb(skb);
++@@ -6863,8 +6863,8 @@ nodefer:	__kfree_skb(skb);
+  	/* Make sure to trigger NET_RX_SOFTIRQ on the remote CPU
+  	 * if we are unlucky enough (this seems very unlikely).
+  	 */
+diff --git a/target/linux/generic/backport-6.6/620-01-v6.7-page_pool-fragment-API-support-for-32-bit-arch-with-.patch b/target/linux/generic/backport-6.6/620-01-v6.7-page_pool-fragment-API-support-for-32-bit-arch-with-.patch
+index 5e30465179..0f57e2ec66 100644
+--- a/target/linux/generic/backport-6.6/620-01-v6.7-page_pool-fragment-API-support-for-32-bit-arch-with-.patch
++++ b/target/linux/generic/backport-6.6/620-01-v6.7-page_pool-fragment-API-support-for-32-bit-arch-with-.patch
+@@ -104,7 +104,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  static inline bool page_pool_put(struct page_pool *pool)
+ --- a/net/core/page_pool.c
+ +++ b/net/core/page_pool.c
+-@@ -207,10 +207,6 @@ static int page_pool_init(struct page_po
++@@ -211,10 +211,6 @@ static int page_pool_init(struct page_po
+  		 */
+  	}
+  
+@@ -115,7 +115,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  #ifdef CONFIG_PAGE_POOL_STATS
+  	pool->recycle_stats = alloc_percpu(struct page_pool_recycle_stats);
+  	if (!pool->recycle_stats)
+-@@ -359,12 +355,20 @@ static bool page_pool_dma_map(struct pag
++@@ -363,12 +359,20 @@ static bool page_pool_dma_map(struct pag
+  	if (dma_mapping_error(pool->p.dev, dma))
+  		return false;
+  
+diff --git a/target/linux/generic/backport-6.6/620-02-v6.7-page_pool-unify-frag_count-handling-in-page_pool_is_.patch b/target/linux/generic/backport-6.6/620-02-v6.7-page_pool-unify-frag_count-handling-in-page_pool_is_.patch
+index c238a8847a..1ad0eb449d 100644
+--- a/target/linux/generic/backport-6.6/620-02-v6.7-page_pool-unify-frag_count-handling-in-page_pool_is_.patch
++++ b/target/linux/generic/backport-6.6/620-02-v6.7-page_pool-unify-frag_count-handling-in-page_pool_is_.patch
+@@ -147,7 +147,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	page_pool_put_defragged_page(pool, page, dma_sync_size, allow_direct);
+ --- a/net/core/page_pool.c
+ +++ b/net/core/page_pool.c
+-@@ -376,6 +376,14 @@ static void page_pool_set_pp_info(struct
++@@ -380,6 +380,14 @@ static void page_pool_set_pp_info(struct
+  {
+  	page->pp = pool;
+  	page->pp_magic |= PP_SIGNATURE;
+@@ -162,7 +162,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	if (pool->p.init_callback)
+  		pool->p.init_callback(page, pool->p.init_arg);
+  }
+-@@ -678,7 +686,7 @@ void page_pool_put_page_bulk(struct page
++@@ -676,7 +684,7 @@ void page_pool_put_page_bulk(struct page
+  		struct page *page = virt_to_head_page(data[i]);
+  
+  		/* It is not the last user for the page frag case */
+@@ -171,7 +171,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  			continue;
+  
+  		page = __page_pool_put_page(pool, page, -1, false);
+-@@ -754,8 +762,7 @@ struct page *page_pool_alloc_frag(struct
++@@ -752,8 +760,7 @@ struct page *page_pool_alloc_frag(struct
+  	unsigned int max_size = PAGE_SIZE << pool->p.order;
+  	struct page *page = pool->frag_page;
+  
+diff --git a/target/linux/generic/backport-6.6/716-v6.9-02-net-phy-add-support-for-scanning-PHY-in-PHY-packages.patch b/target/linux/generic/backport-6.6/716-v6.9-02-net-phy-add-support-for-scanning-PHY-in-PHY-packages.patch
+index af2cba11df..9a2b082001 100644
+--- a/target/linux/generic/backport-6.6/716-v6.9-02-net-phy-add-support-for-scanning-PHY-in-PHY-packages.patch
++++ b/target/linux/generic/backport-6.6/716-v6.9-02-net-phy-add-support-for-scanning-PHY-in-PHY-packages.patch
+@@ -143,7 +143,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  }
+ --- a/drivers/net/phy/mdio_bus.c
+ +++ b/drivers/net/phy/mdio_bus.c
+-@@ -459,19 +459,34 @@ EXPORT_SYMBOL(of_mdio_find_bus);
++@@ -456,19 +456,34 @@ EXPORT_SYMBOL(of_mdio_find_bus);
+   * found, set the of_node pointer for the mdio device. This allows
+   * auto-probed phy devices to be supplied with information passed in
+   * via DT.
+@@ -185,7 +185,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  		addr = of_mdio_parse_addr(dev, child);
+  		if (addr < 0)
+  			continue;
+-@@ -481,9 +496,22 @@ static void of_mdiobus_link_mdiodev(stru
++@@ -478,9 +493,22 @@ static void of_mdiobus_link_mdiodev(stru
+  			/* The refcount on "child" is passed to the mdio
+  			 * device. Do _not_ use of_node_put(child) here.
+  			 */
+diff --git a/target/linux/generic/backport-6.6/771-v6.7-02-net-stmmac-move-TX-timer-arm-after-DMA-enable.patch b/target/linux/generic/backport-6.6/771-v6.7-02-net-stmmac-move-TX-timer-arm-after-DMA-enable.patch
+index fd0d9047c0..00829a15df 100644
+--- a/target/linux/generic/backport-6.6/771-v6.7-02-net-stmmac-move-TX-timer-arm-after-DMA-enable.patch
++++ b/target/linux/generic/backport-6.6/771-v6.7-02-net-stmmac-move-TX-timer-arm-after-DMA-enable.patch
+@@ -42,7 +42,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  
+  	u64_stats_update_begin(&txq_stats->napi_syncp);
+  	u64_stats_add(&txq_stats->napi.tx_packets, tx_packets);
+-@@ -5609,6 +5613,7 @@ static int stmmac_napi_poll_tx(struct na
++@@ -5611,6 +5615,7 @@ static int stmmac_napi_poll_tx(struct na
+  		container_of(napi, struct stmmac_channel, tx_napi);
+  	struct stmmac_priv *priv = ch->priv_data;
+  	struct stmmac_txq_stats *txq_stats;
+@@ -50,7 +50,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	u32 chan = ch->index;
+  	int work_done;
+  
+-@@ -5617,7 +5622,7 @@ static int stmmac_napi_poll_tx(struct na
++@@ -5619,7 +5624,7 @@ static int stmmac_napi_poll_tx(struct na
+  	u64_stats_inc(&txq_stats->napi.poll);
+  	u64_stats_update_end(&txq_stats->napi_syncp);
+  
+@@ -59,7 +59,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	work_done = min(work_done, budget);
+  
+  	if (work_done < budget && napi_complete_done(napi, work_done)) {
+-@@ -5628,6 +5633,10 @@ static int stmmac_napi_poll_tx(struct na
++@@ -5630,6 +5635,10 @@ static int stmmac_napi_poll_tx(struct na
+  		spin_unlock_irqrestore(&ch->lock, flags);
+  	}
+  
+@@ -70,7 +70,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	return work_done;
+  }
+  
+-@@ -5636,6 +5645,7 @@ static int stmmac_napi_poll_rxtx(struct
++@@ -5638,6 +5647,7 @@ static int stmmac_napi_poll_rxtx(struct
+  	struct stmmac_channel *ch =
+  		container_of(napi, struct stmmac_channel, rxtx_napi);
+  	struct stmmac_priv *priv = ch->priv_data;
+@@ -78,7 +78,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	int rx_done, tx_done, rxtx_done;
+  	struct stmmac_rxq_stats *rxq_stats;
+  	struct stmmac_txq_stats *txq_stats;
+-@@ -5651,7 +5661,7 @@ static int stmmac_napi_poll_rxtx(struct
++@@ -5653,7 +5663,7 @@ static int stmmac_napi_poll_rxtx(struct
+  	u64_stats_inc(&txq_stats->napi.poll);
+  	u64_stats_update_end(&txq_stats->napi_syncp);
+  
+@@ -87,7 +87,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	tx_done = min(tx_done, budget);
+  
+  	rx_done = stmmac_rx_zc(priv, budget, chan);
+-@@ -5676,6 +5686,10 @@ static int stmmac_napi_poll_rxtx(struct
++@@ -5678,6 +5688,10 @@ static int stmmac_napi_poll_rxtx(struct
+  		spin_unlock_irqrestore(&ch->lock, flags);
+  	}
+  
+diff --git a/target/linux/generic/backport-6.6/780-08-v6.9-r8169-add-support-for-RTL8126A.patch b/target/linux/generic/backport-6.6/780-08-v6.9-r8169-add-support-for-RTL8126A.patch
+index 4c4b89b951..27f9637f1b 100644
+--- a/target/linux/generic/backport-6.6/780-08-v6.9-r8169-add-support-for-RTL8126A.patch
++++ b/target/linux/generic/backport-6.6/780-08-v6.9-r8169-add-support-for-RTL8126A.patch
+@@ -221,7 +221,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  	if (tp->mac_version == RTL_GIGA_MAC_VER_63)
+  		r8168_mac_ocp_modify(tp, 0xe63e, 0x0c30, 0x0000);
+ @@ -3611,6 +3645,10 @@ static void rtl_hw_start_8125_common(str
+- 	r8168_mac_ocp_modify(tp, 0xe056, 0x00f0, 0x0000);
++ 	r8168_mac_ocp_modify(tp, 0xe056, 0x00f0, 0x0030);
+  	r8168_mac_ocp_modify(tp, 0xe040, 0x1000, 0x0000);
+  	r8168_mac_ocp_modify(tp, 0xea1c, 0x0003, 0x0001);
+ +	if (tp->mac_version == RTL_GIGA_MAC_VER_65)
+diff --git a/target/linux/generic/backport-6.6/780-22-v6.12-r8169-add-support-for-RTL8126A-rev.b.patch b/target/linux/generic/backport-6.6/780-22-v6.12-r8169-add-support-for-RTL8126A-rev.b.patch
+index a921806bb6..bbe6928885 100644
+--- a/target/linux/generic/backport-6.6/780-22-v6.12-r8169-add-support-for-RTL8126A-rev.b.patch
++++ b/target/linux/generic/backport-6.6/780-22-v6.12-r8169-add-support-for-RTL8126A-rev.b.patch
+@@ -181,7 +181,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	else if (tp->mac_version == RTL_GIGA_MAC_VER_63)
+  		r8168_mac_ocp_modify(tp, 0xe614, 0x0700, 0x0200);
+ @@ -3739,7 +3748,8 @@ static void rtl_hw_start_8125_common(str
+- 	r8168_mac_ocp_modify(tp, 0xe056, 0x00f0, 0x0000);
++ 	r8168_mac_ocp_modify(tp, 0xe056, 0x00f0, 0x0030);
+  	r8168_mac_ocp_modify(tp, 0xe040, 0x1000, 0x0000);
+  	r8168_mac_ocp_modify(tp, 0xea1c, 0x0003, 0x0001);
+ -	if (tp->mac_version == RTL_GIGA_MAC_VER_65)
+diff --git a/target/linux/generic/backport-6.6/780-47-v6.14-r8169-adjust-version-numbering-for-RTL8126.patch b/target/linux/generic/backport-6.6/780-47-v6.14-r8169-adjust-version-numbering-for-RTL8126.patch
+index b1678bb9ac..6f1f9c177a 100644
+--- a/target/linux/generic/backport-6.6/780-47-v6.14-r8169-adjust-version-numbering-for-RTL8126.patch
++++ b/target/linux/generic/backport-6.6/780-47-v6.14-r8169-adjust-version-numbering-for-RTL8126.patch
+@@ -183,7 +183,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	else if (tp->mac_version == RTL_GIGA_MAC_VER_63)
+  		r8168_mac_ocp_modify(tp, 0xe614, 0x0700, 0x0200);
+ @@ -3720,8 +3720,8 @@ static void rtl_hw_start_8125_common(str
+- 	r8168_mac_ocp_modify(tp, 0xe056, 0x00f0, 0x0000);
++ 	r8168_mac_ocp_modify(tp, 0xe056, 0x00f0, 0x0030);
+  	r8168_mac_ocp_modify(tp, 0xe040, 0x1000, 0x0000);
+  	r8168_mac_ocp_modify(tp, 0xea1c, 0x0003, 0x0001);
+ -	if (tp->mac_version == RTL_GIGA_MAC_VER_65 ||
+diff --git a/target/linux/generic/backport-6.6/780-62-v6.16-r8169-merge-chip-versions-70-and-71-RTL8126A.patch b/target/linux/generic/backport-6.6/780-62-v6.16-r8169-merge-chip-versions-70-and-71-RTL8126A.patch
+index 1feff1526a..08f7d4f90a 100644
+--- a/target/linux/generic/backport-6.6/780-62-v6.16-r8169-merge-chip-versions-70-and-71-RTL8126A.patch
++++ b/target/linux/generic/backport-6.6/780-62-v6.16-r8169-merge-chip-versions-70-and-71-RTL8126A.patch
+@@ -69,7 +69,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	else if (tp->mac_version == RTL_GIGA_MAC_VER_63)
+  		r8168_mac_ocp_modify(tp, 0xe614, 0x0700, 0x0200);
+ @@ -3718,8 +3714,7 @@ static void rtl_hw_start_8125_common(str
+- 	r8168_mac_ocp_modify(tp, 0xe056, 0x00f0, 0x0000);
++ 	r8168_mac_ocp_modify(tp, 0xe056, 0x00f0, 0x0030);
+  	r8168_mac_ocp_modify(tp, 0xe040, 0x1000, 0x0000);
+  	r8168_mac_ocp_modify(tp, 0xea1c, 0x0003, 0x0001);
+ -	if (tp->mac_version == RTL_GIGA_MAC_VER_70 ||
+diff --git a/target/linux/generic/backport-6.6/780-65-v6.16-r8169-add-support-for-RTL8127A.patch b/target/linux/generic/backport-6.6/780-65-v6.16-r8169-add-support-for-RTL8127A.patch
+index 4872132eb6..93f7bbc0cf 100644
+--- a/target/linux/generic/backport-6.6/780-65-v6.16-r8169-add-support-for-RTL8127A.patch
++++ b/target/linux/generic/backport-6.6/780-65-v6.16-r8169-add-support-for-RTL8127A.patch
+@@ -97,7 +97,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	else if (tp->mac_version == RTL_GIGA_MAC_VER_63)
+  		r8168_mac_ocp_modify(tp, 0xe614, 0x0700, 0x0200);
+ @@ -3712,7 +3724,8 @@ static void rtl_hw_start_8125_common(str
+- 	r8168_mac_ocp_modify(tp, 0xe056, 0x00f0, 0x0000);
++ 	r8168_mac_ocp_modify(tp, 0xe056, 0x00f0, 0x0030);
+  	r8168_mac_ocp_modify(tp, 0xe040, 0x1000, 0x0000);
+  	r8168_mac_ocp_modify(tp, 0xea1c, 0x0003, 0x0001);
+ -	if (tp->mac_version == RTL_GIGA_MAC_VER_70)
+diff --git a/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch b/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
+index f869fc2037..3f105cfd2b 100644
+--- a/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
++++ b/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
+@@ -41,7 +41,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -21990,6 +21990,7 @@ U-BOOT ENVIRONMENT VARIABLES
++@@ -21989,6 +21989,7 @@ U-BOOT ENVIRONMENT VARIABLES
+  M:	Rafał Miłecki <rafal@milecki.pl>
+  S:	Maintained
+  F:	Documentation/devicetree/bindings/nvmem/u-boot,env.yaml
+diff --git a/target/linux/generic/hack-6.6/610-net-page_pool-try-to-free-deferred-skbs-while-waitin.patch b/target/linux/generic/hack-6.6/610-net-page_pool-try-to-free-deferred-skbs-while-waitin.patch
+index 304b272c42..cfe35bc51a 100644
+--- a/target/linux/generic/hack-6.6/610-net-page_pool-try-to-free-deferred-skbs-while-waitin.patch
++++ b/target/linux/generic/hack-6.6/610-net-page_pool-try-to-free-deferred-skbs-while-waitin.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/net/core/page_pool.c
+ +++ b/net/core/page_pool.c
+-@@ -875,7 +875,8 @@ static void page_pool_release_retry(stru
++@@ -873,7 +873,8 @@ static void page_pool_release_retry(stru
+  {
+  	struct delayed_work *dwq = to_delayed_work(wq);
+  	struct page_pool *pool = container_of(dwq, typeof(*pool), release_dw);
+@@ -26,7 +26,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+  	inflight = page_pool_release(pool);
+  	/* In rare cases, a driver bug may cause inflight to go negative.
+-@@ -887,6 +888,21 @@ static void page_pool_release_retry(stru
++@@ -885,6 +886,21 @@ static void page_pool_release_retry(stru
+  	if (inflight <= 0)
+  		return;
+  
+diff --git a/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch b/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
+index 7d9b00e861..1b210ee3cc 100644
+--- a/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
++++ b/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
+@@ -127,7 +127,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+  #include <net/protocol.h>
+  #include <net/dst.h>
+-@@ -848,6 +849,22 @@ skb_fail:
++@@ -844,6 +845,22 @@ skb_fail:
+  }
+  EXPORT_SYMBOL(__napi_alloc_skb);
+  
+diff --git a/target/linux/generic/hack-6.6/780-usb-net-MeigLink_modem_support.patch b/target/linux/generic/hack-6.6/780-usb-net-MeigLink_modem_support.patch
+index 610c95c181..9d389dd3fc 100644
+--- a/target/linux/generic/hack-6.6/780-usb-net-MeigLink_modem_support.patch
++++ b/target/linux/generic/hack-6.6/780-usb-net-MeigLink_modem_support.patch
+@@ -10,7 +10,7 @@ Subject: [PATCH] net/usb/qmi_wwan: add MeigLink modem support
+ 
+ --- a/drivers/net/usb/qmi_wwan.c
+ +++ b/drivers/net/usb/qmi_wwan.c
+-@@ -1090,6 +1090,11 @@ static const struct usb_device_id produc
++@@ -1084,6 +1084,11 @@ static const struct usb_device_id produc
+  		USB_DEVICE_AND_INTERFACE_INFO(0x03f0, 0x581d, USB_CLASS_VENDOR_SPEC, 1, 7),
+  		.driver_info = (unsigned long)&qmi_wwan_info,
+  	},
+@@ -22,7 +22,7 @@ Subject: [PATCH] net/usb/qmi_wwan: add MeigLink modem support
+  	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0122)},	/* Quectel RG650V */
+  	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0125)},	/* Quectel EC25, EC20 R2.0  Mini PCIe */
+  	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0306)},	/* Quectel EP06/EG06/EM06 */
+-@@ -1097,6 +1102,7 @@ static const struct usb_device_id produc
++@@ -1091,6 +1096,7 @@ static const struct usb_device_id produc
+  	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0620)},	/* Quectel EM160R-GL */
+  	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0800)},	/* Quectel RM500Q-GL */
+  	{QMI_MATCH_FF_FF_FF(0x2c7c, 0x0801)},	/* Quectel RM520N */
+diff --git a/target/linux/generic/hack-6.6/902-debloat_proc.patch b/target/linux/generic/hack-6.6/902-debloat_proc.patch
+index b4a0eaad3f..ed6b751e1c 100644
+--- a/target/linux/generic/hack-6.6/902-debloat_proc.patch
++++ b/target/linux/generic/hack-6.6/902-debloat_proc.patch
+@@ -246,7 +246,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  				&vmalloc_op,
+ --- a/mm/vmstat.c
+ +++ b/mm/vmstat.c
+-@@ -2137,10 +2137,12 @@ void __init init_mm_internals(void)
++@@ -2136,10 +2136,12 @@ void __init init_mm_internals(void)
+  	start_shepherd_timer();
+  #endif
+  #ifdef CONFIG_PROC_FS
+@@ -330,7 +330,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+ --- a/net/core/sock.c
+ +++ b/net/core/sock.c
+-@@ -4168,6 +4168,8 @@ static __net_initdata struct pernet_oper
++@@ -4165,6 +4165,8 @@ static __net_initdata struct pernet_oper
+  
+  static int __init proto_init(void)
+  {
+diff --git a/target/linux/generic/pending-6.6/510-block-add-uImage.FIT-subimage-block-driver.patch b/target/linux/generic/pending-6.6/510-block-add-uImage.FIT-subimage-block-driver.patch
+index 1ad2210352..056b49db3e 100644
+--- a/target/linux/generic/pending-6.6/510-block-add-uImage.FIT-subimage-block-driver.patch
++++ b/target/linux/generic/pending-6.6/510-block-add-uImage.FIT-subimage-block-driver.patch
+@@ -36,7 +36,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -22017,6 +22017,12 @@ F:	Documentation/filesystems/ubifs-authe
++@@ -22016,6 +22016,12 @@ F:	Documentation/filesystems/ubifs-authe
+  F:	Documentation/filesystems/ubifs.rst
+  F:	fs/ubifs/
+  
+diff --git a/target/linux/generic/pending-6.6/680-net-add-TCP-fraglist-GRO-support.patch b/target/linux/generic/pending-6.6/680-net-add-TCP-fraglist-GRO-support.patch
+index 3e9a233ced..bb2beff43a 100644
+--- a/target/linux/generic/pending-6.6/680-net-add-TCP-fraglist-GRO-support.patch
++++ b/target/linux/generic/pending-6.6/680-net-add-TCP-fraglist-GRO-support.patch
+@@ -21,7 +21,7 @@ Signe-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/include/net/gro.h
+ +++ b/include/net/gro.h
+-@@ -442,6 +442,7 @@ static inline __wsum ip6_gro_compute_pse
++@@ -439,6 +439,7 @@ static inline __wsum ip6_gro_compute_pse
+  }
+  
+  int skb_gro_receive(struct sk_buff *p, struct sk_buff *skb);
+@@ -45,7 +45,7 @@ Signe-off-by: Felix Fietkau <nbd@nbd.name>
+  INDIRECT_CALLABLE_DECLARE(int tcp6_gro_complete(struct sk_buff *skb, int thoff));
+ --- a/net/core/gro.c
+ +++ b/net/core/gro.c
+-@@ -225,6 +225,33 @@ done:
++@@ -228,6 +228,33 @@ done:
+  	return 0;
+  }
+  
+diff --git a/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch b/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
+index c5cc8c5acd..e0c3e206da 100644
+--- a/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
++++ b/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+ 
+ --- a/net/netfilter/nf_tables_api.c
+ +++ b/net/netfilter/nf_tables_api.c
+-@@ -8463,7 +8463,7 @@ static int nft_register_flowtable_net_ho
++@@ -8448,7 +8448,7 @@ static int nft_register_flowtable_net_ho
+  		err = flowtable->data.type->setup(&flowtable->data,
+  						  hook->ops.dev,
+  						  FLOW_BLOCK_BIND);
+diff --git a/target/linux/generic/pending-6.6/710-bridge-add-knob-for-filtering-rx-tx-BPDU-pack.patch b/target/linux/generic/pending-6.6/710-bridge-add-knob-for-filtering-rx-tx-BPDU-pack.patch
+index 433e7616c2..31e29c447e 100644
+--- a/target/linux/generic/pending-6.6/710-bridge-add-knob-for-filtering-rx-tx-BPDU-pack.patch
++++ b/target/linux/generic/pending-6.6/710-bridge-add-knob-for-filtering-rx-tx-BPDU-pack.patch
+@@ -24,7 +24,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  
+ --- a/net/bridge/br_forward.c
+ +++ b/net/bridge/br_forward.c
+-@@ -202,6 +202,7 @@ void br_flood(struct net_bridge *br, str
++@@ -201,6 +201,7 @@ void br_flood(struct net_bridge *br, str
+  	      enum br_pkt_type pkt_type, bool local_rcv, bool local_orig,
+  	      u16 vid)
+  {
+@@ -32,7 +32,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	struct net_bridge_port *prev = NULL;
+  	struct net_bridge_port *p;
+  
+-@@ -219,6 +220,10 @@ void br_flood(struct net_bridge *br, str
++@@ -218,6 +219,10 @@ void br_flood(struct net_bridge *br, str
+  		case BR_PKT_MULTICAST:
+  			if (!(p->flags & BR_MCAST_FLOOD) && skb->dev != br->dev)
+  				continue;
+diff --git a/target/linux/generic/pending-6.6/810-pci_disable_common_quirks.patch b/target/linux/generic/pending-6.6/810-pci_disable_common_quirks.patch
+index 2d138d123a..e4c8caff22 100644
+--- a/target/linux/generic/pending-6.6/810-pci_disable_common_quirks.patch
++++ b/target/linux/generic/pending-6.6/810-pci_disable_common_quirks.patch
+@@ -33,7 +33,7 @@ Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+  /*
+   * The Mellanox Tavor device gives false positive parity errors.  Disable
+   * parity error reporting.
+-@@ -3502,6 +3503,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_I
++@@ -3501,6 +3502,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_I
+  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65f9, quirk_intel_mc_errata);
+  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x65fa, quirk_intel_mc_errata);
+  
+@@ -42,7 +42,7 @@ Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+  /*
+   * Ivytown NTB BAR sizes are misreported by the hardware due to an erratum.
+   * To work around this, query the size it should be configured to by the
+-@@ -3527,6 +3530,8 @@ static void quirk_intel_ntb(struct pci_d
++@@ -3526,6 +3529,8 @@ static void quirk_intel_ntb(struct pci_d
+  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+  
+@@ -51,7 +51,7 @@ Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+  /*
+   * Some BIOS implementations leave the Intel GPU interrupts enabled, even
+   * though no one is handling them (e.g., if the i915 driver is never
+-@@ -3565,6 +3570,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_IN
++@@ -3564,6 +3569,8 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_IN
+  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x010a, disable_igfx_irq);
+  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0152, disable_igfx_irq);
+  
+diff --git a/target/linux/ipq40xx/patches-6.6/400-mmc-sdhci-sdhci-msm-use-sdhci_set_clock-instead-of-s.patch b/target/linux/ipq40xx/patches-6.6/400-mmc-sdhci-sdhci-msm-use-sdhci_set_clock-instead-of-s.patch
+index dc3faee799..737da1e2fe 100644
+--- a/target/linux/ipq40xx/patches-6.6/400-mmc-sdhci-sdhci-msm-use-sdhci_set_clock-instead-of-s.patch
++++ b/target/linux/ipq40xx/patches-6.6/400-mmc-sdhci-sdhci-msm-use-sdhci_set_clock-instead-of-s.patch
+@@ -13,7 +13,7 @@ Signed-off-by: Robert Marko <robert.marko@sartura.hr>
+ 
+ --- a/drivers/mmc/host/sdhci-msm.c
+ +++ b/drivers/mmc/host/sdhci-msm.c
+-@@ -2398,7 +2398,7 @@ MODULE_DEVICE_TABLE(of, sdhci_msm_dt_mat
++@@ -2383,7 +2383,7 @@ MODULE_DEVICE_TABLE(of, sdhci_msm_dt_mat
+  
+  static const struct sdhci_ops sdhci_msm_ops = {
+  	.reset = sdhci_and_cqhci_reset,
+diff --git a/target/linux/ipq40xx/patches-6.6/401-mmc-sdhci-msm-comment-unused-sdhci_msm_set_clock.patch b/target/linux/ipq40xx/patches-6.6/401-mmc-sdhci-msm-comment-unused-sdhci_msm_set_clock.patch
+index 8a81756d67..6e0f35b6fc 100644
+--- a/target/linux/ipq40xx/patches-6.6/401-mmc-sdhci-msm-comment-unused-sdhci_msm_set_clock.patch
++++ b/target/linux/ipq40xx/patches-6.6/401-mmc-sdhci-msm-comment-unused-sdhci_msm_set_clock.patch
+@@ -13,7 +13,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ 
+ --- a/drivers/mmc/host/sdhci-msm.c
+ +++ b/drivers/mmc/host/sdhci-msm.c
+-@@ -1833,49 +1833,49 @@ static unsigned int sdhci_msm_get_min_cl
++@@ -1818,49 +1818,49 @@ static unsigned int sdhci_msm_get_min_cl
+  	return SDHCI_MSM_MIN_CLOCK;
+  }
+  
+diff --git a/target/linux/ipq40xx/patches-6.6/700-net-ipqess-introduce-the-Qualcomm-IPQESS-driver.patch b/target/linux/ipq40xx/patches-6.6/700-net-ipqess-introduce-the-Qualcomm-IPQESS-driver.patch
+index 39e1bceefc..b8557bacc7 100644
+--- a/target/linux/ipq40xx/patches-6.6/700-net-ipqess-introduce-the-Qualcomm-IPQESS-driver.patch
++++ b/target/linux/ipq40xx/patches-6.6/700-net-ipqess-introduce-the-Qualcomm-IPQESS-driver.patch
+@@ -32,7 +32,7 @@ Signed-off-by: Maxime Chevallier <maxime.chevallier@bootlin.com>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -17718,6 +17718,13 @@ L:	netdev@vger.kernel.org
++@@ -17717,6 +17717,13 @@ L:	netdev@vger.kernel.org
+  S:	Maintained
+  F:	drivers/net/ethernet/qualcomm/emac/
+  
+diff --git a/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch b/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch
+index 2db87575a9..292f6e6f10 100644
+--- a/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch
++++ b/target/linux/ipq40xx/patches-6.6/701-net-dsa-add-out-of-band-tagging-protocol.patch
+@@ -64,7 +64,7 @@ Signed-off-by: Maxime Chevallier <maxime.chevallier@bootlin.com>
+  
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -17724,6 +17724,7 @@ L:	netdev@vger.kernel.org
++@@ -17723,6 +17723,7 @@ L:	netdev@vger.kernel.org
+  S:	Maintained
+  F:	Documentation/devicetree/bindings/net/qcom,ipq4019-ess-edma.yaml
+  F:	drivers/net/ethernet/qualcomm/ipqess/
+@@ -136,7 +136,7 @@ Signed-off-by: Maxime Chevallier <maxime.chevallier@bootlin.com>
+  #include <net/dst.h>
+  #include <net/sock.h>
+  #include <net/checksum.h>
+-@@ -4827,6 +4831,9 @@ static const u8 skb_ext_type_len[] = {
++@@ -4823,6 +4827,9 @@ static const u8 skb_ext_type_len[] = {
+  #if IS_ENABLED(CONFIG_MCTP_FLOWS)
+  	[SKB_EXT_MCTP] = SKB_EXT_CHUNKSIZEOF(struct mctp_flow),
+  #endif
+diff --git a/target/linux/mediatek/patches-6.6/739-net-add-negotiation-of-in-band-capabilities.patch b/target/linux/mediatek/patches-6.6/739-net-add-negotiation-of-in-band-capabilities.patch
+index 629b124125..b0c7897945 100644
+--- a/target/linux/mediatek/patches-6.6/739-net-add-negotiation-of-in-band-capabilities.patch
++++ b/target/linux/mediatek/patches-6.6/739-net-add-negotiation-of-in-band-capabilities.patch
+@@ -956,7 +956,7 @@ publishing the in-band capabilities from the BCM84881 PHY driver.
+  static int m88e1111_config_aneg(struct phy_device *phydev)
+  {
+  	int extsr = phy_read(phydev, MII_M1111_PHY_EXT_SR);
+-@@ -3329,6 +3371,8 @@ static struct phy_driver marvell_drivers
++@@ -3292,6 +3334,8 @@ static struct phy_driver marvell_drivers
+  		.name = "Marvell 88E1112",
+  		/* PHY_GBIT_FEATURES */
+  		.probe = marvell_probe,
+@@ -965,7 +965,7 @@ publishing the in-band capabilities from the BCM84881 PHY driver.
+  		.config_init = m88e1112_config_init,
+  		.config_aneg = marvell_config_aneg,
+  		.config_intr = marvell_config_intr,
+-@@ -3349,6 +3393,8 @@ static struct phy_driver marvell_drivers
++@@ -3312,6 +3356,8 @@ static struct phy_driver marvell_drivers
+  		.name = "Marvell 88E1111",
+  		/* PHY_GBIT_FEATURES */
+  		.probe = marvell_probe,
+@@ -974,7 +974,7 @@ publishing the in-band capabilities from the BCM84881 PHY driver.
+  		.config_init = m88e1111gbe_config_init,
+  		.config_aneg = m88e1111_config_aneg,
+  		.read_status = marvell_read_status,
+-@@ -3370,6 +3416,8 @@ static struct phy_driver marvell_drivers
++@@ -3333,6 +3379,8 @@ static struct phy_driver marvell_drivers
+  		.name = "Marvell 88E1111 (Finisar)",
+  		/* PHY_GBIT_FEATURES */
+  		.probe = marvell_probe,
+diff --git a/target/linux/ramips/patches-6.6/810-uvc-add-iPassion-iP2970-support.patch b/target/linux/ramips/patches-6.6/810-uvc-add-iPassion-iP2970-support.patch
+index 1a68ba4430..9122652337 100644
+--- a/target/linux/ramips/patches-6.6/810-uvc-add-iPassion-iP2970-support.patch
++++ b/target/linux/ramips/patches-6.6/810-uvc-add-iPassion-iP2970-support.patch
+@@ -13,7 +13,7 @@ Signed-off-by: John Crispin <blogic@openwrt.org>
+ 
+ --- a/drivers/media/usb/uvc/uvc_driver.c
+ +++ b/drivers/media/usb/uvc/uvc_driver.c
+-@@ -3342,6 +3342,18 @@ static const struct usb_device_id uvc_id
++@@ -3329,6 +3329,18 @@ static const struct usb_device_id uvc_id
+  	  .bInterfaceSubClass	= 1,
+  	  .bInterfaceProtocol	= 0,
+  	  .driver_info		= UVC_INFO_META(V4L2_META_FMT_D4XX) },
+diff --git a/target/linux/starfive/patches-6.6/0049-MAINTAINERS-Update-all-StarFive-entries.patch b/target/linux/starfive/patches-6.6/0049-MAINTAINERS-Update-all-StarFive-entries.patch
+index 5f2c94914f..57e8c08c81 100644
+--- a/target/linux/starfive/patches-6.6/0049-MAINTAINERS-Update-all-StarFive-entries.patch
++++ b/target/linux/starfive/patches-6.6/0049-MAINTAINERS-Update-all-StarFive-entries.patch
+@@ -27,7 +27,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  DRM DRIVERS FOR STI
+  M:	Alain Volmat <alain.volmat@foss.st.com>
+  L:	dri-devel@lists.freedesktop.org
+-@@ -16018,6 +16026,13 @@ F:	Documentation/i2c/busses/i2c-ocores.r
++@@ -16017,6 +16025,13 @@ F:	Documentation/i2c/busses/i2c-ocores.r
+  F:	drivers/i2c/busses/i2c-ocores.c
+  F:	include/linux/platform_data/i2c-ocores.h
+  
+@@ -41,7 +41,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  OPENRISC ARCHITECTURE
+  M:	Jonas Bonn <jonas@southpole.se>
+  M:	Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+-@@ -16429,6 +16444,14 @@ S:	Maintained
++@@ -16428,6 +16443,14 @@ S:	Maintained
+  F:	Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt
+  F:	drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
+  
+@@ -56,7 +56,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  PCI DRIVER FOR RENESAS R-CAR
+  M:	Marek Vasut <marek.vasut+renesas@gmail.com>
+  M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+-@@ -16660,7 +16683,7 @@ M:	Daire McNamara <daire.mcnamara@microc
++@@ -16659,7 +16682,7 @@ M:	Daire McNamara <daire.mcnamara@microc
+  L:	linux-pci@vger.kernel.org
+  S:	Supported
+  F:	Documentation/devicetree/bindings/pci/microchip*
+@@ -65,7 +65,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  
+  PCIE DRIVER FOR QUALCOMM MSM
+  M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+-@@ -16684,6 +16707,13 @@ S:	Maintained
++@@ -16683,6 +16706,13 @@ S:	Maintained
+  F:	Documentation/devicetree/bindings/pci/socionext,uniphier-pcie*
+  F:	drivers/pci/controller/dwc/pcie-uniphier*
+  
+@@ -79,7 +79,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  PCIE DRIVER FOR ST SPEAR13XX
+  M:	Pratyush Anand <pratyush.anand@gmail.com>
+  L:	linux-pci@vger.kernel.org
+-@@ -18456,7 +18486,7 @@ F:	drivers/char/hw_random/mpfs-rng.c
++@@ -18455,7 +18485,7 @@ F:	drivers/char/hw_random/mpfs-rng.c
+  F:	drivers/clk/microchip/clk-mpfs*.c
+  F:	drivers/i2c/busses/i2c-microchip-corei2c.c
+  F:	drivers/mailbox/mailbox-mpfs.c
+@@ -88,7 +88,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  F:	drivers/pwm/pwm-microchip-core.c
+  F:	drivers/reset/reset-mpfs.c
+  F:	drivers/rtc/rtc-mpfs.c
+-@@ -20437,6 +20467,15 @@ M:	Ion Badulescu <ionut@badula.org>
++@@ -20436,6 +20466,15 @@ M:	Ion Badulescu <ionut@badula.org>
+  S:	Odd Fixes
+  F:	drivers/net/ethernet/adaptec/starfire*
+  
+@@ -104,7 +104,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  STARFIVE CRYPTO DRIVER
+  M:	Jia Jie Ho <jiajie.ho@starfivetech.com>
+  M:	William Qiu <william.qiu@starfivetech.com>
+-@@ -20475,6 +20514,13 @@ S:	Supported
++@@ -20474,6 +20513,13 @@ S:	Supported
+  F:	Documentation/devicetree/bindings/clock/starfive,jh7110-pll.yaml
+  F:	drivers/clk/starfive/clk-starfive-jh7110-pll.c
+  
+@@ -118,7 +118,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  STARFIVE JH7110 SYSCON
+  M:	William Qiu <william.qiu@starfivetech.com>
+  M:	Xingyu Wu <xingyu.wu@starfivetech.com>
+-@@ -20522,9 +20568,10 @@ F:	drivers/usb/cdns3/cdns3-starfive.c
++@@ -20521,9 +20567,10 @@ F:	drivers/usb/cdns3/cdns3-starfive.c
+  
+  STARFIVE JH71XX PMU CONTROLLER DRIVER
+  M:	Walker Chen <walker.chen@starfivetech.com>
+@@ -130,7 +130,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  F:	include/dt-bindings/power/starfive,jh7110-pmu.h
+  
+  STARFIVE SOC DRIVERS
+-@@ -20532,7 +20579,13 @@ M:	Conor Dooley <conor@kernel.org>
++@@ -20531,7 +20578,13 @@ M:	Conor Dooley <conor@kernel.org>
+  S:	Maintained
+  T:	git https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux.git/
+  F:	Documentation/devicetree/bindings/soc/starfive/
+diff --git a/target/linux/starfive/patches-6.6/0109-usb-xhci-To-improve-performance-usb-using-lowmem-for.patch b/target/linux/starfive/patches-6.6/0109-usb-xhci-To-improve-performance-usb-using-lowmem-for.patch
+index 2cc8c7aba1..95d83d46bb 100644
+--- a/target/linux/starfive/patches-6.6/0109-usb-xhci-To-improve-performance-usb-using-lowmem-for.patch
++++ b/target/linux/starfive/patches-6.6/0109-usb-xhci-To-improve-performance-usb-using-lowmem-for.patch
+@@ -143,7 +143,7 @@ Signed-off-by: minda.chen <minda.chen@starfivetech.com>
+  	 * something other than the default (~1ms minimum between interrupts).
+ --- a/drivers/usb/host/xhci-plat.c
+ +++ b/drivers/usb/host/xhci-plat.c
+-@@ -254,6 +254,14 @@ int xhci_plat_probe(struct platform_devi
++@@ -253,6 +253,14 @@ int xhci_plat_probe(struct platform_devi
+  		if (device_property_read_bool(tmpdev, "xhci-sg-trb-cache-size-quirk"))
+  			xhci->quirks |= XHCI_SG_TRB_CACHE_SIZE_QUIRK;
+  
+diff --git a/target/linux/starfive/patches-6.6/0110-usb-xhci-using-dma_alloc_noncoherent-to-alloc-low-me.patch b/target/linux/starfive/patches-6.6/0110-usb-xhci-using-dma_alloc_noncoherent-to-alloc-low-me.patch
+index 714d09441c..2a72bcb9cf 100644
+--- a/target/linux/starfive/patches-6.6/0110-usb-xhci-using-dma_alloc_noncoherent-to-alloc-low-me.patch
++++ b/target/linux/starfive/patches-6.6/0110-usb-xhci-using-dma_alloc_noncoherent-to-alloc-low-me.patch
+@@ -88,7 +88,7 @@ Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
+  	/*
+ --- a/drivers/usb/host/xhci-plat.c
+ +++ b/drivers/usb/host/xhci-plat.c
+-@@ -256,10 +256,11 @@ int xhci_plat_probe(struct platform_devi
++@@ -255,10 +255,11 @@ int xhci_plat_probe(struct platform_devi
+  
+  		if (device_property_read_bool(tmpdev, "xhci-lowmem-pool")) {
+  			xhci->quirks |= XHCI_LOCAL_BUFFER;
+diff --git a/target/linux/starfive/patches-6.6/1009-net-stmmac-use-GFP_DMA32.patch b/target/linux/starfive/patches-6.6/1009-net-stmmac-use-GFP_DMA32.patch
+index 9b5ad54f97..4d3997b24e 100644
+--- a/target/linux/starfive/patches-6.6/1009-net-stmmac-use-GFP_DMA32.patch
++++ b/target/linux/starfive/patches-6.6/1009-net-stmmac-use-GFP_DMA32.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Matteo Croce <mcroce@microsoft.com>
+  
+  	if (priv->dma_cap.host_dma_width <= 32)
+  		gfp |= GFP_DMA32;
+-@@ -4690,7 +4690,7 @@ static inline void stmmac_rx_refill(stru
++@@ -4693,7 +4693,7 @@ static inline void stmmac_rx_refill(stru
+  	struct stmmac_rx_queue *rx_q = &priv->dma_conf.rx_queue[queue];
+  	int dirty = stmmac_rx_dirty(priv, queue);
+  	unsigned int entry = rx_q->dirty_rx;
+diff --git a/target/linux/starfive/patches-6.6/1014-reset-starfive-Add-JH7100-audio-reset-driver.patch b/target/linux/starfive/patches-6.6/1014-reset-starfive-Add-JH7100-audio-reset-driver.patch
+index 8b24eb33e5..79e7d4ddb4 100644
+--- a/target/linux/starfive/patches-6.6/1014-reset-starfive-Add-JH7100-audio-reset-driver.patch
++++ b/target/linux/starfive/patches-6.6/1014-reset-starfive-Add-JH7100-audio-reset-driver.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Emil Renner Berthing <kernel@esmil.dk>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -20556,7 +20556,7 @@ STARFIVE JH71X0 RESET CONTROLLER DRIVERS
++@@ -20555,7 +20555,7 @@ STARFIVE JH71X0 RESET CONTROLLER DRIVERS
+  M:	Emil Renner Berthing <kernel@esmil.dk>
+  M:	Hal Feng <hal.feng@starfivetech.com>
+  S:	Maintained
+-- 
+2.43.0
+

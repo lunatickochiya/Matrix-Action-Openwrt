@@ -1,0 +1,511 @@
+From 8f7ccef955bebc1080933bb8003c002500999fed Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 27 Dec 2025 19:43:27 +0800
+Subject: [PATCH 02/11] Revert "kernel: bump 6.6 to 6.6.119"
+
+This reverts commit 581050ce4e1f28a8e371cbd090f48945e02d4448.
+---
+ include/kernel-6.6                            |  4 +-
+ .../901-snand-mtk-bmt-support.patch           |  6 +--
+ ...all-the-downstream-rpi-sound-card-dr.patch |  2 +-
+ ...-add-FS-LS-bus-instance-parkmode-dis.patch |  4 +-
+ ...-Always-request-for-user-confirmatio.patch | 45 +++++++++++++++++++
+ ...d-support-for-setting-NAK-enhancemen.patch |  4 +-
+ ...wc3-Set-DMA-and-coherent-masks-early.patch | 16 +++----
+ ...-nvmem-layouts-add-U-Boot-env-layout.patch |  2 +-
+ ...flip_threshold-to-75-of-ECC-strength.patch |  2 +-
+ ...add-uImage.FIT-subimage-block-driver.patch |  2 +-
+ .../701-staging-add-fsl_ppfe-driver.patch     |  4 +-
+ .../330-snand-mtk-bmt-support.patch           |  6 +--
+ ...ers-spi-mem-Add-spi-calibration-hook.patch |  4 +-
+ ...and-Add-calibration-support-for-spin.patch |  2 +-
+ ...960-asus-hack-u-boot-ignore-mtdparts.patch |  4 +-
+ ...or-support-mtd-name-from-device-tree.patch |  4 +-
+ ...c3-add-optional-PHY-interface-clocks.patch |  6 +--
+ ...NTAINERS-Update-all-StarFive-entries.patch |  8 ++--
+ ...arfive-Add-JH7100-audio-reset-driver.patch |  2 +-
+ 19 files changed, 86 insertions(+), 41 deletions(-)
+ create mode 100644 target/linux/bcm27xx/patches-6.6/950-1255-Revert-Bluetooth-Always-request-for-user-confirmatio.patch
+
+diff --git a/include/kernel-6.6 b/include/kernel-6.6
+index 7f4bc6fbfa..e5c3c5c302 100644
+--- a/include/kernel-6.6
++++ b/include/kernel-6.6
+@@ -1,2 +1,2 @@
+-LINUX_VERSION-6.6 = .119
+-LINUX_KERNEL_HASH-6.6.119 = 3da09b980bb404cc28793479bb2d6c636522679215ffa65a04c893575253e5e8
++LINUX_VERSION-6.6 = .118
++LINUX_KERNEL_HASH-6.6.118 = 4bdddce35474afc8d26f74ebfbcd0e1045ecd15f69e60f53529dba143374b17d
+diff --git a/target/linux/airoha/patches-6.6/901-snand-mtk-bmt-support.patch b/target/linux/airoha/patches-6.6/901-snand-mtk-bmt-support.patch
+index ad11affefe..e62a810a57 100644
+--- a/target/linux/airoha/patches-6.6/901-snand-mtk-bmt-support.patch
++++ b/target/linux/airoha/patches-6.6/901-snand-mtk-bmt-support.patch
+@@ -8,7 +8,7 @@
+  
+  static int spinand_read_reg_op(struct spinand_device *spinand, u8 reg, u8 *val)
+  {
+-@@ -1355,6 +1356,7 @@ static int spinand_probe(struct spi_mem
++@@ -1353,6 +1354,7 @@ static int spinand_probe(struct spi_mem
+  	if (ret)
+  		return ret;
+  
+@@ -16,7 +16,7 @@
+  	ret = mtd_device_register(mtd, NULL, 0);
+  	if (ret)
+  		goto err_spinand_cleanup;
+-@@ -1362,6 +1364,7 @@ static int spinand_probe(struct spi_mem
++@@ -1360,6 +1362,7 @@ static int spinand_probe(struct spi_mem
+  	return 0;
+  
+  err_spinand_cleanup:
+@@ -24,7 +24,7 @@
+  	spinand_cleanup(spinand);
+  
+  	return ret;
+-@@ -1380,6 +1383,7 @@ static int spinand_remove(struct spi_mem
++@@ -1378,6 +1381,7 @@ static int spinand_remove(struct spi_mem
+  	if (ret)
+  		return ret;
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch b/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
+index 8521837175..09ad4d0ac7 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0106-Add-support-for-all-the-downstream-rpi-sound-card-dr.patch
+@@ -17583,7 +17583,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  	 * For devices with more than one control interface, we assume the
+ --- a/sound/usb/quirks.c
+ +++ b/sound/usb/quirks.c
+-@@ -2279,6 +2279,8 @@ static const struct usb_audio_quirk_flag
++@@ -2278,6 +2278,8 @@ static const struct usb_audio_quirk_flag
+  		   QUIRK_FLAG_ALIGN_TRANSFER),
+  	DEVICE_FLG(0x534d, 0x2109, /* MacroSilicon MS2109 */
+  		   QUIRK_FLAG_ALIGN_TRANSFER),
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0853-drivers-usb-dwc3-add-FS-LS-bus-instance-parkmode-dis.patch b/target/linux/bcm27xx/patches-6.6/950-0853-drivers-usb-dwc3-add-FS-LS-bus-instance-parkmode-dis.patch
+index fe0a610ab8..77aebef467 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0853-drivers-usb-dwc3-add-FS-LS-bus-instance-parkmode-dis.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0853-drivers-usb-dwc3-add-FS-LS-bus-instance-parkmode-dis.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.com>
+ 
+ --- a/drivers/usb/dwc3/core.c
+ +++ b/drivers/usb/dwc3/core.c
+-@@ -1368,6 +1368,9 @@ static int dwc3_core_init(struct dwc3 *d
++@@ -1367,6 +1367,9 @@ static int dwc3_core_init(struct dwc3 *d
+  		if (dwc->parkmode_disable_hs_quirk)
+  			reg |= DWC3_GUCTL1_PARKMODE_DISABLE_HS;
+  
+@@ -26,7 +26,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.com>
+  		if (DWC3_VER_IS_WITHIN(DWC3, 290A, ANY) &&
+  		    (dwc->maximum_speed == USB_SPEED_HIGH ||
+  		     dwc->maximum_speed == USB_SPEED_FULL))
+-@@ -1635,6 +1638,8 @@ static void dwc3_get_properties(struct d
++@@ -1634,6 +1637,8 @@ static void dwc3_get_properties(struct d
+  				"snps,parkmode-disable-ss-quirk");
+  	dwc->parkmode_disable_hs_quirk = device_property_read_bool(dev,
+  				"snps,parkmode-disable-hs-quirk");
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1255-Revert-Bluetooth-Always-request-for-user-confirmatio.patch b/target/linux/bcm27xx/patches-6.6/950-1255-Revert-Bluetooth-Always-request-for-user-confirmatio.patch
+new file mode 100644
+index 0000000000..e549f27d7b
+--- /dev/null
++++ b/target/linux/bcm27xx/patches-6.6/950-1255-Revert-Bluetooth-Always-request-for-user-confirmatio.patch
+@@ -0,0 +1,45 @@
++From d6a12dd8f4e9362f7dd355969dd046adc44b1f47 Mon Sep 17 00:00:00 2001
++From: Phil Elwell <phil@raspberrypi.com>
++Date: Mon, 1 Mar 2021 09:12:44 +0000
++Subject: [PATCH 1255/1350] Revert "Bluetooth: Always request for user
++ confirmation for Just Works (LE SC)"
++
++This reverts commit ffee202a78c2980688bc5d2f7d56480e69a5e0c9.
++
++The commit "Bluetooth: Always request for user confirmation for Just
++Works" prevents BLE devices pairing in (at least) the Raspberry Pi OS
++GUI. After reverting it, pairing works again. Although this companion
++commit ("... (LE SC)") has not been demonstrated to be problematic,
++it follows the same logic and therefore could affect some use cases.
++
++If another solution to the problem is found then this reversion will
++be removed.
++
++See: https://github.com/raspberrypi/linux/issues/4139
++
++Signed-off-by: Phil Elwell <phil@raspberrypi.com>
++---
++ net/bluetooth/smp.c | 5 +----
++ 1 file changed, 1 insertion(+), 4 deletions(-)
++
++--- a/net/bluetooth/smp.c
+++++ b/net/bluetooth/smp.c
++@@ -2208,7 +2208,7 @@ mackey_and_ltk:
++ 	if (err)
++ 		return SMP_UNSPECIFIED;
++ 
++-	if (smp->method == REQ_OOB) {
+++	if (smp->method == JUST_WORKS || smp->method == REQ_OOB) {
++ 		if (test_bit(SMP_FLAG_INITIATOR, &smp->flags)) {
++ 			sc_dhkey_check(smp);
++ 			SMP_ALLOW_CMD(smp, SMP_CMD_DHKEY_CHECK);
++@@ -2223,9 +2223,6 @@ mackey_and_ltk:
++ 	confirm_hint = 0;
++ 
++ confirm:
++-	if (smp->method == JUST_WORKS)
++-		confirm_hint = 1;
++-
++ 	err = mgmt_user_confirm_request(hcon->hdev, &hcon->dst, hcon->type,
++ 					hcon->dst_type, passkey, confirm_hint);
++ 	if (err)
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1359-usb-dwc3-core-add-support-for-setting-NAK-enhancemen.patch b/target/linux/bcm27xx/patches-6.6/950-1359-usb-dwc3-core-add-support-for-setting-NAK-enhancemen.patch
+index 38ee7d3aef..db0cce8d59 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1359-usb-dwc3-core-add-support-for-setting-NAK-enhancemen.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1359-usb-dwc3-core-add-support-for-setting-NAK-enhancemen.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.com>
+ 
+ --- a/drivers/usb/dwc3/core.c
+ +++ b/drivers/usb/dwc3/core.c
+-@@ -1362,6 +1362,12 @@ static int dwc3_core_init(struct dwc3 *d
++@@ -1361,6 +1361,12 @@ static int dwc3_core_init(struct dwc3 *d
+  		if (dwc->dis_tx_ipgap_linecheck_quirk)
+  			reg |= DWC3_GUCTL1_TX_IPGAP_LINECHECK_DIS;
+  
+@@ -35,7 +35,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.com>
+  		if (dwc->parkmode_disable_ss_quirk)
+  			reg |= DWC3_GUCTL1_PARKMODE_DISABLE_SS;
+  
+-@@ -1634,6 +1640,10 @@ static void dwc3_get_properties(struct d
++@@ -1633,6 +1639,10 @@ static void dwc3_get_properties(struct d
+  				"snps,resume-hs-terminations");
+  	dwc->ulpi_ext_vbus_drv = device_property_read_bool(dev,
+  				"snps,ulpi-ext-vbus-drv");
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1539-Reapply-usb-dwc3-Set-DMA-and-coherent-masks-early.patch b/target/linux/bcm27xx/patches-6.6/950-1539-Reapply-usb-dwc3-Set-DMA-and-coherent-masks-early.patch
+index 95cbe44e38..327819f289 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1539-Reapply-usb-dwc3-Set-DMA-and-coherent-masks-early.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1539-Reapply-usb-dwc3-Set-DMA-and-coherent-masks-early.patch
+@@ -171,7 +171,7 @@ This reverts commit 09dfdf6129532e19b2cfd4992d1d09e7119ccd48.
+  	},
+ --- a/drivers/usb/dwc3/core.c
+ +++ b/drivers/usb/dwc3/core.c
+-@@ -1224,6 +1224,24 @@ static void dwc3_config_threshold(struct
++@@ -1223,6 +1223,24 @@ static void dwc3_config_threshold(struct
+  	}
+  }
+  
+@@ -196,7 +196,7 @@ This reverts commit 09dfdf6129532e19b2cfd4992d1d09e7119ccd48.
+  /**
+   * dwc3_core_init - Low-level initialization of DWC3 Core
+   * @dwc: Pointer to our controller context structure
+-@@ -1289,6 +1307,8 @@ static int dwc3_core_init(struct dwc3 *d
++@@ -1288,6 +1306,8 @@ static int dwc3_core_init(struct dwc3 *d
+  
+  	dwc3_set_incr_burst_type(dwc);
+  
+@@ -205,7 +205,7 @@ This reverts commit 09dfdf6129532e19b2cfd4992d1d09e7119ccd48.
+  	ret = dwc3_phy_power_on(dwc);
+  	if (ret)
+  		goto err_exit_phy;
+-@@ -1387,6 +1407,24 @@ static int dwc3_core_init(struct dwc3 *d
++@@ -1386,6 +1406,24 @@ static int dwc3_core_init(struct dwc3 *d
+  
+  	dwc3_config_threshold(dwc);
+  
+@@ -230,7 +230,7 @@ This reverts commit 09dfdf6129532e19b2cfd4992d1d09e7119ccd48.
+  	return 0;
+  
+  err_power_off_phy:
+-@@ -1530,6 +1568,7 @@ static void dwc3_get_properties(struct d
++@@ -1529,6 +1567,7 @@ static void dwc3_get_properties(struct d
+  	u8			tx_thr_num_pkt_prd = 0;
+  	u8			tx_max_burst_prd = 0;
+  	u8			tx_fifo_resize_max_num;
+@@ -238,7 +238,7 @@ This reverts commit 09dfdf6129532e19b2cfd4992d1d09e7119ccd48.
+  
+  	/* default to highest possible threshold */
+  	lpm_nyet_threshold = 0xf;
+-@@ -1550,6 +1589,9 @@ static void dwc3_get_properties(struct d
++@@ -1549,6 +1588,9 @@ static void dwc3_get_properties(struct d
+  	 */
+  	tx_fifo_resize_max_num = 6;
+  
+@@ -248,7 +248,7 @@ This reverts commit 09dfdf6129532e19b2cfd4992d1d09e7119ccd48.
+  	dwc->maximum_speed = usb_get_maximum_speed(dev);
+  	dwc->max_ssp_rate = usb_get_maximum_ssp_rate(dev);
+  	dwc->dr_mode = usb_get_dr_mode(dev);
+-@@ -1670,6 +1712,9 @@ static void dwc3_get_properties(struct d
++@@ -1669,6 +1711,9 @@ static void dwc3_get_properties(struct d
+  	dwc->dis_split_quirk = device_property_read_bool(dev,
+  				"snps,dis-split-quirk");
+  
+@@ -258,7 +258,7 @@ This reverts commit 09dfdf6129532e19b2cfd4992d1d09e7119ccd48.
+  	dwc->lpm_nyet_threshold = lpm_nyet_threshold;
+  	dwc->tx_de_emphasis = tx_de_emphasis;
+  
+-@@ -1687,6 +1732,8 @@ static void dwc3_get_properties(struct d
++@@ -1686,6 +1731,8 @@ static void dwc3_get_properties(struct d
+  	dwc->tx_thr_num_pkt_prd = tx_thr_num_pkt_prd;
+  	dwc->tx_max_burst_prd = tx_max_burst_prd;
+  
+@@ -267,7 +267,7 @@ This reverts commit 09dfdf6129532e19b2cfd4992d1d09e7119ccd48.
+  	dwc->tx_fifo_resize_max_num = tx_fifo_resize_max_num;
+  }
+  
+-@@ -1979,6 +2026,12 @@ static int dwc3_probe(struct platform_de
++@@ -1978,6 +2025,12 @@ static int dwc3_probe(struct platform_de
+  	if (IS_ERR(dwc->usb_psy))
+  		return dev_err_probe(dev, PTR_ERR(dwc->usb_psy), "couldn't get usb power supply\n");
+  
+diff --git a/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch b/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
+index e087b51c20..f869fc2037 100644
+--- a/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
++++ b/target/linux/generic/backport-6.6/823-v6.12-0003-nvmem-layouts-add-U-Boot-env-layout.patch
+@@ -41,7 +41,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -21984,6 +21984,7 @@ U-BOOT ENVIRONMENT VARIABLES
++@@ -21990,6 +21990,7 @@ U-BOOT ENVIRONMENT VARIABLES
+  M:	Rafał Miłecki <rafal@milecki.pl>
+  S:	Maintained
+  F:	Documentation/devicetree/bindings/nvmem/u-boot,env.yaml
+diff --git a/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch b/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch
+index 6b935eb602..814b50e19c 100644
+--- a/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch
++++ b/target/linux/generic/pending-6.6/410-mtd-spinand-set-bitflip_threshold-to-75-of-ECC-strength.patch
+@@ -53,7 +53,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+ 
+ --- a/drivers/mtd/nand/spi/core.c
+ +++ b/drivers/mtd/nand/spi/core.c
+-@@ -1294,6 +1294,7 @@ static int spinand_init(struct spinand_d
++@@ -1292,6 +1292,7 @@ static int spinand_init(struct spinand_d
+  	/* Propagate ECC information to mtd_info */
+  	mtd->ecc_strength = nanddev_get_ecc_conf(nand)->strength;
+  	mtd->ecc_step_size = nanddev_get_ecc_conf(nand)->step_size;
+diff --git a/target/linux/generic/pending-6.6/510-block-add-uImage.FIT-subimage-block-driver.patch b/target/linux/generic/pending-6.6/510-block-add-uImage.FIT-subimage-block-driver.patch
+index 1d91f8372a..1ad2210352 100644
+--- a/target/linux/generic/pending-6.6/510-block-add-uImage.FIT-subimage-block-driver.patch
++++ b/target/linux/generic/pending-6.6/510-block-add-uImage.FIT-subimage-block-driver.patch
+@@ -36,7 +36,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -22011,6 +22011,12 @@ F:	Documentation/filesystems/ubifs-authe
++@@ -22017,6 +22017,12 @@ F:	Documentation/filesystems/ubifs-authe
+  F:	Documentation/filesystems/ubifs.rst
+  F:	fs/ubifs/
+  
+diff --git a/target/linux/layerscape/patches-6.6/701-staging-add-fsl_ppfe-driver.patch b/target/linux/layerscape/patches-6.6/701-staging-add-fsl_ppfe-driver.patch
+index f912d4ed3b..59bbb964c5 100644
+--- a/target/linux/layerscape/patches-6.6/701-staging-add-fsl_ppfe-driver.patch
++++ b/target/linux/layerscape/patches-6.6/701-staging-add-fsl_ppfe-driver.patch
+@@ -908,7 +908,7 @@ Signed-off-by: Dong Aisheng <aisheng.dong@nxp.com>
+  L:	linux-spi@vger.kernel.org
+ --- a/drivers/staging/Kconfig
+ +++ b/drivers/staging/Kconfig
+-@@ -76,4 +76,6 @@ source "drivers/staging/qlge/Kconfig"
++@@ -78,4 +78,6 @@ source "drivers/staging/qlge/Kconfig"
+  
+  source "drivers/staging/vme_user/Kconfig"
+  
+@@ -917,7 +917,7 @@ Signed-off-by: Dong Aisheng <aisheng.dong@nxp.com>
+  endif # STAGING
+ --- a/drivers/staging/Makefile
+ +++ b/drivers/staging/Makefile
+-@@ -27,3 +27,4 @@ obj-$(CONFIG_PI433)		+= pi433/
++@@ -28,3 +28,4 @@ obj-$(CONFIG_PI433)		+= pi433/
+  obj-$(CONFIG_XIL_AXIS_FIFO)	+= axis-fifo/
+  obj-$(CONFIG_FIELDBUS_DEV)     += fieldbus/
+  obj-$(CONFIG_QLGE)		+= qlge/
+diff --git a/target/linux/mediatek/patches-6.6/330-snand-mtk-bmt-support.patch b/target/linux/mediatek/patches-6.6/330-snand-mtk-bmt-support.patch
+index ad11affefe..e62a810a57 100644
+--- a/target/linux/mediatek/patches-6.6/330-snand-mtk-bmt-support.patch
++++ b/target/linux/mediatek/patches-6.6/330-snand-mtk-bmt-support.patch
+@@ -8,7 +8,7 @@
+  
+  static int spinand_read_reg_op(struct spinand_device *spinand, u8 reg, u8 *val)
+  {
+-@@ -1355,6 +1356,7 @@ static int spinand_probe(struct spi_mem
++@@ -1353,6 +1354,7 @@ static int spinand_probe(struct spi_mem
+  	if (ret)
+  		return ret;
+  
+@@ -16,7 +16,7 @@
+  	ret = mtd_device_register(mtd, NULL, 0);
+  	if (ret)
+  		goto err_spinand_cleanup;
+-@@ -1362,6 +1364,7 @@ static int spinand_probe(struct spi_mem
++@@ -1360,6 +1362,7 @@ static int spinand_probe(struct spi_mem
+  	return 0;
+  
+  err_spinand_cleanup:
+@@ -24,7 +24,7 @@
+  	spinand_cleanup(spinand);
+  
+  	return ret;
+-@@ -1380,6 +1383,7 @@ static int spinand_remove(struct spi_mem
++@@ -1378,6 +1381,7 @@ static int spinand_remove(struct spi_mem
+  	if (ret)
+  		return ret;
+  
+diff --git a/target/linux/mediatek/patches-6.6/433-drivers-spi-mem-Add-spi-calibration-hook.patch b/target/linux/mediatek/patches-6.6/433-drivers-spi-mem-Add-spi-calibration-hook.patch
+index c0b51d84ad..d9fe480b17 100644
+--- a/target/linux/mediatek/patches-6.6/433-drivers-spi-mem-Add-spi-calibration-hook.patch
++++ b/target/linux/mediatek/patches-6.6/433-drivers-spi-mem-Add-spi-calibration-hook.patch
+@@ -11,7 +11,7 @@ Signed-off-by: SkyLake.Huang <skylake.huang@mediatek.com>
+ 
+ --- a/drivers/spi/spi-mem.c
+ +++ b/drivers/spi/spi-mem.c
+-@@ -439,6 +439,14 @@ int spi_mem_exec_op(struct spi_mem *mem,
++@@ -419,6 +419,14 @@ int spi_mem_exec_op(struct spi_mem *mem,
+  }
+  EXPORT_SYMBOL_GPL(spi_mem_exec_op);
+  
+@@ -28,7 +28,7 @@ Signed-off-by: SkyLake.Huang <skylake.huang@mediatek.com>
+   *			upper layer if necessary
+ --- a/include/linux/spi/spi-mem.h
+ +++ b/include/linux/spi/spi-mem.h
+-@@ -388,6 +388,10 @@ bool spi_mem_supports_op(struct spi_mem
++@@ -370,6 +370,10 @@ bool spi_mem_supports_op(struct spi_mem
+  int spi_mem_exec_op(struct spi_mem *mem,
+  		    const struct spi_mem_op *op);
+  
+diff --git a/target/linux/mediatek/patches-6.6/435-drivers-mtd-spinand-Add-calibration-support-for-spin.patch b/target/linux/mediatek/patches-6.6/435-drivers-mtd-spinand-Add-calibration-support-for-spin.patch
+index 45d1199f8d..7d54700718 100644
+--- a/target/linux/mediatek/patches-6.6/435-drivers-mtd-spinand-Add-calibration-support-for-spin.patch
++++ b/target/linux/mediatek/patches-6.6/435-drivers-mtd-spinand-Add-calibration-support-for-spin.patch
+@@ -68,7 +68,7 @@ Signed-off-by: SkyLake.Huang <skylake.huang@mediatek.com>
+  static int spinand_id_detect(struct spinand_device *spinand)
+  {
+  	u8 *id = spinand->id.data;
+-@@ -1237,6 +1287,10 @@ static int spinand_init(struct spinand_d
++@@ -1235,6 +1285,10 @@ static int spinand_init(struct spinand_d
+  	if (!spinand->scratchbuf)
+  		return -ENOMEM;
+  
+diff --git a/target/linux/mediatek/patches-6.6/960-asus-hack-u-boot-ignore-mtdparts.patch b/target/linux/mediatek/patches-6.6/960-asus-hack-u-boot-ignore-mtdparts.patch
+index 14d98e9025..8337e12887 100644
+--- a/target/linux/mediatek/patches-6.6/960-asus-hack-u-boot-ignore-mtdparts.patch
++++ b/target/linux/mediatek/patches-6.6/960-asus-hack-u-boot-ignore-mtdparts.patch
+@@ -29,7 +29,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+ 
+ --- a/drivers/mtd/nand/spi/core.c
+ +++ b/drivers/mtd/nand/spi/core.c
+-@@ -1449,6 +1449,7 @@ static int spinand_remove(struct spi_mem
++@@ -1447,6 +1447,7 @@ static int spinand_remove(struct spi_mem
+  
+  static const struct spi_device_id spinand_ids[] = {
+  	{ .name = "spi-nand" },
+@@ -37,7 +37,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+  	{ /* sentinel */ },
+  };
+  MODULE_DEVICE_TABLE(spi, spinand_ids);
+-@@ -1456,6 +1457,7 @@ MODULE_DEVICE_TABLE(spi, spinand_ids);
++@@ -1454,6 +1455,7 @@ MODULE_DEVICE_TABLE(spi, spinand_ids);
+  #ifdef CONFIG_OF
+  static const struct of_device_id spinand_of_ids[] = {
+  	{ .compatible = "spi-nand" },
+diff --git a/target/linux/pistachio/patches-6.6/401-mtd-nor-support-mtd-name-from-device-tree.patch b/target/linux/pistachio/patches-6.6/401-mtd-nor-support-mtd-name-from-device-tree.patch
+index 3e2a7abff5..0000c22a89 100644
+--- a/target/linux/pistachio/patches-6.6/401-mtd-nor-support-mtd-name-from-device-tree.patch
++++ b/target/linux/pistachio/patches-6.6/401-mtd-nor-support-mtd-name-from-device-tree.patch
+@@ -10,7 +10,7 @@ Signed-off-by: Abhimanyu Vishwakarma <Abhimanyu.Vishwakarma@imgtec.com>
+ 
+ --- a/drivers/spi/spi-mem.c
+ +++ b/drivers/spi/spi-mem.c
+-@@ -883,7 +883,9 @@ static int spi_mem_probe(struct spi_devi
++@@ -846,7 +846,9 @@ static int spi_mem_probe(struct spi_devi
+  {
+  	struct spi_mem_driver *memdrv = to_spi_mem_drv(spi->dev.driver);
+  	struct spi_controller *ctlr = spi->controller;
+@@ -20,7 +20,7 @@ Signed-off-by: Abhimanyu Vishwakarma <Abhimanyu.Vishwakarma@imgtec.com>
+  
+  	mem = devm_kzalloc(&spi->dev, sizeof(*mem), GFP_KERNEL);
+  	if (!mem)
+-@@ -891,10 +893,15 @@ static int spi_mem_probe(struct spi_devi
++@@ -854,10 +856,15 @@ static int spi_mem_probe(struct spi_devi
+  
+  	mem->spi = spi;
+  
+diff --git a/target/linux/rockchip/patches-6.6/034-v6.7-usb-dwc3-add-optional-PHY-interface-clocks.patch b/target/linux/rockchip/patches-6.6/034-v6.7-usb-dwc3-add-optional-PHY-interface-clocks.patch
+index 02c47b4826..4d358ea219 100644
+--- a/target/linux/rockchip/patches-6.6/034-v6.7-usb-dwc3-add-optional-PHY-interface-clocks.patch
++++ b/target/linux/rockchip/patches-6.6/034-v6.7-usb-dwc3-add-optional-PHY-interface-clocks.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ 
+ --- a/drivers/usb/dwc3/core.c
+ +++ b/drivers/usb/dwc3/core.c
+-@@ -861,8 +861,20 @@ static int dwc3_clk_enable(struct dwc3 *
++@@ -860,8 +860,20 @@ static int dwc3_clk_enable(struct dwc3 *
+  	if (ret)
+  		goto disable_ref_clk;
+  
+@@ -39,7 +39,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+  disable_ref_clk:
+  	clk_disable_unprepare(dwc->ref_clk);
+  disable_bus_clk:
+-@@ -872,6 +884,8 @@ disable_bus_clk:
++@@ -871,6 +883,8 @@ disable_bus_clk:
+  
+  static void dwc3_clk_disable(struct dwc3 *dwc)
+  {
+@@ -48,7 +48,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+  	clk_disable_unprepare(dwc->susp_clk);
+  	clk_disable_unprepare(dwc->ref_clk);
+  	clk_disable_unprepare(dwc->bus_clk);
+-@@ -1887,6 +1901,20 @@ static int dwc3_get_clocks(struct dwc3 *
++@@ -1886,6 +1900,20 @@ static int dwc3_get_clocks(struct dwc3 *
+  		}
+  	}
+  
+diff --git a/target/linux/starfive/patches-6.6/0049-MAINTAINERS-Update-all-StarFive-entries.patch b/target/linux/starfive/patches-6.6/0049-MAINTAINERS-Update-all-StarFive-entries.patch
+index 1f023052fc..5f2c94914f 100644
+--- a/target/linux/starfive/patches-6.6/0049-MAINTAINERS-Update-all-StarFive-entries.patch
++++ b/target/linux/starfive/patches-6.6/0049-MAINTAINERS-Update-all-StarFive-entries.patch
+@@ -88,7 +88,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  F:	drivers/pwm/pwm-microchip-core.c
+  F:	drivers/reset/reset-mpfs.c
+  F:	drivers/rtc/rtc-mpfs.c
+-@@ -20431,6 +20461,15 @@ M:	Ion Badulescu <ionut@badula.org>
++@@ -20437,6 +20467,15 @@ M:	Ion Badulescu <ionut@badula.org>
+  S:	Odd Fixes
+  F:	drivers/net/ethernet/adaptec/starfire*
+  
+@@ -104,7 +104,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  STARFIVE CRYPTO DRIVER
+  M:	Jia Jie Ho <jiajie.ho@starfivetech.com>
+  M:	William Qiu <william.qiu@starfivetech.com>
+-@@ -20469,6 +20508,13 @@ S:	Supported
++@@ -20475,6 +20514,13 @@ S:	Supported
+  F:	Documentation/devicetree/bindings/clock/starfive,jh7110-pll.yaml
+  F:	drivers/clk/starfive/clk-starfive-jh7110-pll.c
+  
+@@ -118,7 +118,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  STARFIVE JH7110 SYSCON
+  M:	William Qiu <william.qiu@starfivetech.com>
+  M:	Xingyu Wu <xingyu.wu@starfivetech.com>
+-@@ -20516,9 +20562,10 @@ F:	drivers/usb/cdns3/cdns3-starfive.c
++@@ -20522,9 +20568,10 @@ F:	drivers/usb/cdns3/cdns3-starfive.c
+  
+  STARFIVE JH71XX PMU CONTROLLER DRIVER
+  M:	Walker Chen <walker.chen@starfivetech.com>
+@@ -130,7 +130,7 @@ Signed-off-by: Hal Feng <hal.feng@starfivetech.com>
+  F:	include/dt-bindings/power/starfive,jh7110-pmu.h
+  
+  STARFIVE SOC DRIVERS
+-@@ -20526,7 +20573,13 @@ M:	Conor Dooley <conor@kernel.org>
++@@ -20532,7 +20579,13 @@ M:	Conor Dooley <conor@kernel.org>
+  S:	Maintained
+  T:	git https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux.git/
+  F:	Documentation/devicetree/bindings/soc/starfive/
+diff --git a/target/linux/starfive/patches-6.6/1014-reset-starfive-Add-JH7100-audio-reset-driver.patch b/target/linux/starfive/patches-6.6/1014-reset-starfive-Add-JH7100-audio-reset-driver.patch
+index 578b6bf84a..8b24eb33e5 100644
+--- a/target/linux/starfive/patches-6.6/1014-reset-starfive-Add-JH7100-audio-reset-driver.patch
++++ b/target/linux/starfive/patches-6.6/1014-reset-starfive-Add-JH7100-audio-reset-driver.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Emil Renner Berthing <kernel@esmil.dk>
+ 
+ --- a/MAINTAINERS
+ +++ b/MAINTAINERS
+-@@ -20550,7 +20550,7 @@ STARFIVE JH71X0 RESET CONTROLLER DRIVERS
++@@ -20556,7 +20556,7 @@ STARFIVE JH71X0 RESET CONTROLLER DRIVERS
+  M:	Emil Renner Berthing <kernel@esmil.dk>
+  M:	Hal Feng <hal.feng@starfivetech.com>
+  S:	Maintained
+-- 
+2.43.0
+
