@@ -160,9 +160,9 @@ function patch_lunatic7() {
         }
 
 function patch_rockchip() {
-        for rockpatch in $( ls tpm312/core-2410 ); do
+        for rockpatch in $( ls tpm312/istoreos-2410 ); do
             echo Applying tpm312 $rockpatch
-            patch -p1 --no-backup-if-mismatch --quiet < tpm312/core-2410/$rockpatch
+            patch -p1 --no-backup-if-mismatch --quiet < tpm312/istoreos-2410/$rockpatch
         done
         rm -rf tpm312
         }

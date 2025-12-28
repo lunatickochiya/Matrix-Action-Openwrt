@@ -12,13 +12,13 @@ Subject: [PATCH 1/5] luci:add more info
  5 files changed, 192 insertions(+), 39 deletions(-)
 
 diff --git a/modules/luci-base/po/zh_Hans/base.po b/modules/luci-base/po/zh_Hans/base.po
-index 377b06c..f79c1df 100644
+index 1a1f4fa..14b2882 100644
 --- a/modules/luci-base/po/zh_Hans/base.po
 +++ b/modules/luci-base/po/zh_Hans/base.po
-@@ -12502,3 +12502,12 @@ msgstr "{example_nx} 返回 {nxdomain}。"
- #: modules/luci-compat/luasrc/view/cbi/delegator.htm:20
- msgid "« Back"
- msgstr "« 后退"
+@@ -12901,3 +12901,12 @@ msgstr "\"<code>3,192.168.2.1</code>\"表示通告不同的网关给客户端。
+
+ msgid "Note: Do not use \"odhcpd\" or network interface (such as \"lan\", \"wan\", \"wan6\", etc.) as name when adding tags, conflicts will occur. It is recommended to prefix the name with \"t_\" to avoid such conflicts."
+ msgstr "注意：添加标签时请勿将“odhcpd”或网络接口（例如“lan”，“wan”，“wan6”等）作为名称，将产生冲突。建议在名称前面加上前缀“t_”以杜绝此类冲突。"
 +
 +msgid "Source Code"
 +msgstr "源代码"
@@ -29,10 +29,10 @@ index 377b06c..f79c1df 100644
 +msgid "Online Users"
 +msgstr "在线用户数"
 diff --git a/modules/luci-base/root/usr/share/rpcd/ucode/luci b/modules/luci-base/root/usr/share/rpcd/ucode/luci
-index e104225..9e053ad 100644
+index bd55c78..01df156 100644
 --- a/modules/luci-base/root/usr/share/rpcd/ucode/luci
 +++ b/modules/luci-base/root/usr/share/rpcd/ucode/luci
-@@ -199,6 +199,7 @@ const methods = {
+@@ -227,6 +227,7 @@ const methods = {
  				bonding:    access('/sys/module/bonding'),
  				mii_tool:   access('/usr/sbin/mii-tool'),
  				offloading: access('/sys/module/xt_FLOWOFFLOAD/refcnt') == true || access('/sys/module/nft_flow_offload/refcnt') == true,
@@ -40,8 +40,8 @@ index e104225..9e053ad 100644
  				br2684ctl:  access('/usr/sbin/br2684ctl') == true,
  				swconfig:   access('/sbin/swconfig') == true,
  				odhcpd:     access('/usr/sbin/odhcpd') == true,
-@@ -546,44 +547,119 @@ const methods = {
- 
+@@ -579,49 +580,121 @@ const methods = {
+
  	getBuiltinEthernetPorts: {
  		call: function() {
 -			let fd = open('/etc/board.json', 'r');
@@ -49,7 +49,7 @@ index e104225..9e053ad 100644
 +			const ubus = connect();
 +			const sysboard = ubus.call('system', 'board');
  			let ports = [];
- 
+
 -			for (let k in [ 'lan', 'wan' ]) {
 -				if (!board?.network?.[k])
 -					continue;
@@ -61,8 +61,10 @@ index e104225..9e053ad 100644
 +				map(keys(stat), (ifname) => {
 +					if (
 +						ifname &&
-+						stat[ifname]?.devtype in ['ethernet', 'dsa'] &&
-+						length(stat[ifname]['link-advertising'])
++						stat[ifname]?.devtype in ['ethernet', 'dsa'] && (
++							length(stat[ifname]['link-advertising']) ||
++							match(ifname, /^eth\d+$/)
++						)
 +					)
 +						push(ports, { role: 'unknown', device: ifname });
 +				});
@@ -72,7 +74,7 @@ index e104225..9e053ad 100644
 +				for (let k in [ 'lan', 'wan' ]) {
 +					if (!board?.network?.[k])
 +						continue;
- 
+
 -				if (type(board.network[k].ports) == 'array') {
 -					for (let ifname in board.network[k].ports) {
 -						push(ports, { role: k, device: ifname });
@@ -87,15 +89,20 @@ index e104225..9e053ad 100644
 -					push(ports, { role: k, device: board.network[k].device });
 -				}
  			}
- 
+
 -			/* Workaround for targets that do not enumerate  all netdevs in board.json */
--			if (uname().machine in [ 'x86_64' ] &&
+-			if (uname().machine in [ 'x86_64', 'aarch64' ] &&
 -			    match(ports[0]?.device, /^eth\d+$/)) {
--				let bus = readlink(`/sys/class/net/${ports[0].device}/device/subsystem`);
+-				let bus = readlink(`/sys/class/net/${ports[0].device}/device/subsystem`) || 'virtual';
+-				let busname = basename(bus);
+-				let allowed_buses = [ busname ];
+-				if (busname == 'pci' || busname == 'virtio') {
+-					allowed_buses = [ 'pci', 'virtio' ];
+-				}
 +			return { result: ports };
 +		}
 +	},
- 
+
 -				for (let netdev in lsdir('/sys/class/net')) {
 -					if (!match(netdev, /^eth\d+$/))
 -						continue;
@@ -104,15 +111,15 @@ index e104225..9e053ad 100644
 +			return { cpubench: readfile('/etc/bench.log') || '' };
 +		}
 +	},
- 
+
 -					if (length(filter(ports, port => port.device == netdev)))
 -						continue;
 +	getCPUInfo: {
 +		call: function() {
 +			if (!access('/sbin/cpuinfo'))
 +				return {};
- 
--					if (readlink(`/sys/class/net/${netdev}/device/subsystem`) != bus)
+
+-					if (!(basename(readlink(`/sys/class/net/${netdev}/device/subsystem`) || 'virtual') in allowed_buses))
 -						continue;
 +			const fd = popen('/sbin/cpuinfo');
 +			if (fd) {
@@ -120,7 +127,7 @@ index e104225..9e053ad 100644
 +				if (!cpuinfo)
 +					cpuinfo = '?';
 +				fd.close();
- 
+
 -					push(ports, { role: 'unknown', device: netdev });
 -				}
 +				return { cpuinfo: cpuinfo };
@@ -129,7 +136,7 @@ index e104225..9e053ad 100644
  			}
 +		}
 +	},
- 
+
 -			return { result: ports };
 +	getCPUUsage: {
 +		call: function() {
@@ -183,8 +190,9 @@ index e104225..9e053ad 100644
 +				return { onlineusers: error() };
 +			}
  		}
- 	}
- };
+ 	},
+
+
 diff --git a/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js b/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js
 index 45f7b4a..7ef6b50 100644
 --- a/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include/10_system.js
