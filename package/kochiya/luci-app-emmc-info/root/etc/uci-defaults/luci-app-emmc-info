@@ -1,0 +1,9 @@
+#!/bin/sh
+
+/etc/init.d/uhttpd restart
+chmod 0777 /usr/bin/emmcinfo.sh
+rm -rf /tmp/luci-*
+exit 0
+
+
+
