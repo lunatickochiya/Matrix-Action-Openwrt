@@ -1,5 +1,5 @@
-REPO_URL="https://github.com/istoreos/istoreos"
-REPO_BRANCH="istoreos-24.10"
+REPO_URL="https://github.com/lunatickochiya/istoreos-24.10.git"
+REPO_BRANCH="24.10.4"
 DIY_SH="diy-2410.sh"
 DIY_SH_AFB="after_build.sh"
 DIY_SH_RFC="refineconfig.sh"

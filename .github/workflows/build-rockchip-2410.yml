@@ -16,15 +16,16 @@ on:
         type: choice
         options:
         - 'tpm312'
+        - 'tpm312_lite'
         - 'mpc1917'
         - 'fmx1_pro'
       REPO:
         description: 'Choose repo'
         required: true
-        default: 'openwrt-24.10'
+        default: 'istoreos-24.10'
         type: choice
         options:
-        - 'openwrt-24.10'
+        - 'istoreos-24.10'
         - 'main'
       SETIP:
         description: 'Set ip address'
@@ -98,6 +99,7 @@ jobs:
         include:
         - rockchip: mpc1917
         - rockchip: tpm312
+        - rockchip: tpm312_lite
         - rockchip: fmx1_pro
 
     steps:
@@ -107,8 +109,8 @@ jobs:
       - name: 生成矩阵配置
         id: set-matrix
         run: |
-          if [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "openwrt-24.10" ]; then
-            matrix={\"include\":[{\"target\":\"rockchip-iptables\",\"repo\":\"openwrt-24.10\"},{\"target\":\"rockchip-nftables\",\"repo\":\"openwrt-24.10\"}]}
+          if [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "istoreos-24.10" ]; then
+            matrix={\"include\":[{\"target\":\"rockchip-iptables\",\"repo\":\"istoreos-24.10\"},{\"target\":\"rockchip-nftables\",\"repo\":\"istoreos-24.10\"}]}
           elif [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "main" ]; then
             matrix={\"include\":[{\"target\":\"rockchip-iptables\",\"repo\":\"main\"},{\"target\":\"rockchip-nftables\",\"repo\":\"main\"}]}
           fi
