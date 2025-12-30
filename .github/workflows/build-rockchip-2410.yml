@@ -80,7 +80,7 @@ on:
       patch_repo:
         description: 'Use json patch repo true(1) or false(0) See ReadME'
         required: true
-        default: '{"OPENSSL_3_5": "1", "BCM_FULLCONE": "0", "MAC80211_616": "0", "MAC80211_618": "0", "TRY_BBR_V3": "1", "Firewall_Allow_WAN": "1"}'
+        default: '{"Branch": "istoreos-24.10.5-6.6.110", "OPENSSL_3_5": "1", "BCM_FULLCONE": "0", "MAC80211_616": "0", "MAC80211_618": "0", "TRY_BBR_V3": "1", "Firewall_Allow_WAN": "0"}'
 
       config_repo:
         description: 'Use json config repo true(1) or false(0) See ReadME'
@@ -166,7 +166,7 @@ jobs:
       id: clone
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
+        git clone $REPO_URL -b $Branch openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
@@ -352,7 +352,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
-        name: ${{ env.date3 }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}${{ env.MAC80211_616_NAME }}
+        name: ${{ env.date3 }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}${{ env.MAC80211_616_NAME }}_${{ env.Branch }}
         path: |
           firmware
 
@@ -361,7 +361,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_IPK_DIR == 'true' && steps.afb.outputs.status == 'success'
       with:
-        name: ${{ env.date3 }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}${{ env.MAC80211_616_NAME }}
+        name: ${{ env.date3 }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}${{ env.MAC80211_616_NAME }}_${{ env.Branch }}
         path: |
           ipks
 
@@ -402,8 +402,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: "${{ env.FIRMWARE }}/*"
-        name: ${{ env.date }} ${{matrix.target}}-${{github.event.inputs.MACH}}-${{ matrix.repo }}
-        tag_name: ${{ env.date }}_${{matrix.target}}-${{github.event.inputs.MACH}}-${{ matrix.repo }}
+        name: ${{ env.date }} ${{matrix.target}}-${{github.event.inputs.MACH}}-${{ matrix.repo }}_${{ env.Branch }}
+        tag_name: ${{ env.date }}_${{matrix.target}}-${{github.event.inputs.MACH}}-${{ matrix.repo }}_${{ env.Branch }}
         body_path: release.txt
 
     - name: 删除工作流
