@@ -1,0 +1,320 @@
+<%+header%>
+<style>
+  .card {
+    background: var(--cbi-section-bg, #fff);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .card h3 {
+    margin-top: 0;
+    color: var(--cbi-section-header-color, #2c3e50);
+    font-weight: 600;
+    font-size: 1.2em;
+    border-bottom: 2px solid var(--cbi-section-header-color, #2c3e50);
+    padding-bottom: 6px;
+  }
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  .info-table th, .info-table td {
+    text-align: left;
+    padding: 6px 8px;
+    vertical-align: top;
+  }
+  .info-table th {
+    background: var(--cbi-section-bg-alt, #f9fafb);
+    width: 150px;
+  }
+  .progress-bar {
+    height: 18px;
+    background: #eee;
+    border-radius: 9px;
+    overflow: hidden;
+    margin-top: 6px;
+    width: 100%;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--cbi-button-bg, #007AFF);
+    transition: width 0.5s ease;
+  }
+  .remark {
+    font-size: x-small;
+    font-style: italic;
+    color: #666;
+    margin-top: 2px;
+    display: block;
+  }
+  #resultConsole {
+    background: #1e1e2f;
+    color: #a0a0ff;
+    font-family: monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 15px;
+    display: none;
+  }
+  .btn-center {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  #speedResults {
+    list-style:none;  
+    padding-left:0;  
+    font-family: monospace;  
+    margin-top: 10px;
+  }
+  #speedResults li {
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--cbi-section-header-color, #2c3e50);
+  }
+  #lastCheckTime {
+    position: absolute;
+    right: 20px;
+    bottom: 12px;
+    color: red;
+    font-size: 0.85em;
+    font-weight: 600;
+    font-family: monospace;
+    user-select: none;
+  }
+  
+  .log-output {
+    background-color: #1e1e1e;       /* 深色背景，类似 VSCode */
+    color: #dcdcdc;                  /* 柔和字体颜色 */
+    font-family: Consolas, monospace; /* 等宽字体 */
+    font-size: 13px;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    white-space: pre-wrap;          /* 自动换行 */
+    word-break: break-word;
+    max-height: 400px;              /* 限制高度，避免撑满页面 */
+    overflow-y: auto;               /* 可滚动 */
+    box-shadow: inset 0 0 5px #000; /* 内阴影增强层次感 */
+}
+</style>
+
+<h2 class="cbi-section-title">eMMC 检测工具</h2>
+<p>点击下方按钮运行检测，显示型号、寿命和速度等信息。查看你设备内的eMMC芯片的主要参数信息。</p>
+
+<div class="btn-center">
+  <button class="cbi-button cbi-button-apply" onclick="runCheck()">运行检测</button>
+</div>
+
+<div id="infoCards" style="display:none; position: relative;">
+  <div class="card" id="basicInfo">
+    <h3>基本信息</h3>
+    <table class="info-table">
+      <tbody>
+        <tr><th>型号</th><td id="model"></td></tr>
+        <tr><th>CID</th><td id="cid"></td></tr>
+        <tr><th>容量</th><td id="capacity"></td></tr>
+        <tr><th>序列号</th><td id="serial"></td></tr>
+        <tr><th>挂载点</th><td id="device"></td></tr>      
+        <tr><th>固件版本</th><td id="fwrev"></td></tr>
+        <tr><th>硬件版本</th><td id="hwrev"></td></tr>
+        <tr><th>厂商ID</th><td id="manfid"></td></tr>
+        <tr><th>OEM ID</th><td id="oemid"></td></tr>
+        <tr><th>产品版本</th><td id="prv"></td></tr>
+        <tr><th>生产日期</th><td id="date"></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" id="healthInfo">
+    <h3>寿命信息<small>（10%阶梯）</small></h3>
+    <table class="info-table">
+      <tbody>
+        <tr>
+          <th>
+            已使用寿命<br>
+            <span class="remark">（擦除次数）</span>
+          </th>
+          <td>
+            <span id="lifeA_val"></span>
+            <div class="progress-bar"><div id="lifeA_bar" class="progress-fill"></div></div>
+          </td>
+        </tr>
+        <tr>
+          <th>
+            已使用寿命<br>
+            <span class="remark">（写入量）</span>
+          </th>
+          <td>
+            <span id="lifeB_val"></span>
+            <div class="progress-bar"><div id="lifeB_bar" class="progress-fill"></div></div>
+          </td>
+        </tr>
+        <tr><th>Pre EOL 信息</th><td id="preEOL"></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" id="speedInfo" style="position: relative;">
+    <h3>速度测试</h3>
+    <ul id="speedResults"></ul>
+    <div id="lastCheckTime" title="最后检测时间"></div>
+  </div>
+
+
+<h3 style="cursor:pointer; user-select:none;">详细检测日志</h3>
+<pre id="rawOutput" class="log-output"></pre>
+
+
+</div>
+
+<script type="text/javascript">
+function formatDateTime(date) {
+  const pad = (n) => n < 10 ? '0' + n : n;
+  return date.getFullYear() + '-' + pad(date.getMonth()+1) + '-' + pad(date.getDate()) + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+}
+
+function loadFromStorage() {
+  try {
+    const savedData = localStorage.getItem("emmcinfo_last_result");
+    const savedTime = localStorage.getItem("emmcinfo_last_time");
+    if (savedData && savedTime) {
+      document.getElementById("rawOutput").textContent = savedData;
+      document.getElementById("infoCards").style.display = "block";
+      document.getElementById("lastCheckTime").textContent = "检测时间: " + savedTime;
+      parseAndFill(savedData);
+    }
+  } catch(e) {
+    console.warn("加载本地缓存失败", e);
+  }
+}
+
+function parseAndFill(txt) {
+  try {
+    const devMatch = txt.match(/Device\s*:\s*(.*)/);
+    const modelMatch = txt.match(/Model\s*:\s*(.*)/);
+    const cidMatch = txt.match(/CID\s*:\s*(.*)/);
+    const dateMatch = txt.match(/Date\s*:\s*(.*)/);
+    const capacityMatch = txt.match(/Capacity\s*:\s*(.*)/);
+    const fwrevMatch = txt.match(/FWRev\s*:\s*(.*)/);
+    const hwrevMatch = txt.match(/HWRev\s*:\s*(.*)/);
+    const manfidMatch = txt.match(/Manf ID\s*:\s*(.*)/);
+    const oemidMatch = txt.match(/OEM ID\s*:\s*(.*)/);
+    const prvMatch = txt.match(/Product Ver\s*:\s*(.*)/);
+    const serialMatch = txt.match(/Serial(?:\s*No)?\s*:\s*(.*)/);
+
+    if (devMatch) document.getElementById("device").textContent = devMatch[1].trim();
+    if (modelMatch) document.getElementById("model").textContent = modelMatch[1].trim();
+    if (cidMatch) document.getElementById("cid").textContent = cidMatch[1].trim();
+    if (dateMatch) document.getElementById("date").textContent = dateMatch[1].trim();
+    if (capacityMatch) document.getElementById("capacity").textContent = capacityMatch[1].trim();
+    if (fwrevMatch) document.getElementById("fwrev").textContent = fwrevMatch[1].trim();
+    if (hwrevMatch) document.getElementById("hwrev").textContent = hwrevMatch[1].trim();
+    if (manfidMatch) document.getElementById("manfid").textContent = manfidMatch[1].trim();
+    if (oemidMatch) document.getElementById("oemid").textContent = oemidMatch[1].trim();
+    if (prvMatch) document.getElementById("prv").textContent = prvMatch[1].trim();
+    if (serialMatch) document.getElementById("serial").textContent = serialMatch[1].trim().toUpperCase();
+
+    // 寿命信息
+    const lifeAMatch = txt.match(/Life Time Estimation A\s*:\s*0x([0-9a-fA-F]+) \(~(\d+)% used\)/);
+    const lifeBMatch = txt.match(/Life Time Estimation B\s*:\s*0x([0-9a-fA-F]+) \(~(\d+)% used\)/);
+    const preEOLMatch = txt.match(/Pre EOL info\s*:\s*(0x[0-9a-fA-F]+) \((.*)\)/);
+
+    if (lifeAMatch) {
+      const percentA = parseInt(lifeAMatch[2]);
+      document.getElementById("lifeA_val").textContent = `${percentA}%`;
+      document.getElementById("lifeA_bar").style.width = percentA + "%";
+    }
+    if (lifeBMatch) {
+      const percentB = parseInt(lifeBMatch[2]);
+      document.getElementById("lifeB_val").textContent = `${percentB}%`;
+      document.getElementById("lifeB_bar").style.width = percentB + "%";
+    }
+    if (preEOLMatch) {
+      document.getElementById("preEOL").textContent = preEOLMatch[2];
+    }
+
+    // 速度信息解析
+    const speedSection = txt.split("==== eMMC Speed Test ====")[1];
+    if (speedSection) {
+      const lines = speedSection.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+      let writeSpeed = null, readSpeed = null, hdparmCached = null, hdparmBuffered = null;
+
+      for (let line of lines) {
+        let m = line.match(/([\d\.]+)\s*(MB|GB)\/s/);
+        if (m && line.toLowerCase().includes("copied")) {
+          writeSpeed = m[1] + " " + m[2] + "/s";
+          break;
+        }
+      }
+      for (let line of lines) {
+        if (line.toLowerCase().includes("copied") && !line.toLowerCase().includes("write")) {
+          let m = line.match(/([\d\.]+)\s*(MB|GB)\/s/);
+          if (m) { readSpeed = m[1] + " " + m[2] + "/s"; break; }
+        }
+      }
+      for (let line of lines) {
+        let cachedM = line.match(/Timing cached reads:.*=\s*([\d\.]+) MB\/sec/);
+        let bufferedM = line.match(/Timing buffered disk reads:.*=\s*([\d\.]+) MB\/sec/);
+        if (cachedM) hdparmCached = cachedM[1] + " MB/s";
+        if (bufferedM) hdparmBuffered = bufferedM[1] + " MB/s";
+      }
+
+      const ul = document.getElementById("speedResults");
+      ul.innerHTML = "";
+      if (writeSpeed) ul.insertAdjacentHTML("beforeend", `<li>写入速度: ${writeSpeed}</li>`);
+      if (readSpeed) ul.insertAdjacentHTML("beforeend", `<li>读取速度: ${readSpeed}</li>`);
+      if (hdparmCached) ul.insertAdjacentHTML("beforeend", `<li>缓存读取速度 (hdparm): ${hdparmCached}</li>`);
+      if (hdparmBuffered) ul.insertAdjacentHTML("beforeend", `<li>缓冲读取速度 (hdparm): ${hdparmBuffered}</li>`);
+    }
+  } catch(e) {
+    console.warn("解析异常", e);
+  }
+}
+
+function runCheck() {
+  const btn = document.querySelector("button.cbi-button-apply");
+  btn.disabled = true;
+  btn.textContent = "检测中，请稍候...";
+
+  document.getElementById("infoCards").style.display = "none";
+  document.getElementById("rawOutput").textContent = "";
+  ["device","model","cid","date","capacity","fwrev","hwrev","manfid","oemid","prv","serial","lifeA_val","lifeB_val","preEOL"].forEach(id => {
+    document.getElementById(id).textContent = "";
+  });
+  document.getElementById("lifeA_bar").style.width = "0%";
+  document.getElementById("lifeB_bar").style.width = "0%";
+  document.getElementById("speedResults").innerHTML = "";
+  document.getElementById("lastCheckTime").textContent = "";
+
+  fetch('<%=url([[admin]], [[system]], [[emmcinfo_run]])%>')
+    .then(res => res.text())
+    .then(txt => {
+      document.getElementById("rawOutput").textContent = txt;
+      btn.disabled = false;
+      btn.textContent = "运行检测";
+      document.getElementById("infoCards").style.display = "block";
+      const nowStr = formatDateTime(new Date());
+      document.getElementById("lastCheckTime").textContent = "检测时间: " + nowStr;
+      try {
+        localStorage.setItem("emmcinfo_last_result", txt);
+        localStorage.setItem("emmcinfo_last_time", nowStr);
+      } catch(e) {}
+      parseAndFill(txt);
+    })
+    .catch(err => {
+      alert("检测出错: " + err);
+      btn.disabled = false;
+      btn.textContent = "运行检测";
+    });
+}
+
+window.onload = loadFromStorage;
+</script>
+<%+footer%>
