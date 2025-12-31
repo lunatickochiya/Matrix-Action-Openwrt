@@ -80,7 +80,7 @@ on:
       patch_repo:
         description: 'Use json patch repo true(1) or false(0) See ReadME'
         required: true
-        default: '{"Branch": "istoreos-24.10.5-6.6.110", "OPENSSL_3_5": "1", "BCM_FULLCONE": "0", "MAC80211_616": "0", "MAC80211_618": "0", "TRY_BBR_V3": "1", "Firewall_Allow_WAN": "0"}'
+        default: '{"Branch": "istoreos-24.10-mac80211-618", "OPENSSL_3_5": "1", "BCM_FULLCONE": "0", "TRY_BBR_V3": "1", "Firewall_Allow_WAN": "0"}'
 
       config_repo:
         description: 'Use json config repo true(1) or false(0) See ReadME'
@@ -172,7 +172,7 @@ jobs:
         sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
         bash tpm312/cus.sh
-        if [ ${{ env.MAC80211_618 }} = 1 ]; then
+        if [ ${{ env.Branch }} = istoreos-24.10-mac80211-618 ]; then
         mv -f tpm312/mac80211-618-patch-for-2410 $GITHUB_WORKSPACE/mac80211-618
         mv -f tpm312/batman-with-backport6.18-2410 $GITHUB_WORKSPACE/batman-2410
         fi
@@ -280,7 +280,7 @@ jobs:
         echo "------------------------"
         awk '/CONFIG_PACKAGE_kmod/ { print }' .config
         echo "------------------------"
-        awk '/turboacc/ { print }' .config
+        awk '/mmdvm/ { print }' .config
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'

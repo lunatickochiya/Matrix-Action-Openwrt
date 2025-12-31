@@ -124,6 +124,14 @@ function init_openwrt_patch_common() {
 		echo "MAC80211_616_NAME=_MAC80211_616" >> $GITHUB_ENV
 	fi
 
+	if [ "$Branch" = "istoreos-24.10-mac80211-618" ]; then
+		[ -d mac80211-618 ] && cp -r mac80211-618/* $OpenWrt_PATCH_FILE_DIR/mypatch-custom-$Matrix_Target
+		mkdir -p $OpenWrt_PATCH_FILE_DIR/feeds-routing-patch
+		[ -d batman-2410 ] && cp -r batman-2410/* $OpenWrt_PATCH_FILE_DIR/feeds-routing-patch
+		echo "----$Matrix_Target----mac80211-6-18---"
+		echo "MAC80211_616_NAME=_MAC80211_618" >> $GITHUB_ENV
+	fi
+
 	if [ "$AG71XX_FIX" = "1" ]; then
 		[ -d $OpenWrt_PATCH_FILE_DIR/my-patch-ag71xx-fix ] && cp -r $OpenWrt_PATCH_FILE_DIR/my-patch-ag71xx-fix/* $OpenWrt_PATCH_FILE_DIR/mypatch-custom-$Matrix_Target
 	fi
@@ -434,6 +442,7 @@ function fix_openwrt_feeds() {
 	[ -d $OpenWrt_PATCH_FILE_DIR/feeds-luci-patch ] && mv -f $OpenWrt_PATCH_FILE_DIR/feeds-luci-patch openwrt/feeds/luci/feeds-luci-patch
 	[ -d $OpenWrt_PATCH_FILE_DIR/feeds-packages-patch ] && mv -f $OpenWrt_PATCH_FILE_DIR/feeds-packages-patch openwrt/feeds/packages/feeds-packages-patch
 	[ -d $OpenWrt_PATCH_FILE_DIR/feeds-telephony-patch ] && mv -f $OpenWrt_PATCH_FILE_DIR/feeds-telephony-patch openwrt/feeds/telephony/feeds-telephony-patch
+	[ -d $OpenWrt_PATCH_FILE_DIR/feeds-routing-patch ] && mv -f $OpenWrt_PATCH_FILE_DIR/feeds-routing-patch openwrt/feeds/routing/feeds-routing-patch
 
 	cd openwrt
 	autosetver
@@ -520,6 +529,13 @@ function patch_openwrt_feeds() {
     cd feeds/telephony/
     echo Applying feeds-telephony-patch $telepatch
         patch -p1 --no-backup-if-mismatch < feeds-telephony-patch/$telepatch
+    cd ../..
+    done
+
+    for routingpatch in $( ls feeds/routing/feeds-routing-patch ); do
+    cd feeds/routing/
+    echo Applying feeds-routing-patch $routingpatch
+        patch -p1 --no-backup-if-mismatch --quiet < feeds-routing-patch/$routingpatch
     cd ../..
     done
 }
