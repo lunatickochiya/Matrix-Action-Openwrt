@@ -572,6 +572,7 @@ function remove_error_package_not_install() {
 		"feeds/luci/applications/luci-app-filebrowser"
 		"feeds/luci/applications/luci-app-filemanager"
 		"feeds/lunatic7/rtl8821cu"
+		"feeds/lunatic7/mmdvm-luci"
 		"feeds/lunatic7/shortcut-fe"
 		"feeds/lunatic7/fullconenat-nft"
 		"feeds/lunatic7/luci-app-turboacc"

@@ -238,6 +238,12 @@ jobs:
         $GITHUB_WORKSPACE/core.sh fix-openwrt-feeds
         echo "status=success" >> $GITHUB_OUTPUT
 
+    - name: Run awk command
+      working-directory: ./openwrt
+      run: |
+        echo "------------------------"
+        awk '/mmdvm/ { print }' .config
+
     - name: 添加kmod
       if: steps.config.outputs.status == 'success' && env.ALLKMOD == '1'
       id: config2
