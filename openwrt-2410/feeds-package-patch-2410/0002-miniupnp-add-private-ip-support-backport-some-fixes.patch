@@ -1,0 +1,1778 @@
+From 952901763b9829f88d479f7c490dc7932653c1ab Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Thu, 1 Jan 2026 19:57:14 +0800
+Subject: [PATCH] miniupnp:add private ip support backport some fixes
+
+---
+ net/miniupnpd/files/miniupnpd.init            |   6 +-
+ net/miniupnpd/files/upnpd.config              |   9 +-
+ .../patches/010-upnp-igdv2-compat.patch       |  75 +++
+ .../patches/020-descr-filter-fix.patch        | 511 +++++++++++++++
+ .../patches/030-allow-private-fix.patch       |  18 +
+ .../patches/040-improve-logging.patch         | 450 +++++++++++++
+ ...pd-format-xml-to-make-some-app-happy.patch | 608 ++++++++++++++++++
+ 7 files changed, 1673 insertions(+), 4 deletions(-)
+ create mode 100644 net/miniupnpd/patches/010-upnp-igdv2-compat.patch
+ create mode 100644 net/miniupnpd/patches/020-descr-filter-fix.patch
+ create mode 100644 net/miniupnpd/patches/030-allow-private-fix.patch
+ create mode 100644 net/miniupnpd/patches/040-improve-logging.patch
+ create mode 100644 net/miniupnpd/patches/900-miniupnpd-format-xml-to-make-some-app-happy.patch
+
+diff --git a/net/miniupnpd/files/miniupnpd.init b/net/miniupnpd/files/miniupnpd.init
+index 15bd2e0f9..ab02a8606 100644
+--- a/net/miniupnpd/files/miniupnpd.init
++++ b/net/miniupnpd/files/miniupnpd.init
+@@ -61,7 +61,7 @@ upnpd() {
+ 	local external_iface external_iface6 external_zone external_ip internal_iface
+ 	local upload download log_output port config_file serial_number model_number
+ 	local use_stun stun_host stun_port uuid notify_interval presentation_url
+-	local upnp_lease_file ipv6_disable
++	local upnp_lease_file ipv6_disable force_forwarding
+ 
+ 	local enabled
+ 	config_get_bool enabled config enabled 1
+@@ -87,6 +87,7 @@ upnpd() {
+ 	config_get presentation_url config presentation_url
+ 	config_get upnp_lease_file config upnp_lease_file
+ 	config_get ipv6_disable config ipv6_disable 0
++	config_get force_forwarding config force_forwarding 0
+ 
+ 	local conf ifname ifname6
+ 
+@@ -132,13 +133,14 @@ upnpd() {
+ 		done
+ 
+ 		config_load "upnpd"
+-		upnpd_write_bool enable_natpmp 1
++		upnpd_write_bool enable_natpmp 1 enable_pcp_pmp
+ 		upnpd_write_bool enable_upnp 1
+ 		upnpd_write_bool secure_mode 1
+ 		upnpd_write_bool system_uptime 1
+ 		upnpd_write_bool igdv1 0 force_igd_desc_v1
+ 		upnpd_write_bool use_stun 0 ext_perform_stun
+ 		upnpd_write_bool ipv6_disable $ipv6_disable
++		upnpd_write_bool ext_allow_private_ipv4 $force_forwarding
+ 
+ 		[ "$use_stun" -eq 0 ] || {
+ 			[ -n "$stun_host" ] && echo "ext_stun_host=$stun_host"
+diff --git a/net/miniupnpd/files/upnpd.config b/net/miniupnpd/files/upnpd.config
+index bd7c3ec40..ef31a7bee 100644
+--- a/net/miniupnpd/files/upnpd.config
++++ b/net/miniupnpd/files/upnpd.config
+@@ -4,14 +4,19 @@ config upnpd config
+ 	option enable_upnp	1
+ 	option secure_mode	1
+ 	option log_output	0
+-	option download		1024
+-	option upload		512
++	option download		20480
++	option upload		2048
+ #by default, looked up dynamically from ubus
+ #	option external_iface	wan
+ 	option internal_iface	lan
+ 	option port		5000
+ 	option upnp_lease_file	/var/run/miniupnpd.leases
+ 	option igdv1		1
++	option ipv6_disable	1
++	option use_stun		0
++	option stun_host	stun.miwifi.com
++	option stun_port	3478
++	option force_forwarding	1
+ 
+ config perm_rule
+ 	option action		allow
+diff --git a/net/miniupnpd/patches/010-upnp-igdv2-compat.patch b/net/miniupnpd/patches/010-upnp-igdv2-compat.patch
+new file mode 100644
+index 000000000..597e899c5
+--- /dev/null
++++ b/net/miniupnpd/patches/010-upnp-igdv2-compat.patch
+@@ -0,0 +1,75 @@
++From a5fa10bbe0dbb69bbfc47f5865238f352fa71675 Mon Sep 17 00:00:00 2001
++From: Self-Hosting-Group
++ <155233284+Self-Hosting-Group@users.noreply.github.com>
++Date: Thu, 27 Nov 2025 00:00:00 +0000
++Subject: [PATCH] miniupnpd: UPnP IGDv2 Microsoft/Apple compatibility
++
++- Add workaround to list port maps with the Windows IGDv2-incompatible
++  client by returning an infinite (0) lease duration. To fix listing and
++  editing via GUI (Explorer/Network), if daemon was compiled with IGDv2
++- Extend detection to older versions of Windows and add Xbox
++- Detect Apple IGDv2-incompatible clients and apply existing workaround,
++  that only caused problems if PCP/NAT-PMP (prioritised) was disabled
++
++Link: https://github.com/Self-Hosting-Group/miniupnp/tree/upnp-igdv2-compat
++
++--- a/upnphttp.c
+++++ b/upnphttp.c
++@@ -303,9 +303,22 @@ ParseHttpHeaders(struct upnphttp * h)
++ 			}
++ 			else if(strncasecmp(line, "user-agent:", 11) == 0)
++ 			{
++-				/* - User-Agent: Microsoft-Windows/10.0 UPnP/1.0
++-				 * - User-Agent: FDSSDP                           */
++-				if(strcasestr(line + 11, "microsoft") != NULL || strstr(line + 11, "FDSSDP") != NULL) {
+++				/* Detect Microsoft UPnP IGDv2-incompatible clients that only support IGDv1 routers,
+++				 * and Windows requires extra UDA 1.x (Win XP 1.0), via User-Agent SOAP/HTTP header:
+++				 * - Microsoft-Windows/10.0 UPnP/1.0 (Win >=10)
+++				 * - Microsoft-Windows/6.1 UPnP/1.0 (Win 7)
+++				 * - FDSSDP (Win >=Vista for GET)
+++				 * - Mozilla/4.0 (compatible; UPnP/1.0; Windows NT/5.1) (Win XP/Vista for GET)
+++				 * - Mozilla/4.0 (compatible; UPnP/1.0; Windows 9x) (Win XP/Vista for POST)
+++				 * - Xbox/2.0.17559.0 UPnP/1.0 Xbox/2.0.17559.0
+++				 * Detect Apple UPnP IGDv2-incompatible clients that only support IGDv1 routers:
+++				 * - Mozilla/4.0 (compatible; UPnP/1.0; Windows NT/5.1) (for GET)
+++				 * - Mozilla/4.0 (compatible; UPnP/1.0; Windows 9x) (for POST) */
+++				if (((strstr(line + 11, "Microsoft-Windows/") != NULL ||
+++							strstr(line + 11, "Xbox/") != NULL) &&
+++						 strstr(line + 11, " UPnP/1.0") != NULL) ||
+++						strstr(line + 11, "FDSSDP") != NULL ||
+++						strstr(line + 11, "Mozilla/4.0 (compatible; UPnP/1.0; Windows") != NULL) {
++ 					h->respflags |= FLAG_MS_CLIENT;
++ 				}
++ 			}
++--- a/upnpsoap.c
+++++ b/upnpsoap.c
++@@ -854,6 +854,14 @@ GetSpecificPortMappingEntry(struct upnph
++ #ifdef ENABLE_PCP
++ 		hide_pcp_nonce(desc);
++ #endif
+++#ifdef IGD_V2
+++		/* Workaround to list port maps with the Windows IGDv2-incompatible client
+++		 * by returning an infinite (0) lease duration. To fix listing and editing
+++		 * via GUI (Explorer/Network), if daemon was compiled with IGDv2 */
+++		if (h->respflags & FLAG_MS_CLIENT) {
+++			leaseduration = 0;
+++		}
+++#endif
++ 		bodylen = snprintf(body, sizeof(body), resp,
++ 				action, ns/*SERVICE_TYPE_WANIPC*/,
++ 				(unsigned int)iport, int_ip, desc, leaseduration,
++@@ -1124,6 +1132,14 @@ GetGenericPortMappingEntry(struct upnpht
++ #ifdef ENABLE_PCP
++ 		hide_pcp_nonce(desc);
++ #endif
+++#ifdef IGD_V2
+++		/* Workaround to list port maps with the Windows IGDv2-incompatible client
+++		 * by returning an infinite (0) lease duration. To fix listing and editing
+++		 * via GUI (Explorer/Network), if daemon was compiled with IGDv2 */
+++		if (h->respflags & FLAG_MS_CLIENT) {
+++			leaseduration = 0;
+++		}
+++#endif
++ 		bodylen = snprintf(body, sizeof(body), resp,
++ 			action, ns, /*SERVICE_TYPE_WANIPC,*/ rhost,
++ 			(unsigned int)eport, protocol, (unsigned int)iport, iaddr, desc,
+diff --git a/net/miniupnpd/patches/020-descr-filter-fix.patch b/net/miniupnpd/patches/020-descr-filter-fix.patch
+new file mode 100644
+index 000000000..9d657d153
+--- /dev/null
++++ b/net/miniupnpd/patches/020-descr-filter-fix.patch
+@@ -0,0 +1,511 @@
++From 54ecff0ae4452598773a020e8798ff61ccf3c966 Mon Sep 17 00:00:00 2001
++From: yangfl <yangfl@users.noreply.github.com>
++Date: Thu, 31 Jul 2025 10:35:50 +0800
++Subject: [PATCH] miniupnpd: Rewrite permission line parser
++
++Permission line parser rewrites input buffer in-place for parsing,
++which causes several problems:
++
++* It unnecessarily invalidates input buffer for caller. Actually, you
++  might see the following error message when parsing fails:
++    miniupnpd[1234]: parsing error file /etc/miniupnpd.conf line 16 : allow 1024
++  since the hyphen after 1024 is erased by a '\0'.
++
++* It fails to validate token separators. For example, the following
++  line will be accepted:
++    allow 1024-65535X0.0.0.0/0 1024-65535 all
++                    ^ could be any character
++  and even a potential buffer over-read if the character is '\0', since
++  the parser blindlessly skips it.
++
++* The fifth token is never parsed since it gets a previously written
++  '\0'.
++
++Instead of fixing them case-by-case, we rewrite it with DFS in mind,
++which is much simpler and less error-prone.
++
++--- a/upnppermissions.c
+++++ b/upnppermissions.c
++@@ -29,6 +29,12 @@ isodigit(char c)
++ 	return '0' <= c && c >= '7';
++ }
++ 
+++static int
+++iseol(char c)
+++{
+++	return c == '\0' || c == '\n' || c == '\r';
+++}
+++
++ static char
++ hex2chr(char c)
++ {
++@@ -91,6 +97,84 @@ unescape_char(const char * s, int * seql
++ 	return c;
++ }
++ 
+++/* greedy parser: try to match the longest sequence and do not
+++ * check for terminators */
+++
+++static char *
+++get_sep(const char * s)
+++{
+++	if(!isspace(*s))
+++		return NULL;
+++	do
+++		s++;
+++	while(isspace(*s));
+++	return (char *) s;
+++}
+++
+++static char *
+++get_ushort(const char * s, u_short * val)
+++{
+++	char * end;
+++	unsigned long val_ul;
+++
+++	if(!isdigit(*s))
+++		return NULL;
+++	val_ul = strtoul(s, &end, 10);
+++	if(val_ul > 65535)
+++		return NULL;
+++	*val = (u_short)val_ul;
+++
+++	return end;
+++}
+++
+++static char *
+++get_range(const char * s, u_short * begin, u_short * end)
+++{
+++	s = get_ushort(s, begin);
+++	if(!s)
+++		return NULL;
+++
+++	if(*s!='-')
+++		*end = *begin;
+++	else
+++	{
+++		s++;
+++		s = get_ushort(s, end);
+++		if(!s)
+++			return NULL;
+++		if(*begin > *end)
+++			return NULL;
+++	}
+++	return (char *) s;
+++}
+++
+++static char *
+++get_addr(const char * s, struct in_addr * addr, unsigned int * dot_cnt)
+++{
+++	size_t i;
+++	char buf[64];
+++
+++	if(!isdigit(*s))
+++		return NULL;
+++
+++	*dot_cnt = 0;
+++	for(i = 0; isdigit(s[i]) || s[i] == '.';)
+++	{
+++		if(s[i] == '.')
+++			(*dot_cnt)++;
+++		buf[i] = s[i];
+++		i++;
+++		if (i > sizeof(buf) - 1)
+++			return NULL;
+++	}
+++
+++	buf[i] = '\0';
+++	if(!inet_aton(buf, addr))
+++		return NULL;
+++
+++	return (char *) s + i;
+++}
+++
++ /* get_next_token(s, &token, raw)
++  * put the unquoted/unescaped token in token and returns
++  * a pointer to the begining of the next token
++@@ -99,18 +183,8 @@ static char *
++ get_next_token(const char * s, char ** token, int raw)
++ {
++ 	char deli;
++-	const char * end;
+++	size_t len;
++ 
++-	/* skip any whitespace */
++-	for(; isspace(*s); s++)
++-		if(*s == '\0' || *s == '\n')
++-		{
++-			if(token)
++-				*token = NULL;
++-			return (char *) s;
++-		}
++-
++-	/* find the start */
++ 	if(*s == '"' || *s == '\'')
++ 	{
++ 		deli = *s;
++@@ -119,85 +193,90 @@ get_next_token(const char * s, char ** t
++ 	else
++ 		deli = 0;
++ 	/* find the end */
++-	end = s;
++-	for(; *end != '\0' && *end != '\n' && (deli ? *end != deli : !isspace(*end));
++-	    end++)
++-		if(*end == '\\')
+++	for(len = 0; !iseol(s[len]) && (deli ? s[len] != deli : !isspace(s[len]));
+++	    len++)
+++		if(s[len] == '\\')
++ 		{
++-			end++;
++-			if(*end == '\0')
+++			len++;
+++			if(iseol(s[len]))
++ 				break;
++ 		}
++ 
++ 	/* save the token */
++ 	if(token)
++ 	{
++-		unsigned int token_len;
++-		unsigned int i;
++-
++-		token_len = end - s;
++-		*token = strndup(s, token_len);
++-		if(!*token)
++-			return NULL;
++-
++-		for(i = 0; (*token)[i] != '\0'; i++)
++-		{
++-			int sequence_len;
++-
++-			if((*token)[i] != '\\')
++-				continue;
++-
++-			if(raw && deli && (*token)[i + 1] != deli)
++-				continue;
++-			(*token)[i] = unescape_char(*token + i, &sequence_len);
++-			memmove(*token + i + 1, *token + i + sequence_len,
++-			        token_len - i - sequence_len);
++-		}
++-		if (i == 0)
++-		{
++-			/* behavior of realloc(p, 0) is implementation-defined, so better set it to NULL.
++-			 * https://github.com/miniupnp/miniupnp/issues/652#issuecomment-1518922139 */
++-			free(*token);
+++		if(len == 0)
++ 			*token = NULL;
++-		}
++ 		else
++ 		{
++-			char * tmp = realloc(*token, i);
++-			if (tmp != NULL)
++-				*token = tmp;
+++			unsigned int i;
+++			unsigned int j;
+++
+++			char * tmp;
+++			char * t;
+++
+++			t = malloc(len + 1);
+++			if(!t)
+++				return NULL;
+++
+++			if (raw)
+++			{
+++				memcpy(t, s, len);
+++				j = len;
+++			}
++ 			else
++-				syslog(LOG_ERR, "%s: failed to reallocate to %u bytes",
++-				       "get_next_token()", i);
+++			{
+++				for(i = 0, j = 0; i < len; j++)
+++					if(s[i] != '\\')
+++					{
+++						t[j] = s[i];
+++						i++;
+++					}
+++					else
+++					{
+++						int seqlen;
+++						t[j] = unescape_char(s + i, &seqlen);
+++						i += seqlen;
+++						if (i > len)
+++							break;
+++					}
+++
+++				tmp = realloc(*token, j + 1);
+++				if (tmp != NULL)
+++					t = tmp;
+++				else
+++					syslog(LOG_ERR, "%s: failed to reallocate to %u bytes",
+++					"get_next_token()", j + 1);
+++			}
+++			t[j] = '\0';
+++			*token = t;
++ 		}
++ 	}
++ 
++-	/* return the beginning of the next token */
++-	if(deli && *end == deli)
++-		end++;
++-	while(isspace(*end))
++-		end++;
++-	return (char *) end;
+++	s += len;
+++	if(deli && *s == deli)
+++		s++;
+++	return (char *) s;
++ }
++ 
++ /* read_permission_line()
++  * parse the a permission line which format is :
++- * (deny|allow) [0-9]+(-[0-9]+) ip/mask [0-9]+(-[0-9]+) regex
+++ * (deny|allow) [0-9]+(-[0-9]+)? ip(/mask)? [0-9]+(-[0-9]+)? (regex)?
++  * ip/mask is either 192.168.1.1/24 or 192.168.1.1/255.255.255.0
++  */
++ int
++ read_permission_line(struct upnpperm * perm,
++-                     char * p)
+++                     const char * p)
++ {
++-	char * q;
++-	int n_bits;
++-	int i;
+++	unsigned int dot_cnt;
++ 
++ 	/* zero memory : see https://github.com/miniupnp/miniupnp/issues/652 */
++ 	memset(perm, 0, sizeof(struct upnpperm));
++ 
++-	/* first token: (allow|deny) */
++ 	while(isspace(*p))
++ 		p++;
+++
+++	/* first token: (allow|deny) */
++ 	if(0 == memcmp(p, "allow", 5))
++ 	{
++ 		perm->type = UPNPPERM_ALLOW;
++@@ -212,133 +291,61 @@ read_permission_line(struct upnpperm * p
++ 	{
++ 		return -1;
++ 	}
++-	while(isspace(*p))
++-		p++;
+++
+++	p = get_sep(p);
+++	if(!p)
+++		return -1;
++ 
++ 	/* second token: eport or eport_min-eport_max */
++-	if(!isdigit(*p))
+++	p = get_range(p, &perm->eport_min, &perm->eport_max);
+++	if(!p)
++ 		return -1;
++-	for(q = p; isdigit(*q); q++);
++-	if(*q=='-')
++-	{
++-		*q = '\0';
++-		i = atoi(p);
++-		if(i > 65535)
++-			return -1;
++-		perm->eport_min = (u_short)i;
++-		q++;
++-		p = q;
++-		while(isdigit(*q))
++-			q++;
++-		*q = '\0';
++-		i = atoi(p);
++-		if(i > 65535)
++-			return -1;
++-		perm->eport_max = (u_short)i;
++-		if(perm->eport_min > perm->eport_max)
++-			return -1;
++-	}
++-	else if(isspace(*q))
++-	{
++-		*q = '\0';
++-		i = atoi(p);
++-		if(i > 65535)
++-			return -1;
++-		perm->eport_min = perm->eport_max = (u_short)i;
++-	}
++-	else
++-	{
+++
+++	p = get_sep(p);
+++	if(!p)
++ 		return -1;
++-	}
++-	p = q + 1;
++-	while(isspace(*p))
++-		p++;
++ 
++-	/* third token:  ip/mask */
++-	if(!isdigit(*p))
+++	/* third token: ip/mask */
+++	p = get_addr(p, &perm->address, &dot_cnt);
+++	if(!p)
++ 		return -1;
++-	for(q = p; isdigit(*q) || (*q == '.'); q++);
++-	if(*q=='/')
+++
+++	if(*p!='/')
+++		perm->mask.s_addr = 0xffffffffu;
+++	else
++ 	{
++-		*q = '\0';
++-		if(!inet_aton(p, &perm->address))
++-			return -1;
++-		q++;
++-		p = q;
++-		while(isdigit(*q))
++-			q++;
++-		if(*q == '.')
++-		{
++-			while(*q == '.' || isdigit(*q))
++-				q++;
++-			if(!isspace(*q))
++-				return -1;
++-			*q = '\0';
++-			if(!inet_aton(p, &perm->mask))
++-				return -1;
++-		}
++-		else if(!isspace(*q))
+++		p++;
+++		p = get_addr(p, &perm->mask, &dot_cnt);
+++		if(!p)
++ 			return -1;
++-		else
+++		/* inet_aton(): When only one part is given, the value is stored
+++		 * directly in the network address without any byte
+++		 * rearrangement. */
+++		if(!dot_cnt)
++ 		{
++-			*q = '\0';
++-			n_bits = atoi(p);
+++			unsigned int n_bits = ntohl(perm->mask.s_addr);
++ 			if(n_bits > 32)
++ 				return -1;
++-			perm->mask.s_addr = htonl(n_bits ? (0xffffffffu << (32 - n_bits)) : 0);
+++			perm->mask.s_addr = !n_bits ? 0 : htonl(0xffffffffu << (32 - n_bits));
++ 		}
++ 	}
++-	else if(isspace(*q))
++-	{
++-		*q = '\0';
++-		if(!inet_aton(p, &perm->address))
++-			return -1;
++-		perm->mask.s_addr = 0xffffffffu;
++-	}
++-	else
++-	{
+++
+++	p = get_sep(p);
+++	if(!p)
++ 		return -1;
++-	}
++-	p = q + 1;
++ 
++ 	/* fourth token: iport or iport_min-iport_max */
++-	while(isspace(*p))
++-		p++;
++-	if(!isdigit(*p))
+++	p = get_range(p, &perm->iport_min, &perm->iport_max);
+++	if(!p)
++ 		return -1;
++-	for(q = p; isdigit(*q); q++);
++-	if(*q=='-')
++-	{
++-		*q = '\0';
++-		i = atoi(p);
++-		if(i > 65535)
++-			return -1;
++-		perm->iport_min = (u_short)i;
++-		q++;
++-		p = q;
++-		while(isdigit(*q))
++-			q++;
++-		*q = '\0';
++-		i = atoi(p);
++-		if(i > 65535)
++-			return -1;
++-		perm->iport_max = (u_short)i;
++-		if(perm->iport_min > perm->iport_max)
++-			return -1;
++-	}
++-	else if(isspace(*q) || *q == '\0')
++-	{
++-		*q = '\0';
++-		i = atoi(p);
++-		if(i > 65535)
++-			return -1;
++-		perm->iport_min = perm->iport_max = (u_short)i;
++-	}
++-	else
++-	{
+++
+++	if(iseol(*p) || *p == '#')
+++		goto end;
+++	p = get_sep(p);
+++	if(!p)
++ 		return -1;
++-	}
++-	p = q;
+++	if(iseol(*p) || *p == '#')
+++		goto end;
++ 
++ 	/* fifth token: (optional) regex */
++ 	p = get_next_token(p, &perm->re, 1);
++@@ -381,6 +388,7 @@ read_permission_line(struct upnpperm * p
++ 		}
++ 	}
++ 
+++end:
++ #ifdef DEBUG
++ 	printf("perm rule added : %s %hu-%hu %08x/%08x %hu-%hu %s\n",
++ 	       (perm->type==UPNPPERM_ALLOW) ? "allow" : "deny",
++@@ -427,8 +435,26 @@ write_permlist(int fd, const struct upnp
++ 		write(fd, buf, l);
++ 		if(perm->re)
++ 		{
++-			write(fd, " ", 1);
++-			write(fd, perm->re, strlen(perm->re));
+++			const char * p;
+++			write(fd, " \"", 2);
+++			for(p = perm->re; *p != '\0'; p++)
+++			{
+++				if(*p == '"')
+++				{
+++					write(fd, "\\\"", 2);
+++					continue;
+++				}
+++
+++				if(*p == '\\')
+++				{
+++					write(fd, p, 1);
+++					p++;
+++					if(*p == '\0')
+++						break;
+++				}
+++				write(fd, p, 1);
+++			}
+++			write(fd, "\"", 1);
++ 		}
++ 		write(fd, "\n", 1);
++ 	}
++--- a/upnppermissions.h
+++++ b/upnppermissions.h
++@@ -43,7 +43,7 @@ struct upnpperm {
++  *  deny 0-65535 0.0.0.0/0 0-65535 */
++ int
++ read_permission_line(struct upnpperm * perm,
++-                     char * p);
+++                     const char * p);
++ 
++ void
++ free_permission_line(struct upnpperm * perm);
++@@ -72,4 +72,3 @@ write_permlist(int fd, const struct upnp
++ #endif
++ 
++ #endif
++-
+diff --git a/net/miniupnpd/patches/030-allow-private-fix.patch b/net/miniupnpd/patches/030-allow-private-fix.patch
+new file mode 100644
+index 000000000..b8a42b2b5
+--- /dev/null
++++ b/net/miniupnpd/patches/030-allow-private-fix.patch
+@@ -0,0 +1,18 @@
++From 9ff3c71bfb6c7f7bf525d6bda447387de7257aff Mon Sep 17 00:00:00 2001
++From: Vlad Starodubtsev <vlad.starodubtsev@keenetic.com>
++Date: Wed, 6 Aug 2025 19:04:18 +0300
++Subject: [PATCH] miniupnpd: fix ALLOWPRIVATEIPV4MASK condition
++
++Fixed usage of private/reserved WAN addresses if they are allowed in the configuration.
++
++--- a/upnpsoap.c
+++++ b/upnpsoap.c
++@@ -370,7 +370,7 @@ GetExternalIPAddress(struct upnphttp * h
++ 				ext_if_name);
++ 			ext_ip_addr[0] = '\0';
++ 		} else if (addr_is_reserved(&addr)) {
++-			if (!GETFLAG(ALLOWPRIVATEIPV4MASK)) {
+++			if (GETFLAG(ALLOWPRIVATEIPV4MASK)) {
++ 				syslog(LOG_WARNING, "IGNORED : private/reserved address %s is not suitable for external IP", ext_ip_addr);
++ 			} else {
++ 				syslog(LOG_NOTICE, "private/reserved address %s is not suitable for external IP", ext_ip_addr);
+diff --git a/net/miniupnpd/patches/040-improve-logging.patch b/net/miniupnpd/patches/040-improve-logging.patch
+new file mode 100644
+index 000000000..998df1cb4
+--- /dev/null
++++ b/net/miniupnpd/patches/040-improve-logging.patch
+@@ -0,0 +1,450 @@
++--- a/minissdp.c
+++++ b/minissdp.c
++@@ -1274,7 +1274,7 @@ ProcessSSDPData(int s, const char *bufr,
++ 					else
++ 						snprintf(ver_str, sizeof(ver_str), "%d", known_service_types[i].version);
++ #endif
++-					syslog(LOG_INFO, "Single search found");
+++					syslog(LOG_DEBUG, "Single search found");
++ #ifdef DELAY_MSEARCH_RESPONSE
++ 					delay = random() / (1 + RAND_MAX / (1000 * mx_value));
++ #ifdef DEBUG
++@@ -1303,7 +1303,7 @@ ProcessSSDPData(int s, const char *bufr,
++ #ifdef DELAY_MSEARCH_RESPONSE
++ 				unsigned int delay_increment = (mx_value * 1000) / 15;
++ #endif
++-				syslog(LOG_INFO, "ssdp:all found");
+++				syslog(LOG_DEBUG, "ssdp:all found");
++ 				for(i=0; known_service_types[i].s; i++)
++ 				{
++ #ifdef DELAY_MSEARCH_RESPONSE
++@@ -1361,7 +1361,7 @@ ProcessSSDPData(int s, const char *bufr,
++ #endif
++ 				if(0 == memcmp(st, uuidvalue_igd, l))
++ 				{
++-					syslog(LOG_INFO, "ssdp:uuid (IGD) found");
+++					syslog(LOG_DEBUG, "ssdp:uuid (IGD) found");
++ 					SendSSDPResponse(s, sender, st, st_len, "",
++ 					                 announced_host, http_port,
++ #ifdef ENABLE_HTTPS
++@@ -1371,7 +1371,7 @@ ProcessSSDPData(int s, const char *bufr,
++ 				}
++ 				else if(0 == memcmp(st, uuidvalue_wan, l))
++ 				{
++-					syslog(LOG_INFO, "ssdp:uuid (WAN) found");
+++					syslog(LOG_DEBUG, "ssdp:uuid (WAN) found");
++ 					SendSSDPResponse(s, sender, st, st_len, "",
++ 					                 announced_host, http_port,
++ #ifdef ENABLE_HTTPS
++@@ -1381,7 +1381,7 @@ ProcessSSDPData(int s, const char *bufr,
++ 				}
++ 				else if(0 == memcmp(st, uuidvalue_wcd, l))
++ 				{
++-					syslog(LOG_INFO, "ssdp:uuid (WCD) found");
+++					syslog(LOG_DEBUG, "ssdp:uuid (WCD) found");
++ 					SendSSDPResponse(s, sender, st, st_len, "",
++ 					                 announced_host, http_port,
++ #ifdef ENABLE_HTTPS
++@@ -1646,4 +1646,3 @@ SubmitServicesToMiniSSDPD(const char * h
++ 	syslog(LOG_DEBUG, "%d service submitted to MiniSSDPd", i);
++ 	return 0;
++ }
++-
++--- a/miniupnpd.8
+++++ b/miniupnpd.8
++@@ -42,10 +42,10 @@ and do not filter out low priority messa
++ report system uptime instead of daemon uptime to clients.
++ .TP
++ .B \-S0
++-disable "secure" mode so clients can only add mappings to other IPs
+++disable UPnP IGD secure mode, allow adding port maps for non-requesting IP addresses
++ .TP
++ .B \-N
++-enable NAT-PMP and PCP functionality.
+++enable PCP/NAT-PMP protocols.
++ .TP
++ .BI \-u " uuid"
++ set the uuid of the UPnP Internet Gateway Device.
++@@ -83,7 +83,7 @@ examples :
++ sets the value of BOOTID.UPNP.ORG SSDP header
++ .TP
++ .B \-1
++-force reporting IGDv1 in rootDesc when compiled as IGDv2 *use with care*
+++force reporting IGDv1 in rootDesc when compiled as IGDv2
++ .SH "SEE ALSO"
++ minissdpd(1) miniupnpc(3)
++ .SH BUGS
++--- a/miniupnpd.c
+++++ b/miniupnpd.c
++@@ -859,7 +859,7 @@ set_startup_time(void)
++ 			}
++ 			else
++ 			{
++-				syslog(LOG_INFO, "system uptime is %lu seconds", uptime);
+++				syslog(LOG_DEBUG, "system uptime is %lu seconds", uptime);
++ 			}
++ 			fclose(f);
++ 			startup_time -= uptime;
++@@ -2098,6 +2098,22 @@ init(int argc, char * * argv, struct run
++ 		pidfilename = NULL;
++ #endif
++ 
+++syslog(LOG_NOTICE, "MiniUPnP daemon version " MINIUPNPD_VERSION " starting, enabled protocols: %s%s%s, ext_ifname=%s BOOTID=%u",
+++	GETFLAG(ENABLEUPNPMASK) ? "UPnP IGD" : "",
+++#ifdef ENABLE_NATPMP
+++	GETFLAG(ENABLEUPNPMASK) && GETFLAG(ENABLENATPMPMASK) ? " & " : "",
+++#ifdef ENABLE_PCP
+++	GETFLAG(ENABLENATPMPMASK) ? "PCP/NAT-PMP" : "",
+++#else
+++	GETFLAG(ENABLENATPMPMASK) ? "NAT-PMP" : "",
+++#endif
+++#else
+++	"", "",
+++#endif
+++	ext_if_name, upnp_bootid);
+++syslog(LOG_INFO, "More information at https://miniupnp.tuxfamily.org/ or http://miniupnp.free.fr/");
+++syslog(LOG_NOTICE, "Extra logging by setting log level to info (-v) or debug (-vv)");
+++
++ #ifdef USE_SYSTEMD
++ 	if (systemd_flag) {
++ 		int r = sd_notify(0,
++@@ -2190,14 +2206,14 @@ print_usage:
++ #if defined(USE_PF) || defined(USE_IPF)
++ 			"\t-L sets packet log in pf and ipf on.\n"
++ #endif
++-			"\t-S0 disable \"secure\" mode so clients can add mappings to other ips\n"
+++			"\t-S0 disable UPnP IGD secure mode, allow adding port maps for non-requesting IP addresses\n"
++ 			"\t-U causes miniupnpd to report system uptime instead "
++ 			"of daemon uptime.\n"
++ #ifdef ENABLE_NATPMP
++ #ifdef ENABLE_PCP
++-			"\t-N enables NAT-PMP and PCP functionality.\n"
+++			"\t-N enable PCP/NAT-PMP protocols.\n"
++ #else
++-			"\t-N enables NAT-PMP functionality.\n"
+++			"\t-N enable NAT-PMP protocol.\n"
++ #endif
++ #endif
++ 			"\t-B sets bitrates reported by daemon in bits per second.\n"
++@@ -2217,7 +2233,7 @@ print_usage:
++ 			"\t  \"deny 0-65535 0.0.0.0/0 0-65535\"\n"
++ 			"\t-b sets the value of BOOTID.UPNP.ORG SSDP header\n"
++ #ifdef IGD_V2
++-			"\t-1 force reporting IGDv1 in rootDesc *use with care*\n"
+++			"\t-1 force reporting IGDv1 in rootDesc\n"
++ #endif
++ 			"\t-v enables LOG_INFO messages, -vv LOG_DEBUG as well (default with -d)\n"
++ 			"\t-h / --help prints this help and quits.\n"
++@@ -2398,21 +2414,9 @@ main(int argc, char * * argv)
++ 		return 0;
++ 	}
++ 
++-	syslog(LOG_INFO, "version " MINIUPNPD_VERSION " starting%s%sext if %s BOOTID=%u",
++-#ifdef ENABLE_NATPMP
++-#ifdef ENABLE_PCP
++-	       GETFLAG(ENABLENATPMPMASK) ? " NAT-PMP/PCP " : " ",
++-#else
++-	       GETFLAG(ENABLENATPMPMASK) ? " NAT-PMP " : " ",
++-#endif
++-#else
++-	       " ",
++-#endif
++-	       GETFLAG(ENABLEUPNPMASK) ? "UPnP-IGD " : "",
++-	       ext_if_name, upnp_bootid);
++ #ifdef ENABLE_IPV6
++ 	if (strcmp(ext_if_name6, ext_if_name) != 0) {
++-		syslog(LOG_INFO, "specific IPv6 ext if %s", ext_if_name6);
+++		syslog(LOG_NOTICE, "ext_ifname6=%s", ext_if_name6);
++ 	}
++ #endif
++ 
++@@ -2456,7 +2460,7 @@ main(int argc, char * * argv)
++ 			return 1;
++ 		}
++ 		v.port = listen_port;
++-		syslog(LOG_NOTICE, "HTTP listening on port %d", v.port);
+++		syslog(LOG_NOTICE, "Listening for UPnP IGD (SOAP/HTTP) traffic on port %d/TCP", v.port);
++ #if defined(V6SOCKETS_ARE_V6ONLY) && defined(ENABLE_IPV6)
++ 		if(!GETFLAG(IPV6DISABLEDMASK))
++ 		{
++@@ -2482,7 +2486,7 @@ main(int argc, char * * argv)
++ 			return 1;
++ 		}
++ 		v.https_port = listen_port;
++-		syslog(LOG_NOTICE, "HTTPS listening on port %d", v.https_port);
+++		syslog(LOG_NOTICE, "Listening for UPnP IGD (SOAP/HTTPS) traffic on port %d/TCP", v.https_port);
++ #if defined(V6SOCKETS_ARE_V6ONLY) && defined(ENABLE_IPV6)
++ 		shttpsl_v4 =  OpenAndConfHTTPSocket(&listen_port, 0);
++ 		if(shttpsl_v4 < 0)
++@@ -2496,11 +2500,11 @@ main(int argc, char * * argv)
++ 		if(!GETFLAG(IPV6DISABLEDMASK)) {
++ 			if(find_ipv6_addr(lan_addrs.lh_first ? lan_addrs.lh_first->ifname : NULL,
++ 			                  ipv6_addr_for_http_with_brackets, sizeof(ipv6_addr_for_http_with_brackets)) > 0) {
++-				syslog(LOG_NOTICE, "HTTP IPv6 address given to control points : %s",
+++				syslog(LOG_NOTICE, "IPv6 enabled with address: %s",
++ 				       ipv6_addr_for_http_with_brackets);
++ 			} else {
++ 				memcpy(ipv6_addr_for_http_with_brackets, "[::1]", 6);
++-				syslog(LOG_WARNING, "no HTTP IPv6 address, disabling IPv6");
+++				syslog(LOG_WARNING, "No IPv6 address, disable support");
++ 				SETFLAG(IPV6DISABLEDMASK);
++ 			}
++ 		}
++@@ -2571,22 +2575,22 @@ main(int argc, char * * argv)
++ 	}
++ 
++ #ifdef ENABLE_NATPMP
++-	/* open socket for NAT PMP traffic */
+++	/* open socket for NAT-PMP traffic */
++ 	if(GETFLAG(ENABLENATPMPMASK))
++ 	{
++ 		if(OpenAndConfNATPMPSockets(snatpmp) < 0)
++ #ifdef ENABLE_PCP
++ 		{
++-			syslog(LOG_ERR, "Failed to open sockets for NAT-PMP/PCP.");
+++			syslog(LOG_ERR, "Failed to open sockets for PCP/NAT-PMP.");
++ 		} else {
++-			syslog(LOG_NOTICE, "Listening for NAT-PMP/PCP traffic on port %u",
+++			syslog(LOG_NOTICE, "Listening for PCP/NAT-PMP traffic on port %u/UDP",
++ 			       NATPMP_PORT);
++ 		}
++ #else
++ 		{
++-			syslog(LOG_ERR, "Failed to open sockets for NAT PMP.");
+++			syslog(LOG_ERR, "Failed to open sockets for NAT-PMP.");
++ 		} else {
++-			syslog(LOG_NOTICE, "Listening for NAT-PMP traffic on port %u",
+++			syslog(LOG_NOTICE, "Listening for NAT-PMP traffic on port %u/UDP",
++ 			       NATPMP_PORT);
++ 		}
++ #endif
++@@ -2695,6 +2699,24 @@ main(int argc, char * * argv)
++ 	}
++ #endif /* HAS_LIBCAP_NG */
++ 
+++if (GETFLAG(ENABLEUPNPMASK) && !GETFLAG(SECUREMODEMASK))
+++	syslog(LOG_WARNING, "WARNING: secure_mode=no, allow adding port maps for non-requesting IP addresses via UPnP IGD");
+++#ifdef ENABLE_PCP
+++if (GETFLAG(ENABLENATPMPMASK) && GETFLAG(PCP_ALLOWTHIRDPARTYMASK))
+++	syslog(LOG_WARNING, "WARNING: pcp_allow_thirdparty=yes, allow adding port maps for non-requesting IP addresses via PCP");
+++#endif
+++if (GETFLAG(ENABLEUPNPMASK)) {
+++#ifdef IGD_V2
+++	if (GETFLAG(FORCEIGDDESCV1MASK)) {
+++		syslog(LOG_NOTICE, "UPnP IGD compatiblity mode set to IGDv1 (IPv4 only)");
+++	} else {
+++		syslog(LOG_NOTICE, "UPnP IGD compatiblity mode set to IGDv2");
+++	}
+++#else
+++	syslog(LOG_NOTICE, "UPnP IGD compatiblity mode set to IGDv1 (IPv4 only)");
+++#endif
+++}
+++
++ #ifdef USE_SYSTEMD
++ 	if (v.systemd_notify) {
++ 		upnp_update_status();
++@@ -3162,7 +3184,7 @@ main(int argc, char * * argv)
++ 		/* process SSDP packets */
++ 		if(sudp >= 0 && FD_ISSET(sudp, &readset))
++ 		{
++-			/*syslog(LOG_INFO, "Received UDP Packet");*/
+++			/*syslog(LOG_DEBUG, "Received UDP Packet");*/
++ #ifdef ENABLE_HTTPS
++ 			ProcessSSDPRequest(sudp, (unsigned short)v.port, (unsigned short)v.https_port);
++ #else
++@@ -3172,7 +3194,7 @@ main(int argc, char * * argv)
++ #ifdef ENABLE_IPV6
++ 		if(sudpv6 >= 0 && FD_ISSET(sudpv6, &readset))
++ 		{
++-			syslog(LOG_INFO, "Received UDP Packet (IPv6)");
+++			/*syslog(LOG_DEBUG, "Received UDP Packet (IPv6)");*/
++ #ifdef ENABLE_HTTPS
++ 			ProcessSSDPRequest(sudpv6, (unsigned short)v.port, (unsigned short)v.https_port);
++ #else
++--- a/miniupnpd.conf
+++++ b/miniupnpd.conf
++@@ -88,7 +88,8 @@
++ # 120s and 86400s (24h) are suggested values from PCP-base
++ #min_lifetime=120
++ #max_lifetime=86400
++-# allow THIRD_PARTY Option for MAP and PEER Opcodes (default is no)
+++# PCP allow third-party mapping option (default no)
+++# Allow adding port maps for non-requesting IP addresses
++ #pcp_allow_thirdparty=yes
++ 
++ # table names for netfilter nft. Default is "filter" for both
++@@ -131,8 +132,8 @@
++ #bitrate_up=1000000
++ #bitrate_down=10000000
++ 
++-# Secure Mode, UPnP clients can only add mappings to their own IP
++-# Enabled by default
+++# UPnP IGD secure mode (default yes)
+++# Allow adding port maps for requesting IP addresses only
++ #secure_mode=no
++ 
++ # Default presentation URL is HTTP address on port 80
++--- a/natpmp.c
+++++ b/natpmp.c
++@@ -231,7 +231,7 @@ void ProcessIncomingNATPMPPacket(int s,
++ 		syslog(LOG_ERR, "inet_ntop(natpmp): %m");
++ 	}
++ 
++-	syslog(LOG_INFO, "NAT-PMP request received from %s:%hu %dbytes",
+++	syslog(LOG_DEBUG, "NAT-PMP request received from %s:%hu %d bytes",
++ 	       senderaddrstr, ntohs(senderaddr->sin_port), n);
++ 
++ 	if(n<2 || ((((req[1]-1)&~1)==0) && n<12)) {
++@@ -260,7 +260,7 @@ void ProcessIncomingNATPMPPacket(int s,
++ 		resp[3] = 1;	/* unsupported version */
++ 	} else switch(req[1]) {
++ 	case 0:	/* Public address request */
++-		syslog(LOG_INFO, "NAT-PMP public address request");
+++		syslog(LOG_DEBUG, "NAT-PMP public address request");
++ 		FillPublicAddressResponse(resp, senderaddr->sin_addr.s_addr);
++ 		resplen = 12;
++ 		break;
++@@ -340,7 +340,7 @@ void ProcessIncomingNATPMPPacket(int s,
++ 						eport_first = eport;
++ 					} else if(eport == eport_first) { /* no eport available */
++ 						if(any_eport_allowed == 0) { /* all eports rejected by permissions */
++-							syslog(LOG_ERR, "No allowed eport for NAT-PMP %hu %s->%s:%hu",
+++							syslog(LOG_INFO, "No allowed eport for NAT-PMP %hu %s->%s:%hu",
++ 							       eport, proto_itoa(proto), senderaddrstr, iport);
++ 							resp[3] = 2;	/* Not Authorized/Refused */
++ 						} else { /* at least one eport allowed (but none available) */
++--- a/netfilter_nft/nftnlrdr_misc.c
+++++ b/netfilter_nft/nftnlrdr_misc.c
++@@ -104,7 +104,7 @@ nft_mnl_connect(void)
++ 		return -1;
++ 	}
++ 	mnl_portid = mnl_socket_get_portid(mnl_sock);
++-	syslog(LOG_INFO, "mnl_socket bound, port_id=%u", mnl_portid);
+++	syslog(LOG_DEBUG, "mnl_socket bound, port_id=%u", mnl_portid);
++ 	return 0;
++ }
++ 
++--- a/netfilter_nft/nftpinhole.c
+++++ b/netfilter_nft/nftpinhole.c
++@@ -159,7 +159,6 @@ find_pinhole(const char * ifname,
++ 		   (0 == memcmp(&daddr, &p->daddr6, sizeof(struct in6_addr)))) {
++ 
++ 			if (sscanf(p->desc, PINEHOLE_LABEL_FORMAT_SKIPDESC, &uid, &ts) != 2) {
++-				syslog(LOG_DEBUG, "rule with label '%s' is not a IGD pinhole", p->desc);
++ 				continue;
++ 			}
++ 
++@@ -397,7 +396,6 @@ get_pinhole_info(unsigned short uid,
++ 			if (timestamp) {
++ 				int uid_temp;
++ 				if (sscanf(p->desc, PINEHOLE_LABEL_FORMAT_SKIPDESC, &uid_temp, &ts) != 2) {
++-					syslog(LOG_DEBUG, "rule with label '%s' is not a IGD pinhole", p->desc);
++ 					continue;
++ 				}
++ 
++@@ -461,7 +459,6 @@ clean_pinhole_list(unsigned int * next_t
++ 			continue;
++ 
++ 		if (sscanf(p->desc, PINEHOLE_LABEL_FORMAT_SKIPDESC, &uid, &ts) != 2) {
++-			syslog(LOG_DEBUG, "rule with label '%s' is not a IGD pinhole", p->desc);
++ 			continue;
++ 		}
++ 
++--- a/pcpserver.c
+++++ b/pcpserver.c
++@@ -1087,7 +1087,7 @@ static void CreatePCPMap(pcp_info_t *pcp
++ 	else
++ 		r = CreatePCPMap_NAT(pcp_msg_info);
++ 	pcp_msg_info->result_code = r;
++-	syslog(r == PCP_SUCCESS ? LOG_INFO : LOG_ERR,
+++	syslog(LOG_INFO,
++ 	      "PCP MAP: %s mapping %s %hu->%s:%hu '%s'",
++ 	       r == PCP_SUCCESS ? "added" : "failed to add",
++ 	       proto_itoa(pcp_msg_info->protocol),
++--- a/pf/pfpinhole.c
+++++ b/pf/pfpinhole.c
++@@ -246,12 +246,10 @@ int find_pinhole(const char * ifname,
++ 		   (0 == memcmp(&daddr, &RULE.dst.addr.v.a.addr.v6, sizeof(struct in6_addr)))) {
++ #ifdef USE_LIBPFCTL
++ 			if(sscanf(RULE.label[0], PINEHOLE_LABEL_FORMAT_SKIPDESC, &uid, &ts) != 2) {
++-				syslog(LOG_DEBUG, "rule with label '%s' is not a IGD pinhole", RULE.label[0]);
++ 				continue;
++ 			}
++ #else /* USE_LIBPFCTL */
++ 			if(sscanf(RULE.label, PINEHOLE_LABEL_FORMAT_SKIPDESC, &uid, &ts) != 2) {
++-				syslog(LOG_DEBUG, "rule with label '%s' is not a IGD pinhole", RULE.label);
++ 				continue;
++ 			}
++ #endif /* USE_LIBPFCTL */
++@@ -563,7 +561,6 @@ int clean_pinhole_list(unsigned int * ne
++ 			return -1;
++ 		}
++ 		if(sscanf(RULE.label[0], PINEHOLE_LABEL_FORMAT_SKIPDESC, &uid, &ts) != 2) {
++-			syslog(LOG_DEBUG, "rule with label '%s' is not a IGD pinhole", RULE.label[0]);
++ 			continue;
++ 		}
++ #else /* USE_LIBPFCTL */
++@@ -574,7 +571,6 @@ int clean_pinhole_list(unsigned int * ne
++ 			return -1;
++ 		}
++ 		if(sscanf(RULE.label, PINEHOLE_LABEL_FORMAT_SKIPDESC, &uid, &ts) != 2) {
++-			syslog(LOG_DEBUG, "rule with label '%s' is not a IGD pinhole", RULE.label);
++ 			continue;
++ 		}
++ #endif /* USE_LIBPFCTL */
++--- a/upnphttp.c
+++++ b/upnphttp.c
++@@ -513,7 +513,7 @@ ProcessHTTPPOST_upnphttp(struct upnphttp
++ 		if(h->req_soapActionOff > 0)
++ 		{
++ 			/* we can process the request */
++-			syslog(LOG_INFO, "SOAPAction: %.*s",
+++			syslog(LOG_DEBUG, "SOAPAction: %.*s",
++ 			       h->req_soapActionLen, h->req_buf + h->req_soapActionOff);
++ 			ExecuteSoapAction(h,
++ 				h->req_buf + h->req_soapActionOff,
++@@ -818,7 +818,7 @@ ProcessHttpQuery_upnphttp(struct upnphtt
++ 	for(i = 0; i<15 && *p != '\r'; i++)
++ 		HttpVer[i] = *(p++);
++ 	HttpVer[i] = '\0';
++-	syslog(LOG_INFO, "HTTP REQUEST from %s : %s %s (%s)",
+++	syslog(LOG_DEBUG, "HTTP REQUEST from %s : %s %s (%s)",
++ 	       h->clientaddr_str, HttpCommand, HttpUrl, HttpVer);
++ 	ParseHttpHeaders(h);
++ 	if(h->req_HostOff > 0 && h->req_HostLen > 0) {
++--- a/upnpredirect.c
+++++ b/upnpredirect.c
++@@ -641,7 +641,7 @@ get_upnp_rules_state_list(int max_rules_
++ 	{
++ 		if(tmp->to_remove)
++ 		{
++-			syslog(LOG_NOTICE, "remove port mapping %hu %s because it has expired",
+++			syslog(LOG_INFO, "remove port mapping %hu %s because it has expired",
++ 			       tmp->eport, proto_itoa(tmp->proto));
++ 			_upnp_delete_redir(tmp->eport, tmp->proto);
++ 			*p = tmp->next;
++--- a/upnpsoap.c
+++++ b/upnpsoap.c
++@@ -847,7 +847,7 @@ GetSpecificPortMappingEntry(struct upnph
++ 	}
++ 	else
++ 	{
++-		syslog(LOG_INFO, "%s: rhost='%s' %s %s found => %s:%u desc='%s' duration=%u",
+++		syslog(LOG_DEBUG, "%s: rhost='%s' %s %s found => %s:%u desc='%s' duration=%u",
++ 		       action,
++ 		       r_host ? r_host : "NULL", ext_port, protocol, int_ip,
++ 		       (unsigned int)iport, desc, leaseduration);
++@@ -1112,7 +1112,7 @@ GetGenericPortMappingEntry(struct upnpht
++ 		return;
++ 	}
++ 
++-	syslog(LOG_INFO, "%s: index=%d", action, (int)index);
+++	syslog(LOG_DEBUG, "%s: index=%d", action, (int)index);
++ 
++ 	rhost[0] = '\0';
++ 	r = upnp_get_redirection_infos_by_index((int)index, &eport, protocol, &iport,
++@@ -2486,4 +2486,3 @@ SoapError(struct upnphttp * h, int errCo
++ 	BuildResp2_upnphttp(h, 500, "Internal Server Error", body, bodylen);
++ 	SendRespAndClose_upnphttp(h);
++ }
++-
+diff --git a/net/miniupnpd/patches/900-miniupnpd-format-xml-to-make-some-app-happy.patch b/net/miniupnpd/patches/900-miniupnpd-format-xml-to-make-some-app-happy.patch
+new file mode 100644
+index 000000000..579d106be
+--- /dev/null
++++ b/net/miniupnpd/patches/900-miniupnpd-format-xml-to-make-some-app-happy.patch
+@@ -0,0 +1,608 @@
++From 7651a23732d234f97137ca160a0c157eaed43ae8 Mon Sep 17 00:00:00 2001
++From: Chen Minqiang <ptpt52@gmail.com>
++Date: Wed, 29 Sep 2021 22:29:53 +0800
++Subject: [PATCH] miniupnpd: format xml to make some app happy
++
++Server-U
++
++Signed-off-by: Chen Minqiang <ptpt52@gmail.com>
++---
++ upnpdescgen.c |   6 +
++ upnpsoap.c    | 302 ++++++++++++++++++++--------------------
++ 2 files changed, 157 insertions(+), 151 deletions(-)
++
++--- a/upnpdescgen.c
+++++ b/upnpdescgen.c
++@@ -947,6 +947,8 @@ genXML(char * str, int * len, int * tmpl
++ 				str = strcat_char(str, len, tmplen, '<');
++ 				str = strcat_str(str, len, tmplen, eltname);
++ 				str = strcat_char(str, len, tmplen, '>');
+++				str = strcat_char(str, len, tmplen, '\r');
+++				str = strcat_char(str, len, tmplen, '\n');
++ 			}
++ #ifdef IGD_V2
++ unstack:
++@@ -967,6 +969,8 @@ unstack:
++ 					for(c = *s; c > ' '; c = *(++s))
++ 						str = strcat_char(str, len, tmplen, c);
++ 					str = strcat_char(str, len, tmplen, '>');
+++					str = strcat_char(str, len, tmplen, '\r');
+++					str = strcat_char(str, len, tmplen, '\n');
++ 					top--;
++ 				}
++ 				else
++@@ -996,6 +1000,8 @@ unstack:
++ 				str = strcat_str(str, len, tmplen, configid_str);
++ 			}
++ 			str = strcat_char(str, len, tmplen, '>');
+++			str = strcat_char(str, len, tmplen, '\r');
+++			str = strcat_char(str, len, tmplen, '\n');
++ 			i = k & 0xffff;
++ 			j = i + (k >> 16);
++ 			if(top < (GENXML_STACK_SIZE - 1)) {
++--- a/upnpsoap.c
+++++ b/upnpsoap.c
++@@ -75,11 +75,11 @@ BuildSendAndCloseSoapResp(struct upnphtt
++ 	static const char beforebody[] =
++ 		"<?xml version=\"1.0\"?>\r\n"
++ 		"<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" "
++-		"s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
++-		"<s:Body>";
+++		"s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\r\n"
+++		"<s:Body>\r\n";
++ 
++ 	static const char afterbody[] =
++-		"</s:Body>"
+++		"</s:Body>\r\n"
++ 		"</s:Envelope>\r\n";
++ 
++ 	int r = BuildHeader_upnphttp(h, 200, "OK",  sizeof(beforebody) - 1
++@@ -107,17 +107,17 @@ GetConnectionTypeInfo(struct upnphttp *
++ #if 0
++ 	static const char resp[] =
++ 		"<u:GetConnectionTypeInfoResponse "
++-		"xmlns:u=\"" SERVICE_TYPE_WANIPC "\">"
++-		"<NewConnectionType>IP_Routed</NewConnectionType>"
++-		"<NewPossibleConnectionTypes>IP_Routed</NewPossibleConnectionTypes>"
++-		"</u:GetConnectionTypeInfoResponse>";
+++		"xmlns:u=\"" SERVICE_TYPE_WANIPC "\">\r\n"
+++		"<NewConnectionType>IP_Routed</NewConnectionType>\r\n"
+++		"<NewPossibleConnectionTypes>IP_Routed</NewPossibleConnectionTypes>\r\n"
+++		"</u:GetConnectionTypeInfoResponse>\r\n";
++ #endif
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewConnectionType>IP_Routed</NewConnectionType>"
++-		"<NewPossibleConnectionTypes>IP_Routed</NewPossibleConnectionTypes>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewConnectionType>IP_Routed</NewConnectionType>\r\n"
+++		"<NewPossibleConnectionTypes>IP_Routed</NewPossibleConnectionTypes>\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[512];
++ 	int bodylen;
++ 
++@@ -136,9 +136,9 @@ GetTotalBytesSent(struct upnphttp * h, c
++ 
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewTotalBytesSent>%lu</NewTotalBytesSent>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewTotalBytesSent>%lu</NewTotalBytesSent>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -162,9 +162,9 @@ GetTotalBytesReceived(struct upnphttp *
++ 
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewTotalBytesReceived>%lu</NewTotalBytesReceived>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewTotalBytesReceived>%lu</NewTotalBytesReceived>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -193,9 +193,9 @@ GetTotalPacketsSent(struct upnphttp * h,
++ 
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewTotalPacketsSent>%lu</NewTotalPacketsSent>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewTotalPacketsSent>%lu</NewTotalPacketsSent>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -219,9 +219,9 @@ GetTotalPacketsReceived(struct upnphttp
++ 
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewTotalPacketsReceived>%lu</NewTotalPacketsReceived>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewTotalPacketsReceived>%lu</NewTotalPacketsReceived>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -245,12 +245,12 @@ GetCommonLinkProperties(struct upnphttp
++ 	 * DSL, POTS (plain old Telephone service), Cable, Ethernet */
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewWANAccessType>%s</NewWANAccessType>"
++-		"<NewLayer1UpstreamMaxBitRate>%lu</NewLayer1UpstreamMaxBitRate>"
++-		"<NewLayer1DownstreamMaxBitRate>%lu</NewLayer1DownstreamMaxBitRate>"
++-		"<NewPhysicalLinkStatus>%s</NewPhysicalLinkStatus>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewWANAccessType>%s</NewWANAccessType>\r\n"
+++		"<NewLayer1UpstreamMaxBitRate>%lu</NewLayer1UpstreamMaxBitRate>\r\n"
+++		"<NewLayer1DownstreamMaxBitRate>%lu</NewLayer1DownstreamMaxBitRate>\r\n"
+++		"<NewPhysicalLinkStatus>%s</NewPhysicalLinkStatus>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[2048];
++ 	int bodylen;
++@@ -284,11 +284,11 @@ GetStatusInfo(struct upnphttp * h, const
++ {
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewConnectionStatus>%s</NewConnectionStatus>"
++-		"<NewLastConnectionError>ERROR_NONE</NewLastConnectionError>"
++-		"<NewUptime>%ld</NewUptime>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewConnectionStatus>%s</NewConnectionStatus>\r\n"
+++		"<NewLastConnectionError>ERROR_NONE</NewLastConnectionError>\r\n"
+++		"<NewUptime>%ld</NewUptime>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -312,18 +312,18 @@ GetNATRSIPStatus(struct upnphttp * h, co
++ #if 0
++ 	static const char resp[] =
++ 		"<u:GetNATRSIPStatusResponse "
++-		"xmlns:u=\"" SERVICE_TYPE_WANIPC "\">"
++-		"<NewRSIPAvailable>0</NewRSIPAvailable>"
++-		"<NewNATEnabled>1</NewNATEnabled>"
++-		"</u:GetNATRSIPStatusResponse>";
+++		"xmlns:u=\"" SERVICE_TYPE_WANIPC "\">\r\n"
+++		"<NewRSIPAvailable>0</NewRSIPAvailable>\r\n"
+++		"<NewNATEnabled>1</NewNATEnabled>\r\n"
+++		"</u:GetNATRSIPStatusResponse>\r\n";
++ 	UNUSED(action);
++ #endif
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewRSIPAvailable>0</NewRSIPAvailable>"
++-		"<NewNATEnabled>1</NewNATEnabled>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewRSIPAvailable>0</NewRSIPAvailable>\r\n"
+++		"<NewNATEnabled>1</NewNATEnabled>\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[512];
++ 	int bodylen;
++ 	/* 2.2.9. RSIPAvailable
++@@ -345,9 +345,9 @@ GetExternalIPAddress(struct upnphttp * h
++ {
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewExternalIPAddress>%s</NewExternalIPAddress>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewExternalIPAddress>%s</NewExternalIPAddress>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -417,10 +417,10 @@ AddPortMapping(struct upnphttp * h, cons
++ 
++ 	/*static const char resp[] =
++ 		"<u:AddPortMappingResponse "
++-		"xmlns:u=\"" SERVICE_TYPE_WANIPC "\"/>";*/
+++		"xmlns:u=\"" SERVICE_TYPE_WANIPC "\"/>\r\n";*/
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\"/>";
+++		"xmlns:u=\"%s\"/>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -614,9 +614,9 @@ AddAnyPortMapping(struct upnphttp * h, c
++ 	int r;
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewReservedPort>%hu</NewReservedPort>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewReservedPort>%hu</NewReservedPort>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -780,13 +780,13 @@ GetSpecificPortMappingEntry(struct upnph
++ 
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewInternalPort>%u</NewInternalPort>"
++-		"<NewInternalClient>%s</NewInternalClient>"
++-		"<NewEnabled>1</NewEnabled>"
++-		"<NewPortMappingDescription>%s</NewPortMappingDescription>"
++-		"<NewLeaseDuration>%u</NewLeaseDuration>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewInternalPort>%u</NewInternalPort>\r\n"
+++		"<NewInternalClient>%s</NewInternalClient>\r\n"
+++		"<NewEnabled>1</NewEnabled>\r\n"
+++		"<NewPortMappingDescription>%s</NewPortMappingDescription>\r\n"
+++		"<NewLeaseDuration>%u</NewLeaseDuration>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[1024];
++ 	int bodylen;
++@@ -871,12 +871,12 @@ DeletePortMapping(struct upnphttp * h, c
++ 
++ 	/*static const char resp[] =
++ 		"<u:DeletePortMappingResponse "
++-		"xmlns:u=\"" SERVICE_TYPE_WANIPC "\">"
++-		"</u:DeletePortMappingResponse>";*/
+++		"xmlns:u=\"" SERVICE_TYPE_WANIPC "\">\r\n"
+++		"</u:DeletePortMappingResponse>\r\n";*/
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -981,12 +981,12 @@ DeletePortMappingRange(struct upnphttp *
++ 	int r = -1;
++ 	/*static const char resp[] =
++ 		"<u:DeletePortMappingRangeResponse "
++-		"xmlns:u=\"" SERVICE_TYPE_WANIPC "\">"
++-		"</u:DeletePortMappingRangeResponse>";*/
+++		"xmlns:u=\"" SERVICE_TYPE_WANIPC "\">\r\n"
+++		"</u:DeletePortMappingRangeResponse>\r\n";*/
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[512];
++ 	int bodylen;
++ 	struct NameValueParserData data;
++@@ -1057,16 +1057,16 @@ GetGenericPortMappingEntry(struct upnpht
++ 
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<NewRemoteHost>%s</NewRemoteHost>"
++-		"<NewExternalPort>%u</NewExternalPort>"
++-		"<NewProtocol>%s</NewProtocol>"
++-		"<NewInternalPort>%u</NewInternalPort>"
++-		"<NewInternalClient>%s</NewInternalClient>"
++-		"<NewEnabled>1</NewEnabled>"
++-		"<NewPortMappingDescription>%s</NewPortMappingDescription>"
++-		"<NewLeaseDuration>%u</NewLeaseDuration>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<NewRemoteHost>%s</NewRemoteHost>\r\n"
+++		"<NewExternalPort>%u</NewExternalPort>\r\n"
+++		"<NewProtocol>%s</NewProtocol>\r\n"
+++		"<NewInternalPort>%u</NewInternalPort>\r\n"
+++		"<NewInternalClient>%s</NewInternalClient>\r\n"
+++		"<NewEnabled>1</NewEnabled>\r\n"
+++		"<NewPortMappingDescription>%s</NewPortMappingDescription>\r\n"
+++		"<NewLeaseDuration>%u</NewLeaseDuration>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	long int index = 0;
++ 	unsigned short eport, iport;
++@@ -1140,31 +1140,31 @@ GetListOfPortMappings(struct upnphttp *
++ {
++ 	static const char resp_start[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
+++		"xmlns:u=\"%s\">\r\n"
++ 		"<NewPortListing><![CDATA[";
++ 	static const char resp_end[] =
++-		"]]></NewPortListing>"
++-		"</u:%sResponse>";
+++		"]]></NewPortListing>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	static const char list_start[] =
++ 		"<p:PortMappingList xmlns:p=\"urn:schemas-upnp-org:gw:WANIPConnection\""
++ 		" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
++ 		" xsi:schemaLocation=\"urn:schemas-upnp-org:gw:WANIPConnection"
++-		" http://www.upnp.org/schemas/gw/WANIPConnection-v2.xsd\">";
+++		" http://www.upnp.org/schemas/gw/WANIPConnection-v2.xsd\">\r\n";
++ 	static const char list_end[] =
++-		"</p:PortMappingList>";
+++		"</p:PortMappingList>\r\n";
++ 
++ 	static const char entry[] =
++-		"<p:PortMappingEntry>"
++-		"<p:NewRemoteHost>%s</p:NewRemoteHost>"
++-		"<p:NewExternalPort>%hu</p:NewExternalPort>"
++-		"<p:NewProtocol>%s</p:NewProtocol>"
++-		"<p:NewInternalPort>%hu</p:NewInternalPort>"
++-		"<p:NewInternalClient>%s</p:NewInternalClient>"
++-		"<p:NewEnabled>1</p:NewEnabled>"
++-		"<p:NewDescription>%s</p:NewDescription>"
++-		"<p:NewLeaseTime>%u</p:NewLeaseTime>"
++-		"</p:PortMappingEntry>";
+++		"<p:PortMappingEntry>\r\n"
+++		"<p:NewRemoteHost>%s</p:NewRemoteHost>\r\n"
+++		"<p:NewExternalPort>%hu</p:NewExternalPort>\r\n"
+++		"<p:NewProtocol>%s</p:NewProtocol>\r\n"
+++		"<p:NewInternalPort>%hu</p:NewInternalPort>\r\n"
+++		"<p:NewInternalClient>%s</p:NewInternalClient>\r\n"
+++		"<p:NewEnabled>1</p:NewEnabled>\r\n"
+++		"<p:NewDescription>%s</p:NewDescription>\r\n"
+++		"<p:NewLeaseTime>%u</p:NewLeaseTime>\r\n"
+++		"</p:PortMappingEntry>\r\n";
++ 
++ 	char * body;
++ 	size_t bodyalloc;
++@@ -1322,12 +1322,12 @@ SetDefaultConnectionService(struct upnph
++ {
++ 	/*static const char resp[] =
++ 		"<u:SetDefaultConnectionServiceResponse "
++-		"xmlns:u=\"urn:schemas-upnp-org:service:Layer3Forwarding:1\">"
++-		"</u:SetDefaultConnectionServiceResponse>";*/
+++		"xmlns:u=\"urn:schemas-upnp-org:service:Layer3Forwarding:1\">\r\n"
+++		"</u:SetDefaultConnectionServiceResponse>\r\n";*/
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[512];
++ 	int bodylen;
++ 	struct NameValueParserData data;
++@@ -1365,14 +1365,14 @@ GetDefaultConnectionService(struct upnph
++ {
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
+++		"xmlns:u=\"%s\">\r\n"
++ #ifdef IGD_V2
++ 		"<NewDefaultConnectionService>%s:WANConnectionDevice:2,"
++ #else
++ 		"<NewDefaultConnectionService>%s:WANConnectionDevice:1,"
++ #endif
++-		SERVICE_ID_WANIPC "</NewDefaultConnectionService>"
++-		"</u:%sResponse>";
+++		SERVICE_ID_WANIPC "</NewDefaultConnectionService>\r\n"
+++		"</u:%sResponse>\r\n";
++ 	/* example from UPnP_IGD_Layer3Forwarding 1.0.pdf :
++ 	 * uuid:44f5824f-c57d-418c-a131-f22b34e14111:WANConnectionDevice:1,
++ 	 * urn:upnp-org:serviceId:WANPPPConn1 */
++@@ -1443,9 +1443,9 @@ QueryStateVariable(struct upnphttp * h,
++ {
++ 	static const char resp[] =
++         "<u:%sResponse "
++-        "xmlns:u=\"%s\">"
++-		"<return>%s</return>"
++-        "</u:%sResponse>";
+++        "xmlns:u=\"%s\">\r\n"
+++		"<return>%s</return>\r\n"
+++        "</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -1515,10 +1515,10 @@ GetFirewallStatus(struct upnphttp * h, c
++ {
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<FirewallEnabled>%d</FirewallEnabled>"
++-		"<InboundPinholeAllowed>%d</InboundPinholeAllowed>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<FirewallEnabled>%d</FirewallEnabled>\r\n"
+++		"<InboundPinholeAllowed>%d</InboundPinholeAllowed>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -1709,9 +1709,9 @@ AddPinhole(struct upnphttp * h, const ch
++ 	int r;
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<UniqueID>%d</UniqueID>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<UniqueID>%d</UniqueID>\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[512];
++ 	int bodylen;
++ 	struct NameValueParserData data;
++@@ -1885,13 +1885,13 @@ UpdatePinhole(struct upnphttp * h, const
++ #if 0
++ 	static const char resp[] =
++ 		"<u:UpdatePinholeResponse "
++-		"xmlns:u=\"urn:schemas-upnp-org:service:WANIPv6FirewallControl:1\">"
++-		"</u:UpdatePinholeResponse>";
+++		"xmlns:u=\"urn:schemas-upnp-org:service:WANIPv6FirewallControl:1\">\r\n"
+++		"</u:UpdatePinholeResponse>\r\n";
++ #endif
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[512];
++ 	int bodylen;
++ 	struct NameValueParserData data;
++@@ -1963,9 +1963,9 @@ GetOutboundPinholeTimeout(struct upnphtt
++ 
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<OutboundPinholeTimeout>%d</OutboundPinholeTimeout>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<OutboundPinholeTimeout>%d</OutboundPinholeTimeout>\r\n"
+++		"</u:%sResponse>\r\n";
++ 
++ 	char body[512];
++ 	int bodylen;
++@@ -2028,13 +2028,13 @@ DeletePinhole(struct upnphttp * h, const
++ #if 0
++ 	static const char resp[] =
++ 		"<u:DeletePinholeResponse "
++-		"xmlns:u=\"urn:schemas-upnp-org:service:WANIPv6FirewallControl:1\">"
++-		"</u:DeletePinholeResponse>";
+++		"xmlns:u=\"urn:schemas-upnp-org:service:WANIPv6FirewallControl:1\">\r\n"
+++		"</u:DeletePinholeResponse>\r\n";
++ #endif
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[512];
++ 	int bodylen;
++ 
++@@ -2103,9 +2103,9 @@ CheckPinholeWorking(struct upnphttp * h,
++ {
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<IsWorking>%d</IsWorking>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<IsWorking>%d</IsWorking>\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[512];
++ 	int bodylen;
++ 	int r;
++@@ -2163,9 +2163,9 @@ GetPinholePackets(struct upnphttp * h, c
++ {
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<PinholePackets>%u</PinholePackets>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<PinholePackets>%u</PinholePackets>\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[512];
++ 	int bodylen;
++ 	struct NameValueParserData data;
++@@ -2224,9 +2224,9 @@ SendSetupMessage(struct upnphttp * h, co
++ {
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<OutMessage>%s</OutMessage>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<OutMessage>%s</OutMessage>\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[1024];
++ 	int bodylen;
++ 	struct NameValueParserData data;
++@@ -2265,9 +2265,9 @@ GetSupportedProtocols(struct upnphttp *
++ {
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<ProtocolList><![CDATA[%s]]></ProtocolList>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<ProtocolList><![CDATA[%s]]></ProtocolList>\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[1024];
++ 	int bodylen;
++ 	const char * ProtocolList =
++@@ -2275,10 +2275,10 @@ GetSupportedProtocols(struct upnphttp *
++ 		"<SupportedProtocols xmlns=\"urn:schemas-upnp-org:gw:DeviceProtection\""
++ 		" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
++ 		" xsi:schemaLocation=\"urn:schemas-upnp-org:gw:DeviceProtection"
++-		" http://www.upnp.org/schemas/gw/DeviceProtection-v1.xsd\">"
++-		"<Introduction><Name>WPS</Name></Introduction>"
++-		"<Login><Name>PKCS5</Name></Login>"
++-		"</SupportedProtocols>";
+++		" http://www.upnp.org/schemas/gw/DeviceProtection-v1.xsd\">\r\n"
+++		"<Introduction><Name>WPS</Name></Introduction>\r\n"
+++		"<Login><Name>PKCS5</Name></Login>\r\n"
+++		"</SupportedProtocols>\r\n";
++ 
++ 	bodylen = snprintf(body, sizeof(body), resp,
++ 	                   action, ns/*"urn:schemas-upnp-org:service:DeviceProtection:1"*/,
++@@ -2291,9 +2291,9 @@ GetAssignedRoles(struct upnphttp * h, co
++ {
++ 	static const char resp[] =
++ 		"<u:%sResponse "
++-		"xmlns:u=\"%s\">"
++-		"<RoleList>%s</RoleList>"
++-		"</u:%sResponse>";
+++		"xmlns:u=\"%s\">\r\n"
+++		"<RoleList>%s</RoleList>\r\n"
+++		"</u:%sResponse>\r\n";
++ 	char body[1024];
++ 	int bodylen;
++ 	const char * RoleList = "Public"; /* list of roles separated by spaces */
++@@ -2447,20 +2447,20 @@ SoapError(struct upnphttp * h, int errCo
++ 	static const char resp[] =
++ 		"<s:Envelope "
++ 		"xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" "
++-		"s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">"
++-		"<s:Body>"
++-		"<s:Fault>"
++-		"<faultcode>s:Client</faultcode>"
++-		"<faultstring>UPnPError</faultstring>"
++-		"<detail>"
++-		"<UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">"
++-		"<errorCode>%d</errorCode>"
++-		"<errorDescription>%s</errorDescription>"
++-		"</UPnPError>"
++-		"</detail>"
++-		"</s:Fault>"
++-		"</s:Body>"
++-		"</s:Envelope>";
+++		"s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\r\n"
+++		"<s:Body>\r\n"
+++		"<s:Fault>\r\n"
+++		"<faultcode>s:Client</faultcode>\r\n"
+++		"<faultstring>UPnPError</faultstring>\r\n"
+++		"<detail>\r\n"
+++		"<UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">\r\n"
+++		"<errorCode>%d</errorCode>\r\n"
+++		"<errorDescription>%s</errorDescription>\r\n"
+++		"</UPnPError>\r\n"
+++		"</detail>\r\n"
+++		"</s:Fault>\r\n"
+++		"</s:Body>\r\n"
+++		"</s:Envelope>\r\n";
++ 
++ 	char body[2048];
++ 	int bodylen;
+-- 
+2.43.0
+
