@@ -241,6 +241,9 @@ jobs:
         INPUT_PKGS_CFG_STATUS: ${{ github.event.inputs.packages_mod }}
         INPUT_PKGS_CFG_FOO: ${{ github.event.inputs.packages }}
       run: |
+        if [ ${{ env.MAC80211_618 }} = 1 ]; then
+        $GITHUB_WORKSPACE/core.sh mac80211-618-pkg
+        fi
         $GITHUB_WORKSPACE/core.sh fix-openwrt-feeds
         echo "status=success" >> $GITHUB_OUTPUT
 
