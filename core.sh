@@ -247,8 +247,8 @@ CONFIG_PACKAGE_luci-app-daed=y
 
 function ln_openwrt() {
 	sudo mkdir -p -m 777 /mnt/openwrt/dl /mnt/openwrt/bin /mnt/openwrt/staging_dir /mnt/openwrt/build_dir
-	ln -sf /mnt/openwrt/dl openwrt/dl
-	ln -sf /mnt/openwrt/bin openwrt/bin
+	#ln -sf /mnt/openwrt/dl openwrt/dl
+	#ln -sf /mnt/openwrt/bin openwrt/bin
 	ln -sf /mnt/openwrt/staging_dir openwrt/staging_dir
 	ln -sf /mnt/openwrt/build_dir openwrt/build_dir
 	df -hT
