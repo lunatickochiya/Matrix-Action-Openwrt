@@ -34,7 +34,7 @@ function init_gh_env_2410() {
 	source "${GITHUB_WORKSPACE}/env/common.txt"
 	source "${GITHUB_WORKSPACE}/env/$OpenWrt_PATCH_FILE_DIR.repo"
 	echo -e "TEST_KERNEL=$(echo $PATCH_JSON_INPUT | jq -r ".TEST_KERNEL")" >> "$GITHUB_ENV"
-	echo -e "Branch=$(echo $PATCH_JSON_INPUT | jq -r ".Branch")" >> $GITHUB_ENV
+	echo -e "ADD_eBPF=$(echo $PATCH_JSON_INPUT | jq -r ".ADD_eBPF")" >> "$GITHUB_ENV"
 }
 
 function init_gh_env_2410_ipq() {
@@ -221,6 +221,27 @@ CONFIG_NSS_FIRMWARE_VERSION_12_1=y\nCONFIG_NSS_FIRMWARE_VERSION_11_4=n' machine-
 	sed -i '1i\
 CONFIG_NSS_FIRMWARE_VERSION_11_4=y' machine-configs/$OpenWrt_PATCH_FILE_DIR/*
 	echo "----$Matrix_Target--IPQ--Firmware-114---"
+	fi
+
+	if [ "$ADD_eBPF" = "1" ]; then
+		for file1 in package-configs/$OpenWrt_PATCH_FILE_DIR/*.config; do     echo "# ADD eBPF
+CONFIG_DEVEL=y
+CONFIG_KERNEL_DEBUG_INFO=y
+CONFIG_KERNEL_DEBUG_INFO_REDUCED=n
+CONFIG_KERNEL_DEBUG_INFO_BTF=y
+CONFIG_KERNEL_CGROUPS=y
+CONFIG_KERNEL_CGROUP_BPF=y
+CONFIG_KERNEL_BPF_EVENTS=y
+CONFIG_BPF_TOOLCHAIN_HOST=y
+CONFIG_KERNEL_XDP_SOCKETS=y
+CONFIG_PACKAGE_kmod-xdp-sockets-diag=y
+# DAE
+CONFIG_PACKAGE_luci-app-dae=y
+CONFIG_PACKAGE_luci-app-daed=y
+		" >> "$file1"; done
+		echo "----------eBPF-with-dae-added------"
+		echo "eBPF=_eBPF" >> $GITHUB_ENV
+		echo "----$Matrix_Target----eBPF---"
 	fi
 }
 

@@ -16,9 +16,9 @@ on:
         type: choice
         options:
         - 'tpm312'
+        - 'tpm312_lite'
         - 'mpc1917'
-        - 'r08'
-        - 'fmx1'
+        - 'fmx1_pro'
       REPO:
         description: 'Choose repo'
         required: true
@@ -99,8 +99,8 @@ jobs:
         include:
         - rockchip: mpc1917
         - rockchip: tpm312
-        - rockchip: r08
-        - rockchip: fmx1
+        - rockchip: tpm312_lite
+        - rockchip: fmx1_pro
 
     steps:
       - name: 检查
@@ -110,9 +110,9 @@ jobs:
         id: set-matrix
         run: |
           if [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "openwrt-24.10" ]; then
-            matrix={\"include\":[{\"target\":\"rockchip-ipt\",\"repo\":\"openwrt-24.10\"},{\"target\":\"rockchip-nft\",\"repo\":\"openwrt-24.10\"}]}
+            matrix={\"include\":[{\"target\":\"rockchip-iptables\",\"repo\":\"openwrt-24.10\"},{\"target\":\"rockchip-nftables\",\"repo\":\"openwrt-24.10\"}]}
           elif [ "${{ github.event.inputs.MACH }}" == "${{ matrix.rockchip }}" ] && [ "${{ github.event.inputs.REPO }}" == "main" ]; then
-            matrix={\"include\":[{\"target\":\"rockchip-ipt\",\"repo\":\"main\"},{\"target\":\"rockchip-nft\",\"repo\":\"main\"}]}
+            matrix={\"include\":[{\"target\":\"rockchip-iptables\",\"repo\":\"main\"},{\"target\":\"rockchip-nftables\",\"repo\":\"main\"}]}
           fi
           echo "Generated matrix: "$matrix""
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
@@ -161,16 +161,6 @@ jobs:
         echo ${{matrix.target}}
         $GITHUB_WORKSPACE/core.sh init-gh-env-2410
 
-    - name: 导入机器及安装包config
-      id: cfg
-      run: |
-        if [ ${{ env.TEST_KERNEL }} = 1 ]; then
-        $GITHUB_WORKSPACE/$DIY_SH add-test-config
-        echo "Kernel_Test=_Kernel_Test_Ver" >> $GITHUB_ENV
-        fi
-        $GITHUB_WORKSPACE/core.sh init-math-config
-        $GITHUB_WORKSPACE/core.sh init-openwrt-pkg-config
-
     - name: 克隆源代码
       working-directory: /workdir
       id: clone
@@ -218,23 +208,10 @@ jobs:
     - name: 自定义安装包(优先于feeds)
       if: steps.clone.outputs.status == 'success'
       id: files
+      env:
+        SFE_INPUT_STATUS: ${{ github.event.inputs.SFE_BUILDIN }}
       run: |
-        mkdir openwrt/feeds-bump
-        [ -d feeds-packages/openwrt-24.10/feeds/ ] && mv -f feeds-packages/openwrt-24.10/feeds/* openwrt/feeds-bump
-        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
-        rm -rf openwrt-2410/mypatch-2410-${{matrix.target}}/0004-fix.patch
-        fi
-        if [ "${{ matrix.repo }}" == "openwrt-24.10" ]; then
-        [ -d openwrt-2410/mypatch-2410-${{matrix.target}} ] && mv -f openwrt-2410/mypatch-2410-${{matrix.target}} openwrt/mypatch
-        elif [ "${{ matrix.repo }}" == "main" ]; then
-        [ -d openwrt-main/mypatch-main-${{matrix.target}} ] && mv -f openwrt-main/mypatch-main-${{matrix.target}} openwrt/mypatch
-        fi
-        [ -d package ] && mv -f package/* openwrt/package
-        [ -d openwrt-2410/mypatch-2410 ] && mv -f openwrt-2410/mypatch-2410 openwrt/mypatch-2410
-        [ -d openwrt-2410/package-for-2410 ] && cp -r openwrt-2410/package-for-2410/* openwrt/package
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_SH patch-openwrt
-        cd ../
+        $GITHUB_WORKSPACE/core.sh add-openwrt-files-2410
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 设置 IP 地址
@@ -260,48 +237,18 @@ jobs:
     - name: 自定义配置（修复feeds）
       if: steps.feeds.outputs.status == 'success'
       id: config
+      env:
+        INPUT_PKGS_CFG_STATUS: ${{ github.event.inputs.packages_mod }}
+        INPUT_PKGS_CFG_FOO: ${{ github.event.inputs.packages }}
       run: |
-        if [ ${{ env.MAC80211_618 }} = 1 ]; then
-        $GITHUB_WORKSPACE/core.sh mac80211-618-pkg
-        fi
-        if [ "${{ matrix.repo }}" == "openwrt-24.10" ]; then
-        [ -d openwrt-2410/lunatic7-revert ] && mv -f openwrt-2410/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
-        [ -d openwrt-2410/luci-patch-2410 ] && mv -f openwrt-2410/luci-patch-2410 openwrt/feeds/luci/luci-patch-2410
-        [ -d openwrt-2410/feeds-package-patch-2410 ] && mv -f openwrt-2410/feeds-package-patch-2410 openwrt/feeds/packages/feeds-package-patch-2410
-        [ -d openwrt-2410/feeds-telephony-patch ] && mv -f openwrt-2410/feeds-telephony-patch openwrt/feeds/telephony/feeds-telephony-patch
-        [ -d openwrt-2410/feeds-routing-patch ] && mv -f openwrt-2410/feeds-routing-patch openwrt/feeds/routing/feeds-routing-patch
-        elif [ "${{ matrix.repo }}" == "main" ]; then
-        [ -d openwrt-main/lunatic7-revert ] && mv -f openwrt-main/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
-        [ -d openwrt-main/luci-patch ] && mv -f openwrt-main/luci-patch openwrt/feeds/luci/luci-patch
-        [ -d openwrt-main/feeds-package-patch ] && mv -f openwrt-main/feeds-package-patch openwrt/feeds/packages/feeds-package-patch
-        fi
-        [ -e files ] && mv files openwrt/files
-        [ -e package-configs ] && mv package-configs openwrt/package-configs
-        [ -e machine-configs/${{matrix.target}}.config ] && mv -f machine-configs/${{matrix.target}}.config openwrt/package-configs/.config
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_SH ${{matrix.target}}
-        if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
-        $GITHUB_WORKSPACE/$DIY_SH patchtele
-        fi
-        make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
-        if [ ${{github.event.inputs.KERNEL66}} = true ]; then
-        $GITHUB_WORKSPACE/$DIY_SH feeds-replace
-        fi
+        $GITHUB_WORKSPACE/core.sh fix-openwrt-feeds
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 添加kmod
       if: steps.config.outputs.status == 'success' && env.ALLKMOD == '1'
       id: config2
       run: |
-        cd openwrt
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
-        make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
-        make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC kmod-kernel66
-        make defconfig
-        $GITHUB_WORKSPACE/$DIY_SH_RFC ${{matrix.target}}
+        $GITHUB_WORKSPACE/core.sh add-openwrt-kmods
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Run awk command
