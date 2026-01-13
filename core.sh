@@ -14,17 +14,12 @@ OpenWrt_PATCH_FILE_DIR="openwrt-ipq"
 }
 
 function init_pkg_env() {
-	sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
-	sudo -E apt-get -qq update
-	sudo -E apt-get -qq install build-essential clang flex g++ gawk gcc-multilib gettext \
-		git libncurses5-dev libssl-dev python3-distutils python3-pyelftools python3-setuptools \
-		libpython3-dev rsync unzip zlib1g-dev swig aria2 jq subversion qemu-utils ccache rename \
-		libelf-dev device-tree-compiler libgnutls28-dev coccinelle libgmp3-dev libmpc-dev libfuse-dev \
-		b43-fwcutter cups-ppdc
+	sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+	sudo -E apt-get -qq install libgnutls28-dev coccinelle libfuse-dev \
+	b43-fwcutter cups-ppdc
 
-	sudo -E apt-get -qq purge azure-cli ghc* zulu* llvm* firefox powershell openjdk* dotnet* google* mysql* php* android*
-	sudo -E apt-get -qq autoremove --purge
-	sudo -E apt-get -qq clean
+	sudo npm install -g pnpm
+	clang --version
 
 	sudo timedatectl set-timezone "$TZ"
 	sudo mkdir -p /workdir
@@ -35,6 +30,7 @@ function init_gh_env_2410() {
 	source "${GITHUB_WORKSPACE}/env/common-rk3399.txt"
 	source "${GITHUB_WORKSPACE}/env/openwrt-24.10.repo"
 	echo -e "TEST_KERNEL=$(echo $PATCH_JSON_INPUT | jq -r ".TEST_KERNEL")" >> "$GITHUB_ENV"
+	echo -e "ADD_eBPF=$(echo $PATCH_JSON_INPUT | jq -r ".ADD_eBPF")" >> "$GITHUB_ENV"
 }
 
 function init_gh_env_2410_ipq() {
@@ -184,6 +180,24 @@ function init_openwrt_patch_common() {
 	if [ "$ADD_IB" = "1" ]; then
 		bash $GITHUB_WORKSPACE/add-sfe-packages.sh lunatic-lede-ib
 		echo "----$Matrix_Target----IB---"
+	fi
+
+	if [ "$ADD_eBPF" = "1" ]; then
+		for file1 in package-configs/$OpenWrt_PATCH_FILE_DIR/*.config; do     echo "# ADD eBPF
+CONFIG_DEVEL=y
+CONFIG_KERNEL_DEBUG_INFO=y
+CONFIG_KERNEL_DEBUG_INFO_REDUCED=n
+CONFIG_KERNEL_DEBUG_INFO_BTF=y
+CONFIG_KERNEL_CGROUPS=y
+CONFIG_KERNEL_CGROUP_BPF=y
+CONFIG_KERNEL_BPF_EVENTS=y
+CONFIG_BPF_TOOLCHAIN_HOST=y
+CONFIG_KERNEL_XDP_SOCKETS=y
+CONFIG_PACKAGE_kmod-xdp-sockets-diag=y
+		" >> "$file1"; done
+		echo "----------eBPF-added------"
+		echo "eBPF=_eBPF" >> $GITHUB_ENV
+		echo "----$Matrix_Target----eBPF---"
 	fi
 }
 

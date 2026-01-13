@@ -80,7 +80,7 @@ on:
       patch_repo:
         description: 'Use json patch repo true(1) or false(0) See ReadME'
         required: true
-        default: '{"OPENSSL_3_5": "1", "BCM_FULLCONE": "1", "MAC80211_616": "0", "MAC80211_618": "0", "TRY_BBR_V3": "1"}'
+        default: '{"OPENSSL_3_5": "1", "BCM_FULLCONE": "1", "MAC80211_616": "0", "MAC80211_618": "0", "TRY_BBR_V3": "1", "ADD_eBPF": "0"}'
 
       config_repo:
         description: 'Use json config repo true(1) or false(0) See ReadME'
@@ -411,7 +411,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       with:
-        name: ${{ env.date3 }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}${{ env.MAC80211_616_NAME }}
+        name: ${{ env.date3 }}_${{matrix.target}}_firmware_${{ matrix.repo }}-${{github.event.inputs.MACH}}-${{ github.event.inputs.SETIP }}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}${{ env.MAC80211_616_NAME }}${{ env.eBPF }}
         path: |
           firmware
 
@@ -420,7 +420,7 @@ jobs:
       continue-on-error: true
       if: steps.organize.outputs.status == 'success' && env.UPLOAD_IPK_DIR == 'true' && steps.afb.outputs.status == 'success'
       with:
-        name: ${{ env.date3 }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}${{ env.MAC80211_616_NAME }}
+        name: ${{ env.date3 }}_${{matrix.target}}_ipks_${{ matrix.repo }}-${{github.event.inputs.MACH}}${{ env.Kernel_Test }}${{ env.BCM_FULLCONE_NAME }}${{ env.SFE }}${{ env.TRY_BBR_V3_NAME }}${{ env.OPENSSL_3_5_NAME }}${{ env.MAC80211_616_NAME }}${{ env.eBPF }}
         path: |
           ipks
 
