@@ -132,16 +132,6 @@ jobs:
     - name: 检查
       uses: actions/checkout@main
 
-    - name: Maximize build space
-      uses: easimon/maximize-build-space@master
-      with:
-          root-reserve-mb: 512
-          swap-size-mb: 1024
-
-    - name: 检查空间使用情况
-      if: (!cancelled())
-      run: df -hT
-
     - name: 检查服务器配置
       run: |
         echo "若分配的服务器性能不足，务必及时取消，重新运行！"
