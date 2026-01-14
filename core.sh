@@ -253,6 +253,7 @@ function ln_openwrt() {
 	ln -sf /mnt/openwrt/build_dir openwrt/build_dir
 	df -hT
 	ls /mnt/openwrt
+	ls $PWD
 }
 
 function add_openwrt_sfe_ipt_k66() {
