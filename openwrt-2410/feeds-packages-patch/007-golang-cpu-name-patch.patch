@@ -1,0 +1,99 @@
+From bfd5e0e899daa872d2fc0140fe2db9d501a3bec7 Mon Sep 17 00:00:00 2001
+From: George Sapkin <george@sapk.in>
+Date: Sun, 2 Nov 2025 00:27:22 +0200
+Subject: [PATCH] golang: set GOARM64 based on CONFIG_CPU_TYPE
+
+Fixes: https://github.com/openwrt/packages/issues/26852
+Signed-off-by: George Sapkin <george@sapk.in>
+---
+ lang/golang/golang-package.mk |  1 +
+ lang/golang/golang-values.mk  | 44 +++++++++++++++++++++++++++++++++++
+ lang/golang/golang/Makefile   |  3 ++-
+ 3 files changed, 47 insertions(+), 1 deletion(-)
+
+diff --git a/lang/golang/golang-package.mk b/lang/golang/golang-package.mk
+index cc00505368c7c..8edcb278c5b9b 100644
+--- a/lang/golang/golang-package.mk
++++ b/lang/golang/golang-package.mk
+@@ -200,6 +200,7 @@ GO_PKG_TARGET_VARS= \
+ 	GO386="$(GO_386)" \
+ 	GOAMD64="$(GO_AMD64)" \
+ 	GOARM="$(GO_ARM)" \
++	GOARM64="$(GO_ARM64)" \
+ 	GOMIPS="$(GO_MIPS)" \
+ 	GOMIPS64="$(GO_MIPS64)" \
+ 	GOPPC64="$(GO_PPC64)" \
+diff --git a/lang/golang/golang-values.mk b/lang/golang/golang-values.mk
+index 727739e2d2ffe..06e6cec38ffd0 100644
+--- a/lang/golang/golang-values.mk
++++ b/lang/golang/golang-values.mk
+@@ -147,6 +147,34 @@ GO_HOST_ARCH:=$(call go_arch,$(subst \
+   i686,i386,$(HOST_ARCH)))))
+ GO_HOST_OS_ARCH:=$(GO_HOST_OS)_$(GO_HOST_ARCH)
+ 
++# Filter lists for ARM64 cores
++# See https://en.wikipedia.org/wiki/ARM_architecture_family#Cores
++GO_ARM64_V8_0_CORES= \
++  cortex-a34 \
++  cortex-a35 \
++  cortex-a53 \
++  cortex-a57 \
++  cortex-a72 \
++  cortex-a73
++GO_ARM64_V8_2_CORES= \
++  cortex-a55 \
++  cortex-a65 \
++  cortex-a75 \
++  cortex-a76 \
++  cortex-a77 \
++  cortex-a78 \
++  cortex-x1
++GO_ARM64_V9_0_CORES= \
++  cortex-a510 \
++  cortex-a710 \
++  cortex-a715 \
++  cortex-x2 \
++  cortex-x3
++GO_ARM64_V9_2_CORES= \
++  cortex-a520 \
++  cortex-a720 \
++  cortex-x4
++
+ ifeq ($(GO_OS_ARCH),$(GO_HOST_OS_ARCH))
+   GO_HOST_TARGET_SAME:=1
+ else
+@@ -180,6 +208,22 @@ else ifeq ($(GO_ARCH),arm)
+     GO_ARM:=7
+   endif
+ 
++else ifeq ($(GO_ARCH),arm64)
++  GO_TARGET_CPU:=$(call qstrip,$(CONFIG_CPU_TYPE))
++
++  ifneq ($(filter $(GO_TARGET_CPU),$(GO_ARM64_V8_0_CORES)),)
++    GO_ARM64:=v8.0
++  else ifneq ($(filter $(GO_TARGET_CPU),$(GO_ARM64_V8_2_CORES)),)
++    GO_ARM64:=v8.2
++  else ifneq ($(filter $(GO_TARGET_CPU),$(GO_ARM64_V9_0_CORES)),)
++    GO_ARM64:=v9.0
++  else ifneq ($(filter $(GO_TARGET_CPU),$(GO_ARM64_V9_2_CORES)),)
++    GO_ARM64:=v9.2
++  else
++    # Unknown CPU, assume baseline
++    GO_ARM64:=v8.0
++  endif
++
+ else ifneq ($(filter $(GO_ARCH),mips mipsle),)
+   ifeq ($(CONFIG_HAS_FPU),y)
+     GO_MIPS:=hardfloat
+diff --git a/lang/golang/golang/Makefile b/lang/golang/golang/Makefile
+index 5d4eb1ebac803..b525386ee9518 100644
+--- a/lang/golang/golang/Makefile
++++ b/lang/golang/golang/Makefile
+@@ -357,6 +357,7 @@ PKG_GO_ZBOOTSTRAP_MODS:= \
+ 	s/defaultGO386 = `[^`]*`/defaultGO386 = `$(or $(GO_386),sse2)`/; \
+ 	s/defaultGOAMD64 = `[^`]*`/defaultGOAMD64 = `$(or $(GO_AMD64),v1)`/; \
+ 	s/defaultGOARM = `[^`]*`/defaultGOARM = `$(or $(GO_ARM),7)`/; \
++	s/defaultGOARM64 = `[^`]*`/defaultGOARM64 = `$(or $(GO_ARM64),v8.0)`/; \
+ 	s/defaultGOMIPS = `[^`]*`/defaultGOMIPS = `$(or $(GO_MIPS),hardfloat)`/; \
+ 	s/defaultGOMIPS64 = `[^`]*`/defaultGOMIPS64 = `$(or $(GO_MIPS64),hardfloat)`/; \
+ 	s/defaultGOPPC64 = `[^`]*`/defaultGOPPC64 = `$(or $(GO_PPC64),power8)`/;
