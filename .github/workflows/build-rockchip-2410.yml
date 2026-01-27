@@ -134,7 +134,6 @@ jobs:
 
     - name: 检查服务器配置
       run: |
-        echo "若分配的服务器性能不足，务必及时取消，重新运行！"
         echo -e "------------------------------- CPU信息 -------------------------------\n"
         echo "CPU物理数量:$(cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l)"
         echo -e "CPU核心及版本信息: $(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
