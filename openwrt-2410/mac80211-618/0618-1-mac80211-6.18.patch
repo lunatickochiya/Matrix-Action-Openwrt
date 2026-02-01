@@ -7,15 +7,15 @@ index 7ec440738f..5f9158f875 100644
  PKG_NAME:=mac80211
 
 -PKG_VERSION:=6.16.12
-+PKG_VERSION:=6.18.2
++PKG_VERSION:=6.18.7
  PKG_RELEASE:=1
  PKG_LICENSE:=GPL-2.0-only
  PKG_LICENSE_FILES:=COPYING
 
 -PKG_SOURCE_URL:=https://github.com/lunatickochiya/backports-action/releases/download/backports-v$(PKG_VERSION)
 -PKG_HASH:=6eace0fefb690634ee3a677c2f3958cb6b6a5dc2a4e5a08a2eb3fa10afed7ce1
-+PKG_SOURCE_URL:=https://github.com/lunatickochiya/backports/releases/download/backports-v$(PKG_VERSION)
-+PKG_HASH:=e5ac15b1b1e9254fc3866ab4f98b116d28b20e661e73d3b926d7fed586952f0e
++PKG_SOURCE_URL:=https://github.com/openwrt/backports/releases/download/backports-v$(PKG_VERSION)
++PKG_HASH:=623e5cf46ca8e81fd413f4f465e2580a0143e24929f9c22ce1ba7c34f2872989
 
 
  PKG_SOURCE:=backports-$(PKG_VERSION).tar.zst
