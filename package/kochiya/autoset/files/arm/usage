@@ -2,7 +2,7 @@
 
 NSS_PATH="/sys/kernel/debug/qca-nss-drv/stats"
 
-cpu_usage="$(busybox top -n1 | awk '/^CPU/ {printf("%d%", 100 - $8)}')"
+cpu_usage="$(busybox top -n1 | awk '/^CPU/ {printf("%d", 100 - $8)}')"
 
 combined_output=""
 
