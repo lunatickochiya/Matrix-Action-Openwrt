@@ -1,0 +1,177 @@
+From 2186a6633cf94811ce957902f16705793c48a566 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Fri, 6 Feb 2026 21:01:17 +0800
+Subject: [PATCH] Revert "openssl: update to version 3.0.19"
+
+This reverts commit 9237dea49e8f868b6c0408973c05e1acc4df4296.
+---
+ package/libs/openssl/Makefile                 |  4 +-
+ .../patches/140-allow-prefer-chacha20.patch   | 42 ++++++++++---------
+ ...default-to-not-use-digests-in-engine.patch | 16 +++----
+ ...to-ignore-error-when-closing-session.patch |  5 ++-
+ 4 files changed, 35 insertions(+), 32 deletions(-)
+
+diff --git a/package/libs/openssl/Makefile b/package/libs/openssl/Makefile
+index cd2d3af06a..70d64d6711 100644
+--- a/package/libs/openssl/Makefile
++++ b/package/libs/openssl/Makefile
+@@ -8,7 +8,7 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=openssl
+-PKG_VERSION:=3.0.19
++PKG_VERSION:=3.0.18
+ PKG_RELEASE:=1
+ PKG_BUILD_FLAGS:=no-mips16 gc-sections no-lto
+ 
+@@ -21,7 +21,7 @@ PKG_SOURCE_URL:= \
+ 	https://www.openssl.org/source/old/$(PKG_BASE)/ \
+ 	https://github.com/openssl/openssl/releases/download/$(PKG_NAME)-$(PKG_VERSION)/
+ 
+-PKG_HASH:=fa5a4143b8aae18be53ef2f3caf29a2e0747430b8bc74d32d88335b94ab63072
++PKG_HASH:=d80c34f5cf902dccf1f1b5df5ebb86d0392e37049e5d73df1b3abae72e4ffe8b
+ 
+ PKG_LICENSE:=Apache-2.0
+ PKG_LICENSE_FILES:=LICENSE.txt
+diff --git a/package/libs/openssl/patches/140-allow-prefer-chacha20.patch b/package/libs/openssl/patches/140-allow-prefer-chacha20.patch
+index ce7f08c40d..fb7bc84361 100644
+--- a/package/libs/openssl/patches/140-allow-prefer-chacha20.patch
++++ b/package/libs/openssl/patches/140-allow-prefer-chacha20.patch
+@@ -16,9 +16,9 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+ 
+ --- a/ssl/ssl_ciph.c
+ +++ b/ssl/ssl_ciph.c
+-@@ -1490,11 +1490,29 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
++@@ -1506,11 +1506,29 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
+      ssl_cipher_apply_rule(0, SSL_kECDHE, 0, 0, 0, 0, 0, CIPHER_DEL, -1, &head,
+-         &tail);
++                           &tail);
+  
+ +    /*
+ +     * If OPENSSL_PREFER_CHACHA_OVER_GCM is defined, ChaCha20_Poly1305
+@@ -33,20 +33,20 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+ +
+ +#ifdef OPENSSL_PREFER_CHACHA_OVER_GCM
+ +    ssl_cipher_apply_rule(0, 0, 0, SSL_CHACHA20, 0, 0, 0, CIPHER_ADD, -1,
+-+        &head, &tail);
+++                          &head, &tail);
+ +    ssl_cipher_apply_rule(0, 0, 0, SSL_AESGCM, 0, 0, 0, CIPHER_ADD, -1,
+-+        &head, &tail);
+++                          &head, &tail);
+ +#else
+      /* Within each strength group, we prefer GCM over CHACHA... */
+      ssl_cipher_apply_rule(0, 0, 0, SSL_AESGCM, 0, 0, 0, CIPHER_ADD, -1,
+-         &head, &tail);
++                           &head, &tail);
+      ssl_cipher_apply_rule(0, 0, 0, SSL_CHACHA20, 0, 0, 0, CIPHER_ADD, -1,
+-         &head, &tail);
++                           &head, &tail);
+ +#endif
+  
+      /*
+       * ...and generally, our preferred cipher is AES.
+-@@ -1549,7 +1567,7 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
++@@ -1565,7 +1583,7 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_
+       * Within each group, ciphers remain sorted by strength and previous
+       * preference, i.e.,
+       * 1) ECDHE > DHE
+@@ -55,7 +55,7 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+       * 3) AES > rest
+       * 4) TLS 1.2 > legacy
+       *
+-@@ -2222,7 +2240,13 @@ const char *OSSL_default_cipher_list(voi
++@@ -2236,7 +2254,13 @@ const char *OSSL_default_cipher_list(voi
+   */
+  const char *OSSL_default_ciphersuites(void)
+  {
+@@ -71,20 +71,22 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+  }
+ --- a/include/openssl/ssl.h.in
+ +++ b/include/openssl/ssl.h.in
+-@@ -197,10 +197,16 @@ extern "C" {
++@@ -195,9 +195,15 @@ extern "C" {
+   * DEPRECATED IN 3.0.0, in favor of OSSL_default_ciphersuites()
+   * Update both macro and function simultaneously
+   */
+-+#ifdef OPENSSL_PREFER_CHACHA_OVER_GCM
+-+#define TLS_DEFAULT_CIPHERSUITES "TLS_CHACHA20_POLY1305_SHA256:" \
+-+                                 "TLS_AES_256_GCM_SHA384:" \
+-+                                 "TLS_AES_128_GCM_SHA256"
+-+#else
+- #define TLS_DEFAULT_CIPHERSUITES "TLS_AES_256_GCM_SHA384:"       \
+-                                  "TLS_CHACHA20_POLY1305_SHA256:" \
+-                                  "TLS_AES_128_GCM_SHA256"
+- #endif
+-+#endif
++-#  define TLS_DEFAULT_CIPHERSUITES "TLS_AES_256_GCM_SHA384:" \
++-                                   "TLS_CHACHA20_POLY1305_SHA256:" \
++-                                   "TLS_AES_128_GCM_SHA256"
+++#  ifdef OPENSSL_PREFER_CHACHA_OVER_GCM
+++#   define TLS_DEFAULT_CIPHERSUITES "TLS_CHACHA20_POLY1305_SHA256:" \
+++                                    "TLS_AES_256_GCM_SHA384:" \
+++                                    "TLS_AES_128_GCM_SHA256"
+++#  else
+++#   define TLS_DEFAULT_CIPHERSUITES "TLS_AES_256_GCM_SHA384:" \
+++                                    "TLS_CHACHA20_POLY1305_SHA256:" \
+++                                    "TLS_AES_128_GCM_SHA256"
+++#  endif
++ # endif
+  /*
+   * As of OpenSSL 1.0.0, ssl_create_cipher_list() in ssl/ssl_ciph.c always
+-  * starts with a reasonable order, and all we have to do for DEFAULT is
+diff --git a/package/libs/openssl/patches/500-e_devcrypto-default-to-not-use-digests-in-engine.patch b/package/libs/openssl/patches/500-e_devcrypto-default-to-not-use-digests-in-engine.patch
+index 66af636371..f183263858 100644
+--- a/package/libs/openssl/patches/500-e_devcrypto-default-to-not-use-digests-in-engine.patch
++++ b/package/libs/openssl/patches/500-e_devcrypto-default-to-not-use-digests-in-engine.patch
+@@ -21,21 +21,21 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+ 
+ --- a/engines/e_devcrypto.c
+ +++ b/engines/e_devcrypto.c
+-@@ -886,7 +886,7 @@ static void prepare_digest_methods(void)
++@@ -905,7 +905,7 @@ static void prepare_digest_methods(void)
+      for (i = 0, known_digest_nids_amount = 0; i < OSSL_NELEM(digest_data);
+-         i++) {
++          i++) {
+  
+ -        selected_digests[i] = 1;
+ +        selected_digests[i] = 0;
+  
+          /*
+           * Check that the digest is usable
+-@@ -1095,7 +1095,7 @@ static const ENGINE_CMD_DEFN devcrypto_c
++@@ -1119,7 +1119,7 @@ static const ENGINE_CMD_DEFN devcrypto_c
+  #ifdef IMPLEMENT_DIGEST
+-     { DEVCRYPTO_CMD_DIGESTS,
+-         "DIGESTS",
+--        "either ALL, NONE, or a comma-separated list of digests to enable [default=ALL]",
+-+        "either ALL, NONE, or a comma-separated list of digests to enable [default=NONE]",
+-         ENGINE_CMD_FLAG_STRING },
++    {DEVCRYPTO_CMD_DIGESTS,
++     "DIGESTS",
++-    "either ALL, NONE, or a comma-separated list of digests to enable [default=ALL]",
+++    "either ALL, NONE, or a comma-separated list of digests to enable [default=NONE]",
++     ENGINE_CMD_FLAG_STRING},
+  #endif
+  
+diff --git a/package/libs/openssl/patches/510-e_devcrypto-ignore-error-when-closing-session.patch b/package/libs/openssl/patches/510-e_devcrypto-ignore-error-when-closing-session.patch
+index 8d914d8b39..40b1dc78d3 100644
+--- a/package/libs/openssl/patches/510-e_devcrypto-ignore-error-when-closing-session.patch
++++ b/package/libs/openssl/patches/510-e_devcrypto-ignore-error-when-closing-session.patch
+@@ -10,11 +10,12 @@ Signed-off-by: Eneas U de Queiroz <cote2004-github@yahoo.com>
+ 
+ --- a/engines/e_devcrypto.c
+ +++ b/engines/e_devcrypto.c
+-@@ -210,8 +210,8 @@ static int cipher_init(EVP_CIPHER_CTX *c
++@@ -211,9 +211,8 @@ static int cipher_init(EVP_CIPHER_CTX *c
+      int ret;
+  
+      /* cleanup a previous session */
+--    if (cipher_ctx->sess.ses != 0 && clean_devcrypto_session(&cipher_ctx->sess) == 0)
++-    if (cipher_ctx->sess.ses != 0 &&
++-        clean_devcrypto_session(&cipher_ctx->sess) == 0)
+ -        return 0;
+ +    if (cipher_ctx->sess.ses != 0)
+ +        clean_devcrypto_session(&cipher_ctx->sess);
+-- 
+2.43.0
+

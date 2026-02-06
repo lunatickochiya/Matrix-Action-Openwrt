@@ -1,0 +1,44 @@
+From 1bddf7524553d0e3fee44ee9798bb693e0152f87 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Fri, 6 Feb 2026 21:07:36 +0800
+Subject: [PATCH] Revert "mac80211: ath11k: fix for unsupported 11ax EDCA"
+
+This reverts commit 93d54b142eb05a0a7e608be4db7894665f099f3c.
+---
+ ...7-wifi-ath11k-Fix-the-WMM-param-type.patch | 24 -------------------
+ 1 file changed, 24 deletions(-)
+ delete mode 100644 package/kernel/mac80211/patches/ath11k/907-wifi-ath11k-Fix-the-WMM-param-type.patch
+
+diff --git a/package/kernel/mac80211/patches/ath11k/907-wifi-ath11k-Fix-the-WMM-param-type.patch b/package/kernel/mac80211/patches/ath11k/907-wifi-ath11k-Fix-the-WMM-param-type.patch
+deleted file mode 100644
+index df3643e3ee..0000000000
+--- a/package/kernel/mac80211/patches/ath11k/907-wifi-ath11k-Fix-the-WMM-param-type.patch
++++ /dev/null
+@@ -1,24 +0,0 @@
+-From c420c1f66235b5ab4fc8d94da72bd5ae6397117f Mon Sep 17 00:00:00 2001
+-From: Gautham Kumar Senthilkumaran <gauthamk@qti.qualcomm.com>
+-Date: Mon, 19 Jan 2026 11:55:51 +0100
+-Subject: [PATCH] wifi: ath11k: Fix the WMM param type
+-
+-Since FW does not support the 11ax EDCA parameter in WMI TLV command.
+-FW was crashing as host was sending this parameter, now changed the
+-WMM parameter type as default zero before sending to FW.
+-
+-Fixes: b78c02f7c710 ("wifi: ath11k: add support for MU EDCA")
+-Signed-off-by: Gautham Kumar Senthilkumaran <gauthamk@qti.qualcomm.com>
+-Signed-off-by: Paweł Owoc <frut3k7@gmail.com>
+-
+---- a/drivers/net/wireless/ath/ath11k/wmi.c
+-+++ b/drivers/net/wireless/ath/ath11k/wmi.c
+-@@ -2682,7 +2682,7 @@ int ath11k_wmi_send_wmm_update_cmd_tlv(s
+- 			  FIELD_PREP(WMI_TLV_LEN, sizeof(*cmd) - TLV_HDR_SIZE);
+- 
+- 	cmd->vdev_id = vdev_id;
+--	cmd->wmm_param_type = wmm_param_type;
+-+	cmd->wmm_param_type = WMI_WMM_PARAM_TYPE_LEGACY;
+- 
+- 	for (ac = 0; ac < WME_NUM_AC; ac++) {
+- 		switch (ac) {
+-- 
+2.43.0
+
