@@ -1,0 +1,42 @@
+From 40a305c5b1ba21f2bfb3c231deac67b3ee0ad241 Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Sat, 25 Oct 2025 22:44:22 +0200
+Subject: [PATCH 5/5] wireless-regdb: Update to version 2025.10.07
+
+e51d568 wireless-regdb: update regulatory rules for Botswana (BW) for 2022
+5afc632 wireless-regdb: update regulatory rules for Sint Marteen (SX) for 2018
+b484a31 wireless-regdb: Update regulatory info including bandwidth for Costa Rica (CR) for 2023
+39e5e04 wireless-regdb: Permit lower 6 GHz band for Kazakhstan (KZ)
+a827d3a wireless-regdb: update regulatory database based on preceding changes
+
+Link: https://github.com/openwrt/openwrt/pull/20544
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+(cherry picked from commit b4a8ba2e88681af12287eea2d18c4f7de25e280e)
+---
+ package/firmware/wireless-regdb/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package/firmware/wireless-regdb/Makefile b/package/firmware/wireless-regdb/Makefile
+index d45c95e5e3..25382eb656 100644
+--- a/package/firmware/wireless-regdb/Makefile
++++ b/package/firmware/wireless-regdb/Makefile
+@@ -1,14 +1,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=wireless-regdb
+-PKG_VERSION:=2025.07.10
++PKG_VERSION:=2025.10.07
+ PKG_RELEASE:=1
+ PKG_LICENSE:=ISC
+ PKG_LICENSE_FILES:=LICENSE
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+ PKG_SOURCE_URL:=@KERNEL/software/network/wireless-regdb/
+-PKG_HASH:=a8340bcdcd1b5db6c79149879d122b170f3bb075381718d4f429ad831a6fa28d
++PKG_HASH:=d4c872a44154604c869f5851f7d21d818d492835d370af7f58de8847973801c3
+ 
+ PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
+ 
+-- 
+2.43.0
+

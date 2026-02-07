@@ -1,0 +1,60 @@
+From 7aeb70412186420ed81ef5d19d53aba820eed7c0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+Date: Sat, 6 Dec 2025 18:34:37 +0000
+Subject: [PATCH 3/5] dropbear: enable configurable port forwarding options
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Currently its only possible to disable port forwarding only for specific
+keys, via the OpenSSH-style restriction in `authorized_keys` file.
+
+In some use cases it might be feasible to disable such features globally
+on service level, so lets add new LocalPortForward and RemotePortForward
+config knobs.
+
+Signed-off-by: Petr Štetiar <ynezz@true.cz>
+Link: https://github.com/openwrt/openwrt/pull/21071
+(cherry picked from commit 83f6177dbf44fa92ecf6d2e1cda9f92cfc5fe849)
+[ fix conflict error ]
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+---
+ package/network/services/dropbear/files/dropbear.config | 2 ++
+ package/network/services/dropbear/files/dropbear.init   | 4 ++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/package/network/services/dropbear/files/dropbear.config b/package/network/services/dropbear/files/dropbear.config
+index 7eb5975449..7957cd6a49 100644
+--- a/package/network/services/dropbear/files/dropbear.config
++++ b/package/network/services/dropbear/files/dropbear.config
+@@ -5,3 +5,5 @@ config dropbear main
+ 	option RootPasswordAuth 'on'
+ 	option Port         '22'
+ #	option BannerFile   '/etc/banner'
++#	option LocalPortForward 'off'
++#	option RemotePortForward 'off'
+diff --git a/package/network/services/dropbear/files/dropbear.init b/package/network/services/dropbear/files/dropbear.init
+index 395237f9bc..6e45a55a64 100755
+--- a/package/network/services/dropbear/files/dropbear.init
++++ b/package/network/services/dropbear/files/dropbear.init
+@@ -179,6 +179,8 @@ validate_section_dropbear()
+ 		'IdleTimeout:uinteger:0' \
+ 		'MaxAuthTries:uinteger:3' \
+ 		'RecvWindowSize:uinteger:262144' \
++		'LocalPortForward:bool:1' \
++		'RemotePortForward:bool:1' \
+ 		'mdns:bool:1'
+ }
+ 
+@@ -319,6 +321,8 @@ dropbear_instance()
+ 	fi
+ 	[ "${PasswordAuth}" -eq 0 ] && procd_append_param command -s
+ 	[ "${GatewayPorts}" -eq 1 ] && procd_append_param command -a
++	[ "${LocalPortForward}" -eq 0 ] && procd_append_param command -j
++	[ "${RemotePortForward}" -eq 0 ] && procd_append_param command -k
+ 	[ -n "${ForceCommand}" ] && procd_append_param command -c "${ForceCommand}"
+ 	[ "${RootPasswordAuth}" -eq 0 ] && procd_append_param command -g
+ 	[ "${RootLogin}" -eq 0 ] && procd_append_param command -w
+-- 
+2.43.0
+

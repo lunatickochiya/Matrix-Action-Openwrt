@@ -1,0 +1,24 @@
+From 8802b315d8ed38c6d601e65dbcdc1ba296fb7252 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 7 Feb 2026 22:25:14 +0800
+Subject: [PATCH 4/4] Revert "bcm53xx: modify
+ 180-usb-xhci-add-support-for-performing-fake-doorbell.patch"
+
+This reverts commit efd444537dec1bb3f222fc4db859edaab5a102f0.
+---
+ ...80-usb-xhci-add-support-for-performing-fake-doorbell.patch | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/target/linux/bcm53xx/patches-6.6/180-usb-xhci-add-support-for-performing-fake-doorbell.patch b/target/linux/bcm53xx/patches-6.6/180-usb-xhci-add-support-for-performing-fake-doorbell.patch
+index 9484546935..378d1467ed 100644
+--- a/target/linux/bcm53xx/patches-6.6/180-usb-xhci-add-support-for-performing-fake-doorbell.patch
++++ b/target/linux/bcm53xx/patches-6.6/180-usb-xhci-add-support-for-performing-fake-doorbell.patch
+@@ -23,7 +23,7 @@ it on BCM4708 family.
+  static void xhci_plat_quirks(struct device *dev, struct xhci_hcd *xhci)
+  {
+  	struct xhci_plat_priv *priv = xhci_to_priv(xhci);
+-+	struct platform_device *pdev = to_platform_device(dev);
+++	struct platform_device*pdev = to_platform_device(dev);
+ +	struct device_node *node = pdev->dev.of_node;
+  
+  	xhci->quirks |= priv->quirks;

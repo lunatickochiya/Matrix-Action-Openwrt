@@ -1,0 +1,983 @@
+From dd4e3899ac1843e7401486e8b0b6a4aee92c682a Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Wed, 17 Dec 2025 00:41:30 +0100
+Subject: [PATCH 4/5] dropbear: backport security fixes
+
+This fixes the following security problems:
+CVE-2025-14282: Avoid privilege escalation via unix stream forwarding in Dropbear server.
+CVE-2019-6111: This allowed a malicious server to overwrite arbitrary local files.
+
+This backports two upstream merged PRs:
+https://github.com/mkj/dropbear/pull/391
+https://github.com/mkj/dropbear/pull/394
+and this upstream commit:
+https://github.com/mkj/dropbear/commit/48a17cff6aa104b8e806ddb2191f83f1024060f1
+
+Link: https://github.com/openwrt/openwrt/pull/21192
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ package/network/services/dropbear/Makefile    |   2 +-
+ ...privileges-after-user-authentication.patch | 262 ++++++++++++++++++
+ ...-Remove-return-code-from-login_login.patch |  91 ++++++
+ ...saved-group-when-dropping-privileges.patch | 260 +++++++++++++++++
+ ...-Limit-rekey-to-current-hostkey-type.patch |  64 +++++
+ ...-Restore-seteuid-for-authorized_keys.patch |  41 +++
+ .../patches/006-scp-CVE-2019-6111-fix.patch   | 153 ++++++++++
+ .../dropbear/patches/110-change_user.patch    |  11 +-
+ 8 files changed, 880 insertions(+), 4 deletions(-)
+ create mode 100644 package/network/services/dropbear/patches/001-Drop-privileges-after-user-authentication.patch
+ create mode 100644 package/network/services/dropbear/patches/002-Remove-return-code-from-login_login.patch
+ create mode 100644 package/network/services/dropbear/patches/003-Retain-utmp-saved-group-when-dropping-privileges.patch
+ create mode 100644 package/network/services/dropbear/patches/004-Limit-rekey-to-current-hostkey-type.patch
+ create mode 100644 package/network/services/dropbear/patches/005-Restore-seteuid-for-authorized_keys.patch
+ create mode 100644 package/network/services/dropbear/patches/006-scp-CVE-2019-6111-fix.patch
+
+diff --git a/package/network/services/dropbear/Makefile b/package/network/services/dropbear/Makefile
+index e13b6c2145..dd54c5bc25 100644
+--- a/package/network/services/dropbear/Makefile
++++ b/package/network/services/dropbear/Makefile
+@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=dropbear
+ PKG_VERSION:=2024.86
+-PKG_RELEASE:=1
++PKG_RELEASE:=2
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+ PKG_SOURCE_URL:= \
+diff --git a/package/network/services/dropbear/patches/001-Drop-privileges-after-user-authentication.patch b/package/network/services/dropbear/patches/001-Drop-privileges-after-user-authentication.patch
+new file mode 100644
+index 0000000000..66830ee81d
+--- /dev/null
++++ b/package/network/services/dropbear/patches/001-Drop-privileges-after-user-authentication.patch
+@@ -0,0 +1,262 @@
++From 61cfbc66aefcb047534210713f3aac097100e5f5 Mon Sep 17 00:00:00 2001
++From: Matt Johnston <matt@ucc.asn.au>
++Date: Tue, 9 Dec 2025 15:08:06 +0900
++Subject: Drop privileges after user authentication
++
++Instead of switching user privileges after forking to a shell, switch
++to the user immediately upon successful authentication.
++
++This will require further commits to fix utmp and hostkey handling.
++
++The DROPBEAR_SVR_DROP_PRIVS configuration option controls this
++behaviour.  This should generally be enabled, but can be set to 0 for
++incompatible platforms.  In future it may become non-optional, those
++platforms should be investigated.
++
++Most uses of DROPBEAR_SVR_MULTIUSER have been replaced by
++!DROPBEAR_SVR_DROP_PRIVS.
++
++(cherry picked from commit e0251be2354e1a5c6eccfc2cf4b64243625dafcc)
++---
++ .github/workflows/build.yml |  2 ++
++ src/auth.h                  |  1 +
++ src/default_options.h       |  6 +++++
++ src/svr-agentfwd.c          | 14 ++++++++----
++ src/svr-auth.c              | 45 +++++++++++++++++++++++++++++++++++++
++ src/svr-authpubkey.c        |  6 +++--
++ src/svr-chansession.c       | 26 ++-------------------
++ src/sysoptions.h            |  3 +++
++ 8 files changed, 73 insertions(+), 30 deletions(-)
++
++--- a/.github/workflows/build.yml
+++++ b/.github/workflows/build.yml
++@@ -217,6 +217,8 @@ jobs:
++           echo "#define DROPBEAR_SVR_PASSWORD_AUTH 0" >> localoptions.h
++           # 1 second timeout is too short
++           sed -i "s/DEFAULT_IDLE_TIMEOUT 1/DEFAULT_IDLE_TIMEOUT 99/" localoptions.h
+++          # DROPBEAR_SVR_DROP_PRIVS is on by default, turn it off
+++          echo "#define DROPBEAR_SVR_DROP_PRIVS 0" >> localoptions.h
++ 
++       - name: make
++         run: |
++--- a/src/auth.h
+++++ b/src/auth.h
++@@ -40,6 +40,7 @@ void send_msg_userauth_banner(const buff
++ void svr_auth_password(int valid_user);
++ void svr_auth_pubkey(int valid_user);
++ void svr_auth_pam(int valid_user);
+++void svr_switch_user(void);
++ 
++ #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
++ int svr_pubkey_allows_agentfwd(void);
++--- a/src/default_options.h
+++++ b/src/default_options.h
++@@ -297,6 +297,12 @@ group1 in Dropbear server too */
++ /* -T server option overrides */
++ #define MAX_AUTH_TRIES 10
++ 
+++/* Change server process to user privileges after authentication. */
+++#ifndef DROPBEAR_SVR_DROP_PRIVS
+++/* Default is enabled. Should only be disabled if platforms are incompatible */
+++#define DROPBEAR_SVR_DROP_PRIVS DROPBEAR_SVR_MULTIUSER
+++#endif
+++
++ /* Delay introduced before closing an unauthenticated session (seconds).
++    Disabled by default, can be set to say 30 seconds to reduce the speed
++    of password brute forcing. Note that there is a risk of denial of
++--- a/src/svr-agentfwd.c
+++++ b/src/svr-agentfwd.c
++@@ -151,7 +151,7 @@ void svr_agentcleanup(struct ChanSess *
++ 
++ 	if (chansess->agentfile != NULL && chansess->agentdir != NULL) {
++ 
++-#if DROPBEAR_SVR_MULTIUSER
+++#if !DROPBEAR_SVR_DROP_PRIVS
++ 		/* Remove the dir as the user. That way they can't cause problems except
++ 		 * for themselves */
++ 		uid = getuid();
++@@ -160,6 +160,9 @@ void svr_agentcleanup(struct ChanSess *
++ 			(seteuid(ses.authstate.pw_uid)) < 0) {
++ 			dropbear_exit("Failed to set euid");
++ 		}
+++#else
+++		(void)uid;
+++		(void)gid;
++ #endif
++ 
++ 		/* 2 for "/" and "\0" */
++@@ -172,7 +175,7 @@ void svr_agentcleanup(struct ChanSess *
++ 
++ 		rmdir(chansess->agentdir);
++ 
++-#if DROPBEAR_SVR_MULTIUSER
+++#if !DROPBEAR_SVR_DROP_PRIVS
++ 		if ((seteuid(uid)) < 0 ||
++ 			(setegid(gid)) < 0) {
++ 			dropbear_exit("Failed to revert euid");
++@@ -219,7 +222,7 @@ static int bindagent(int fd, struct Chan
++ 	gid_t gid;
++ 	int ret = DROPBEAR_FAILURE;
++ 
++-#if DROPBEAR_SVR_MULTIUSER
+++#if !DROPBEAR_SVR_DROP_PRIVS
++ 	/* drop to user privs to make the dir/file */
++ 	uid = getuid();
++ 	gid = getgid();
++@@ -227,6 +230,9 @@ static int bindagent(int fd, struct Chan
++ 		(seteuid(ses.authstate.pw_uid)) < 0) {
++ 		dropbear_exit("Failed to set euid");
++ 	}
+++#else
+++		(void)uid;
+++		(void)gid;
++ #endif
++ 
++ 	memset((void*)&addr, 0x0, sizeof(addr));
++@@ -267,7 +273,7 @@ bindsocket:
++ 
++ 
++ out:
++-#if DROPBEAR_SVR_MULTIUSER
+++#if !DROPBEAR_SVR_DROP_PRIVS
++ 	if ((seteuid(uid)) < 0 ||
++ 		(setegid(gid)) < 0) {
++ 		dropbear_exit("Failed to revert euid");
++--- a/src/svr-auth.c
+++++ b/src/svr-auth.c
++@@ -456,12 +456,22 @@ void send_msg_userauth_success() {
++ 	/* authdone must be set after encrypt_packet() for 
++ 	 * delayed-zlib mode */
++ 	ses.authstate.authdone = 1;
+++
+++#if DROPBEAR_DROP_PRIVS
+++	svr_switch_user();
+++#endif
++ 	ses.connect_time = 0;
++ 
++ 
+++#if DROPBEAR_DROP_PRIVS
+++	/* If running as the user, we can rely on the OS
+++	 * to limit allowed ports */
+++	ses.allowprivport = 1;
+++#else
++ 	if (ses.authstate.pw_uid == 0) {
++ 		ses.allowprivport = 1;
++ 	}
+++#endif
++ 
++ 	/* Remove from the list of pre-auth sockets. Should be m_close(), since if
++ 	 * we fail, we might end up leaking connection slots, and disallow new
++@@ -471,3 +481,38 @@ void send_msg_userauth_success() {
++ 	TRACE(("leave send_msg_userauth_success"))
++ 
++ }
+++
+++/* Switch to the ses.authstate user.
+++ * Fails if not running as root and the user differs.
+++ *
+++ * This may be called either after authentication, or 
+++ * after shell/command fork if DROPBEAR_SVR_DROP_PRIVS is unset.
+++ */
+++void svr_switch_user(void) {
+++	assert(ses.authstate.authdone);
+++
+++	/* We can only change uid/gid as root ... */
+++	if (getuid() == 0) {
+++
+++		if ((setgid(ses.authstate.pw_gid) < 0) ||
+++			(initgroups(ses.authstate.pw_name, 
+++						ses.authstate.pw_gid) < 0)) {
+++			dropbear_exit("Error changing user group");
+++		}
+++		if (setuid(ses.authstate.pw_uid) < 0) {
+++			dropbear_exit("Error changing user");
+++		}
+++	} else {
+++		/* ... but if the daemon is the same uid as the requested uid, we don't
+++		 * need to */
+++
+++		/* XXX - there is a minor issue here, in that if there are multiple
+++		 * usernames with the same uid, but differing groups, then the
+++		 * differing groups won't be set (as with initgroups()). The solution
+++		 * is for the sysadmin not to give out the UID twice */
+++		if (getuid() != ses.authstate.pw_uid) {
+++			dropbear_exit("Couldn't	change user as non-root");
+++		}
+++	}
+++}
+++
++--- a/src/svr-authpubkey.c
+++++ b/src/svr-authpubkey.c
++@@ -444,12 +444,14 @@ static int checkpubkey(const char* keyal
++ 	buffer * line = NULL;
++ 	unsigned int len;
++ 	int line_num;
+++#if !DROPBEAR_SVR_DROP_PRIVS
++ 	uid_t origuid;
++ 	gid_t origgid;
+++#endif
++ 
++ 	TRACE(("enter checkpubkey"))
++ 
++-#if DROPBEAR_SVR_MULTIUSER
+++#if !DROPBEAR_SVR_DROP_PRIVS
++ 	/* access the file as the authenticating user. */
++ 	origuid = getuid();
++ 	origgid = getgid();
++@@ -476,7 +478,7 @@ static int checkpubkey(const char* keyal
++ 			TRACE(("checkpubkey: failed opening %s: %s", filename, strerror(errno)))
++ 		}
++ 	}
++-#if DROPBEAR_SVR_MULTIUSER
+++#if !DROPBEAR_SVR_DROP_PRIVS
++ 	if ((seteuid(origuid)) < 0 ||
++ 		(setegid(origgid)) < 0) {
++ 		dropbear_exit("Failed to revert euid");
++--- a/src/svr-chansession.c
+++++ b/src/svr-chansession.c
++@@ -980,30 +980,8 @@ static void execchild(const void *user_d
++ #endif /* DEBUG_VALGRIND */
++ 	}
++ 
++-#if DROPBEAR_SVR_MULTIUSER
++-	/* We can only change uid/gid as root ... */
++-	if (getuid() == 0) {
++-
++-		if ((setgid(ses.authstate.pw_gid) < 0) ||
++-			(initgroups(ses.authstate.pw_name, 
++-						ses.authstate.pw_gid) < 0)) {
++-			dropbear_exit("Error changing user group");
++-		}
++-		if (setuid(ses.authstate.pw_uid) < 0) {
++-			dropbear_exit("Error changing user");
++-		}
++-	} else {
++-		/* ... but if the daemon is the same uid as the requested uid, we don't
++-		 * need to */
++-
++-		/* XXX - there is a minor issue here, in that if there are multiple
++-		 * usernames with the same uid, but differing groups, then the
++-		 * differing groups won't be set (as with initgroups()). The solution
++-		 * is for the sysadmin not to give out the UID twice */
++-		if (getuid() != ses.authstate.pw_uid) {
++-			dropbear_exit("Couldn't	change user as non-root");
++-		}
++-	}
+++#if !DROPBEAR_SVR_DROP_PRIVS
+++	svr_switch_user();
++ #endif
++ 
++ 	/* set env vars */
++--- a/src/sysoptions.h
+++++ b/src/sysoptions.h
++@@ -403,6 +403,9 @@
++ #define DROPBEAR_MULTI 0
++ #endif
++ 
+++#if !DROPBEAR_SVR_MULTIUSER && DROPBEAR_SVR_DROP_PRIVS
+++#error DROPBEAR_SVR_DROP_PRIVS needs DROPBEAR_SVR_MULTIUSER
+++#endif
++ /* Fuzzing expects all key types to be enabled */
++ #if DROPBEAR_FUZZ
++ #if defined(DROPBEAR_DSS)
+diff --git a/package/network/services/dropbear/patches/002-Remove-return-code-from-login_login.patch b/package/network/services/dropbear/patches/002-Remove-return-code-from-login_login.patch
+new file mode 100644
+index 0000000000..9692d16d71
+--- /dev/null
++++ b/package/network/services/dropbear/patches/002-Remove-return-code-from-login_login.patch
+@@ -0,0 +1,91 @@
++From febe8493782965b05025b016091a8bffa5d03563 Mon Sep 17 00:00:00 2001
++From: Matt Johnston <matt@ucc.asn.au>
++Date: Tue, 9 Dec 2025 09:04:04 +0900
++Subject: Remove return code from login_login
++
++Previously this was always 0, so not useful.
++
++(cherry picked from commit b47fe5df58f0b459bb49accdd8cb961d969209fb)
++---
++ src/loginrec.c | 19 +++++--------------
++ src/loginrec.h |  6 +++---
++ 2 files changed, 8 insertions(+), 17 deletions(-)
++
++--- a/src/loginrec.c
+++++ b/src/loginrec.c
++@@ -193,32 +193,24 @@ int wtmpx_get_entry(struct logininfo *li
++  *
++  * Call with a pointer to a struct logininfo initialised with
++  * login_init_entry() or login_alloc_entry()
++- *
++- * Returns:
++- *  >0 if successful
++- *  0  on failure (will use OpenSSH's logging facilities for diagnostics)
++  */
++-int
+++void
++ login_login (struct logininfo *li)
++ {
++ 	li->type = LTYPE_LOGIN;
++-	return login_write(li);
+++	login_write(li);
++ }
++ 
++ 
++ /* login_logout(struct logininfo *)     - Record a logout
++  *
++  * Call as with login_login()
++- *
++- * Returns:
++- *  >0 if successful
++- *  0  on failure (will use OpenSSH's logging facilities for diagnostics)
++  */
++-int
+++void
++ login_logout(struct logininfo *li)
++ {
++ 	li->type = LTYPE_LOGOUT;
++-	return login_write(li);
+++	login_write(li);
++ }
++ 
++ 
++@@ -309,7 +301,7 @@ login_set_current_time(struct logininfo
++  ** login_write: Call low-level recording functions based on autoconf
++  ** results
++  **/
++-int
+++void
++ login_write (struct logininfo *li)
++ {
++ #ifndef HAVE_CYGWIN
++@@ -340,7 +332,6 @@ login_write (struct logininfo *li)
++ #ifdef USE_WTMPX
++ 	wtmpx_write_entry(li);
++ #endif
++-	return 0;
++ }
++ 
++ #ifdef LOGIN_NEEDS_UTMPX
++--- a/src/loginrec.h
+++++ b/src/loginrec.h
++@@ -161,8 +161,8 @@ int login_init_entry(struct logininfo *l
++ void login_set_current_time(struct logininfo *li);
++ 
++ /* record the entry */
++-int login_login (struct logininfo *li);
++-int login_logout(struct logininfo *li);
+++void login_login (struct logininfo *li);
+++void login_logout(struct logininfo *li);
++ #ifdef LOGIN_NEEDS_UTMPX
++ int login_utmp_only(struct logininfo *li);
++ #endif
++@@ -170,7 +170,7 @@ int login_utmp_only(struct logininfo *li
++ /** End of public functions */
++ 
++ /* record the entry */
++-int login_write (struct logininfo *li);
+++void login_write (struct logininfo *li);
++ int login_log_entry(struct logininfo *li);
++ 
++ /* produce various forms of the line filename */
+diff --git a/package/network/services/dropbear/patches/003-Retain-utmp-saved-group-when-dropping-privileges.patch b/package/network/services/dropbear/patches/003-Retain-utmp-saved-group-when-dropping-privileges.patch
+new file mode 100644
+index 0000000000..99c9dc5b7a
+--- /dev/null
++++ b/package/network/services/dropbear/patches/003-Retain-utmp-saved-group-when-dropping-privileges.patch
+@@ -0,0 +1,260 @@
++From b20e7823a0c6a4480aa473e0a46d3ccab4b9b102 Mon Sep 17 00:00:00 2001
++From: Matt Johnston <matt@ucc.asn.au>
++Date: Tue, 9 Dec 2025 09:05:30 +0900
++Subject: Retain utmp saved group when dropping privileges
++
++utmp is required to record logout. The saved group
++is reset by the OS for the executed user shell.
++
++This requires setresgid() function which is not available on all
++platforms. Notable platforms are netbsd and macos. Those platforms will
++have to set DROPBEAR_SVR_DROP_PRIVS 0 unless an alternative approach is
++found.
++
++(cherry picked from commit 73e4e70ea8e6b890c3918b52bb2e647313a09faa)
++---
++ .github/workflows/build.yml |  6 ++++
++ configure                   |  7 +++++
++ configure.ac                |  1 +
++ src/auth.h                  |  2 ++
++ src/config.h.in             |  3 ++
++ src/loginrec.c              |  6 ----
++ src/session.h               |  6 ++++
++ src/svr-auth.c              | 61 +++++++++++++++++++++++++++++++++++--
++ src/svr-chansession.c       |  8 +++++
++ src/sysoptions.h            |  4 +++
++ 10 files changed, 96 insertions(+), 8 deletions(-)
++
++--- a/.github/workflows/build.yml
+++++ b/.github/workflows/build.yml
++@@ -72,6 +72,9 @@ jobs:
++             # fails with:
++             # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
++             ranlib: ranlib -no_warning_for_no_symbols
+++            # macos doesn't have setresgid
+++            localoptions: |
+++              #define DROPBEAR_SVR_DROP_PRIVS 0
++ 
++           - name: macos 15
++             os: macos-15
++@@ -84,6 +87,9 @@ jobs:
++             # fails with:
++             # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
++             ranlib: ranlib -no_warning_for_no_symbols
+++            # macos doesn't have setresgid
+++            localoptions: |
+++              #define DROPBEAR_SVR_DROP_PRIVS 0
++ 
++           # Check that debug code doesn't bitrot
++           - name: DEBUG_TRACE
++--- a/configure
+++++ b/configure
++@@ -7597,6 +7597,13 @@ then :
++ 
++ fi
++ 
+++ac_fn_c_check_func "$LINENO" "setresgid" "ac_cv_func_setresgid"
+++if test "x$ac_cv_func_setresgid" = xyes
+++then :
+++  printf "%s\n" "#define HAVE_SETRESGID 1" >>confdefs.h
+++
+++fi
+++
++ 
++ # POSIX monotonic time
++ ac_fn_c_check_func "$LINENO" "clock_gettime" "ac_cv_func_clock_gettime"
++--- a/configure.ac
+++++ b/configure.ac
++@@ -545,6 +545,7 @@ AC_CHECK_FUNCS(utmpname)
++ AC_CHECK_FUNCS(endutxent getutxent getutxid getutxline pututxline )
++ AC_CHECK_FUNCS(setutxent utmpxname)
++ AC_CHECK_FUNCS(logout updwtmp logwtmp)
+++AC_CHECK_FUNCS(setresgid)
++ 
++ # POSIX monotonic time
++ AC_CHECK_FUNCS(clock_gettime)
++--- a/src/auth.h
+++++ b/src/auth.h
++@@ -41,6 +41,8 @@ void svr_auth_password(int valid_user);
++ void svr_auth_pubkey(int valid_user);
++ void svr_auth_pam(int valid_user);
++ void svr_switch_user(void);
+++void svr_raise_gid_utmp(void);
+++void svr_restore_gid(void);
++ 
++ #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
++ int svr_pubkey_allows_agentfwd(void);
++--- a/src/config.h.in
+++++ b/src/config.h.in
++@@ -222,6 +222,9 @@
++ /* Define to 1 if you have the <security/pam_appl.h> header file. */
++ #undef HAVE_SECURITY_PAM_APPL_H
++ 
+++/* Define to 1 if you have the `setresgid' function. */
+++#undef HAVE_SETRESGID
+++
++ /* Define to 1 if you have the `setutent' function. */
++ #undef HAVE_SETUTENT
++ 
++--- a/src/loginrec.c
+++++ b/src/loginrec.c
++@@ -304,12 +304,6 @@ login_set_current_time(struct logininfo
++ void
++ login_write (struct logininfo *li)
++ {
++-#ifndef HAVE_CYGWIN
++-	if ((int)geteuid() != 0) {
++-	  return 1;
++-	}
++-#endif
++-
++ 	/* set the timestamp */
++ 	login_set_current_time(li);
++ #ifdef USE_LOGIN
++--- a/src/session.h
+++++ b/src/session.h
++@@ -271,6 +271,12 @@ struct serversession {
++ 	/* The instance created by the plugin_new function */
++ 	struct PluginInstance *plugin_instance;
++ #endif
+++
+++#if DROPBEAR_SVR_DROP_PRIVS
+++	/* Set to 1 when utmp_gid is valid */
+++	int have_utmp_gid;
+++	gid_t utmp_gid;
+++#endif
++ };
++ 
++ typedef enum {
++--- a/src/svr-auth.c
+++++ b/src/svr-auth.c
++@@ -457,13 +457,14 @@ void send_msg_userauth_success() {
++ 	 * delayed-zlib mode */
++ 	ses.authstate.authdone = 1;
++ 
++-#if DROPBEAR_DROP_PRIVS
+++#if DROPBEAR_SVR_DROP_PRIVS
+++	/* Drop privileges as soon as authentication has happened. */
++ 	svr_switch_user();
++ #endif
++ 	ses.connect_time = 0;
++ 
++ 
++-#if DROPBEAR_DROP_PRIVS
+++#if DROPBEAR_SVR_DROP_PRIVS
++ 	/* If running as the user, we can rely on the OS
++ 	 * to limit allowed ports */
++ 	ses.allowprivport = 1;
++@@ -482,6 +483,20 @@ void send_msg_userauth_success() {
++ 
++ }
++ 
+++#if DROPBEAR_SVR_DROP_PRIVS
+++/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+++static int utmp_gid(gid_t *ret_gid) {
+++	struct group *utmp_gr = getgrnam("utmp");
+++	if (!utmp_gr) {
+++		TRACE(("No utmp group"));
+++		return DROPBEAR_FAILURE;
+++	}
+++
+++	*ret_gid = utmp_gr->gr_gid;
+++	return DROPBEAR_SUCCESS;
+++}
+++#endif
+++
++ /* Switch to the ses.authstate user.
++  * Fails if not running as root and the user differs.
++  *
++@@ -499,6 +514,25 @@ void svr_switch_user(void) {
++ 						ses.authstate.pw_gid) < 0)) {
++ 			dropbear_exit("Error changing user group");
++ 		}
+++
+++#if DROPBEAR_SVR_DROP_PRIVS
+++		/* Retain utmp saved group so that wtmp/utmp can be written */
+++		int ret = utmp_gid(&svr_ses.utmp_gid);
+++		if (ret == DROPBEAR_SUCCESS) {
+++			/* Set saved gid to utmp so that it can be
+++			 * restored for login_logout() etc. This saved
+++			 * group is cleared by the OS on execve() */
+++			int rc = setresgid(-1, -1, svr_ses.utmp_gid);
+++			if (rc == 0) {
+++				svr_ses.have_utmp_gid = 1;
+++			} else {
+++				/* Will not attempt to switch to utmp gid.
+++				 * login() etc may fail. */
+++				TRACE(("utmp setresgid failed"));
+++			}
+++		}
+++#endif
+++
++ 		if (setuid(ses.authstate.pw_uid) < 0) {
++ 			dropbear_exit("Error changing user");
++ 		}
++@@ -516,3 +550,26 @@ void svr_switch_user(void) {
++ 	}
++ }
++ 
+++void svr_raise_gid_utmp(void) {
+++#if DROPBEAR_SVR_DROP_PRIVS
+++	if (!svr_ses.have_utmp_gid) {
+++		return;
+++	}
+++
+++	if (setegid(svr_ses.utmp_gid) != 0) {
+++		dropbear_log(LOG_WARNING, "failed setegid");
+++	}
+++#endif
+++}
+++
+++void svr_restore_gid(void) {
+++#if DROPBEAR_SVR_DROP_PRIVS
+++	if (!svr_ses.have_utmp_gid) {
+++		return;
+++	}
+++
+++	if (setegid(getgid()) != 0) {
+++		dropbear_log(LOG_WARNING, "failed setegid");
+++	}
+++#endif
+++}
++--- a/src/svr-chansession.c
+++++ b/src/svr-chansession.c
++@@ -326,7 +326,11 @@ static void cleanupchansess(const struct
++ 	if (chansess->tty) {
++ 		/* write the utmp/wtmp login record */
++ 		li = chansess_login_alloc(chansess);
+++
+++		svr_raise_gid_utmp();
++ 		login_logout(li);
+++		svr_restore_gid();
+++
++ 		login_free_entry(li);
++ 
++ 		pty_release(chansess->tty);
++@@ -847,7 +851,11 @@ static int ptycommand(struct Channel *ch
++ 		 * terminal used for stdout with the dup2 above, otherwise
++ 		 * the wtmp login will not be recorded */
++ 		li = chansess_login_alloc(chansess);
+++
+++		svr_raise_gid_utmp();
++ 		login_login(li);
+++		svr_restore_gid();
+++
++ 		login_free_entry(li);
++ 
++ 		/* Can now dup2 stderr. Messages from login_login() have gone
++--- a/src/sysoptions.h
+++++ b/src/sysoptions.h
++@@ -318,6 +318,10 @@
++ 	#error "At least one hostkey or public-key algorithm must be enabled; RSA is recommended."
++ #endif
++ 
+++#if DROPBEAR_SVR_DROP_PRIVS && !defined(HAVE_SETRESGID)
+++	#error "DROPBEAR_SVR_DROP_PRIVS requires setresgid()."
+++#endif
+++
++ /* Source for randomness. This must be able to provide hundreds of bytes per SSH
++  * connection without blocking. */
++ #ifndef DROPBEAR_URANDOM_DEV
+diff --git a/package/network/services/dropbear/patches/004-Limit-rekey-to-current-hostkey-type.patch b/package/network/services/dropbear/patches/004-Limit-rekey-to-current-hostkey-type.patch
+new file mode 100644
+index 0000000000..f5e455595b
+--- /dev/null
++++ b/package/network/services/dropbear/patches/004-Limit-rekey-to-current-hostkey-type.patch
+@@ -0,0 +1,64 @@
++From ae7f99902161237542f2c71089ff68b8f694006b Mon Sep 17 00:00:00 2001
++From: Matt Johnston <matt@ucc.asn.au>
++Date: Tue, 9 Dec 2025 09:08:37 +0900
++Subject: Limit rekey to current hostkey type
++
++During rekey dropbear process may be running with user privileges, that
++can't write a new hostkey when auto-generating keys.
++Only offer the original hostkey when rekeying, also for non-autogenerate
++case.
++
++(cherry picked from commit a4043dac4e0e0237255200603672ddb0122017a4)
++---
++ src/runopts.h     |  1 +
++ src/svr-kex.c     |  8 ++++++++
++ src/svr-runopts.c | 11 +++++++++++
++ 3 files changed, 20 insertions(+)
++
++--- a/src/runopts.h
+++++ b/src/runopts.h
++@@ -66,6 +66,7 @@ extern runopts opts;
++ int readhostkey(const char * filename, sign_key * hostkey,
++ 	enum signkey_type *type);
++ void load_all_hostkeys(void);
+++void disable_sig_except(enum signature_type sig_type);
++ 
++ typedef struct svr_runopts {
++ 
++--- a/src/svr-kex.c
+++++ b/src/svr-kex.c
++@@ -96,6 +96,14 @@ void recv_msg_kexdh_init() {
++ 	}
++ #endif
++ 
+++	if (!ses.kexstate.donesecondkex) {
+++		/* Disable other signature types.
+++		 * During future rekeying, privileges may have been dropped
+++		 * so other keys won't be loadable.
+++		 * This must occur after send_msg_ext_info() which uses the hostkey list */
+++		disable_sig_except(ses.newkeys->algo_signature);
+++	}
+++
++ 	ses.requirenext = SSH_MSG_NEWKEYS;
++ 	TRACE(("leave recv_msg_kexdh_init"))
++ }
++--- a/src/svr-runopts.c
+++++ b/src/svr-runopts.c
++@@ -502,6 +502,17 @@ static void disablekey(enum signature_ty
++ 	}
++ }
++ 
+++void disable_sig_except(enum signature_type allow_type) {
+++	int i;
+++	TRACE(("Disabling other sigs except %d", allow_type));
+++	for (i = 0; sigalgs[i].name != NULL; i++) {
+++		enum signature_type sig_type = sigalgs[i].val;
+++		if (sig_type != allow_type) {
+++			sigalgs[i].usable = 0;
+++		}
+++	}
+++}
+++
++ static void loadhostkey_helper(const char *name, void** src, void** dst, int fatal_duplicate) {
++ 	if (*dst) {
++ 		if (fatal_duplicate) {
+diff --git a/package/network/services/dropbear/patches/005-Restore-seteuid-for-authorized_keys.patch b/package/network/services/dropbear/patches/005-Restore-seteuid-for-authorized_keys.patch
+new file mode 100644
+index 0000000000..bef5948fb0
+--- /dev/null
++++ b/package/network/services/dropbear/patches/005-Restore-seteuid-for-authorized_keys.patch
+@@ -0,0 +1,41 @@
++From 3e487854fcf09a5ef57a620ebe606f586a6efdc3 Mon Sep 17 00:00:00 2001
++From: Matt Johnston <matt@ucc.asn.au>
++Date: Fri, 12 Dec 2025 12:31:40 +0900
++Subject: Restore seteuid for authorized_keys
++
++Authorized_keys reading is pre-authentication so should not be
++modified in the post-auth drop-privilege change.
++
++Fixes: e0251be2354e ("Drop privileges after user authentication")
++(cherry picked from commit d193731630a62482855b450daa1d5a5e13a90125)
++---
++ src/svr-authpubkey.c | 6 ++----
++ 1 file changed, 2 insertions(+), 4 deletions(-)
++
++--- a/src/svr-authpubkey.c
+++++ b/src/svr-authpubkey.c
++@@ -444,14 +444,12 @@ static int checkpubkey(const char* keyal
++ 	buffer * line = NULL;
++ 	unsigned int len;
++ 	int line_num;
++-#if !DROPBEAR_SVR_DROP_PRIVS
++ 	uid_t origuid;
++ 	gid_t origgid;
++-#endif
++ 
++ 	TRACE(("enter checkpubkey"))
++ 
++-#if !DROPBEAR_SVR_DROP_PRIVS
+++#if DROPBEAR_SVR_MULTIUSER
++ 	/* access the file as the authenticating user. */
++ 	origuid = getuid();
++ 	origgid = getgid();
++@@ -478,7 +476,7 @@ static int checkpubkey(const char* keyal
++ 			TRACE(("checkpubkey: failed opening %s: %s", filename, strerror(errno)))
++ 		}
++ 	}
++-#if !DROPBEAR_SVR_DROP_PRIVS
+++#if DROPBEAR_SVR_MULTIUSER
++ 	if ((seteuid(origuid)) < 0 ||
++ 		(setegid(origgid)) < 0) {
++ 		dropbear_exit("Failed to revert euid");
+diff --git a/package/network/services/dropbear/patches/006-scp-CVE-2019-6111-fix.patch b/package/network/services/dropbear/patches/006-scp-CVE-2019-6111-fix.patch
+new file mode 100644
+index 0000000000..5cbcbd96ba
+--- /dev/null
++++ b/package/network/services/dropbear/patches/006-scp-CVE-2019-6111-fix.patch
+@@ -0,0 +1,153 @@
++From 5938a084b0aad887c0f7fa62bf3644d029e4d47d Mon Sep 17 00:00:00 2001
++From: Matt Johnston <matt@ucc.asn.au>
++Date: Tue, 9 Dec 2025 22:59:19 +0900
++Subject: scp CVE-2019-6111 fix
++
++Cherry-pick from OpenSSH portable
++
++391ffc4b9d31 ("upstream: check in scp client that filenames sent during")
++
++upstream: check in scp client that filenames sent during
++
++remote->local directory copies satisfy the wildcard specified by the user.
++
++This checking provides some protection against a malicious server
++sending unexpected filenames, but it comes at a risk of rejecting wanted
++files due to differences between client and server wildcard expansion rules.
++
++For this reason, this also adds a new -T flag to disable the check.
++
++reported by Harry Sintonen
++fix approach suggested by markus@;
++has been in snaps for ~1wk courtesy deraadt@
++
++(cherry picked from commit 48a17cff6aa104b8e806ddb2191f83f1024060f1)
++---
++ src/scp.c | 38 +++++++++++++++++++++++++++++---------
++ 1 file changed, 29 insertions(+), 9 deletions(-)
++
++--- a/src/scp.c
+++++ b/src/scp.c
++@@ -76,6 +76,8 @@
++ #include "includes.h"
++ /*RCSID("$OpenBSD: scp.c,v 1.130 2006/01/31 10:35:43 djm Exp $");*/
++ 
+++#include <fnmatch.h>
+++
++ #include "atomicio.h"
++ #include "compat.h"
++ #include "scpmisc.h"
++@@ -291,14 +293,14 @@ void verifydir(char *);
++ 
++ uid_t userid;
++ int errs, remin, remout;
++-int pflag, iamremote, iamrecursive, targetshouldbedirectory;
+++int Tflag, pflag, iamremote, iamrecursive, targetshouldbedirectory;
++ 
++ #define	CMDNEEDS	64
++ char cmd[CMDNEEDS];		/* must hold "rcp -r -p -d\0" */
++ 
++ int response(void);
++ void rsource(char *, struct stat *);
++-void sink(int, char *[]);
+++void sink(int, char *[], const char *);
++ void source(int, char *[]);
++ void tolocal(int, char *[]);
++ void toremote(char *, int, char *[]);
++@@ -325,8 +327,8 @@ main(int argc, char **argv)
++ 	args.list = NULL;
++ 	addargs(&args, "%s", ssh_program);
++ 
++-	fflag = tflag = 0;
++-	while ((ch = getopt(argc, argv, "dfl:prtvBCc:i:P:q1246S:o:F:")) != -1)
+++	fflag = Tflag = tflag = 0;
+++	while ((ch = getopt(argc, argv, "dfl:prtTvBCc:i:P:q1246S:o:F:")) != -1)
++ 		switch (ch) {
++ 		/* User-visible flags. */
++ 		case '1':
++@@ -389,9 +391,12 @@ main(int argc, char **argv)
++ 			setmode(0, O_BINARY);
++ #endif
++ 			break;
+++		case 'T':
+++			Tflag = 1;
+++			break;
++ 		default:
++ 			usage();
++-		}
+++	}
++ 	argc -= optind;
++ 	argv += optind;
++ 
++@@ -409,7 +414,7 @@ main(int argc, char **argv)
++ 	}
++ 	if (tflag) {
++ 		/* Receive data. */
++-		sink(argc, argv);
+++		sink(argc, argv, NULL);
++ 		exit(errs != 0);
++ 	}
++ 	if (argc < 2)
++@@ -589,7 +594,7 @@ tolocal(int argc, char **argv)
++ 			continue;
++ 		}
++ 		xfree(bp);
++-		sink(1, argv + argc - 1);
+++		sink(1, argv + argc - 1, src);
++ 		(void) close(remin);
++ 		remin = remout = -1;
++ 	}
++@@ -822,7 +827,7 @@ bwlimit(int amount)
++ }
++ 
++ void
++-sink(int argc, char **argv)
+++sink(int argc, char **argv, const char *src)
++ {
++ 	static BUF buffer;
++ 	struct stat stb;
++@@ -836,6 +841,7 @@ sink(int argc, char **argv)
++ 	off_t size, statbytes;
++ 	int setimes, targisdir, wrerrno = 0;
++ 	char ch, *cp, *np, *targ, *why, *vect[1], buf[2048];
+++	char *src_copy = NULL, *restrict_pattern = NULL;
++ 	struct timeval tv[2];
++ 
++ #define	atime	tv[0]
++@@ -857,6 +863,17 @@ sink(int argc, char **argv)
++ 	(void) atomicio(vwrite, remout, "", 1);
++ 	if (stat(targ, &stb) == 0 && S_ISDIR(stb.st_mode))
++ 		targisdir = 1;
+++	if (src != NULL && !iamrecursive && !Tflag) {
+++		/*
+++		 * Prepare to try to restrict incoming filenames to match
+++		 * the requested destination file glob.
+++		 */
+++		if ((src_copy = strdup(src)) == NULL)
+++			fatal("strdup failed");
+++		if ((restrict_pattern = strrchr(src_copy, '/')) != NULL) {
+++			*restrict_pattern++ = '\0';
+++		}
+++	}
++ 	for (first = 1;; first = 0) {
++ 		cp = buf;
++ 		if (atomicio(read, remin, cp, 1) != 1)
++@@ -939,6 +956,9 @@ sink(int argc, char **argv)
++ 			run_err("error: unexpected filename: %s", cp);
++ 			exit(1);
++ 		}
+++		if (restrict_pattern != NULL &&
+++		    fnmatch(restrict_pattern, cp, 0) != 0)
+++			SCREWUP("filename does not match request");
++ 		if (targisdir) {
++ 			static char *namebuf = NULL;
++ 			static size_t cursize = 0;
++@@ -977,7 +997,7 @@ sink(int argc, char **argv)
++ 					goto bad;
++ 			}
++ 			vect[0] = xstrdup(np);
++-			sink(1, vect);
+++			sink(1, vect, src);
++ 			if (setimes) {
++ 				setimes = 0;
++ 				if (utimes(vect[0], tv) < 0)
+diff --git a/package/network/services/dropbear/patches/110-change_user.patch b/package/network/services/dropbear/patches/110-change_user.patch
+index 9ef8f0cfbc..5fbcd663bc 100644
+--- a/package/network/services/dropbear/patches/110-change_user.patch
++++ b/package/network/services/dropbear/patches/110-change_user.patch
+@@ -1,6 +1,6 @@
+---- a/src/svr-chansession.c
+-+++ b/src/svr-chansession.c
+-@@ -984,12 +984,12 @@ static void execchild(const void *user_d
++--- a/src/svr-auth.c
+++++ b/src/svr-auth.c
++@@ -509,9 +509,9 @@ void svr_switch_user(void) {
+  	/* We can only change uid/gid as root ... */
+  	if (getuid() == 0) {
+  
+@@ -11,6 +11,11 @@
+ +						ses.authstate.pw_gid) < 0))) {
+  			dropbear_exit("Error changing user group");
+  		}
++ 
++@@ -533,7 +533,7 @@ void svr_switch_user(void) {
++ 		}
++ #endif
++ 
+ -		if (setuid(ses.authstate.pw_uid) < 0) {
+ +		if ((ses.authstate.pw_uid != 0) && (setuid(ses.authstate.pw_uid) < 0)) {
+  			dropbear_exit("Error changing user");
+-- 
+2.43.0
+
