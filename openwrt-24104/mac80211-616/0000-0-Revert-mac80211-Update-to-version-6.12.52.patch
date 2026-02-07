@@ -1,0 +1,451 @@
+From 10b41d7a2b88161e3529f6e210ab94a9fd9c4e8f Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Mon, 20 Oct 2025 21:38:05 +0800
+Subject: [PATCH] Revert "mac80211: Update to version 6.12.52"
+
+This reverts commit 74fecb6ecdf1c77aa67499761a96f3153844742e.
+---
+ package/kernel/mac80211/Makefile              |  6 +--
+ .../991-ath10k-support-flush_sta-method.patch |  6 +--
+ ...upport-setting-FW-memory-mode-via-DT.patch |  4 +-
+ ...tersection-support-for-regulatory-ru.patch | 24 ++++------
+ ...ear-the-keys-properly-when-DISABLE_K.patch | 48 +++++++++++++++++++
+ .../801-libertas-configure-sysfs-links.patch  |  2 +-
+ .../802-libertas-set-wireless-macaddr.patch   |  2 +-
+ .../patches/subsys/130-disable_auto_vif.patch |  2 +-
+ ...11-add-option-for-vif-allowed-radios.patch |  2 +-
+ ...pport-EHT-1024-aggregation-size-in-T.patch | 39 ++++++++++-----
+ 10 files changed, 96 insertions(+), 39 deletions(-)
+ create mode 100644 package/kernel/mac80211/patches/ath11k/940-ath11k-Revert-clear-the-keys-properly-when-DISABLE_K.patch
+
+diff --git a/package/kernel/mac80211/Makefile b/package/kernel/mac80211/Makefile
+index 80ffb9f598..c93f177aec 100644
+--- a/package/kernel/mac80211/Makefile
++++ b/package/kernel/mac80211/Makefile
+@@ -10,13 +10,13 @@ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=mac80211
+ 
+-PKG_VERSION:=6.12.52
+-PKG_RELEASE:=1
++PKG_VERSION:=6.12.44
++PKG_RELEASE:=2
+ PKG_LICENSE:=GPL-2.0-only
+ PKG_LICENSE_FILES:=COPYING
+ 
+ PKG_SOURCE_URL:=http://mirror2.openwrt.org/sources/
+-PKG_HASH:=ed6ef4c67e08b294ed1101c7cc5ae584a5f338c99ef95362fa3921eb6d207f5d
++PKG_HASH:=85a9f92ddba3bf2970a089e7af576c1135217c387205f4481ea9131c0c45c509
+ 
+ PKG_SOURCE:=backports-$(PKG_VERSION).tar.xz
+ PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(if $(BUILD_VARIANT),$(PKG_NAME)-$(BUILD_VARIANT)/)backports-$(PKG_VERSION)
+diff --git a/package/kernel/mac80211/patches/ath10k/991-ath10k-support-flush_sta-method.patch b/package/kernel/mac80211/patches/ath10k/991-ath10k-support-flush_sta-method.patch
+index c426d4b6a8..a0f6eed7cd 100644
+--- a/package/kernel/mac80211/patches/ath10k/991-ath10k-support-flush_sta-method.patch
++++ b/package/kernel/mac80211/patches/ath10k/991-ath10k-support-flush_sta-method.patch
+@@ -29,7 +29,7 @@ Tested-by: Florian Maurer <maurer@fh-aachen.de>
+ 
+ --- a/drivers/net/wireless/ath/ath10k/mac.c
+ +++ b/drivers/net/wireless/ath/ath10k/mac.c
+-@@ -8135,6 +8135,20 @@ static void ath10k_flush(struct ieee8021
++@@ -8166,6 +8166,20 @@ static void ath10k_flush(struct ieee8021
+  	mutex_unlock(&ar->conf_mutex);
+  }
+  
+@@ -50,7 +50,7 @@ Tested-by: Florian Maurer <maurer@fh-aachen.de>
+  /* TODO: Implement this function properly
+   * For now it is needed to reply to Probe Requests in IBSS mode.
+   * Probably we need this information from FW.
+-@@ -9486,6 +9500,7 @@ static const struct ieee80211_ops ath10k
++@@ -9513,6 +9527,7 @@ static const struct ieee80211_ops ath10k
+  	.set_rts_threshold		= ath10k_set_rts_threshold,
+  	.set_frag_threshold		= ath10k_mac_op_set_frag_threshold,
+  	.flush				= ath10k_flush,
+@@ -58,7 +58,7 @@ Tested-by: Florian Maurer <maurer@fh-aachen.de>
+  	.tx_last_beacon			= ath10k_tx_last_beacon,
+  	.set_antenna			= ath10k_set_antenna,
+  	.get_antenna			= ath10k_get_antenna,
+-@@ -10307,6 +10322,9 @@ int ath10k_mac_register(struct ath10k *a
++@@ -10334,6 +10349,9 @@ int ath10k_mac_register(struct ath10k *a
+  	if (!ar->hw_params.hw_ops->set_coverage_class)
+  		ar->ops->set_coverage_class = NULL;
+  
+diff --git a/package/kernel/mac80211/patches/ath11k/903-ath11k-support-setting-FW-memory-mode-via-DT.patch b/package/kernel/mac80211/patches/ath11k/903-ath11k-support-setting-FW-memory-mode-via-DT.patch
+index 2bc1ca3c7d..e747738b81 100644
+--- a/package/kernel/mac80211/patches/ath11k/903-ath11k-support-setting-FW-memory-mode-via-DT.patch
++++ b/package/kernel/mac80211/patches/ath11k/903-ath11k-support-setting-FW-memory-mode-via-DT.patch
+@@ -31,7 +31,7 @@ Signed-off-by: Robert Marko <robimarko@gmail.com>
+  	{
+  		.hw_rev = ATH11K_HW_IPQ8074,
+  		.name = "ipq8074 hw2.0",
+-@@ -2201,7 +2201,8 @@ static void ath11k_core_reset(struct wor
++@@ -2200,7 +2200,8 @@ static void ath11k_core_reset(struct wor
+  static int ath11k_init_hw_params(struct ath11k_base *ab)
+  {
+  	const struct ath11k_hw_params *hw_params = NULL;
+@@ -41,7 +41,7 @@ Signed-off-by: Robert Marko <robimarko@gmail.com>
+  
+  	for (i = 0; i < ARRAY_SIZE(ath11k_hw_params); i++) {
+  		hw_params = &ath11k_hw_params[i];
+-@@ -2217,7 +2218,31 @@ static int ath11k_init_hw_params(struct
++@@ -2216,7 +2217,31 @@ static int ath11k_init_hw_params(struct
+  
+  	ab->hw_params = *hw_params;
+  
+diff --git a/package/kernel/mac80211/patches/ath11k/905-ath11k-remove-intersection-support-for-regulatory-ru.patch b/package/kernel/mac80211/patches/ath11k/905-ath11k-remove-intersection-support-for-regulatory-ru.patch
+index 59a2165c0c..f30e03475f 100644
+--- a/package/kernel/mac80211/patches/ath11k/905-ath11k-remove-intersection-support-for-regulatory-ru.patch
++++ b/package/kernel/mac80211/patches/ath11k/905-ath11k-remove-intersection-support-for-regulatory-ru.patch
+@@ -23,7 +23,7 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+ 
+ --- a/drivers/net/wireless/ath/ath11k/reg.c
+ +++ b/drivers/net/wireless/ath/ath11k/reg.c
+-@@ -353,134 +353,6 @@ static u32 ath11k_map_fw_phy_flags(u32 p
++@@ -361,134 +361,6 @@ static u32 ath11k_map_fw_phy_flags(u32 p
+  	return flags;
+  }
+  
+@@ -158,7 +158,7 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+  static const char *
+  ath11k_reg_get_regdom_str(enum nl80211_dfs_regions dfs_region)
+  {
+-@@ -631,11 +503,11 @@ ath11k_reg_ap_pwr_convert(enum ieee80211
++@@ -639,11 +511,11 @@ ath11k_reg_ap_pwr_convert(enum ieee80211
+  
+  struct ieee80211_regdomain *
+  ath11k_reg_build_regd(struct ath11k_base *ab,
+@@ -172,7 +172,7 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+  	struct cur_reg_rule *reg_rule, *reg_rule_6ghz;
+  	u8 i = 0, j = 0, k = 0;
+  	u8 num_rules;
+-@@ -678,26 +550,26 @@ ath11k_reg_build_regd(struct ath11k_base
++@@ -686,26 +558,26 @@ ath11k_reg_build_regd(struct ath11k_base
+  	}
+  
+  	if (!num_rules)
+@@ -206,7 +206,7 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+  		   reg_info->dfs_region, num_rules);
+  	/* Update reg_rules[] below. Firmware is expected to
+  	 * send these rules in order(2 GHz rules first and then 5 GHz)
+-@@ -736,7 +608,7 @@ ath11k_reg_build_regd(struct ath11k_base
++@@ -744,7 +616,7 @@ ath11k_reg_build_regd(struct ath11k_base
+  		flags |= ath11k_map_fw_reg_flags(reg_rule->flags);
+  		flags |= ath11k_map_fw_phy_flags(reg_info->phybitmap);
+  
+@@ -215,7 +215,7 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+  				       reg_rule->start_freq,
+  				       reg_rule->end_freq, max_bw,
+  				       reg_rule->ant_gain, reg_rule->reg_power,
+-@@ -751,7 +623,7 @@ ath11k_reg_build_regd(struct ath11k_base
++@@ -759,7 +631,7 @@ ath11k_reg_build_regd(struct ath11k_base
+  		    reg_info->dfs_region == ATH11K_DFS_REG_ETSI &&
+  		    (reg_rule->end_freq > ETSI_WEATHER_RADAR_BAND_LOW &&
+  		    reg_rule->start_freq < ETSI_WEATHER_RADAR_BAND_HIGH)){
+@@ -224,7 +224,7 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+  							     reg_rule, &i,
+  							     flags, max_bw);
+  			continue;
+-@@ -762,37 +634,20 @@ ath11k_reg_build_regd(struct ath11k_base
++@@ -770,51 +642,23 @@ ath11k_reg_build_regd(struct ath11k_base
+  				   "\t%d. (%d - %d @ %d) (%d, %d) (%d ms) (FLAGS %d) (%d, %d)\n",
+  				   i + 1, reg_rule->start_freq, reg_rule->end_freq,
+  				   max_bw, reg_rule->ant_gain, reg_rule->reg_power,
+@@ -265,10 +265,6 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+  	return new_regd;
+  }
+  
+-@@ -844,17 +699,6 @@ void ath11k_regd_update_chan_list_work(s
+- 	}
+- }
+- 
+ -static bool ath11k_reg_is_world_alpha(char *alpha)
+ -{
+ -	if (alpha[0] == '0' && alpha[1] == '0')
+@@ -283,7 +279,7 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+  static enum wmi_vdev_type ath11k_reg_get_ar_vdev_type(struct ath11k *ar)
+  {
+  	struct ath11k_vif *arvif;
+-@@ -877,7 +721,6 @@ int ath11k_reg_handle_chan_list(struct a
++@@ -837,7 +681,6 @@ int ath11k_reg_handle_chan_list(struct a
+  				enum ieee80211_ap_reg_power power_type)
+  {
+  	struct ieee80211_regdomain *regd;
+@@ -291,7 +287,7 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+  	int pdev_idx;
+  	struct ath11k *ar;
+  	enum wmi_vdev_type vdev_type;
+-@@ -929,24 +772,14 @@ int ath11k_reg_handle_chan_list(struct a
++@@ -889,24 +732,14 @@ int ath11k_reg_handle_chan_list(struct a
+  		    (char *)reg_info->alpha2, 2))
+  		goto retfail;
+  
+@@ -321,8 +317,8 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
+  		goto fallback;
+ --- a/drivers/net/wireless/ath/ath11k/reg.h
+ +++ b/drivers/net/wireless/ath/ath11k/reg.h
+-@@ -36,7 +36,7 @@ void ath11k_regd_update_work(struct work
+- void ath11k_regd_update_chan_list_work(struct work_struct *work);
++@@ -35,7 +35,7 @@ void ath11k_reg_free(struct ath11k_base
++ void ath11k_regd_update_work(struct work_struct *work);
+  struct ieee80211_regdomain *
+  ath11k_reg_build_regd(struct ath11k_base *ab,
+ -		      struct cur_regulatory_info *reg_info, bool intersect,
+diff --git a/package/kernel/mac80211/patches/ath11k/940-ath11k-Revert-clear-the-keys-properly-when-DISABLE_K.patch b/package/kernel/mac80211/patches/ath11k/940-ath11k-Revert-clear-the-keys-properly-when-DISABLE_K.patch
+new file mode 100644
+index 0000000000..ec2dc222b6
+--- /dev/null
++++ b/package/kernel/mac80211/patches/ath11k/940-ath11k-Revert-clear-the-keys-properly-when-DISABLE_K.patch
+@@ -0,0 +1,48 @@
++From 52393e2ae12f18fb1a60578c24c46ebab292ddb6 Mon Sep 17 00:00:00 2001
++From: Rameshkumar Sundaram <quic_ramess@quicinc.com>
++Date: Mon, 28 Mar 2022 13:21:04 +0530
++Subject: [PATCH] ath11k: Revert: clear the keys properly when DISABLE_KEY
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++Reverting the Upstream clear key change added as a part of
++436a4e886598 ("ath11k: clear the keys properly
++when DISABLE_KEY")
++This change exposed a race in WLAN Firmware where target asserts
++are seen frequently due FW not synchronizing ath11k host’s clear
++key commands(CIPHER changes to NONE) with frames in TX queue.
++Hence reverting this change untill FW fixes to synchronize
++ath11k host’s clear key command are available.
++
++Signed-off-by: Rameshkumar Sundaram <quic_ramess@quicinc.com>
++---
++ drivers/net/wireless/ath/ath11k/mac.c | 4 +++-
++ drivers/net/wireless/ath/ath11k/wmi.c | 3 +--
++ 2 files changed, 4 insertions(+), 3 deletions(-)
++
++--- a/drivers/net/wireless/ath/ath11k/mac.c
+++++ b/drivers/net/wireless/ath/ath11k/mac.c
++@@ -4222,7 +4222,9 @@ static int ath11k_install_key(struct ath
++ 		return 0;
++ 
++ 	if (cmd == DISABLE_KEY) {
++-		arg.key_cipher = WMI_CIPHER_NONE;
+++		/* TODO: Check if FW expects  value other than NONE for del */
+++		/* arg.key_cipher = WMI_CIPHER_NONE; */
+++		arg.key_len = 0;
++ 		arg.key_data = NULL;
++ 		goto install;
++ 	}
++--- a/drivers/net/wireless/ath/ath11k/wmi.c
+++++ b/drivers/net/wireless/ath/ath11k/wmi.c
++@@ -1854,8 +1854,7 @@ int ath11k_wmi_vdev_install_key(struct a
++ 	tlv = (struct wmi_tlv *)(skb->data + sizeof(*cmd));
++ 	tlv->header = FIELD_PREP(WMI_TLV_TAG, WMI_TAG_ARRAY_BYTE) |
++ 		      FIELD_PREP(WMI_TLV_LEN, key_len_aligned);
++-	if (arg->key_data)
++-		memcpy(tlv->value, (u8 *)arg->key_data, key_len_aligned);
+++	memcpy(tlv->value, (u8 *)arg->key_data, key_len_aligned);
++ 
++ 	ret = ath11k_wmi_cmd_send(wmi, skb, WMI_VDEV_INSTALL_KEY_CMDID);
++ 	if (ret) {
+diff --git a/package/kernel/mac80211/patches/mwl/801-libertas-configure-sysfs-links.patch b/package/kernel/mac80211/patches/mwl/801-libertas-configure-sysfs-links.patch
+index bc9f81384e..e6111871c0 100644
+--- a/package/kernel/mac80211/patches/mwl/801-libertas-configure-sysfs-links.patch
++++ b/package/kernel/mac80211/patches/mwl/801-libertas-configure-sysfs-links.patch
+@@ -1,6 +1,6 @@
+ --- a/drivers/net/wireless/marvell/libertas/cfg.c
+ +++ b/drivers/net/wireless/marvell/libertas/cfg.c
+-@@ -2105,6 +2105,8 @@ struct wireless_dev *lbs_cfg_alloc(struc
++@@ -2102,6 +2102,8 @@ struct wireless_dev *lbs_cfg_alloc(struc
+  		goto err_wiphy_new;
+  	}
+  
+diff --git a/package/kernel/mac80211/patches/mwl/802-libertas-set-wireless-macaddr.patch b/package/kernel/mac80211/patches/mwl/802-libertas-set-wireless-macaddr.patch
+index 9aa4d05473..97ddd66b32 100644
+--- a/package/kernel/mac80211/patches/mwl/802-libertas-set-wireless-macaddr.patch
++++ b/package/kernel/mac80211/patches/mwl/802-libertas-set-wireless-macaddr.patch
+@@ -1,6 +1,6 @@
+ --- a/drivers/net/wireless/marvell/libertas/cfg.c
+ +++ b/drivers/net/wireless/marvell/libertas/cfg.c
+-@@ -2182,6 +2182,8 @@ int lbs_cfg_register(struct lbs_private
++@@ -2179,6 +2179,8 @@ int lbs_cfg_register(struct lbs_private
+  	wdev->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
+  	wdev->wiphy->reg_notifier = lbs_reg_notifier;
+  
+diff --git a/package/kernel/mac80211/patches/subsys/130-disable_auto_vif.patch b/package/kernel/mac80211/patches/subsys/130-disable_auto_vif.patch
+index 466eee61ed..b56531435c 100644
+--- a/package/kernel/mac80211/patches/subsys/130-disable_auto_vif.patch
++++ b/package/kernel/mac80211/patches/subsys/130-disable_auto_vif.patch
+@@ -1,6 +1,6 @@
+ --- a/net/mac80211/main.c
+ +++ b/net/mac80211/main.c
+-@@ -1590,24 +1590,6 @@ int ieee80211_register_hw(struct ieee802
++@@ -1585,24 +1585,6 @@ int ieee80211_register_hw(struct ieee802
+  
+  	ieee80211_check_wbrf_support(local);
+  
+diff --git a/package/kernel/mac80211/patches/subsys/330-wifi-cfg80211-add-option-for-vif-allowed-radios.patch b/package/kernel/mac80211/patches/subsys/330-wifi-cfg80211-add-option-for-vif-allowed-radios.patch
+index 4ecbc514fc..dca56f8680 100644
+--- a/package/kernel/mac80211/patches/subsys/330-wifi-cfg80211-add-option-for-vif-allowed-radios.patch
++++ b/package/kernel/mac80211/patches/subsys/330-wifi-cfg80211-add-option-for-vif-allowed-radios.patch
+@@ -246,7 +246,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  			continue;
+  
+  		for (i = 0; i < rdev_req->n_channels; i++) {
+-@@ -3513,9 +3514,12 @@ int cfg80211_wext_siwscan(struct net_dev
++@@ -3512,9 +3513,12 @@ int cfg80211_wext_siwscan(struct net_dev
+  			continue;
+  
+  		for (j = 0; j < wiphy->bands[band]->n_channels; j++) {
+diff --git a/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-Support-EHT-1024-aggregation-size-in-T.patch b/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-Support-EHT-1024-aggregation-size-in-T.patch
+index e4159d2b3d..2771f5eac7 100644
+--- a/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-Support-EHT-1024-aggregation-size-in-T.patch
++++ b/package/kernel/mac80211/patches/subsys/342-wifi-mac80211-Support-EHT-1024-aggregation-size-in-T.patch
+@@ -26,9 +26,11 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  net/mac80211/ieee80211_i.h |  9 +++-
+  5 files changed, 90 insertions(+), 48 deletions(-)
+ 
++diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
++index 456bca45ff05..05dedc45505c 100644
+ --- a/include/linux/ieee80211.h
+ +++ b/include/linux/ieee80211.h
+-@@ -1492,6 +1492,8 @@ struct ieee80211_mgmt {
++@@ -1445,6 +1445,8 @@ struct ieee80211_mgmt {
+  					__le16 status;
+  					__le16 capab;
+  					__le16 timeout;
+@@ -37,9 +39,11 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  				} __packed addba_resp;
+  				struct{
+  					u8 action_code;
++diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
++index fe7eab4b681b..f3fbe5a4395e 100644
+ --- a/net/mac80211/agg-rx.c
+ +++ b/net/mac80211/agg-rx.c
+-@@ -170,28 +170,63 @@ static void sta_rx_agg_reorder_timer_exp
++@@ -170,28 +170,63 @@ static void sta_rx_agg_reorder_timer_expired(struct timer_list *t)
+  	rcu_read_unlock();
+  }
+  
+@@ -113,7 +117,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  {
+  	struct ieee80211_sub_if_data *sdata = sta->sdata;
+  	struct ieee80211_local *local = sdata->local;
+-@@ -223,8 +258,8 @@ static void ieee80211_send_addba_resp(st
++@@ -223,8 +258,8 @@ static void ieee80211_send_addba_resp(struct sta_info *sta, u8 *da, u16 tid,
+  	mgmt->u.action.u.addba_resp.timeout = cpu_to_le16(timeout);
+  	mgmt->u.action.u.addba_resp.status = cpu_to_le16(status);
+  
+@@ -124,7 +128,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  
+  	ieee80211_tx_skb(sdata, skb);
+  }
+-@@ -233,7 +268,7 @@ void __ieee80211_start_rx_ba_session(str
++@@ -233,7 +268,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+  				     u8 dialog_token, u16 timeout,
+  				     u16 start_seq_num, u16 ba_policy, u16 tid,
+  				     u16 buf_size, bool tx, bool auto_seq,
+@@ -133,7 +137,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  {
+  	struct ieee80211_local *local = sta->sdata->local;
+  	struct tid_ampdu_rx *tid_agg_rx;
+-@@ -419,7 +454,7 @@ end:
++@@ -419,7 +454,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+  	if (tx)
+  		ieee80211_send_addba_resp(sta, sta->sta.addr, tid,
+  					  dialog_token, status, 1, buf_size,
+@@ -142,7 +146,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  }
+  
+  void ieee80211_process_addba_request(struct ieee80211_local *local,
+-@@ -428,9 +463,7 @@ void ieee80211_process_addba_request(str
++@@ -428,9 +463,7 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+  				     size_t len)
+  {
+  	u16 capab, tid, timeout, ba_policy, buf_size, start_seq_num;
+@@ -153,7 +157,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  
+  	/* extract session parameters from addba request frame */
+  	dialog_token = mgmt->u.action.u.addba_req.dialog_token;
+-@@ -443,28 +476,17 @@ void ieee80211_process_addba_request(str
++@@ -443,28 +476,17 @@ void ieee80211_process_addba_request(struct ieee80211_local *local,
+  	tid = (capab & IEEE80211_ADDBA_PARAM_TID_MASK) >> 2;
+  	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
+  
+@@ -190,6 +194,8 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  }
+  
+  void ieee80211_manage_rx_ba_offl(struct ieee80211_vif *vif,
++diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
++index 04cb45cfb310..61f2cac37728 100644
+ --- a/net/mac80211/agg-tx.c
+ +++ b/net/mac80211/agg-tx.c
+ @@ -58,23 +58,24 @@
+@@ -222,7 +228,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  
+  	skb_put(skb, 1 + sizeof(mgmt->u.action.u.addba_req));
+  
+-@@ -93,6 +94,9 @@ static void ieee80211_send_addba_request
++@@ -93,6 +94,9 @@ static void ieee80211_send_addba_request(struct ieee80211_sub_if_data *sdata,
+  	mgmt->u.action.u.addba_req.start_seq_num =
+  					cpu_to_le16(start_seq_num << 4);
+  
+@@ -232,7 +238,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  	ieee80211_tx_skb_tid(sdata, skb, tid, -1);
+  }
+  
+-@@ -460,8 +464,11 @@ static void ieee80211_send_addba_with_ti
++@@ -460,8 +464,11 @@ static void ieee80211_send_addba_with_timeout(struct sta_info *sta,
+  	sta->ampdu_mlme.addba_req_num[tid]++;
+  	spin_unlock_bh(&sta->lock);
+  
+@@ -245,7 +251,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  	} else {
+  		/*
+  		 * We really should use what the driver told us it will
+-@@ -473,9 +480,8 @@ static void ieee80211_send_addba_with_ti
++@@ -473,9 +480,8 @@ static void ieee80211_send_addba_with_timeout(struct sta_info *sta,
+  	}
+  
+  	/* send AddBA request */
+@@ -257,7 +263,7 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  
+  	WARN_ON(test_and_set_bit(HT_AGG_STATE_SENT_ADDBA, &tid_tx->state));
+  }
+-@@ -970,6 +976,13 @@ void ieee80211_process_addba_resp(struct
++@@ -970,6 +976,13 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+  	amsdu = capab & IEEE80211_ADDBA_PARAM_AMSDU_MASK;
+  	tid = u16_get_bits(capab, IEEE80211_ADDBA_PARAM_TID_MASK);
+  	buf_size = u16_get_bits(capab, IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK);
+@@ -271,9 +277,11 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  	buf_size = min(buf_size, local->hw.max_tx_aggregation_subframes);
+  
+  	txq = sta->sta.txq[tid];
++diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
++index 1c2b7dd8976a..32390d8a9d75 100644
+ --- a/net/mac80211/ht.c
+ +++ b/net/mac80211/ht.c
+-@@ -379,7 +379,7 @@ void ieee80211_ba_session_work(struct wi
++@@ -379,7 +379,7 @@ void ieee80211_ba_session_work(struct wiphy *wiphy, struct wiphy_work *work)
+  				       sta->ampdu_mlme.tid_rx_manage_offl))
+  			__ieee80211_start_rx_ba_session(sta, 0, 0, 0, 1, tid,
+  							IEEE80211_MAX_AMPDU_BUF_HT,
+@@ -282,9 +290,11 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  
+  		if (test_and_clear_bit(tid + IEEE80211_NUM_TIDS,
+  				       sta->ampdu_mlme.tid_rx_manage_offl))
++diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
++index 7dcb46120abc..752297bcde76 100644
+ --- a/net/mac80211/ieee80211_i.h
+ +++ b/net/mac80211/ieee80211_i.h
+-@@ -2131,14 +2131,19 @@ int ieee80211_send_smps_action(struct ie
++@@ -2111,14 +2111,19 @@ int ieee80211_send_smps_action(struct ieee80211_sub_if_data *sdata,
+  			       const u8 *bssid, int link_id);
+  bool ieee80211_smps_is_restrictive(enum ieee80211_smps_mode smps_mode_old,
+  				   enum ieee80211_smps_mode smps_mode_new);
+@@ -306,3 +316,6 @@ Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+  void ieee80211_sta_tear_down_BA_sessions(struct sta_info *sta,
+  					 enum ieee80211_agg_stop_reason reason);
+  void ieee80211_process_delba(struct ieee80211_sub_if_data *sdata,
++-- 
++2.39.5
++
+-- 
+2.43.0
+

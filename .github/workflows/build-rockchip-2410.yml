@@ -178,6 +178,14 @@ jobs:
       run: |
         echo ${{matrix.target}}
         $GITHUB_WORKSPACE/core.sh init-gh-env-2410
+        if [ "$Target_CFG_Machine" = "mpc1917" ]; then
+        rm -rf openwrt-2410/mac80211-616
+        rm -rf openwrt-2410/openssl-bump
+        rm -rf openwrt-2410/mypatch-kernel-revert
+        mv openwrt-24104/mac80211-616 openwrt-2410/mac80211-616
+        mv openwrt-24104/mypatch-kernel-revert openwrt-2410/mypatch-kernel-revert
+        mv openwrt-24104/openssl-bump openwrt-2410/openssl-bump
+        fi
 
     - name: 克隆源代码
       working-directory: /workdir
@@ -187,6 +195,9 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
+        if [ "$Target_CFG_Machine" = "mpc1917" ]; then
+        git checkout 859ff7a978aea150588e7e21a1333884ab85739f
+        fi
         sed -i \
           -e 's|https://git.openwrt.org/feed/packages.git;openwrt-24.10|https://github.com/openwrt/packages.git;openwrt-24.10|' \
           -e 's|https://git.openwrt.org/project/luci.git;openwrt-24.10|https://github.com/openwrt/luci.git;openwrt-24.10|' \

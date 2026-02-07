@@ -1,0 +1,487 @@
+From f4822c6052268916901d5a2235db6a0e5b468e20 Mon Sep 17 00:00:00 2001
+From: Rosen Penev <rosenp@gmail.com>
+Date: Mon, 18 Aug 2025 12:49:43 -0700
+Subject: [PATCH 1/5] mac80211: remove rt2x00_platform_data
+
+All of this uses OF now. No need to keep platform data around.
+
+Signed-off-by: Rosen Penev <rosenp@gmail.com>
+Link: https://github.com/openwrt/openwrt/pull/19804
+Signed-off-by: Robert Marko <robimarko@gmail.com>
+---
+ package/kernel/mac80211/Makefile              |  1 -
+ ...1-rt2x00-introduce-rt2x00_platform_h.patch | 32 -------------
+ ...support-for-loading-EEPROM-from-user.patch | 14 +++---
+ ...option-to-pass-EEPROM-file-name-from.patch | 43 -----------------
+ ...-support-for-loading-EEPROM-from-MTD.patch | 13 ++---
+ ...i-rt2x00-Support-EEPROM-swap-binding.patch |  4 +-
+ ...port-loading-eeprom-from-NVMEM-cells.patch |  7 ++-
+ ...EEPROM-from-devicetree-embedded-data.patch |  2 +-
+ ...isabling_bands_through_platform_data.patch | 47 -------------------
+ ...07-rt2x00-add_platform_data_mac_addr.patch | 25 ----------
+ ...00-allow_disabling_bands_through_dts.patch |  8 ++--
+ .../611-rt2x00-add-AP+STA-support.patch       |  2 +-
+ ...t-support-for-external-LNA-on-MT7620.patch |  4 +-
+ .../files/include/linux/rt2x00_platform.h     | 23 ---------
+ 14 files changed, 25 insertions(+), 200 deletions(-)
+ delete mode 100644 package/kernel/mac80211/patches/rt2x00/601-rt2x00-introduce-rt2x00_platform_h.patch
+ delete mode 100644 package/kernel/mac80211/patches/rt2x00/602-02-wifi-rt2x00-Add-option-to-pass-EEPROM-file-name-from.patch
+ delete mode 100644 package/kernel/mac80211/patches/rt2x00/606-rt2x00-allow_disabling_bands_through_platform_data.patch
+ delete mode 100644 package/kernel/mac80211/patches/rt2x00/607-rt2x00-add_platform_data_mac_addr.patch
+ delete mode 100644 target/linux/generic/files/include/linux/rt2x00_platform.h
+
+diff --git a/package/kernel/mac80211/Makefile b/package/kernel/mac80211/Makefile
+index d5aee28430..081c23e12e 100644
+--- a/package/kernel/mac80211/Makefile
++++ b/package/kernel/mac80211/Makefile
+@@ -334,7 +334,6 @@ ifeq ($(strip $(CONFIG_EXTERNAL_KERNEL_TREE)),"")
+   ifeq ($(strip $(CONFIG_KERNEL_GIT_CLONE_URI)),"")
+     define Build/Configure
+ 	  cmp $(PKG_BUILD_DIR)/include/linux/ath5k_platform.h $(LINUX_DIR)/include/linux/ath5k_platform.h
+-	  cmp $(PKG_BUILD_DIR)/include/linux/rt2x00_platform.h $(LINUX_DIR)/include/linux/rt2x00_platform.h
+     endef
+   endif
+ endif
+diff --git a/package/kernel/mac80211/patches/rt2x00/601-rt2x00-introduce-rt2x00_platform_h.patch b/package/kernel/mac80211/patches/rt2x00/601-rt2x00-introduce-rt2x00_platform_h.patch
+deleted file mode 100644
+index 1e6211a470..0000000000
+--- a/package/kernel/mac80211/patches/rt2x00/601-rt2x00-introduce-rt2x00_platform_h.patch
++++ /dev/null
+@@ -1,32 +0,0 @@
+---- /dev/null
+-+++ b/include/linux/rt2x00_platform.h
+-@@ -0,0 +1,19 @@
+-+/*
+-+ * Platform data definition for the rt2x00 driver
+-+ *
+-+ * Copyright (C) 2011 Gabor Juhos <juhosg@openwrt.org>
+-+ *
+-+ * This program is free software; you can redistribute it and/or modify it
+-+ * under the terms of the GNU General Public License version 2 as published
+-+ * by the Free Software Foundation.
+-+ *
+-+ */
+-+
+-+#ifndef _RT2X00_PLATFORM_H
+-+#define _RT2X00_PLATFORM_H
+-+
+-+struct rt2x00_platform_data {
+-+	char *eeprom_file_name;
+-+};
+-+
+-+#endif /* _RT2X00_PLATFORM_H */
+---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+-@@ -28,6 +28,7 @@
+- #include <linux/average.h>
+- #include <linux/usb.h>
+- #include <linux/clk.h>
+-+#include <linux/rt2x00_platform.h>
+- 
+- #include <net/mac80211.h>
+- 
+diff --git a/package/kernel/mac80211/patches/rt2x00/602-01-wifi-rt2x00-Add-support-for-loading-EEPROM-from-user.patch b/package/kernel/mac80211/patches/rt2x00/602-01-wifi-rt2x00-Add-support-for-loading-EEPROM-from-user.patch
+index 39d8edb998..1eba6a79db 100644
+--- a/package/kernel/mac80211/patches/rt2x00/602-01-wifi-rt2x00-Add-support-for-loading-EEPROM-from-user.patch
++++ b/package/kernel/mac80211/patches/rt2x00/602-01-wifi-rt2x00-Add-support-for-loading-EEPROM-from-user.patch
+@@ -100,7 +100,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	.drv_init_registers	= rt2800mmio_init_registers,
+ --- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+-@@ -693,6 +693,7 @@ enum rt2x00_capability_flags {
++@@ -692,6 +692,7 @@ enum rt2x00_capability_flags {
+  	REQUIRE_HT_TX_DESC,
+  	REQUIRE_PS_AUTOWAKE,
+  	REQUIRE_DELAYED_RFKILL,
+@@ -108,7 +108,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  
+  	/*
+  	 * Capabilities
+-@@ -1505,4 +1506,13 @@ void rt2x00lib_remove_dev(struct rt2x00_
++@@ -1504,4 +1505,13 @@ void rt2x00lib_remove_dev(struct rt2x00_
+  int rt2x00lib_suspend(struct rt2x00_dev *rt2x00dev);
+  int rt2x00lib_resume(struct rt2x00_dev *rt2x00dev);
+  
+@@ -124,7 +124,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  #endif /* RT2X00_H */
+ --- /dev/null
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+-@@ -0,0 +1,77 @@
++@@ -0,0 +1,79 @@
+ +// SPDX-License-Identifier: GPL-2.0-or-later
+ +/*	Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
+ + *	Copyright (C) 2004 - 2009 Gertjan van Wingerde <gwingerde@gmail.com>
+@@ -137,6 +137,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +
+ +#include <linux/kernel.h>
+ +#include <linux/module.h>
+++#include <linux/of.h>
+ +
+ +#include "rt2x00.h"
+ +#include "rt2x00soc.h"
+@@ -144,10 +145,11 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +static const char *
+ +rt2x00lib_get_eeprom_file_name(struct rt2x00_dev *rt2x00dev)
+ +{
+-+	struct rt2x00_platform_data *pdata = rt2x00dev->dev->platform_data;
+++	struct device_node *np = rt2x00dev->dev->of_node;
+++	const char *eep;
+ +
+-+	if (pdata && pdata->eeprom_file_name)
+-+		return pdata->eeprom_file_name;
+++	if (np && !of_property_read_string(np, "ralink,eeprom", &eep))
+++		return eep;
+ +
+ +	return NULL;
+ +}
+diff --git a/package/kernel/mac80211/patches/rt2x00/602-02-wifi-rt2x00-Add-option-to-pass-EEPROM-file-name-from.patch b/package/kernel/mac80211/patches/rt2x00/602-02-wifi-rt2x00-Add-option-to-pass-EEPROM-file-name-from.patch
+deleted file mode 100644
+index 90055b911f..0000000000
+--- a/package/kernel/mac80211/patches/rt2x00/602-02-wifi-rt2x00-Add-option-to-pass-EEPROM-file-name-from.patch
++++ /dev/null
+@@ -1,43 +0,0 @@
+-From 15329d8b206d9c04ffad49aecd37f5d0bfb85768 Mon Sep 17 00:00:00 2001
+-From: Christian Marangi <ansuelsmth@gmail.com>
+-Date: Sun, 15 Oct 2023 14:23:19 +0200
+-Subject: [PATCH 2/5] wifi: rt2x00: Add option to pass EEPROM file name from DT
+-
+-Add option to pass EEPROM file name from DT using ralink,eeprom binding.
+-
+-Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+----
+- drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c | 11 +++++++++++
+- 1 file changed, 11 insertions(+)
+-
+---- a/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+-@@ -10,6 +10,7 @@
+- 
+- #include <linux/kernel.h>
+- #include <linux/module.h>
+-+#include <linux/of.h>
+- 
+- #include "rt2x00.h"
+- #include "rt2x00soc.h"
+-@@ -18,10 +19,20 @@ static const char *
+- rt2x00lib_get_eeprom_file_name(struct rt2x00_dev *rt2x00dev)
+- {
+- 	struct rt2x00_platform_data *pdata = rt2x00dev->dev->platform_data;
+-+#ifdef CONFIG_OF
+-+	struct device_node *np;
+-+	const char *eep;
+-+#endif
+- 
+- 	if (pdata && pdata->eeprom_file_name)
+- 		return pdata->eeprom_file_name;
+- 
+-+#ifdef CONFIG_OF
+-+	np = rt2x00dev->dev->of_node;
+-+	if (np && !of_property_read_string(np, "ralink,eeprom", &eep))
+-+		return eep;
+-+#endif
+-+
+- 	return NULL;
+- }
+- 
+diff --git a/package/kernel/mac80211/patches/rt2x00/602-03-wifi-rt2x00-Add-support-for-loading-EEPROM-from-MTD.patch b/package/kernel/mac80211/patches/rt2x00/602-03-wifi-rt2x00-Add-support-for-loading-EEPROM-from-MTD.patch
+index fab4bf39c0..befd59491f 100644
+--- a/package/kernel/mac80211/patches/rt2x00/602-03-wifi-rt2x00-Add-support-for-loading-EEPROM-from-MTD.patch
++++ b/package/kernel/mac80211/patches/rt2x00/602-03-wifi-rt2x00-Add-support-for-loading-EEPROM-from-MTD.patch
+@@ -24,15 +24,14 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	  Supported chips: RT2880, RT3050, RT3052, RT3350, RT3352.
+ --- a/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+-@@ -10,11 +10,69 @@
+- 
++@@ -11,10 +11,66 @@
+  #include <linux/kernel.h>
+  #include <linux/module.h>
++ #include <linux/of.h>
+ +#if IS_ENABLED(CONFIG_MTD)
+ +#include <linux/mtd/mtd.h>
+ +#include <linux/mtd/partitions.h>
+ +#endif
+- #include <linux/of.h>
+  
+  #include "rt2x00.h"
+  #include "rt2x00soc.h"
+@@ -40,8 +39,6 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +#if IS_ENABLED(CONFIG_MTD)
+ +static int rt2800lib_read_eeprom_mtd(struct rt2x00_dev *rt2x00dev)
+ +{
+-+	int ret = -EINVAL;
+-+#ifdef CONFIG_OF
+ +	struct device_node *np = rt2x00dev->dev->of_node, *mtd_np = NULL;
+ +	int size, offset = 0;
+ +	struct mtd_info *mtd;
+@@ -49,6 +46,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +	const __be32 *list;
+ +	phandle phandle;
+ +	size_t retlen;
+++	int ret;
+ +
+ +	list = of_get_property(np, "ralink,mtd-eeprom", &size);
+ +	if (!list)
+@@ -79,13 +77,12 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ +		       &retlen, (u_char *)rt2x00dev->eeprom);
+ +	put_mtd_device(mtd);
+ +
+-+	if (retlen != rt2x00dev->ops->eeprom_size || ret) {
+++	if (ret || retlen != rt2x00dev->ops->eeprom_size) {
+ +		dev_err(rt2x00dev->dev, "failed to load eeprom from device \"%s\"\n", part);
+ +		return ret;
+ +	}
+ +
+ +	dev_info(rt2x00dev->dev, "loaded eeprom from mtd device \"%s\"\n", part);
+-+#endif
+ +
+ +	return ret;
+ +}
+@@ -94,7 +91,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  static const char *
+  rt2x00lib_get_eeprom_file_name(struct rt2x00_dev *rt2x00dev)
+  {
+-@@ -83,6 +141,14 @@ err_exit:
++@@ -74,6 +130,14 @@ err_exit:
+  
+  int rt2x00lib_read_eeprom(struct rt2x00_dev *rt2x00dev)
+  {
+diff --git a/package/kernel/mac80211/patches/rt2x00/602-04-wifi-rt2x00-Support-EEPROM-swap-binding.patch b/package/kernel/mac80211/patches/rt2x00/602-04-wifi-rt2x00-Support-EEPROM-swap-binding.patch
+index 392910d224..184b73f271 100644
+--- a/package/kernel/mac80211/patches/rt2x00/602-04-wifi-rt2x00-Support-EEPROM-swap-binding.patch
++++ b/package/kernel/mac80211/patches/rt2x00/602-04-wifi-rt2x00-Support-EEPROM-swap-binding.patch
+@@ -33,12 +33,12 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  static int rt2800lib_read_eeprom_mtd(struct rt2x00_dev *rt2x00dev)
+  {
+  	int ret = -EINVAL;
+-@@ -66,6 +79,8 @@ static int rt2800lib_read_eeprom_mtd(str
++@@ -65,6 +78,8 @@ static int rt2800lib_read_eeprom_mtd(str
+  		return ret;
+  	}
+  
+ +	rt2800lib_eeprom_swap(rt2x00dev);
+ +
+  	dev_info(rt2x00dev->dev, "loaded eeprom from mtd device \"%s\"\n", part);
+- #endif
+  
++ 	return ret;
+diff --git a/package/kernel/mac80211/patches/rt2x00/602-05-wifi-rt2x00-support-loading-eeprom-from-NVMEM-cells.patch b/package/kernel/mac80211/patches/rt2x00/602-05-wifi-rt2x00-support-loading-eeprom-from-NVMEM-cells.patch
+index e6633363bd..30b5de904c 100644
+--- a/package/kernel/mac80211/patches/rt2x00/602-05-wifi-rt2x00-support-loading-eeprom-from-NVMEM-cells.patch
++++ b/package/kernel/mac80211/patches/rt2x00/602-05-wifi-rt2x00-support-loading-eeprom-from-NVMEM-cells.patch
+@@ -21,12 +21,11 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+ 
+ --- a/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+-@@ -14,12 +14,12 @@
++@@ -15,11 +15,11 @@
+  #include <linux/mtd/mtd.h>
+  #include <linux/mtd/partitions.h>
+  #endif
+ +#include <linux/nvmem-consumer.h>
+- #include <linux/of.h>
+  
+  #include "rt2x00.h"
+  #include "rt2x00soc.h"
+@@ -43,7 +42,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  static int rt2800lib_read_eeprom_mtd(struct rt2x00_dev *rt2x00dev)
+  {
+  	int ret = -EINVAL;
+-@@ -88,6 +89,40 @@ static int rt2800lib_read_eeprom_mtd(str
++@@ -86,6 +87,40 @@ static int rt2800lib_read_eeprom_mtd(str
+  }
+  #endif
+  
+@@ -84,7 +83,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  static const char *
+  rt2x00lib_get_eeprom_file_name(struct rt2x00_dev *rt2x00dev)
+  {
+-@@ -164,6 +199,10 @@ int rt2x00lib_read_eeprom(struct rt2x00_
++@@ -153,6 +188,10 @@ int rt2x00lib_read_eeprom(struct rt2x00_
+  		return 0;
+  #endif
+  
+diff --git a/package/kernel/mac80211/patches/rt2x00/603-wifi-rt2x00-Add-support-for-loading-EEPROM-from-devicetree-embedded-data.patch b/package/kernel/mac80211/patches/rt2x00/603-wifi-rt2x00-Add-support-for-loading-EEPROM-from-devicetree-embedded-data.patch
+index 0ef946a6cb..9e6cfb4d07 100644
+--- a/package/kernel/mac80211/patches/rt2x00/603-wifi-rt2x00-Add-support-for-loading-EEPROM-from-devicetree-embedded-data.patch
++++ b/package/kernel/mac80211/patches/rt2x00/603-wifi-rt2x00-Add-support-for-loading-EEPROM-from-devicetree-embedded-data.patch
+@@ -63,7 +63,7 @@ Signed-off-by: Coia Prant <coiaprant@gmail.com>
+  #if IS_ENABLED(CONFIG_MTD)
+  static int rt2800lib_read_eeprom_mtd(struct rt2x00_dev *rt2x00dev)
+  {
+-@@ -193,6 +214,10 @@ int rt2x00lib_read_eeprom(struct rt2x00_
++@@ -182,6 +203,10 @@ int rt2x00lib_read_eeprom(struct rt2x00_
+  {
+  	int ret;
+  
+diff --git a/package/kernel/mac80211/patches/rt2x00/606-rt2x00-allow_disabling_bands_through_platform_data.patch b/package/kernel/mac80211/patches/rt2x00/606-rt2x00-allow_disabling_bands_through_platform_data.patch
+deleted file mode 100644
+index a554707bda..0000000000
+--- a/package/kernel/mac80211/patches/rt2x00/606-rt2x00-allow_disabling_bands_through_platform_data.patch
++++ /dev/null
+@@ -1,47 +0,0 @@
+---- a/include/linux/rt2x00_platform.h
+-+++ b/include/linux/rt2x00_platform.h
+-@@ -14,6 +14,9 @@
+- 
+- struct rt2x00_platform_data {
+- 	char *eeprom_file_name;
+-+
+-+	int disable_2ghz;
+-+	int disable_5ghz;
+- };
+- 
+- #endif /* _RT2X00_PLATFORM_H */
+---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-@@ -1008,6 +1008,22 @@ static int rt2x00lib_probe_hw_modes(stru
+- 	unsigned int num_rates;
+- 	unsigned int i;
+- 
+-+	if (rt2x00dev->dev->platform_data) {
+-+		struct rt2x00_platform_data *pdata;
+-+
+-+		pdata = rt2x00dev->dev->platform_data;
+-+		if (pdata->disable_2ghz)
+-+			spec->supported_bands &= ~SUPPORT_BAND_2GHZ;
+-+		if (pdata->disable_5ghz)
+-+			spec->supported_bands &= ~SUPPORT_BAND_5GHZ;
+-+	}
+-+
+-+	if ((spec->supported_bands & SUPPORT_BAND_BOTH) == 0) {
+-+		rt2x00_err(rt2x00dev, "No supported bands\n");
+-+		return -EINVAL;
+-+	}
+-+
+-+
+- 	num_rates = 0;
+- 	if (spec->supported_rates & SUPPORT_RATE_CCK)
+- 		num_rates += 4;
+---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+-@@ -398,6 +398,7 @@ struct hw_mode_spec {
+- 	unsigned int supported_bands;
+- #define SUPPORT_BAND_2GHZ	0x00000001
+- #define SUPPORT_BAND_5GHZ	0x00000002
+-+#define SUPPORT_BAND_BOTH	(SUPPORT_BAND_2GHZ | SUPPORT_BAND_5GHZ)
+- 
+- 	unsigned int supported_rates;
+- #define SUPPORT_RATE_CCK	0x00000001
+diff --git a/package/kernel/mac80211/patches/rt2x00/607-rt2x00-add_platform_data_mac_addr.patch b/package/kernel/mac80211/patches/rt2x00/607-rt2x00-add_platform_data_mac_addr.patch
+deleted file mode 100644
+index 79f99ffdf4..0000000000
+--- a/package/kernel/mac80211/patches/rt2x00/607-rt2x00-add_platform_data_mac_addr.patch
++++ /dev/null
+@@ -1,25 +0,0 @@
+---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-@@ -990,6 +990,12 @@ static void rt2x00lib_rate(struct ieee80
+- 
+- void rt2x00lib_set_mac_address(struct rt2x00_dev *rt2x00dev, u8 *eeprom_mac_addr)
+- {
+-+	struct rt2x00_platform_data *pdata;
+-+
+-+	pdata = rt2x00dev->dev->platform_data;
+-+	if (pdata && pdata->mac_address)
+-+		ether_addr_copy(eeprom_mac_addr, pdata->mac_address);
+-+
+- 	of_get_mac_address(rt2x00dev->dev->of_node, eeprom_mac_addr);
+- 
+- 	if (!is_valid_ether_addr(eeprom_mac_addr)) {
+---- a/include/linux/rt2x00_platform.h
+-+++ b/include/linux/rt2x00_platform.h
+-@@ -14,6 +14,7 @@
+- 
+- struct rt2x00_platform_data {
+- 	char *eeprom_file_name;
+-+	const u8 *mac_address;
+- 
+- 	int disable_2ghz;
+- 	int disable_5ghz;
+diff --git a/package/kernel/mac80211/patches/rt2x00/608-rt2x00-allow_disabling_bands_through_dts.patch b/package/kernel/mac80211/patches/rt2x00/608-rt2x00-allow_disabling_bands_through_dts.patch
+index 31f2f0261f..7a44d1725f 100644
+--- a/package/kernel/mac80211/patches/rt2x00/608-rt2x00-allow_disabling_bands_through_dts.patch
++++ b/package/kernel/mac80211/patches/rt2x00/608-rt2x00-allow_disabling_bands_through_dts.patch
+@@ -1,10 +1,9 @@
+ --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-@@ -1013,6 +1013,16 @@ static int rt2x00lib_probe_hw_modes(stru
++@@ -1007,6 +1007,14 @@ static int rt2x00lib_probe_hw_modes(stru
+  	struct ieee80211_rate *rates;
+  	unsigned int num_rates;
+  	unsigned int i;
+-+#ifdef CONFIG_OF
+ +	struct device_node *np = rt2x00dev->dev->of_node;
+ +	unsigned int enabled;
+ +	if (!of_property_read_u32(np, "ralink,2ghz",
+@@ -13,7 +12,6 @@
+ +	if (!of_property_read_u32(np, "ralink,5ghz",
+ +                                          &enabled) && !enabled)
+ +		spec->supported_bands &= ~SUPPORT_BAND_5GHZ;
+-+#endif /* CONFIG_OF */
+  
+- 	if (rt2x00dev->dev->platform_data) {
+- 		struct rt2x00_platform_data *pdata;
++ 	num_rates = 0;
++ 	if (spec->supported_rates & SUPPORT_RATE_CCK)
+diff --git a/package/kernel/mac80211/patches/rt2x00/611-rt2x00-add-AP+STA-support.patch b/package/kernel/mac80211/patches/rt2x00/611-rt2x00-add-AP+STA-support.patch
+index 9564f02edd..64291e8f89 100644
+--- a/package/kernel/mac80211/patches/rt2x00/611-rt2x00-add-AP+STA-support.patch
++++ b/package/kernel/mac80211/patches/rt2x00/611-rt2x00-add-AP+STA-support.patch
+@@ -1,6 +1,6 @@
+ --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+ +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+-@@ -1362,7 +1362,7 @@ static inline void rt2x00lib_set_if_comb
++@@ -1338,7 +1338,7 @@ static inline void rt2x00lib_set_if_comb
+  	 */
+  	if_limit = &rt2x00dev->if_limits_ap;
+  	if_limit->max = rt2x00dev->ops->max_ap_intf;
+diff --git a/package/kernel/mac80211/patches/rt2x00/994-rt2x00-import-support-for-external-LNA-on-MT7620.patch b/package/kernel/mac80211/patches/rt2x00/994-rt2x00-import-support-for-external-LNA-on-MT7620.patch
+index 7b63c7ab5f..c1889401b9 100644
+--- a/package/kernel/mac80211/patches/rt2x00/994-rt2x00-import-support-for-external-LNA-on-MT7620.patch
++++ b/package/kernel/mac80211/patches/rt2x00/994-rt2x00-import-support-for-external-LNA-on-MT7620.patch
+@@ -80,10 +80,10 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+  #include <linux/usb.h>
+  #include <linux/clk.h>
+ +#include <linux/pinctrl/consumer.h>
+- #include <linux/rt2x00_platform.h>
+  
+  #include <net/mac80211.h>
+-@@ -1017,6 +1018,11 @@ struct rt2x00_dev {
++ 
++@@ -1015,6 +1016,11 @@ struct rt2x00_dev {
+  
+  	/* Clock for System On Chip devices. */
+  	struct clk *clk;
+diff --git a/target/linux/generic/files/include/linux/rt2x00_platform.h b/target/linux/generic/files/include/linux/rt2x00_platform.h
+deleted file mode 100644
+index e10377e21b..0000000000
+--- a/target/linux/generic/files/include/linux/rt2x00_platform.h
++++ /dev/null
+@@ -1,23 +0,0 @@
+-/*
+- * Platform data definition for the rt2x00 driver
+- *
+- * Copyright (C) 2011 Gabor Juhos <juhosg@openwrt.org>
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License version 2 as published
+- * by the Free Software Foundation.
+- *
+- */
+-
+-#ifndef _RT2X00_PLATFORM_H
+-#define _RT2X00_PLATFORM_H
+-
+-struct rt2x00_platform_data {
+-	char *eeprom_file_name;
+-	const u8 *mac_address;
+-
+-	int disable_2ghz;
+-	int disable_5ghz;
+-};
+-
+-#endif /* _RT2X00_PLATFORM_H */
+-- 
+2.43.0
+

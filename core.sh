@@ -20,7 +20,8 @@ OpenWrt_PATCH_FILE_DIR="openwrt-ipq"
 function init_pkg_env() {
 	sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
 	sudo -E apt-get -qq install libgnutls28-dev coccinelle libfuse-dev \
-	b43-fwcutter cups-ppdc
+	b43-fwcutter cups-ppdc python3-pip
+	pip3 install pyelftools
 
 	sudo npm install -g pnpm
 	clang --version
@@ -380,6 +381,7 @@ function add_openwrt_files() {
 	# [ -d $OpenWrt_PATCH_FILE_DIR/bin-files ] && cp -r $OpenWrt_PATCH_FILE_DIR/bin-files/ipq-wifi/src/* openwrt/package/firmware/ipq-wifi/src
 	[ -d package ] && cp -r package/* openwrt/package
 	[ -d $OpenWrt_PATCH_FILE_DIR/package-for-$OpenWrt_PATCH_FILE_DIR ] && cp -r $OpenWrt_PATCH_FILE_DIR/package-for-$OpenWrt_PATCH_FILE_DIR/* openwrt/package
+	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* $OpenWrt_PATCH_FILE_DIR/mypatch-core/
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-core ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-core openwrt/mypatch-core
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-custom-$Matrix_Target ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-custom-$Matrix_Target openwrt/mypatch-custom
 

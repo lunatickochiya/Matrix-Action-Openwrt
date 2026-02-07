@@ -1,0 +1,342 @@
+From cbbd363339d0ca070c9c1287ee9870feaa4b7d7d Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Thu, 28 Aug 2025 16:46:29 +0800
+Subject: [PATCH 3/5] Revert "mac80211: extend connection monitoring for MLO"
+
+This reverts commit d73ec79a6b31ae4684f30f5dc01f2f073aba2ce8.
+---
+ ...d-link-iteration-macro-for-link-data.patch |  55 -------
+ ...211-extend-beacon-monitoring-for-MLO.patch |  77 ----------
+ ...extend-connection-monitoring-for-MLO.patch | 141 ------------------
+ ...ke-CONNECTION_MONITOR-optional-for-M.patch |  25 ----
+ 4 files changed, 298 deletions(-)
+ delete mode 100644 package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+ delete mode 100644 package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+ delete mode 100644 package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
+ delete mode 100644 package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
+
+diff --git a/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch b/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
+deleted file mode 100644
+index d78a72d246..0000000000
+--- a/package/kernel/mac80211/patches/subsys/350-wifi-mac80211-Add-link-iteration-macro-for-link-data.patch
++++ /dev/null
+@@ -1,55 +0,0 @@
+-From: Maharaja Kennadyrajan <maharaja.kennadyrajan@oss.qualcomm.com>
+-Date: Fri, 18 Jul 2025 11:38:35 +0530
+-Subject: [PATCH] wifi: mac80211: Add link iteration macro for link data
+- with rcu_dereference
+-
+-Currently, the existing macro for_each_link_data() uses sdata_dereference()
+-which requires the wiphy lock. This lock cannot be used in atomic or RCU
+-read-side contexts, such as in the RX path.
+-
+-Introduce a new macro, for_each_link_data_rcu(), that iterates over link of
+-sdata using rcu_dereference(), making it safe to use in RCU contexts. This
+-allows callers to access link data without requiring the wiphy lock.
+-
+-The macro takes into account the vif.valid_links bitmap and ensures only
+-valid links are accessed safely. Callers are responsible for ensuring that
+-rcu_read_lock() is held when using this macro.
+-
+-Signed-off-by: Maharaja Kennadyrajan <maharaja.kennadyrajan@oss.qualcomm.com>
+-Link: https://patch.msgid.link/20250718060837.59371-3-maharaja.kennadyrajan@oss.qualcomm.com
+-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+----
+-
+---- a/net/mac80211/ieee80211_i.h
+-+++ b/net/mac80211/ieee80211_i.h
+-@@ -1211,6 +1211,30 @@ struct ieee80211_sub_if_data *vif_to_sda
+- 	if ((_link = wiphy_dereference((local)->hw.wiphy,		\
+- 				       ___sdata->link[___link_id])))
+- 
+-+#define for_each_link_data(sdata, __link)					\
+-+	/* outer loop just to define the variable ... */			\
+-+	for (struct ieee80211_sub_if_data *__sdata = (sdata); __sdata;		\
+-+		__sdata = NULL /* always stop */)				\
+-+	for (int __link_id = 0;							\
+-+	     __link_id < ARRAY_SIZE((__sdata)->link); __link_id++)		\
+-+		if ((!(__sdata)->vif.valid_links ||				\
+-+		     (__sdata)->vif.valid_links & BIT(__link_id)) &&		\
+-+		    ((__link) = sdata_dereference((__sdata)->link[__link_id],	\
+-+						  (__sdata))))
+-+
+-+/*
+-+ * for_each_link_data_rcu should be used under RCU read lock.
+-+ */
+-+#define for_each_link_data_rcu(sdata, __link)					\
+-+	/* outer loop just to define the variable ... */			\
+-+	for (struct ieee80211_sub_if_data *__sdata = (sdata); __sdata;		\
+-+		__sdata = NULL /* always stop */)				\
+-+	for (int __link_id = 0;							\
+-+	     __link_id < ARRAY_SIZE((__sdata)->link); __link_id++)		\
+-+		if ((!(__sdata)->vif.valid_links ||				\
+-+		     (__sdata)->vif.valid_links & BIT(__link_id)) &&		\
+-+		    ((__link) = rcu_dereference((__sdata)->link[__link_id])))	\
+-+
+- static inline int
+- ieee80211_get_mbssid_beacon_len(struct cfg80211_mbssid_elems *elems,
+- 				struct cfg80211_rnr_elems *rnr_elems,
+diff --git a/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch b/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
+deleted file mode 100644
+index b1986dc8aa..0000000000
+--- a/package/kernel/mac80211/patches/subsys/351-wifi-mac80211-extend-beacon-monitoring-for-MLO.patch
++++ /dev/null
+@@ -1,77 +0,0 @@
+-From: Maharaja Kennadyrajan <maharaja.kennadyrajan@oss.qualcomm.com>
+-Date: Fri, 18 Jul 2025 11:38:36 +0530
+-Subject: [PATCH] wifi: mac80211: extend beacon monitoring for MLO
+-
+-Currently, reset beacon monitor (ieee80211_sta_reset_beacon_monitor())
+-timer is handled only for non-AP non-MLD STA and do not support non-AP MLD
+-STA. When the beacon loss occurs in non-AP MLD STA with the current
+-implementation, it is treated as a single link and the timer will reset
+-based on the timeout of the deflink, without checking all the links.
+-
+-Check the CSA flags for all the links in the MLO and decide whether to
+-schedule the work queue for beacon loss. If any of the links has CSA
+-active, then beacon loss work is not scheduled.
+-
+-Also, call the functions ieee80211_sta_reset_beacon_monitor() and
+-ieee80211_sta_reset_conn_monitor() from ieee80211_csa_switch_work() only
+-when all the links are CSA active.
+-
+-Signed-off-by: Maharaja Kennadyrajan <maharaja.kennadyrajan@oss.qualcomm.com>
+-Link: https://patch.msgid.link/20250718060837.59371-4-maharaja.kennadyrajan@oss.qualcomm.com
+-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+----
+-
+---- a/net/mac80211/mlme.c
+-+++ b/net/mac80211/mlme.c
+-@@ -2159,6 +2159,21 @@ static void ieee80211_csa_switch_work(st
+- 		}
+- 	}
+- 
+-+	/*
+-+	 * It is not necessary to reset these timers if any link does not
+-+	 * have an active CSA and that link still receives the beacons
+-+	 * when other links have active CSA.
+-+	 */
+-+	for_each_link_data(sdata, link) {
+-+		if (!link->conf->csa_active)
+-+			return;
+-+	}
+-+
+-+	/*
+-+	 * Reset the beacon monitor and connection monitor timers when CSA
+-+	 * is active for all links in MLO when channel switch occurs in all
+-+	 * the links.
+-+	 */
+- 	ieee80211_sta_reset_beacon_monitor(sdata);
+- 	ieee80211_sta_reset_conn_monitor(sdata);
+- }
+-@@ -7863,6 +7878,29 @@ void ieee80211_sta_work(struct ieee80211
+- 	}
+- }
+- 
+-+static bool
+-+ieee80211_is_csa_in_progress(struct ieee80211_sub_if_data *sdata)
+-+{
+-+	/*
+-+	 * In MLO, check the CSA flags 'active' and 'waiting_bcn' for all
+-+	 * the links.
+-+	 */
+-+	struct ieee80211_link_data *link;
+-+	bool ret = true;
+-+
+-+	rcu_read_lock();
+-+	for_each_link_data_rcu(sdata, link) {
+-+		if (!(link->conf->csa_active &&
+-+		      !link->u.mgd.csa.waiting_bcn)) {
+-+			ret = false;
+-+			break;
+-+		}
+-+	}
+-+	rcu_read_unlock();
+-+
+-+	return ret;
+-+}
+-+
+- static void ieee80211_sta_bcn_mon_timer(struct timer_list *t)
+- {
+- 	struct ieee80211_sub_if_data *sdata =
+diff --git a/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch b/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
+deleted file mode 100644
+index e6227b97ea..0000000000
+--- a/package/kernel/mac80211/patches/subsys/352-wifi-mac80211-extend-connection-monitoring-for-MLO.patch
++++ /dev/null
+@@ -1,141 +0,0 @@
+-From: Maharaja Kennadyrajan <maharaja.kennadyrajan@oss.qualcomm.com>
+-Date: Fri, 18 Jul 2025 11:38:37 +0530
+-Subject: [PATCH] wifi: mac80211: extend connection monitoring for MLO
+-
+-Currently, reset connection monitor (ieee80211_sta_reset_conn_monitor())
+-timer is handled only for non-AP non-MLD STA and do not support non-AP MLD
+-STA. The current implementation checks for the CSA active and update the
+-monitor timer with the timeout value of deflink and reset the timer based
+-on the deflink's timeout value else schedule the connection loss work when
+-the deflink is timed out and it won't work for the non-AP MLD STA.
+-
+-Handle the reset connection monitor timer for non-AP MLD STA by updating
+-the monitor timer with the timeout value which is determined based on the
+-link that will expire last among all the links in MLO. If at least one link
+-has not timed out, the timer is updated accordingly with the latest timeout
+-value else schedule the connection loss work when all links have timed out.
+-
+-Remove the MLO-related WARN_ON() checks in the beacon and connection
+-monitoring logic code paths as they support MLO now.
+-
+-Signed-off-by: Maharaja Kennadyrajan <maharaja.kennadyrajan@oss.qualcomm.com>
+-Link: https://patch.msgid.link/20250718060837.59371-5-maharaja.kennadyrajan@oss.qualcomm.com
+-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+----
+-
+---- a/net/mac80211/mlme.c
+-+++ b/net/mac80211/mlme.c
+-@@ -3831,9 +3831,6 @@ static void ieee80211_mgd_probe_ap_send(
+- 
+- 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+- 
+--	if (WARN_ON(ieee80211_vif_is_mld(&sdata->vif)))
+--		return;
+--
+- 	/*
+- 	 * Try sending broadcast probe requests for the last three
+- 	 * probe requests after the first ones failed since some
+-@@ -3879,9 +3876,6 @@ static void ieee80211_mgd_probe_ap(struc
+- 
+- 	lockdep_assert_wiphy(sdata->local->hw.wiphy);
+- 
+--	if (WARN_ON_ONCE(ieee80211_vif_is_mld(&sdata->vif)))
+--		return;
+--
+- 	if (!ieee80211_sdata_running(sdata))
+- 		return;
+- 
+-@@ -7921,36 +7915,73 @@ static void ieee80211_sta_bcn_mon_timer(
+- 			 &sdata->u.mgd.beacon_connection_loss_work);
+- }
+- 
+-+static unsigned long
+-+ieee80211_latest_active_link_conn_timeout(struct ieee80211_sub_if_data *sdata)
+-+{
+-+	unsigned long latest_timeout = 0;
+-+	unsigned int link_id;
+-+	struct sta_info *sta;
+-+
+-+	rcu_read_lock();
+-+
+-+	sta = sta_info_get(sdata, sdata->vif.cfg.ap_addr);
+-+	if (!sta)
+-+		goto out;
+-+
+-+	for (link_id = 0; link_id < ARRAY_SIZE(sta->link);
+-+	     link_id++) {
+-+		struct link_sta_info *link_sta;
+-+		unsigned long timeout;
+-+
+-+		link_sta = rcu_dereference(sta->link[link_id]);
+-+		if (!link_sta)
+-+			continue;
+-+
+-+		timeout = link_sta->status_stats.last_ack;
+-+		if (time_before(timeout, link_sta->rx_stats.last_rx))
+-+			timeout = link_sta->rx_stats.last_rx;
+-+
+-+		timeout += IEEE80211_CONNECTION_IDLE_TIME;
+-+
+-+		/*
+-+		 * latest_timeout holds the timeout of the link
+-+		 * that will expire last among all links in an
+-+		 * non-AP MLD STA. This ensures that the connection
+-+		 * monitor timer is only reset if at least one link
+-+		 * is still active, and it is scheduled to fire at
+-+		 * the latest possible timeout.
+-+		 */
+-+		if (time_is_after_jiffies(timeout) &&
+-+		    time_after(timeout, latest_timeout))
+-+			latest_timeout = timeout;
+-+	}
+-+
+-+out:
+-+	rcu_read_unlock();
+-+
+-+	return latest_timeout;
+-+}
+-+
+- static void ieee80211_sta_conn_mon_timer(struct timer_list *t)
+- {
+- 	struct ieee80211_sub_if_data *sdata =
+- 		from_timer(sdata, t, u.mgd.conn_mon_timer);
+- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+- 	struct ieee80211_local *local = sdata->local;
+--	struct sta_info *sta;
+--	unsigned long timeout;
+-+	unsigned long latest_timeout;
+- 
+--	if (WARN_ON(ieee80211_vif_is_mld(&sdata->vif)))
+-+	if (ieee80211_is_csa_in_progress(sdata))
+- 		return;
+- 
+--	if (sdata->vif.bss_conf.csa_active &&
+--	    !sdata->deflink.u.mgd.csa.waiting_bcn)
+--		return;
+--
+--	sta = sta_info_get(sdata, sdata->vif.cfg.ap_addr);
+--	if (!sta)
+--		return;
+--
+--	timeout = sta->deflink.status_stats.last_ack;
+--	if (time_before(sta->deflink.status_stats.last_ack, sta->deflink.rx_stats.last_rx))
+--		timeout = sta->deflink.rx_stats.last_rx;
+--	timeout += IEEE80211_CONNECTION_IDLE_TIME;
+-+	latest_timeout = ieee80211_latest_active_link_conn_timeout(sdata);
+- 
+--	/* If timeout is after now, then update timer to fire at
+--	 * the later date, but do not actually probe at this time.
+--	 */
+--	if (time_is_after_jiffies(timeout)) {
+--		mod_timer(&ifmgd->conn_mon_timer, round_jiffies_up(timeout));
+-+	/*
+-+	 * If latest timeout is after now, then update timer to fire at
+-+ 	 * the later date, but do not actually probe at this time.
+-+ 	 */
+-+	if (latest_timeout) {
+-+		mod_timer(&ifmgd->conn_mon_timer,
+-+			  round_jiffies_up(latest_timeout));
+- 		return;
+- 	}
+- 
+diff --git a/package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch b/package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
+deleted file mode 100644
+index bbc02cc21d..0000000000
+--- a/package/kernel/mac80211/patches/subsys/353-wifi-mac80211-Make-CONNECTION_MONITOR-optional-for-M.patch
++++ /dev/null
+@@ -1,25 +0,0 @@
+-From: Lorenzo Bianconi <lorenzo@kernel.org>
+-Date: Tue, 26 Aug 2025 13:54:31 +0200
+-Subject: [PATCH] wifi: mac80211: Make CONNECTION_MONITOR optional for MLO sta
+-
+-Since commit '1bc892d76a6f ("wifi: mac80211: extend connection
+-monitoring for MLO")' mac80211 supports connection monitor for MLO
+-client interfaces. Remove the CONNECTION_MONITOR requirement in
+-ieee80211_register_hw routine.
+-
+-Fixes: 1bc892d76a6f ("wifi: mac80211: extend connection monitoring for MLO")
+-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
+----
+-
+---- a/net/mac80211/main.c
+-+++ b/net/mac80211/main.c
+-@@ -1174,9 +1174,6 @@ int ieee80211_register_hw(struct ieee802
+- 		if (WARN_ON(!ieee80211_hw_check(hw, MFP_CAPABLE)))
+- 			return -EINVAL;
+- 
+--		if (WARN_ON(!ieee80211_hw_check(hw, CONNECTION_MONITOR)))
+--			return -EINVAL;
+--
+- 		if (WARN_ON(ieee80211_hw_check(hw, NEED_DTIM_BEFORE_ASSOC)))
+- 			return -EINVAL;
+- 
+-- 
+2.43.0
+
