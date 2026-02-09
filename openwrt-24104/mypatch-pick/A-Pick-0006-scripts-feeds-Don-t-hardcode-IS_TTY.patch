@@ -1,0 +1,50 @@
+From c45f99835a5182ca8ac423e468fb31df9613cf29 Mon Sep 17 00:00:00 2001
+From: Ernestas Kulik <ernestas.k@iconn-networks.com>
+Date: Wed, 12 Nov 2025 10:16:30 +0200
+Subject: [PATCH 6/9] =?UTF-8?q?scripts:=20feeds:=20Don=E2=80=99t=20hardcod?=
+ =?UTF-8?q?e=20IS=5FTTY?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+When building in environments that set IS_TTY, the feeds script does not
+honor it and passes a hardcoded value to scan.mk, causing unwanted
+control characters to appear in stdout.
+
+This commit addresses the issue by checking IS_TTY and MAKE_TERMOUT
+variables and uses their values if defined.
+
+Closes #8039
+
+Signed-off-by: Ernestas Kulik <ernestas.k@iconn-networks.com>
+Link: https://github.com/openwrt/openwrt/pull/20743
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+(cherry picked from commit fd7e43d429a370665795fb14c859c046c761e4e9)
+---
+ scripts/feeds | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/scripts/feeds b/scripts/feeds
+index 959995c7af..70b52229a3 100755
+--- a/scripts/feeds
++++ b/scripts/feeds
+@@ -128,8 +128,14 @@ sub update_index($)
+ 	-d "./feeds/$name.tmp/info" or mkdir "./feeds/$name.tmp/info" or return 1;
+ 
+ 	system("$mk -s prepare-mk OPENWRT_BUILD= TMP_DIR=\"$ENV{TOPDIR}/feeds/$name.tmp\"");
+-	system("$mk -s -f include/scan.mk IS_TTY=1 SCAN_TARGET=\"packageinfo\" SCAN_DIR=\"feeds/$name\" SCAN_NAME=\"package\" SCAN_DEPTH=5 SCAN_EXTRA=\"\" TMP_DIR=\"$ENV{TOPDIR}/feeds/$name.tmp\"");
+-	system("$mk -s -f include/scan.mk IS_TTY=1 SCAN_TARGET=\"targetinfo\" SCAN_DIR=\"feeds/$name\" SCAN_NAME=\"target\" SCAN_DEPTH=5 SCAN_EXTRA=\"\" SCAN_MAKEOPTS=\"TARGET_BUILD=1\" TMP_DIR=\"$ENV{TOPDIR}/feeds/$name.tmp\"");
++
++	my $is_tty = $ENV{IS_TTY};
++	$is_tty = defined $is_tty ? $is_tty : $ENV{MAKE_TERMOUT};
++	$is_tty = defined $is_tty ? $is_tty : 1;
++
++	system("$mk -s -f include/scan.mk IS_TTY=$is_tty SCAN_TARGET=\"packageinfo\" SCAN_DIR=\"feeds/$name\" SCAN_NAME=\"package\" SCAN_DEPTH=5 SCAN_EXTRA=\"\" TMP_DIR=\"$ENV{TOPDIR}/feeds/$name.tmp\"");
++	system("$mk -s -f include/scan.mk IS_TTY=$is_tty SCAN_TARGET=\"targetinfo\" SCAN_DIR=\"feeds/$name\" SCAN_NAME=\"target\" SCAN_DEPTH=5 SCAN_EXTRA=\"\" SCAN_MAKEOPTS=\"TARGET_BUILD=1\" TMP_DIR=\"$ENV{TOPDIR}/feeds/$name.tmp\"");
++
+ 	system("ln -sf $name.tmp/.packageinfo ./feeds/$name.index");
+ 	system("ln -sf $name.tmp/.targetinfo ./feeds/$name.targetindex");
+ 
+-- 
+2.43.0
+

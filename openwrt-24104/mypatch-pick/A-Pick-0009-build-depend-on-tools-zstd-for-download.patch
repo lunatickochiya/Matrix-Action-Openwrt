@@ -1,0 +1,35 @@
+From e2dd7f7a4e835eb5812cccf51cafac9ae6282ea5 Mon Sep 17 00:00:00 2001
+From: Andreas Gnau <andreas.gnau@iopsys.eu>
+Date: Wed, 10 Dec 2025 18:21:45 +0100
+Subject: [PATCH 9/9] build: depend on tools/zstd for download
+
+Downloading packages from git requires zstd to compress their tarballs.
+Make sure that zstd from host tools is compiled when running make
+download. Otherwise, either the download would fail because zstd is not
+present or a random version from the host would be used leading to hash
+mismatches.
+
+Signed-off-by: Andreas Gnau <andreas.gnau@iopsys.eu>
+Link: https://github.com/openwrt/openwrt/pull/21125
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+(cherry picked from commit f3e4620f592be9413a5c71fbc4b664c50a158faa)
+---
+ include/toplevel.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/toplevel.mk b/include/toplevel.mk
+index 092dff786c..5923d089fc 100644
+--- a/include/toplevel.mk
++++ b/include/toplevel.mk
+@@ -201,7 +201,7 @@ else
+   DOWNLOAD_DIRS = package/download
+ endif
+ 
+-download: .config FORCE $(if $(wildcard $(STAGING_DIR_HOST)/bin/flock),,tools/flock/compile)
++download: .config FORCE $(if $(wildcard $(STAGING_DIR_HOST)/bin/flock),,tools/flock/compile) $(if $(wildcard $(STAGING_DIR_HOST)/bin/zstd),,tools/zstd/compile)
+ 	@+$(foreach dir,$(DOWNLOAD_DIRS),$(SUBMAKE) $(dir);)
+ 
+ clean dirclean: .config
+-- 
+2.43.0
+

@@ -381,7 +381,6 @@ function add_openwrt_files() {
 	# [ -d $OpenWrt_PATCH_FILE_DIR/bin-files ] && cp -r $OpenWrt_PATCH_FILE_DIR/bin-files/ipq-wifi/src/* openwrt/package/firmware/ipq-wifi/src
 	[ -d package ] && cp -r package/* openwrt/package
 	[ -d $OpenWrt_PATCH_FILE_DIR/package-for-$OpenWrt_PATCH_FILE_DIR ] && cp -r $OpenWrt_PATCH_FILE_DIR/package-for-$OpenWrt_PATCH_FILE_DIR/* openwrt/package
-	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* $OpenWrt_PATCH_FILE_DIR/mypatch-core/
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-core ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-core openwrt/mypatch-core
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-custom-$Matrix_Target ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-custom-$Matrix_Target openwrt/mypatch-custom
 
@@ -402,6 +401,10 @@ function add_openwrt_files() {
 	[ -d $OpenWrt_PATCH_FILE_DIR/package-for-$OpenWrt_PATCH_FILE_DIR ] && cp -r $OpenWrt_PATCH_FILE_DIR/package-for-$OpenWrt_PATCH_FILE_DIR/* openwrt/package
 	fi
 
+	if [ "$Target_CFG_Machine" = "mpc1917" ] || [ "$Target_CFG_Machine" = "mpc1917_lite" ]; then
+	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* $OpenWrt_PATCH_FILE_DIR/mypatch-core/
+	[ -d openwrt-24104/mypatch-pick ] && mv -f openwrt-24104/mypatch-pick/* openwrt/mypatch-core/
+	fi
 	# if [ "$Target_CFG_Machine" = "jdcloud_re-ss-01" ]; then
 	# [ -d $OpenWrt_PATCH_FILE_DIR/ipq6000-jd-re-ss-01 ] && cp -r $OpenWrt_PATCH_FILE_DIR/ipq6000-jd-re-ss-01/* openwrt/mypatch-core
 	# fi

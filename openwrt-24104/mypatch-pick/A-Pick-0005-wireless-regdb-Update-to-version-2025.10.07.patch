@@ -1,7 +1,7 @@
-From 40a305c5b1ba21f2bfb3c231deac67b3ee0ad241 Mon Sep 17 00:00:00 2001
+From 9a8ac0cb2dfd428dcba0576d9f9c34bff8c939d8 Mon Sep 17 00:00:00 2001
 From: Hauke Mehrtens <hauke@hauke-m.de>
 Date: Sat, 25 Oct 2025 22:44:22 +0200
-Subject: [PATCH 5/5] wireless-regdb: Update to version 2025.10.07
+Subject: [PATCH 5/9] wireless-regdb: Update to version 2025.10.07
 
 e51d568 wireless-regdb: update regulatory rules for Botswana (BW) for 2022
 5afc632 wireless-regdb: update regulatory rules for Sint Marteen (SX) for 2018

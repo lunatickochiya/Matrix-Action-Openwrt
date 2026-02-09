@@ -1,0 +1,45 @@
+From 16dbb40b6e9175e74841afeb6a8c76af600a6207 Mon Sep 17 00:00:00 2001
+From: Andreas Gnau <andreas.gnau@iopsys.eu>
+Date: Fri, 3 Oct 2025 10:59:42 +0200
+Subject: [PATCH 8/9] tools/ccache: same behaviour for local and CI builds
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+If the environment variable `CI` is set, ccache will enable the CMake
+option CCACHE_DEV_MODE by default. This leads to differing behaviour
+between local and CI builds which takes quite some time to debug. 🤯
+
+Achieve consistent behaviour between local builds and CI builds by
+setting CCACHE_DEV_MODE. Set it to OFF, because CCACHE_DEV_MODE amongst
+other settings like linker choice, enables -Werror, which will lead to
+potential compilation failures when the host compiler is updated. Using
+-Werror for host utils is not desirable, because the compiler version
+used is not controlled by the OpenWrt build system and host utils should
+compile successfully on an as wide range of host OSes as possible.
+
+Reported-by: Roman Azarenko <roman.azarenko@iopsys.eu>
+Signed-off-by: Andreas Gnau <andreas.gnau@iopsys.eu>
+Link: https://github.com/openwrt/openwrt/pull/20290
+(cherry picked from commit 6f32c657db55a2e34f659d81d56aa385aaa7d69d)
+Link: https://github.com/openwrt/openwrt/pull/20334
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+---
+ tools/ccache/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/tools/ccache/Makefile b/tools/ccache/Makefile
+index 447bc3ea43..fde96be8c1 100644
+--- a/tools/ccache/Makefile
++++ b/tools/ccache/Makefile
+@@ -17,6 +17,7 @@ include $(INCLUDE_DIR)/host-build.mk
+ include $(INCLUDE_DIR)/cmake.mk
+ 
+ CMAKE_HOST_OPTIONS += \
++	-DCCACHE_DEV_MODE=OFF \
+ 	-DCMAKE_C_COMPILER_LAUNCHER="" \
+ 	-DCMAKE_CXX_COMPILER_LAUNCHER="" \
+ 	-DCMAKE_SKIP_RPATH=FALSE \
+-- 
+2.43.0
+

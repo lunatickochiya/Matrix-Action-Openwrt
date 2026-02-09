@@ -1,0 +1,49 @@
+From 42a8f77d6520991d611cd8ecc00abf2ccf610372 Mon Sep 17 00:00:00 2001
+From: George Tsiamasiotis <george@tsiamasiotis.gr>
+Date: Tue, 23 Sep 2025 23:11:19 +0300
+Subject: [PATCH 7/9] scripts/patch-kernel.sh: do not try to check files after
+ patch
+
+Since we are not using patch -b, *.orig files are only created when
+there are conflicts, or never according to posix patch.
+
+As such, it doesn't really make sense to always delete *.orig files
+presuming they are patch backups, even if they are patch backups.
+Doing so is both deleting potentially useful information for failed
+patch applications and creating hard to diagnose bugs [1].
+
+In a similar vein, checking for *.rej files does not add any value
+since we're already checking the patch command's return code.
+
+[1]: https://github.com/openwrt/packages/issues/27485
+
+Signed-off-by: George Tsiamasiotis <george@tsiamasiotis.gr>
+Link: https://github.com/openwrt/openwrt/pull/20141
+Signed-off-by: Robert Marko <robimarko@gmail.com>
+(cherry picked from commit 75ca6bafd614efd1427a979d28d551af775b8e5d)
+Link: https://github.com/openwrt/openwrt/pull/20742
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+---
+ scripts/patch-kernel.sh | 9 ---------
+ 1 file changed, 9 deletions(-)
+
+diff --git a/scripts/patch-kernel.sh b/scripts/patch-kernel.sh
+index 52750dde6e..84bcba8858 100755
+--- a/scripts/patch-kernel.sh
++++ b/scripts/patch-kernel.sh
+@@ -43,12 +43,3 @@ for i in ${patchdir}/${patchpattern} ; do
+ 	exit 1
+     fi
+ done
+-
+-# Check for rejects...
+-if [ "`find $targetdir/ '(' -name '*.rej' -o -name '.*.rej' ')' -print`" ] ; then
+-    echo "Aborting.  Reject files found."
+-    exit 1
+-fi
+-
+-# Remove backup files
+-find $targetdir/ '(' -name '*.orig' -o -name '.*.orig' ')' -exec rm -f {} \;
+-- 
+2.43.0
+

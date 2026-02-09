@@ -201,7 +201,6 @@ jobs:
         git config --global user.name "LunaticKochiya"
         if [ "$Target_CFG_Machine" = "mpc1917" ] || [ "$Target_CFG_Machine" = "mpc1917_lite" ]; then
         git checkout 859ff7a978aea150588e7e21a1333884ab85739f
-        git cherry-pick 4d1c1d775468c1dc60a8e6e0dd6e1364176c03ae 13226471ef02e622cb42ab36d0fb1322c3b93449 3c97c4a44cbeb767281f3260c1f6da4772432807 0f52a05723988633882d6c52122009ce11f8956b e382fc552a5afaa18e98b8971cf515c1e7ef5248 dddeea5e7ff5db16cf3dc513f8d5c8ca27c65fa6 58cde9ec226918812473c77e562b059316b5989a a38b0c94dd02a03ab14f55bc98b2aa24561aed5a c0b10f74428c92a4505c3390837cde5ef68672bd
         fi
         sed -i \
           -e 's|https://git.openwrt.org/feed/packages.git;openwrt-24.10|https://github.com/openwrt/packages.git;openwrt-24.10|' \
