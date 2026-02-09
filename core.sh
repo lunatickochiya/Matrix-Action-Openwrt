@@ -402,7 +402,7 @@ function add_openwrt_files() {
 	fi
 
 	if [ "$Target_CFG_Machine" = "mpc1917" ] || [ "$Target_CFG_Machine" = "mpc1917_lite" ]; then
-	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* $OpenWrt_PATCH_FILE_DIR/mypatch-core/
+	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* openwrt/mypatch-core/
 	[ -d openwrt-24104/mypatch-pick ] && mv -f openwrt-24104/mypatch-pick/* openwrt/mypatch-core/
 	fi
 	# if [ "$Target_CFG_Machine" = "jdcloud_re-ss-01" ]; then
