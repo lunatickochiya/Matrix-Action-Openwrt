@@ -1,7 +1,7 @@
-From 7aeb70412186420ed81ef5d19d53aba820eed7c0 Mon Sep 17 00:00:00 2001
+From ffc7083c51da56bdb74a62e9bf0c04b4e7d6c041 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
 Date: Sat, 6 Dec 2025 18:34:37 +0000
-Subject: [PATCH 3/5] dropbear: enable configurable port forwarding options
+Subject: [PATCH 3/9] dropbear: enable configurable port forwarding options
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

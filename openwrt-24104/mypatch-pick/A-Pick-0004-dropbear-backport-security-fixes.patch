@@ -1,7 +1,7 @@
-From dd4e3899ac1843e7401486e8b0b6a4aee92c682a Mon Sep 17 00:00:00 2001
+From a725333caa0dbe92d7821b6f5dc6908138f78659 Mon Sep 17 00:00:00 2001
 From: Hauke Mehrtens <hauke@hauke-m.de>
 Date: Wed, 17 Dec 2025 00:41:30 +0100
-Subject: [PATCH 4/5] dropbear: backport security fixes
+Subject: [PATCH 4/9] dropbear: backport security fixes
 
 This fixes the following security problems:
 CVE-2025-14282: Avoid privilege escalation via unix stream forwarding in Dropbear server.

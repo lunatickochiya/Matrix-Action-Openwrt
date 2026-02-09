@@ -1,7 +1,7 @@
-From e99c4b161605d3a2a486ed5e9ded949a26a13eab Mon Sep 17 00:00:00 2001
+From 358a79b33fa4dc0b7c95316b4e8ed2cd2b8dfefb Mon Sep 17 00:00:00 2001
 From: Andy Chiang <AndyChiang_git@outlook.com>
 Date: Tue, 9 Sep 2025 07:37:09 +0700
-Subject: [PATCH 2/5] ppp: add reqprefix norelease ac_mac
+Subject: [PATCH 2/9] ppp: add reqprefix norelease ac_mac
 
 Use ppp and enable autoipv6, odhcp6c supports reqprefix and norelease to minimize the chance of IPv6 PD changes.[1]
 PPPoE supports connecting to a specific AC/BRAS by using the pppoe-mac parameter.[2]
