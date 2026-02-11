@@ -81,7 +81,7 @@ on:
       patch_repo:
         description: 'Use json patch repo true(1) or false(0) See ReadME'
         required: true
-        default: '{"OPENSSL_3_5": "1", "BCM_FULLCONE": "1", "MAC80211_616": "0", "MAC80211_618": "0", "TRY_BBR_V3": "1", "ADD_eBPF": "0"}'
+        default: '{"OPENSSL_3_5": "1", "BCM_FULLCONE": "1", "MAC80211_616": "0", "MAC80211_618": "0", "TRY_BBR_V3": "1", "ADD_eBPF": "0", "ADD_IB": "1", "ADD_SDK": "1"}'
 
       config_repo:
         description: 'Use json config repo true(1) or false(0) See ReadME'
