@@ -248,13 +248,14 @@ CONFIG_PACKAGE_luci-app-daed=y
 
 function ln_openwrt() {
 	sudo mkdir -p -m 777 /mnt/openwrt/dl /mnt/openwrt/bin /mnt/openwrt/staging_dir /mnt/openwrt/build_dir
-	ln -sf /mnt/openwrt/dl openwrt/dl
+	#ln -sf /mnt/openwrt/dl openwrt/dl
 	#ln -sf /mnt/openwrt/bin openwrt/bin
 	ln -sf /mnt/openwrt/staging_dir openwrt/staging_dir
 	ln -sf /mnt/openwrt/build_dir openwrt/build_dir
 	df -hT
 	ls /mnt/openwrt
-	ls $PWD
+	echo "-------"
+	ls -l openwrt | grep '^l'
 }
 
 function add_openwrt_sfe_ipt_k66() {
@@ -404,6 +405,9 @@ function add_openwrt_files() {
 	if [ "$Target_CFG_Machine" = "mpc1917" ] || [ "$Target_CFG_Machine" = "mpc1917_lite" ]; then
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* openwrt/mypatch-core/
 	[ -d openwrt-24104/mypatch-pick ] && mv -f openwrt-24104/mypatch-pick/* openwrt/mypatch-core/
+	fi
+	if [ "$Target_CFG_Machine" = "tpm312" ] || [ "$Target_CFG_Machine" = "tpm312_lite" ]; then
+	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* openwrt/mypatch-core/
 	fi
 	# if [ "$Target_CFG_Machine" = "jdcloud_re-ss-01" ]; then
 	# [ -d $OpenWrt_PATCH_FILE_DIR/ipq6000-jd-re-ss-01 ] && cp -r $OpenWrt_PATCH_FILE_DIR/ipq6000-jd-re-ss-01/* openwrt/mypatch-core
