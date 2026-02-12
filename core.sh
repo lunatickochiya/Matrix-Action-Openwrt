@@ -256,6 +256,10 @@ function ln_openwrt() {
 	ls /mnt/openwrt
 	echo "-------"
 	ls -l openwrt | grep '^l'
+	echo "-------"
+	readlink openwrt
+	echo "-------"
+	ls -l /workdir/openwrt
 }
 
 function add_openwrt_sfe_ipt_k66() {
