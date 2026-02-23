@@ -1,0 +1,59 @@
+From 8c0bd967df26b8a784550d859bd08e7f85f7970d Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Mon, 23 Feb 2026 17:11:57 +0800
+Subject: [PATCH] fix-nft-masq-patch
+
+---
+ ...-fullconenat-mod-nft-masq-fix6-6-120.patch | 37 +++++++++++++++++++
+ ...-fullconenat-mod-nft-masq-fix6-6-120.patch | 37 +++++++++++++++++++
+ 2 files changed, 74 insertions(+)
+ create mode 100644 target/linux/generic/hack-6.12/984-bcm-fullconenat-mod-nft-masq-fix6-6-120.patch
+ create mode 100644 target/linux/generic/hack-6.6/984-bcm-fullconenat-mod-nft-masq-fix6-6-120.patch
+
+
+diff --git a/target/linux/generic/hack-6.6/984-bcm-fullconenat-mod-nft-masq-fix6-6-120.patch b/target/linux/generic/hack-6.6/984-bcm-fullconenat-mod-nft-masq-fix6-6-120.patch
+new file mode 100644
+index 0000000000..9d8227b39e
+--- /dev/null
++++ b/target/linux/generic/hack-6.6/984-bcm-fullconenat-mod-nft-masq-fix6-6-120.patch
+@@ -0,0 +1,37 @@
++--- a/net/netfilter/nft_masq.c
+++++ b/net/netfilter/nft_masq.c
++@@ -4,6 +4,7 @@
++  */
++
++ #include <linux/kernel.h>
+++#include <linux/version.h>
++ #include <linux/init.h>
++ #include <linux/module.h>
++ #include <linux/netlink.h>
++@@ -73,15 +73,26 @@
++ 	}
++
++ 	if (tb[NFTA_MASQ_REG_ADDR_MIN]) {
+++#if LINUX_VERSION_CODE > KERNEL_VERSION(6, 6, 120)
+++		err = nft_parse_register_load(ctx, tb[NFTA_MASQ_REG_ADDR_MIN],
+++					      &priv->sreg_addr_min, alen);
+++#else
++ 		err = nft_parse_register_load(tb[NFTA_MASQ_REG_ADDR_MIN],
++ 					      &priv->sreg_addr_min, alen);
+++#endif
++ 		if (err < 0)
++ 			return err;
++
++ 		if (tb[NFTA_MASQ_REG_ADDR_MAX]) {
+++#if LINUX_VERSION_CODE > KERNEL_VERSION(6, 6, 120)
+++			err = nft_parse_register_load(ctx, tb[NFTA_MASQ_REG_ADDR_MAX],
+++						      &priv->sreg_addr_max,
+++						      alen);
+++#else
++ 			err = nft_parse_register_load(tb[NFTA_MASQ_REG_ADDR_MAX],
++ 						      &priv->sreg_addr_max,
++ 						      alen);
+++#endif
++ 			if (err < 0)
++ 				return err;
++ 		} else {
+-- 
+2.43.0
+

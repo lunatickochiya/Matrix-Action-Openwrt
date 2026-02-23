@@ -1,7 +1,7 @@
-From c094b4a0af5a5df9263f27e45be3838092ec2737 Mon Sep 17 00:00:00 2001
+From 9ee5ae4892603aa3009391d46183ca201135e2ed Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Fri, 25 Apr 2025 20:28:41 +0800
-Subject: [PATCH 2/8] iptables:add:fullcone patch
+Subject: [PATCH 2/3] iptables:add:fullcone patch
 
 ---
  .../patches/900-bcm-fullconenat.patch         | 90 +++++++++++++++++++
