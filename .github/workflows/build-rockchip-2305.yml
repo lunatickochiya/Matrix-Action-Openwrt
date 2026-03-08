@@ -253,7 +253,7 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
-        sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
+        sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/luna-action-packages.git' feeds.conf.default
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git
         $GITHUB_WORKSPACE/$DIY_SH rockpatch
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then

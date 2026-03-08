@@ -197,7 +197,7 @@ jobs:
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
         git checkout v23.05.6
-        sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
+        sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/luna-action-packages.git' feeds.conf.default
         sed -i 's|src-git packages https://git.openwrt.org/feed/packages.git\^e59d9ef823bcb581e3939789b4eaeaf900b79759|src-git packages https://git.openwrt.org/feed/packages.git;openwrt-23.05|g' feeds.conf.default
         if [ ${{github.event.inputs.TEST-KERNEL}} = true ]; then
         git clone https://${{ secrets.MY_SECRET_TOKEN }}@github.com/lunatickochiya/tpm312.git

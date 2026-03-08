@@ -240,7 +240,7 @@ jobs:
         git clone $REPO_URL -b $REPO_BRANCH openwrt --single-branch
         ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
         cd openwrt
-        sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/actionbased-openwrt-packages.git' feeds.conf.default
+        sed -i '$a src-git lunatic7 https://github.com/lunatickochiya/luna-action-packages.git' feeds.conf.default
         sed -i 's|https://github.com/jjm2473/packages.git|https://github.com/lunatickochiya/istoreos-packages-2203.git|' feeds.conf.default
         echo "status=success" >> $GITHUB_OUTPUT
 
