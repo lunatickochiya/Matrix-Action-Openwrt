@@ -91,7 +91,7 @@ index e104225..9e053ad 100644
 -			/* Workaround for targets that do not enumerate  all netdevs in board.json */
 -			if (uname().machine in [ 'x86_64' ] &&
 -			    match(ports[0]?.device, /^eth\d+$/)) {
--				let bus = readlink(`/sys/class/net/${ports[0].device}/device/subsystem`);
+-				let bus = realpath(`/sys/class/net/${ports[0].device}/device/subsystem`);
 +			return { result: ports };
 +		}
 +	},
@@ -112,7 +112,7 @@ index e104225..9e053ad 100644
 +			if (!access('/sbin/cpuinfo'))
 +				return {};
  
--					if (readlink(`/sys/class/net/${netdev}/device/subsystem`) != bus)
+-					if (realpath(`/sys/class/net/${netdev}/device/subsystem`) != bus)
 -						continue;
 +			const fd = popen('/sbin/cpuinfo');
 +			if (fd) {
