@@ -1,0 +1,44 @@
+From fb624926e3ed1165a40f07e9a47b6ea5ebacb487 Mon Sep 17 00:00:00 2001
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Date: Sun, 22 Feb 2026 23:11:47 +0100
+Subject: [PATCH] wireless-regdb: update to version 2026.02.04
+
+75bedc5 wireless-regdb: Update regulatory info for Australia (AU) for 2025
+a6e5195 wireless-regdb: Update broken link in regulatory.bin(5) manpage
+9e8c67f wireless-regdb: Update regulatory info for Malaysia (MY) for 2024
+61a4637 wireless-regdb: Update regulatory info for Malaysia (MY) for 2025
+5cefe55 wireless-regdb: Update regulatory info for Tunisia (TN) on 6GHz for 2025
+1a729ae wireless-regdb: Update regulatory info for Canada (CA) for 2025
+ea20dfa wireless-regdb: update regulatory database based on preceding changes
+
+Link: https://github.com/openwrt/openwrt/pull/22150
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+(cherry picked from commit 7c5e329b541066613c09aafd89f7bb6cd8b3bc67)
+---
+ package/firmware/wireless-regdb/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/package/firmware/wireless-regdb/Makefile b/package/firmware/wireless-regdb/Makefile
+index 25382eb656..bd0748427d 100644
+--- a/package/firmware/wireless-regdb/Makefile
++++ b/package/firmware/wireless-regdb/Makefile
+@@ -1,14 +1,14 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=wireless-regdb
+-PKG_VERSION:=2025.10.07
++PKG_VERSION:=2026.02.04
+ PKG_RELEASE:=1
+ PKG_LICENSE:=ISC
+ PKG_LICENSE_FILES:=LICENSE
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
+ PKG_SOURCE_URL:=@KERNEL/software/network/wireless-regdb/
+-PKG_HASH:=d4c872a44154604c869f5851f7d21d818d492835d370af7f58de8847973801c3
++PKG_HASH:=0ff48a5cd9e9cfe8e815a24e023734919e9a3b7ad2f039243ad121cf5aabf6c6
+ 
+ PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
+ 
+-- 
+2.43.0
+

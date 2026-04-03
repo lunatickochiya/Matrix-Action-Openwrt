@@ -1,0 +1,58 @@
+From 3e77f8c7abdefa321f2fbc97a27e9d482789a183 Mon Sep 17 00:00:00 2001
+From: Daniel Golle <daniel@makrotopia.org>
+Date: Sat, 14 Mar 2026 01:18:07 +0000
+Subject: [PATCH] procd: update to git HEAD (2026-03-14)
+
+Update procd cherry-picking fixes from main branch to dedicated
+openwrt-24.10 backport branch.
+
+ c59f2d8 instance: don't print error in case cgroups are disabled
+ 196291a instance: use positive error numbers for strerror()
+ d23ddec rcS, ubus: constify char * arguments and variables where appropriate
+ aeeef20 instance: use mkdir_p helper
+ d033b7c signal: handle SIGUSR1 as halt
+ 8bc8377 cgroups: fix syntax error
+ 909d02b instance: check length of names when creating cgroups
+ 5ec782f procd: jail/cgroups: fix OOB write in cgroups_apply()
+ 8581313 hotplug-dispatch: fix filter disallowing setting PATH
+ 6265463 service instance: Improve handling of watchdog config changes
+ 45bef92 service instance: Fix overwriting of watchdog linked list members
+ 8294471 coldplug: fix missing header include
+ fb1c92b hotplug-dispatch: fix missing header include
+ 6dafa86 initd/coldplug: create /dev/null before running udevtrigger
+ c268f13 hotplug-dispatch: redirect output to /dev/null
+ b8c4f86 hotplug-dispatch: use stat if d_type is DT_UNKNOWN
+ 1f2aa1a system: fix arguments validation in ubus handler
+ 7e5e049 service: fix use-after-free on service data update
+ 3f48d76 instance: convert jail feature flags to bitmap
+ 2c7c0d2 rcS: avoid duplicate pending "running" calls
+ 5a9b16d service: re-run init script "running" command after instance restart
+ d5a45ff jail: fix NULL-pointer dereference when connection to ubus failed
+ 8de8cdf jail: always handle mkdir() return value
+ fa594db jail: seccomp-oci: fix uninitialized pointer read in error path
+
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+ package/system/procd/Makefile | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/package/system/procd/Makefile b/package/system/procd/Makefile
+index 65cc0ad9f6..3ab91cad9c 100644
+--- a/package/system/procd/Makefile
++++ b/package/system/procd/Makefile
+@@ -12,9 +12,9 @@ PKG_RELEASE:=1
+ 
+ PKG_SOURCE_PROTO:=git
+ PKG_SOURCE_URL=$(PROJECT_GIT)/project/procd.git
+-PKG_MIRROR_HASH:=41dbb5352eff931ecc78c4ce9a081645c26a7fb8dc57cdd6521a2f8d3a142567
+-PKG_SOURCE_DATE:=2024-12-22
+-PKG_SOURCE_VERSION:=42d3937654508b04da64969f9d764ac2ec411904
++PKG_MIRROR_HASH:=0f9dc9c9b72c24db277d649b625e2a33be04c7a9e89eb302e3b03e21ee842f1a
++PKG_SOURCE_DATE:=2026-03-14
++PKG_SOURCE_VERSION:=c59f2d801f6a1b3740a8f08b2fcfe3cfb274699a
+ CMAKE_INSTALL:=1
+ 
+ PKG_LICENSE:=GPL-2.0
+-- 
+2.43.0
+
