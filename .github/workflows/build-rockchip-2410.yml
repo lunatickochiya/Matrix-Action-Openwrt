@@ -122,6 +122,7 @@ jobs:
   build:
     runs-on: Ubuntu-24.04
     needs: prepare
+    timeout-minutes: 720
     strategy:
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     name: Build ${{github.event.inputs.MACH}} openwrt ${{ github.event.inputs.REPO }}
