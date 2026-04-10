@@ -337,7 +337,7 @@ jobs:
         find dl -size -1024c -exec rm -f {} \;
 
     - name: 缓存
-      uses: HiGarfield/cachewrtbuild@main
+      uses: lunatickochiya/cachewrtbuild@gomod
       if: env.Cache == '1' && !cancelled()
       with:
         ccache: 'true'
