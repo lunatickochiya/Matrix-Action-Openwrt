@@ -329,6 +329,16 @@ jobs:
         echo "------------------------"
         awk '/turboacc/ { print }' .config
 
+    - name: 缓存dl
+      uses: HiGarfield/cachewrtbuild@main
+      if: env.Cache == '1' && !cancelled()
+      with:
+        mixkey: dl-gomod-rust${{ env.Branch }}
+        prefix: ${{ github.workspace }}/openwrt/dl
+        extra_paths: |
+            ${{ github.workspace }}/openwrt/dl/go-mod-cache
+            ${{ github.workspace }}/openwrt/dl/rustc
+
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
       run: |
@@ -336,8 +346,8 @@ jobs:
         make download -j$(nproc)
         find dl -size -1024c -exec rm -f {} \;
 
-    - name: 缓存
-      uses: lunatickochiya/cachewrtbuild@gomod
+    - name: 缓存staging
+      uses: HiGarfield/cachewrtbuild@main
       if: env.Cache == '1' && !cancelled()
       with:
         ccache: 'true'
