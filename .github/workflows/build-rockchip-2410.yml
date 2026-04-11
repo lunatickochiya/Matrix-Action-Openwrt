@@ -336,8 +336,8 @@ jobs:
         mixkey: dl-gomod-rust${{ env.Branch }}
         prefix: ${{ github.workspace }}/openwrt/dl
         extra_paths: |
-            ${{ github.workspace }}/openwrt/dl/go-mod-cache
-            ${{ github.workspace }}/openwrt/dl/rustc
+            openwrt/dl/go-mod-cache
+            openwrt/dl/rustc
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
