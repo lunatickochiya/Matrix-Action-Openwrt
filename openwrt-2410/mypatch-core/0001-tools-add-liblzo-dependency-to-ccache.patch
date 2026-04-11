@@ -1,0 +1,32 @@
+From b25d9bbed18100bd3e02b1de50bc9c2119124992 Mon Sep 17 00:00:00 2001
+From: lunatickochiya <55731491+lunatickochiya@users.noreply.github.com>
+Date: Sun, 12 Apr 2026 13:57:55 +0800
+Subject: [PATCH] tools: add liblzo dependency to ccache
+
+Ensure ccache is built before liblzo when CONFIG_CCACHE=y and CONFIG_SDK=y
+Description:
+
+When enabling both CONFIG_CCACHE=y and CONFIG_SDK=y, an issue occurs where liblzo compiles before ccache, causing a compilation error. This is because the ccache build is not properly ordered in the make process.
+
+This patch ensures that ccache is correctly built before liblzo by explicitly setting the compilation order in the Makefile. With this fix, ccache will be compiled before any other tools like liblzo, preventing the compilation error.
+
+Signed-off-by: Lunatic Kochiya <125438787@qq.com>
+---
+ tools/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/tools/Makefile b/tools/Makefile
+index 79d3954fef..bc998d63b8 100644
+--- a/tools/Makefile
++++ b/tools/Makefile
+@@ -160,6 +160,7 @@ $(foreach tool, $(filter-out zstd zlib xz pkgconf patch ninja meson libressl exp
+ tools-y += ccache xxhash
+ $(curdir)/xxhash/compile := $(curdir)/cmake/compile
+ $(curdir)/ccache/compile := $(curdir)/xxhash/compile
++$(curdir)/liblzo/compile := $(curdir)/ccache/compile
+ endif
+ 
+ # in case there is no patch tool on the host we need to make patch tool a
+-- 
+2.43.0
+
