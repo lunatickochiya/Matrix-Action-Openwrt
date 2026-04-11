@@ -334,10 +334,10 @@ jobs:
       if: env.Cache == '1' && !cancelled()
       with:
         mixkey: dl-gomod-rust${{ env.Branch }}
-        prefix: ${{ github.workspace }}/openwrt/dl
+        prefix: ${{ github.workspace }}/openwrt
         extra_paths: |
-            openwrt/dl/go-mod-cache
-            openwrt/dl/rustc
+            dl/go-mod-cache
+            dl/rustc
 
     - name: 下载包文件
       if: steps.config.outputs.status == 'success'
