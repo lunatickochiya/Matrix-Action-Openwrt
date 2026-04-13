@@ -320,8 +320,8 @@ jobs:
         if [ ${{ env.CachePKGS }} = 1 ]; then
         make package/libs/toolchain/compile -j$(($(nproc)+1)) || make -j1 V=s
         make package/kochiya/autoset/compile -j$(($(nproc)+1)) || make -j1 V=s
-        make feeds/packages/lang/rust/host/compile -j$(($(nproc)+1)) || make -j1 V=s
-        make feeds/packages/lang/golang/golang/host/compile -j$(($(nproc)+1)) || make -j1 V=s
+        # make feeds/packages/lang/rust/host/compile -j$(($(nproc)+1)) || make -j1 V=s
+        # make feeds/packages/lang/golang/golang/host/compile -j$(($(nproc)+1)) || make -j1 V=s
         fi
         echo "status=success" >> $GITHUB_OUTPUT
 
