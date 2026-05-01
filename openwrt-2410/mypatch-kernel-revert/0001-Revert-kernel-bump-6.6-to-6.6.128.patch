@@ -1,4 +1,4 @@
-From 716d4c262879bbb363307bde8b50743ecd7e4095 Mon Sep 17 00:00:00 2001
+From 0dc16b781f611ca185a949a2e55959ac6f84b534 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Mon, 13 Apr 2026 20:01:11 +0800
 Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.128"
@@ -19,12 +19,18 @@ This reverts commit 04b36e29d55d7a317d6dc4a0b8982e48264e2dbc.
 Revert "kernel: bump 6.6 to 6.6.133"
 
 This reverts commit 2b9f01bebcbe96abeb1d566e3e9715d1a6ae46f6.
+Revert "kernel: bump 6.6 to 6.6.134"
+
+This reverts commit b11cca05b12a0594535046a4a3267e62d09b6635.
+Revert "kernel: bump 6.6 to 6.6.135"
+
+This reverts commit 00da0d2bcee4c1706c6192e8d5b1e16ff05046ec.
 ---
  include/kernel-6.6                            |   4 +-
  ...-resource-set-range-and-size-helpers.patch |  73 ++++++++
  .../105-uart-add-en7523-support.patch         |   2 +-
  ...or-support-mtd-name-from-device-tree.patch |   2 +-
- .../900-unaligned_access_hacks.patch          |   8 +-
+ .../900-unaligned_access_hacks.patch          |  10 +-
  .../patches-6.6/910-mikrotik-rb4xx.patch      |   2 +-
  ...oup-Disable-cgroup-memory-by-default.patch |   8 +-
  ...Demote-deferral-errors-to-INFO-level.patch |   4 +-
@@ -75,7 +81,6 @@ This reverts commit 2b9f01bebcbe96abeb1d566e3e9715d1a6ae46f6.
  ...erride-of-kernel-s-default-NUMA-poli.patch |  10 +-
  ...l-command-line-to-disable-memory-cgr.patch |   8 +-
  ...d-support-for-setting-NAK-enhancemen.patch |   4 +-
- ...366-drm-Increase-plane_mask-to-64bit.patch |   2 +-
  ...port-for-Raspberry-Pi-RP1-ethernet-c.patch |   4 +-
  ...pci-Disable-Host-Memory-Buffer-usage.patch |   6 +-
  ...-kernel-command-line-to-disable-memo.patch |   2 +-
@@ -120,6 +125,7 @@ This reverts commit 2b9f01bebcbe96abeb1d566e3e9715d1a6ae46f6.
  ...vmem-core-Expose-cells-through-sysfs.patch |   4 +-
  ...factor-.add_cells-callback-arguments.patch |   2 +-
  ...mem-drop-nvmem_layout_get_match_data.patch |   2 +-
+ ...1-nvmem-imx-ocotp-ele-support-i.MX95.patch |   2 +-
  ...-support-for-PHY-LEDs-polarity-modes.patch |   4 +-
  ...rt-active-high-property-for-PHY-LEDs.patch |   2 +-
  ...et-free_netdev-exit-earlier-if-dummy.patch |   2 +-
@@ -127,12 +133,15 @@ This reverts commit 2b9f01bebcbe96abeb1d566e3e9715d1a6ae46f6.
  .../hack-6.6/200-tools_portability.patch      |   2 +-
  .../generic/hack-6.6/204-module_strip.patch   |  16 +-
  .../generic/hack-6.6/259-regmap_dynamic.patch |   2 +-
- .../721-net-add-packet-mangeling.patch        |   4 +-
+ .../721-net-add-packet-mangeling.patch        |   6 +-
  ...-r8152-add-LED-configuration-from-OF.patch |   8 +-
  .../790-SFP-GE-T-ignore-TX_FAULT.patch        |  29 ++-
+ ...malloc-tlb_vpn-array-to-avoid-stack-.patch |  60 ++++++
+ ...revent-a-TLB-shutdown-on-initial-uni.patch | 146 +++++++++++++++
  ...support-for-minor-aligned-partitions.patch |   6 +-
  .../pending-6.6/630-packet_socket_type.patch  |   6 +-
  .../pending-6.6/655-increase_skb_pad.patch    |   2 +-
+ ...Add-support-for-MAP-E-FMRs-mesh-mode.patch |  28 +--
  ...ng-with-source-address-failed-policy.patch |  22 +--
  ...680-net-add-TCP-fraglist-GRO-support.patch | 177 ++++++++++++++++--
  ...fraglist-segmentation-after-pull-fro.patch |  74 ++++++++
@@ -143,6 +152,7 @@ This reverts commit 2b9f01bebcbe96abeb1d566e3e9715d1a6ae46f6.
  ..._eth_soc-add-paths-and-SerDes-modes-.patch |  14 +-
  ...th_soc-reduce-rx-ring-size-for-older.patch |  16 +-
  ..._eth_soc-do-not-enable-page-pool-sta.patch |   4 +-
+ ...Fix-DMA-allocations-on-57766-devices.patch |   2 +-
  .../810-pci_disable_common_quirks.patch       |   6 +-
  .../pending-6.6/834-ledtrig-libata.patch      |   8 +-
  ...dsa-add-out-of-band-tagging-protocol.patch |   2 +-
@@ -163,6 +173,7 @@ This reverts commit 2b9f01bebcbe96abeb1d566e3e9715d1a6ae46f6.
  ...q-qcom-nvmem-add-support-for-IPQ6018.patch |   2 +-
  ...q-qcom-nvmem-add-support-for-IPQ8074.patch |   2 +-
  ...ers-ralink-Add-Ralink-System-Tick-Co.patch |   2 +-
+ ...0-mips-ralink-update-CPU-clock-index.patch |  58 ++++++
  ...e-to-enable-disable-the-cevt-r4k-irq.patch |   2 +-
  .../810-uvc-add-iPassion-iP2970-support.patch |   2 +-
  ...sfp-re-probe-modules-on-DEV_UP-event.patch |   2 +-
@@ -178,20 +189,23 @@ This reverts commit 2b9f01bebcbe96abeb1d566e3e9715d1a6ae46f6.
  ...ove-performance-usb-using-lowmem-for.patch |   2 +-
  ...dd-starfive-jh7100-hsuart-compatible.patch |   2 +-
  .../1009-net-stmmac-use-GFP_DMA32.patch       |   2 +-
- 158 files changed, 850 insertions(+), 425 deletions(-)
+ 163 files changed, 1131 insertions(+), 442 deletions(-)
  create mode 100644 target/linux/airoha/patches-6.6/083-01-v6.13-resource-Add-resource-set-range-and-size-helpers.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0291-media-i2c-ov5647-Correct-pixel-array-offset.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0292-media-i2c-ov5647-Correct-minimum-VBLANK-value.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0310-media-i2c-ov5647-Sensor-should-report-RAW-color-spac.patch
+ create mode 100644 target/linux/generic/pending-6.6/360-Revert-MIPS-mm-kmalloc-tlb_vpn-array-to-avoid-stack-.patch
+ create mode 100644 target/linux/generic/pending-6.6/361-Revert-MIPS-mm-Prevent-a-TLB-shutdown-on-initial-uni.patch
  create mode 100644 target/linux/generic/pending-6.6/685-net-gso-fix-tcp-fraglist-segmentation-after-pull-fro.patch
+ create mode 100644 target/linux/ramips/patches-6.6/100-mips-ralink-update-CPU-clock-index.patch
 
 diff --git a/include/kernel-6.6 b/include/kernel-6.6
-index fd1cd472f5..55a5b8c57c 100644
+index 711b5fb571..55a5b8c57c 100644
 --- a/include/kernel-6.6
 +++ b/include/kernel-6.6
 @@ -1,2 +1,2 @@
--LINUX_VERSION-6.6 = .133
--LINUX_KERNEL_HASH-6.6.133 = e6da5b8a3097a46df0e86cd72f3c4f4694652e79acf06673736af3255398f115
+-LINUX_VERSION-6.6 = .135
+-LINUX_KERNEL_HASH-6.6.135 = d3d238ede7169dedb642898af0cb1777e9913171eb1c750eb4d9f82350a7132a
 +LINUX_VERSION-6.6 = .127
 +LINUX_KERNEL_HASH-6.6.127 = a7cd9c97b4f0b31cc030bcdc60abe5434fffb2556e293f7438ce7909dff8c9fe
 diff --git a/target/linux/airoha/patches-6.6/083-01-v6.13-resource-Add-resource-set-range-and-size-helpers.patch b/target/linux/airoha/patches-6.6/083-01-v6.13-resource-Add-resource-set-range-and-size-helpers.patch
@@ -300,7 +314,7 @@ index 4e30817cdc..62d402625d 100644
   	struct mtd_info *mtd = &nor->mtd;
   	struct device *dev = nor->dev;
 diff --git a/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch b/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch
-index 99290d2a55..8c5824bcee 100644
+index a2e5c599f7..8c5824bcee 100644
 --- a/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch
 +++ b/target/linux/ath79/patches-6.6/900-unaligned_access_hacks.patch
 @@ -259,7 +259,7 @@ SVN-Revision: 35130
@@ -312,6 +326,15 @@ index 99290d2a55..8c5824bcee 100644
   	topt = (__be32 *)(t1 + 1);
   
   	if (tsecr) {
+@@ -295,7 +295,7 @@ SVN-Revision: 35130
+  					       &sin->sin6_addr);
+  			sin->sin6_scope_id = 0;
+  		}
+-@@ -854,12 +854,12 @@ int ip6_datagram_send_ctl(struct net *ne
++@@ -853,12 +853,12 @@ int ip6_datagram_send_ctl(struct net *ne
+  			}
+  
+  			if (fl6->flowlabel&IPV6_FLOWINFO_MASK) {
 @@ -312,7 +312,7 @@ SVN-Revision: 35130
   		case IPV6_2292HOPOPTS:
  --- a/net/ipv6/exthdrs.c
@@ -979,14 +1002,14 @@ index 18729e5a09..1c0558f7a1 100644
   	.driver = {
   		.name = "aht10",
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch b/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
-index 58120aa63b..64f734c016 100644
+index 25daf66225..64f734c016 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
 +++ b/target/linux/bcm27xx/patches-6.6/950-0441-Bluetooth-hci_sync-Add-fallback-bd-address-prop.patch
 @@ -20,7 +20,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
  
  --- a/net/bluetooth/hci_sync.c
  +++ b/net/bluetooth/hci_sync.c
--@@ -4947,6 +4947,7 @@ static const struct {
+-@@ -4954,6 +4954,7 @@ static const struct {
 +@@ -4941,6 +4941,7 @@ static const struct {
    */
   static int hci_dev_setup_sync(struct hci_dev *hdev)
@@ -995,7 +1018,7 @@ index 58120aa63b..64f734c016 100644
   	int ret = 0;
   	bool invalid_bdaddr;
   	size_t i;
--@@ -4975,7 +4976,8 @@ static int hci_dev_setup_sync(struct hci
+-@@ -4982,7 +4983,8 @@ static int hci_dev_setup_sync(struct hci
 +@@ -4969,7 +4970,8 @@ static int hci_dev_setup_sync(struct hci
   			 test_bit(HCI_QUIRK_USE_BDADDR_PROPERTY, &hdev->quirks);
   	if (!ret) {
@@ -1045,7 +1068,7 @@ index 2ccd1d75cb..fcf4e8bd7f 100644
   		mmc->caps |= MMC_CAP_UHS_DDR50;
   
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0518-net-macb-Also-set-DMA-coherent-mask.patch b/target/linux/bcm27xx/patches-6.6/950-0518-net-macb-Also-set-DMA-coherent-mask.patch
-index 2791a2cd8b..86e528ba3e 100644
+index 5e397286a8..86e528ba3e 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0518-net-macb-Also-set-DMA-coherent-mask.patch
 +++ b/target/linux/bcm27xx/patches-6.6/950-0518-net-macb-Also-set-DMA-coherent-mask.patch
 @@ -118,7 +118,7 @@ Signed-off-by: Jonathan Bell <jonathan@raspberrypi.com>
@@ -1216,7 +1239,7 @@ index 2791a2cd8b..86e528ba3e 100644
   static int __maybe_unused macb_suspend(struct device *dev)
   {
   	struct net_device *netdev = dev_get_drvdata(dev);
--@@ -5580,6 +5727,7 @@ static const struct dev_pm_ops macb_pm_o
+-@@ -5583,6 +5730,7 @@ static const struct dev_pm_ops macb_pm_o
 +@@ -5417,6 +5564,7 @@ static const struct dev_pm_ops macb_pm_o
   static struct platform_driver macb_driver = {
   	.probe		= macb_probe,
@@ -1416,14 +1439,14 @@ index 4ea40ba421..3049223910 100644
   		log->page_size = norm_file_page(t32, &log->l_size,
   						t32 == DefaultLogPageSize);
 diff --git a/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch b/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
-index c42b1b15f3..5b254943b4 100644
+index 3e11c03a1e..5b254943b4 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
 +++ b/target/linux/bcm27xx/patches-6.6/950-1218-Bluetooth-hci_sync-Fix-crash-on-NULL-parent.patch
 @@ -15,7 +15,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
  
  --- a/net/bluetooth/hci_sync.c
  +++ b/net/bluetooth/hci_sync.c
--@@ -4947,7 +4947,8 @@ static const struct {
+-@@ -4954,7 +4954,8 @@ static const struct {
 +@@ -4941,7 +4941,8 @@ static const struct {
    */
   static int hci_dev_setup_sync(struct hci_dev *hdev)
@@ -1607,19 +1630,6 @@ index 473962dc5f..1757ca7adb 100644
   	unsigned		dis_tx_ipgap_linecheck_quirk:1;
   	unsigned		resume_hs_terminations:1;
   	unsigned		ulpi_ext_vbus_drv:1;
-diff --git a/target/linux/bcm27xx/patches-6.6/950-1366-drm-Increase-plane_mask-to-64bit.patch b/target/linux/bcm27xx/patches-6.6/950-1366-drm-Increase-plane_mask-to-64bit.patch
-index 4e27839486..f3ae9be4fd 100644
---- a/target/linux/bcm27xx/patches-6.6/950-1366-drm-Increase-plane_mask-to-64bit.patch
-+++ b/target/linux/bcm27xx/patches-6.6/950-1366-drm-Increase-plane_mask-to-64bit.patch
-@@ -43,7 +43,7 @@ Signed-off-by: Dave Stevenson <dave.stevenson@raspberrypi.com>
-  retry_disable:
- --- a/drivers/gpu/drm/drm_mode_config.c
- +++ b/drivers/gpu/drm/drm_mode_config.c
--@@ -639,7 +639,7 @@ void drm_mode_config_validate(struct drm
-+@@ -636,7 +636,7 @@ void drm_mode_config_validate(struct drm
-  	struct drm_encoder *encoder;
-  	struct drm_crtc *crtc;
-  	struct drm_plane *plane;
 diff --git a/target/linux/bcm27xx/patches-6.6/950-1423-net-macb-Add-support-for-Raspberry-Pi-RP1-ethernet-c.patch b/target/linux/bcm27xx/patches-6.6/950-1423-net-macb-Add-support-for-Raspberry-Pi-RP1-ethernet-c.patch
 index e8de156041..1d91eb6b4b 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-1423-net-macb-Add-support-for-Raspberry-Pi-RP1-ethernet-c.patch
@@ -1805,14 +1815,14 @@ index 090e72d007..a7186208b2 100644
   	brcmnand_rmw_reg(ctrl, BRCMNAND_CS_XOR, 0xff, 0, 0);
   
 diff --git a/target/linux/generic/backport-6.6/600-v6.10-net-Remove-conditional-threaded-NAPI-wakeup-based-on.patch b/target/linux/generic/backport-6.6/600-v6.10-net-Remove-conditional-threaded-NAPI-wakeup-based-on.patch
-index d74d8c7c08..745e6bbc15 100644
+index 5fa95d40be..745e6bbc15 100644
 --- a/target/linux/generic/backport-6.6/600-v6.10-net-Remove-conditional-threaded-NAPI-wakeup-based-on.patch
 +++ b/target/linux/generic/backport-6.6/600-v6.10-net-Remove-conditional-threaded-NAPI-wakeup-based-on.patch
 @@ -32,7 +32,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
  
  --- a/net/core/dev.c
  +++ b/net/core/dev.c
--@@ -4552,13 +4552,7 @@ static inline void ____napi_schedule(str
+-@@ -4564,13 +4564,7 @@ static inline void ____napi_schedule(str
 +@@ -4539,13 +4539,7 @@ static inline void ____napi_schedule(str
   		 */
   		thread = READ_ONCE(napi->thread);
@@ -1821,7 +1831,7 @@ index d74d8c7c08..745e6bbc15 100644
   			wake_up_process(thread);
   			return;
   		}
--@@ -6714,8 +6708,6 @@ static int napi_poll(struct napi_struct
+-@@ -6726,8 +6720,6 @@ static int napi_poll(struct napi_struct
 +@@ -6701,8 +6695,6 @@ static int napi_poll(struct napi_struct
   
   static int napi_thread_wait(struct napi_struct *napi)
@@ -1830,20 +1840,20 @@ index d74d8c7c08..745e6bbc15 100644
   	set_current_state(TASK_INTERRUPTIBLE);
   
   	while (!kthread_should_stop()) {
--@@ -6724,15 +6716,13 @@ static int napi_thread_wait(struct napi_
+-@@ -6736,15 +6728,13 @@ static int napi_thread_wait(struct napi_
 +@@ -6711,15 +6703,13 @@ static int napi_thread_wait(struct napi_
   		 * Testing SCHED bit is not enough because SCHED bit might be
   		 * set by some other busy poll thread or by napi_disable().
   		 */
 diff --git a/target/linux/generic/backport-6.6/601-v6.10-net-Allow-to-use-SMP-threads-for-backlog-NAPI.patch b/target/linux/generic/backport-6.6/601-v6.10-net-Allow-to-use-SMP-threads-for-backlog-NAPI.patch
-index 03e9debe5e..070cdcd539 100644
+index 8d08f66e45..070cdcd539 100644
 --- a/target/linux/generic/backport-6.6/601-v6.10-net-Allow-to-use-SMP-threads-for-backlog-NAPI.patch
 +++ b/target/linux/generic/backport-6.6/601-v6.10-net-Allow-to-use-SMP-threads-for-backlog-NAPI.patch
 @@ -108,7 +108,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
   static inline void rps_lock_irqsave(struct softnet_data *sd,
   				    unsigned long *flags)
   {
--@@ -4520,6 +4546,7 @@ EXPORT_SYMBOL(__dev_direct_xmit);
+-@@ -4532,6 +4558,7 @@ EXPORT_SYMBOL(__dev_direct_xmit);
 +@@ -4507,6 +4533,7 @@ EXPORT_SYMBOL(__dev_direct_xmit);
   /*************************************************************************
    *			Receiver routines
@@ -1852,7 +1862,7 @@ index 03e9debe5e..070cdcd539 100644
   
   int netdev_max_backlog __read_mostly = 1000;
   EXPORT_SYMBOL(netdev_max_backlog);
--@@ -4552,12 +4579,16 @@ static inline void ____napi_schedule(str
+-@@ -4564,12 +4591,16 @@ static inline void ____napi_schedule(str
 +@@ -4539,12 +4566,16 @@ static inline void ____napi_schedule(str
   		 */
   		thread = READ_ONCE(napi->thread);
@@ -1861,7 +1871,7 @@ index 03e9debe5e..070cdcd539 100644
   	list_add_tail(&napi->poll_list, &sd->poll_list);
   	WRITE_ONCE(napi->list_owner, smp_processor_id());
   	/* If not called from net_rx_action()
--@@ -4803,6 +4834,11 @@ static void napi_schedule_rps(struct sof
+-@@ -4815,6 +4846,11 @@ static void napi_schedule_rps(struct sof
 +@@ -4790,6 +4821,11 @@ static void napi_schedule_rps(struct sof
   
   #ifdef CONFIG_RPS
@@ -1870,7 +1880,7 @@ index 03e9debe5e..070cdcd539 100644
   		sd->rps_ipi_next = mysd->rps_ipi_list;
   		mysd->rps_ipi_list = sd;
   
--@@ -6026,7 +6062,7 @@ static void net_rps_action_and_irq_enabl
+-@@ -6038,7 +6074,7 @@ static void net_rps_action_and_irq_enabl
 +@@ -6013,7 +6049,7 @@ static void net_rps_action_and_irq_enabl
   #ifdef CONFIG_RPS
   	struct softnet_data *remsd = sd->rps_ipi_list;
@@ -1879,7 +1889,7 @@ index 03e9debe5e..070cdcd539 100644
   		sd->rps_ipi_list = NULL;
   
   		local_irq_enable();
--@@ -6041,7 +6077,7 @@ static void net_rps_action_and_irq_enabl
+-@@ -6053,7 +6089,7 @@ static void net_rps_action_and_irq_enabl
 +@@ -6028,7 +6064,7 @@ static void net_rps_action_and_irq_enabl
   static bool sd_has_rps_ipi_waiting(struct softnet_data *sd)
   {
@@ -1888,7 +1898,7 @@ index 03e9debe5e..070cdcd539 100644
   #else
   	return false;
   #endif
--@@ -6085,7 +6121,7 @@ static int process_backlog(struct napi_s
+-@@ -6097,7 +6133,7 @@ static int process_backlog(struct napi_s
 +@@ -6072,7 +6108,7 @@ static int process_backlog(struct napi_s
   			 * We can use a plain write instead of clear_bit(),
   			 * and we dont need an smp_mb() memory barrier.
@@ -1897,7 +1907,7 @@ index 03e9debe5e..070cdcd539 100644
   			again = false;
   		} else {
   			skb_queue_splice_tail_init(&sd->input_pkt_queue,
--@@ -6751,43 +6787,48 @@ static void skb_defer_free_flush(struct
+-@@ -6763,43 +6799,48 @@ static void skb_defer_free_flush(struct
 +@@ -6738,43 +6774,48 @@ static void skb_defer_free_flush(struct
   	}
   }
@@ -1906,7 +1916,7 @@ index 03e9debe5e..070cdcd539 100644
   	return 0;
   }
   
--@@ -11372,7 +11413,7 @@ static int dev_cpu_dead(unsigned int old
+-@@ -11384,7 +11425,7 @@ static int dev_cpu_dead(unsigned int old
 +@@ -11359,7 +11400,7 @@ static int dev_cpu_dead(unsigned int old
   
   		list_del_init(&napi->poll_list);
@@ -1915,7 +1925,7 @@ index 03e9debe5e..070cdcd539 100644
   		else
   			____napi_schedule(sd, napi);
   	}
--@@ -11380,12 +11421,14 @@ static int dev_cpu_dead(unsigned int old
+-@@ -11392,12 +11433,14 @@ static int dev_cpu_dead(unsigned int old
 +@@ -11367,12 +11408,14 @@ static int dev_cpu_dead(unsigned int old
   	raise_softirq_irqoff(NET_TX_SOFTIRQ);
   	local_irq_enable();
@@ -1924,7 +1934,7 @@ index 03e9debe5e..070cdcd539 100644
   
   	/* Process offline CPU's input_pkt_queue */
   	while ((skb = __skb_dequeue(&oldsd->process_queue))) {
--@@ -11648,6 +11691,38 @@ static struct pernet_operations __net_in
+-@@ -11660,6 +11703,38 @@ static struct pernet_operations __net_in
 +@@ -11635,6 +11678,38 @@ static struct pernet_operations __net_in
    *
    */
@@ -1933,33 +1943,33 @@ index 03e9debe5e..070cdcd539 100644
   /*
    *       This is called single threaded during boot, so no need
    *       to take the rtnl semaphore.
--@@ -11698,7 +11773,10 @@ static int __init net_dev_init(void)
+-@@ -11710,7 +11785,10 @@ static int __init net_dev_init(void)
 +@@ -11685,7 +11760,10 @@ static int __init net_dev_init(void)
   		init_gro_hash(&sd->backlog);
   		sd->backlog.poll = process_backlog;
   		sd->backlog.weight = weight_p;
 diff --git a/target/linux/generic/backport-6.6/602-v6.10-net-Use-backlog-NAPI-to-clean-up-the-defer_list.patch b/target/linux/generic/backport-6.6/602-v6.10-net-Use-backlog-NAPI-to-clean-up-the-defer_list.patch
-index 869499f228..58d3f27fbe 100644
+index 56fbd130b3..58d3f27fbe 100644
 --- a/target/linux/generic/backport-6.6/602-v6.10-net-Use-backlog-NAPI-to-clean-up-the-defer_list.patch
 +++ b/target/linux/generic/backport-6.6/602-v6.10-net-Use-backlog-NAPI-to-clean-up-the-defer_list.patch
 @@ -82,7 +82,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
   		spin_unlock_irq(&sd->input_pkt_queue.lock);
   	else if (!IS_ENABLED(CONFIG_PREEMPT_RT))
   		local_irq_enable();
--@@ -4853,6 +4853,23 @@ static void napi_schedule_rps(struct sof
+-@@ -4865,6 +4865,23 @@ static void napi_schedule_rps(struct sof
 +@@ -4840,6 +4840,23 @@ static void napi_schedule_rps(struct sof
   	__napi_schedule_irqoff(&mysd->backlog);
   }
   
 diff --git a/target/linux/generic/backport-6.6/603-v6.10-net-Rename-rps_lock-to-backlog_lock.patch b/target/linux/generic/backport-6.6/603-v6.10-net-Rename-rps_lock-to-backlog_lock.patch
-index b32db220f6..021ebc3fa0 100644
+index 97ba78a905..021ebc3fa0 100644
 --- a/target/linux/generic/backport-6.6/603-v6.10-net-Rename-rps_lock-to-backlog_lock.patch
 +++ b/target/linux/generic/backport-6.6/603-v6.10-net-Rename-rps_lock-to-backlog_lock.patch
 @@ -67,7 +67,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
   {
   	if (IS_ENABLED(CONFIG_RPS) || use_backlog_threads())
   		spin_unlock_irq(&sd->input_pkt_queue.lock);
--@@ -4858,12 +4858,12 @@ void kick_defer_list_purge(struct softne
+-@@ -4870,12 +4870,12 @@ void kick_defer_list_purge(struct softne
 +@@ -4845,12 +4845,12 @@ void kick_defer_list_purge(struct softne
   	unsigned long flags;
   
@@ -1968,7 +1978,7 @@ index b32db220f6..021ebc3fa0 100644
   
   	} else if (!cmpxchg(&sd->defer_ipi_scheduled, 0, 1)) {
   		smp_call_function_single_async(cpu, &sd->defer_csd);
--@@ -4925,7 +4925,7 @@ static int enqueue_to_backlog(struct sk_
+-@@ -4937,7 +4937,7 @@ static int enqueue_to_backlog(struct sk_
 +@@ -4912,7 +4912,7 @@ static int enqueue_to_backlog(struct sk_
   	reason = SKB_DROP_REASON_NOT_SPECIFIED;
   	sd = &per_cpu(softnet_data, cpu);
@@ -1977,7 +1987,7 @@ index b32db220f6..021ebc3fa0 100644
   	if (!netif_running(skb->dev))
   		goto drop;
   	qlen = skb_queue_len(&sd->input_pkt_queue);
--@@ -4934,7 +4934,7 @@ static int enqueue_to_backlog(struct sk_
+-@@ -4946,7 +4946,7 @@ static int enqueue_to_backlog(struct sk_
 +@@ -4921,7 +4921,7 @@ static int enqueue_to_backlog(struct sk_
   enqueue:
   			__skb_queue_tail(&sd->input_pkt_queue, skb);
@@ -1986,7 +1996,7 @@ index b32db220f6..021ebc3fa0 100644
   			return NET_RX_SUCCESS;
   		}
   
--@@ -4949,7 +4949,7 @@ enqueue:
+-@@ -4961,7 +4961,7 @@ enqueue:
 +@@ -4936,7 +4936,7 @@ enqueue:
   
   drop:
@@ -1995,7 +2005,7 @@ index b32db220f6..021ebc3fa0 100644
   
   	dev_core_stats_rx_dropped_inc(skb->dev);
   	kfree_skb_reason(skb, reason);
--@@ -5980,7 +5980,7 @@ static void flush_backlog(struct work_st
+-@@ -5992,7 +5992,7 @@ static void flush_backlog(struct work_st
 +@@ -5967,7 +5967,7 @@ static void flush_backlog(struct work_st
   	local_bh_disable();
   	sd = this_cpu_ptr(&softnet_data);
@@ -2004,7 +2014,7 @@ index b32db220f6..021ebc3fa0 100644
   	skb_queue_walk_safe(&sd->input_pkt_queue, skb, tmp) {
   		if (skb->dev->reg_state == NETREG_UNREGISTERING) {
   			__skb_unlink(skb, &sd->input_pkt_queue);
--@@ -5988,7 +5988,7 @@ static void flush_backlog(struct work_st
+-@@ -6000,7 +6000,7 @@ static void flush_backlog(struct work_st
 +@@ -5975,7 +5975,7 @@ static void flush_backlog(struct work_st
   			input_queue_head_incr(sd);
   		}
@@ -2013,7 +2023,7 @@ index b32db220f6..021ebc3fa0 100644
   
   	skb_queue_walk_safe(&sd->process_queue, skb, tmp) {
   		if (skb->dev->reg_state == NETREG_UNREGISTERING) {
--@@ -6006,14 +6006,14 @@ static bool flush_required(int cpu)
+-@@ -6018,14 +6018,14 @@ static bool flush_required(int cpu)
 +@@ -5993,14 +5993,14 @@ static bool flush_required(int cpu)
   	struct softnet_data *sd = &per_cpu(softnet_data, cpu);
   	bool do_flush;
@@ -2022,7 +2032,7 @@ index b32db220f6..021ebc3fa0 100644
   
   	return do_flush;
   #endif
--@@ -6128,7 +6128,7 @@ static int process_backlog(struct napi_s
+-@@ -6140,7 +6140,7 @@ static int process_backlog(struct napi_s
 +@@ -6115,7 +6115,7 @@ static int process_backlog(struct napi_s
   
   		}
@@ -2031,7 +2041,7 @@ index b32db220f6..021ebc3fa0 100644
   		if (skb_queue_empty(&sd->input_pkt_queue)) {
   			/*
   			 * Inline a custom version of __napi_complete().
--@@ -6144,7 +6144,7 @@ static int process_backlog(struct napi_s
+-@@ -6156,7 +6156,7 @@ static int process_backlog(struct napi_s
 +@@ -6131,7 +6131,7 @@ static int process_backlog(struct napi_s
   			skb_queue_splice_tail_init(&sd->input_pkt_queue,
   						   &sd->process_queue);
@@ -2050,14 +2060,14 @@ index 14fff2f381..8edbce2168 100644
   		uh->check = gso_make_checksum(seg, ~check) ? : CSUM_MANGLED_0;
   
 diff --git a/target/linux/generic/backport-6.6/611-02-v6.11-net-Make-USO-depend-on-CSUM-offload.patch b/target/linux/generic/backport-6.6/611-02-v6.11-net-Make-USO-depend-on-CSUM-offload.patch
-index c556a071ac..2d3f9b1deb 100644
+index 71075e4613..2d3f9b1deb 100644
 --- a/target/linux/generic/backport-6.6/611-02-v6.11-net-Make-USO-depend-on-CSUM-offload.patch
 +++ b/target/linux/generic/backport-6.6/611-02-v6.11-net-Make-USO-depend-on-CSUM-offload.patch
 @@ -20,7 +20,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
  
  --- a/net/core/dev.c
  +++ b/net/core/dev.c
--@@ -9834,6 +9834,15 @@ static void netdev_sync_lower_features(s
+-@@ -9846,6 +9846,15 @@ static void netdev_sync_lower_features(s
 +@@ -9821,6 +9821,15 @@ static void netdev_sync_lower_features(s
   	}
   }
@@ -2066,7 +2076,7 @@ index c556a071ac..2d3f9b1deb 100644
   static netdev_features_t netdev_fix_features(struct net_device *dev,
   	netdev_features_t features)
   {
--@@ -9915,15 +9924,9 @@ static netdev_features_t netdev_fix_feat
+-@@ -9927,15 +9936,9 @@ static netdev_features_t netdev_fix_feat
 +@@ -9902,15 +9911,9 @@ static netdev_features_t netdev_fix_feat
   		features &= ~NETIF_F_LRO;
   	}
@@ -2075,33 +2085,33 @@ index c556a071ac..2d3f9b1deb 100644
   	}
   
   	if ((features & NETIF_F_HW_TLS_RX) && !(features & NETIF_F_RXCSUM)) {
--@@ -9931,6 +9934,11 @@ static netdev_features_t netdev_fix_feat
+-@@ -9943,6 +9946,11 @@ static netdev_features_t netdev_fix_feat
 +@@ -9918,6 +9921,11 @@ static netdev_features_t netdev_fix_feat
   		features &= ~NETIF_F_HW_TLS_RX;
   	}
   
 diff --git a/target/linux/generic/backport-6.6/612-v6.9-net-get-stats64-if-device-if-driver-is-configured.patch b/target/linux/generic/backport-6.6/612-v6.9-net-get-stats64-if-device-if-driver-is-configured.patch
-index cd569627c3..753253f220 100644
+index 3d56cf2bb5..753253f220 100644
 --- a/target/linux/generic/backport-6.6/612-v6.9-net-get-stats64-if-device-if-driver-is-configured.patch
 +++ b/target/linux/generic/backport-6.6/612-v6.9-net-get-stats64-if-device-if-driver-is-configured.patch
 @@ -18,7 +18,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
  
  --- a/net/core/dev.c
  +++ b/net/core/dev.c
--@@ -10741,6 +10741,8 @@ struct rtnl_link_stats64 *dev_get_stats(
+-@@ -10753,6 +10753,8 @@ struct rtnl_link_stats64 *dev_get_stats(
 +@@ -10728,6 +10728,8 @@ struct rtnl_link_stats64 *dev_get_stats(
   		ops->ndo_get_stats64(dev, storage);
   	} else if (ops->ndo_get_stats) {
   		netdev_stats_to_stats64(storage, ops->ndo_get_stats(dev));
 diff --git a/target/linux/generic/backport-6.6/700-v6.10-net-create-a-dummy-net_device-allocator.patch b/target/linux/generic/backport-6.6/700-v6.10-net-create-a-dummy-net_device-allocator.patch
-index 9c89d1ddb1..a9954193a4 100644
+index 10d97f8a4f..a9954193a4 100644
 --- a/target/linux/generic/backport-6.6/700-v6.10-net-create-a-dummy-net_device-allocator.patch
 +++ b/target/linux/generic/backport-6.6/700-v6.10-net-create-a-dummy-net_device-allocator.patch
 @@ -49,7 +49,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
   				    unsigned char name_assign_type,
  --- a/net/core/dev.c
  +++ b/net/core/dev.c
--@@ -10428,25 +10428,12 @@ err_free_name:
+-@@ -10440,25 +10440,12 @@ err_free_name:
 +@@ -10415,25 +10415,12 @@ err_free_name:
   }
   EXPORT_SYMBOL(register_netdevice);
@@ -2110,7 +2120,7 @@ index 9c89d1ddb1..a9954193a4 100644
   	/* make sure we BUG if trying to hit standard
   	 * register/unregister code path
   	 */
--@@ -10466,12 +10453,32 @@ int init_dummy_netdev(struct net_device
+-@@ -10478,12 +10465,32 @@ int init_dummy_netdev(struct net_device
 +@@ -10453,12 +10440,32 @@ int init_dummy_netdev(struct net_device
   	 * because users of this 'device' dont need to change
   	 * its refcount.
@@ -2119,7 +2129,7 @@ index 9c89d1ddb1..a9954193a4 100644
   /**
    *	register_netdev	- register a network device
    *	@dev: device to register
--@@ -11065,6 +11072,19 @@ void free_netdev(struct net_device *dev)
+-@@ -11077,6 +11084,19 @@ void free_netdev(struct net_device *dev)
 +@@ -11052,6 +11059,19 @@ void free_netdev(struct net_device *dev)
   EXPORT_SYMBOL(free_netdev);
   
@@ -2637,14 +2647,14 @@ index 7d5fe535be..b86935f9af 100644
   		return -EINVAL;
   
 diff --git a/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch b/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch
-index 0378f02ced..954fc2b097 100644
+index 4eae770ef4..954fc2b097 100644
 --- a/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch
 +++ b/target/linux/generic/backport-6.6/770-v6.7-net-introduce-napi_is_scheduled-helper.patch
 @@ -85,7 +85,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
   /**
  --- a/net/core/dev.c
  +++ b/net/core/dev.c
--@@ -6681,7 +6681,7 @@ static int __napi_poll(struct napi_struc
+-@@ -6693,7 +6693,7 @@ static int __napi_poll(struct napi_struc
 +@@ -6668,7 +6668,7 @@ static int __napi_poll(struct napi_struc
   	 * accidentally calling ->poll() when NAPI is not scheduled.
   	 */
@@ -2708,7 +2718,7 @@ index 55e1b09313..e0e3f7b5bd 100644
   	}
   
 diff --git a/target/linux/generic/backport-6.6/785-01-v6.8-net-sfp-rework-the-RollBall-PHY-waiting-code.patch b/target/linux/generic/backport-6.6/785-01-v6.8-net-sfp-rework-the-RollBall-PHY-waiting-code.patch
-index 93edf9e60f..fe170d0a68 100644
+index 5bf35d8c96..fe170d0a68 100644
 --- a/target/linux/generic/backport-6.6/785-01-v6.8-net-sfp-rework-the-RollBall-PHY-waiting-code.patch
 +++ b/target/linux/generic/backport-6.6/785-01-v6.8-net-sfp-rework-the-RollBall-PHY-waiting-code.patch
 @@ -36,7 +36,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
@@ -2744,7 +2754,7 @@ index 93edf9e60f..fe170d0a68 100644
   static void sfp_fixup_rollball_cc(struct sfp *sfp)
   {
   	sfp_fixup_rollball(sfp);
--@@ -2364,7 +2362,7 @@ static int sfp_sm_mod_probe(struct sfp *
+-@@ -2369,7 +2367,7 @@ static int sfp_sm_mod_probe(struct sfp *
 +@@ -2323,7 +2321,7 @@ static int sfp_sm_mod_probe(struct sfp *
   		mask |= SFP_F_RS1;
   
@@ -2755,7 +2765,7 @@ index 93edf9e60f..fe170d0a68 100644
 - 	sfp->state_ignore_mask = 0;
 + 	sfp->tx_fault_ignore = false;
   
--@@ -2600,10 +2598,9 @@ static void sfp_sm_main(struct sfp *sfp,
+-@@ -2605,10 +2603,9 @@ static void sfp_sm_main(struct sfp *sfp,
 +@@ -2557,10 +2555,9 @@ static void sfp_sm_main(struct sfp *sfp,
   
   		/* We need to check the TX_FAULT state, which is not defined
@@ -2764,7 +2774,7 @@ index 93edf9e60f..fe170d0a68 100644
   		break;
   
   	case SFP_S_WAIT:
--@@ -2617,8 +2614,8 @@ static void sfp_sm_main(struct sfp *sfp,
+-@@ -2622,8 +2619,8 @@ static void sfp_sm_main(struct sfp *sfp,
 +@@ -2574,8 +2571,8 @@ static void sfp_sm_main(struct sfp *sfp,
   			 * deasserting.
   			 */
@@ -2773,13 +2783,13 @@ index 93edf9e60f..fe170d0a68 100644
   			else
   				timeout = 1;
   
--@@ -2661,7 +2658,11 @@ static void sfp_sm_main(struct sfp *sfp,
+-@@ -2666,7 +2663,11 @@ static void sfp_sm_main(struct sfp *sfp,
 +@@ -2618,7 +2615,11 @@ static void sfp_sm_main(struct sfp *sfp,
   		ret = sfp_sm_probe_for_phy(sfp);
   		if (ret == -ENODEV) {
   			if (--sfp->sm_phy_retries) {
 diff --git a/target/linux/generic/backport-6.6/785-02-v6.8-net-sfp-fix-PHY-discovery-for-FS-SFP-10G-T-module.patch b/target/linux/generic/backport-6.6/785-02-v6.8-net-sfp-fix-PHY-discovery-for-FS-SFP-10G-T-module.patch
-index a9a14f7735..2b177fbe90 100644
+index 73ab288534..2b177fbe90 100644
 --- a/target/linux/generic/backport-6.6/785-02-v6.8-net-sfp-fix-PHY-discovery-for-FS-SFP-10G-T-module.patch
 +++ b/target/linux/generic/backport-6.6/785-02-v6.8-net-sfp-fix-PHY-discovery-for-FS-SFP-10G-T-module.patch
 @@ -30,7 +30,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
@@ -2804,7 +2814,7 @@ index a9a14f7735..2b177fbe90 100644
   }
   
   static void sfp_fixup_halny_gsfp(struct sfp *sfp)
--@@ -2362,6 +2369,7 @@ static int sfp_sm_mod_probe(struct sfp *
+-@@ -2367,6 +2374,7 @@ static int sfp_sm_mod_probe(struct sfp *
 +@@ -2321,6 +2328,7 @@ static int sfp_sm_mod_probe(struct sfp *
   		mask |= SFP_F_RS1;
   
@@ -2813,7 +2823,7 @@ index a9a14f7735..2b177fbe90 100644
   	sfp->phy_t_retry = T_PHY_RETRY;
   
 - 	sfp->state_ignore_mask = 0;
--@@ -2598,9 +2606,10 @@ static void sfp_sm_main(struct sfp *sfp,
+-@@ -2603,9 +2611,10 @@ static void sfp_sm_main(struct sfp *sfp,
 + 	sfp->tx_fault_ignore = false;
 +@@ -2555,9 +2563,10 @@ static void sfp_sm_main(struct sfp *sfp,
   
@@ -2823,20 +2833,20 @@ index a9a14f7735..2b177fbe90 100644
   		break;
   
   	case SFP_S_WAIT:
--@@ -2614,8 +2623,8 @@ static void sfp_sm_main(struct sfp *sfp,
+-@@ -2619,8 +2628,8 @@ static void sfp_sm_main(struct sfp *sfp,
 +@@ -2571,8 +2580,8 @@ static void sfp_sm_main(struct sfp *sfp,
   			 * deasserting.
   			 */
   			timeout = sfp->module_t_start_up;
 diff --git a/target/linux/generic/backport-6.6/785-03-v6.10-net-sfp-update-comment-for-FS-SFP-10G-T-quirk.patch b/target/linux/generic/backport-6.6/785-03-v6.10-net-sfp-update-comment-for-FS-SFP-10G-T-quirk.patch
-index 0acf53940f..543d13a763 100644
+index ed2556601f..543d13a763 100644
 --- a/target/linux/generic/backport-6.6/785-03-v6.10-net-sfp-update-comment-for-FS-SFP-10G-T-quirk.patch
 +++ b/target/linux/generic/backport-6.6/785-03-v6.10-net-sfp-update-comment-for-FS-SFP-10G-T-quirk.patch
 @@ -22,9 +22,9 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
  
  --- a/drivers/net/phy/sfp.c
  +++ b/drivers/net/phy/sfp.c
--@@ -494,8 +494,9 @@ static const struct sfp_quirk sfp_quirks
+-@@ -499,8 +499,9 @@ static const struct sfp_quirk sfp_quirks
 +@@ -456,8 +456,9 @@ static const struct sfp_quirk sfp_quirks
   	SFP_QUIRK("ALCATELLUCENT", "3FE46541AA", sfp_quirk_2500basex,
 - 		  sfp_fixup_nokia),
@@ -2845,7 +2855,7 @@ index 0acf53940f..543d13a763 100644
  -	// Fiberstore SFP-10G-T doesn't identify as copper, and uses the
  -	// Rollball protocol to talk to the PHY.
 diff --git a/target/linux/generic/backport-6.6/785-04-v6.10-net-sfp-enhance-quirk-for-Fibrestore-2.5G-copper-SFP-module.patch b/target/linux/generic/backport-6.6/785-04-v6.10-net-sfp-enhance-quirk-for-Fibrestore-2.5G-copper-SFP-module.patch
-index c517c5acd4..67690b087e 100644
+index 3e4041e1d6..67690b087e 100644
 --- a/target/linux/generic/backport-6.6/785-04-v6.10-net-sfp-enhance-quirk-for-Fibrestore-2.5G-copper-SFP-module.patch
 +++ b/target/linux/generic/backport-6.6/785-04-v6.10-net-sfp-enhance-quirk-for-Fibrestore-2.5G-copper-SFP-module.patch
 @@ -27,7 +27,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
@@ -2861,7 +2871,7 @@ index c517c5acd4..67690b087e 100644
   static void sfp_fixup_halny_gsfp(struct sfp *sfp)
   {
   	/* Ignore the TX_FAULT and LOS signals on this module.
--@@ -499,6 +504,10 @@ static const struct sfp_quirk sfp_quirks
+-@@ -504,6 +509,10 @@ static const struct sfp_quirk sfp_quirks
 +@@ -461,6 +466,10 @@ static const struct sfp_quirk sfp_quirks
   	// PHY.
   	SFP_QUIRK_F("FS", "SFP-10G-T", sfp_fixup_fs_10gt),
@@ -2870,7 +2880,7 @@ index c517c5acd4..67690b087e 100644
   	// Fiberstore GPON-ONU-34-20BI can operate at 2500base-X, but report 1.2GBd
   	// NRZ in their EEPROM
   	SFP_QUIRK("FS", "GPON-ONU-34-20BI", sfp_quirk_2500basex,
--@@ -515,9 +524,6 @@ static const struct sfp_quirk sfp_quirks
+-@@ -520,9 +529,6 @@ static const struct sfp_quirk sfp_quirks
 +@@ -477,9 +486,6 @@ static const struct sfp_quirk sfp_quirks
   	SFP_QUIRK("HUAWEI", "MA5671A", sfp_quirk_2500basex,
 - 		  sfp_fixup_ignore_tx_fault_and_los),
@@ -2879,7 +2889,7 @@ index c517c5acd4..67690b087e 100644
  -	// FS 2.5G Base-T
  -	SFP_QUIRK_M("FS", "SFP-2.5G-T", sfp_quirk_oem_2_5g),
 diff --git a/target/linux/generic/backport-6.6/785-05-v6.15-net-sfp-add-quirk-for-FS-SFP-10GM-T-copper-SFP-module.patch b/target/linux/generic/backport-6.6/785-05-v6.15-net-sfp-add-quirk-for-FS-SFP-10GM-T-copper-SFP-module.patch
-index 6aef7acdb0..740b3ea268 100644
+index 9d5058c98a..740b3ea268 100644
 --- a/target/linux/generic/backport-6.6/785-05-v6.15-net-sfp-add-quirk-for-FS-SFP-10GM-T-copper-SFP-module.patch
 +++ b/target/linux/generic/backport-6.6/785-05-v6.15-net-sfp-add-quirk-for-FS-SFP-10GM-T-copper-SFP-module.patch
 @@ -16,7 +16,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
@@ -2904,7 +2914,7 @@ index 6aef7acdb0..740b3ea268 100644
   }
   
   static void sfp_fixup_halny_gsfp(struct sfp *sfp)
--@@ -504,9 +504,10 @@ static const struct sfp_quirk sfp_quirks
+-@@ -509,9 +509,10 @@ static const struct sfp_quirk sfp_quirks
 +@@ -466,9 +466,10 @@ static const struct sfp_quirk sfp_quirks
   	// PHY.
   	SFP_QUIRK_F("FS", "SFP-10G-T", sfp_fixup_fs_10gt),
@@ -3112,6 +3122,19 @@ index 2a7909c571..b55696e424 100644
   }
   EXPORT_SYMBOL_GPL(nvmem_layout_unregister);
   
+diff --git a/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch b/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch
+index 5a641f0255..04ac6f1334 100644
+--- a/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch
++++ b/target/linux/generic/backport-6.6/823-v6.12-0001-nvmem-imx-ocotp-ele-support-i.MX95.patch
+@@ -40,7 +40,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+  	}
+  
+  	memcpy(val, ((u8 *)p) + skipbytes, bytes);
+-@@ -183,8 +187,30 @@ static const struct ocotp_devtype_data i
++@@ -182,8 +186,30 @@ static const struct ocotp_devtype_data i
+  	},
+  };
+  
 diff --git a/target/linux/generic/backport-6.6/835-v6.9-net-phy-add-support-for-PHY-LEDs-polarity-modes.patch b/target/linux/generic/backport-6.6/835-v6.9-net-phy-add-support-for-PHY-LEDs-polarity-modes.patch
 index d22cd516b6..6cd25416d1 100644
 --- a/target/linux/generic/backport-6.6/835-v6.9-net-phy-add-support-for-PHY-LEDs-polarity-modes.patch
@@ -3148,14 +3171,14 @@ index dec26a9eed..6c271f8a23 100644
   		return -EINVAL;
   
 diff --git a/target/linux/generic/backport-6.6/900-v6.11-net-free_netdev-exit-earlier-if-dummy.patch b/target/linux/generic/backport-6.6/900-v6.11-net-free_netdev-exit-earlier-if-dummy.patch
-index 15bcd688bc..17d4a909b1 100644
+index a764149f1d..17d4a909b1 100644
 --- a/target/linux/generic/backport-6.6/900-v6.11-net-free_netdev-exit-earlier-if-dummy.patch
 +++ b/target/linux/generic/backport-6.6/900-v6.11-net-free_netdev-exit-earlier-if-dummy.patch
 @@ -23,7 +23,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  
  --- a/net/core/dev.c
  +++ b/net/core/dev.c
--@@ -11058,7 +11058,8 @@ void free_netdev(struct net_device *dev)
+-@@ -11070,7 +11070,8 @@ void free_netdev(struct net_device *dev)
 +@@ -11045,7 +11045,8 @@ void free_netdev(struct net_device *dev)
   	dev->xdp_bulkq = NULL;
   
@@ -3282,7 +3305,7 @@ index 4ba2acab12..bb8409ff9e 100644
   }
   postcore_initcall(regmap_initcall);
 diff --git a/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch b/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
-index b1944ce1d1..41ab852aa1 100644
+index 3c8db594cf..41ab852aa1 100644
 --- a/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
 +++ b/target/linux/generic/hack-6.6/721-net-add-packet-mangeling.patch
 @@ -60,7 +60,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
@@ -3302,6 +3325,15 @@ index b1944ce1d1..41ab852aa1 100644
 +@@ -3286,16 +3290,6 @@ static inline struct sk_buff *dev_alloc_
   }
   
+  
+@@ -105,7 +105,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
+  	help
+ --- a/net/core/dev.c
+ +++ b/net/core/dev.c
+-@@ -3665,6 +3665,11 @@ static int xmit_one(struct sk_buff *skb,
++@@ -3653,6 +3653,11 @@ static int xmit_one(struct sk_buff *skb,
+  	if (dev_nit_active(dev))
+  		dev_queue_xmit_nit(skb, dev);
   
 diff --git a/target/linux/generic/hack-6.6/760-net-usb-r8152-add-LED-configuration-from-OF.patch b/target/linux/generic/hack-6.6/760-net-usb-r8152-add-LED-configuration-from-OF.patch
 index 4ef76be0e5..680440b310 100644
@@ -3344,14 +3376,14 @@ index 4ef76be0e5..680440b310 100644
   
   	tp->coalesce = 15000;	/* 15 us */
 diff --git a/target/linux/generic/hack-6.6/790-SFP-GE-T-ignore-TX_FAULT.patch b/target/linux/generic/hack-6.6/790-SFP-GE-T-ignore-TX_FAULT.patch
-index 5a939d9b28..5d67e0ea8f 100644
+index 38c1e9d8ab..5d67e0ea8f 100644
 --- a/target/linux/generic/hack-6.6/790-SFP-GE-T-ignore-TX_FAULT.patch
 +++ b/target/linux/generic/hack-6.6/790-SFP-GE-T-ignore-TX_FAULT.patch
 @@ -26,9 +26,9 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
  
  --- a/drivers/net/phy/sfp.c
  +++ b/drivers/net/phy/sfp.c
--@@ -525,6 +525,9 @@ static const struct sfp_quirk sfp_quirks
+-@@ -530,6 +530,9 @@ static const struct sfp_quirk sfp_quirks
 +@@ -487,6 +487,9 @@ static const struct sfp_quirk sfp_quirks
   	SFP_QUIRK("HUAWEI", "MA5671A", sfp_quirk_2500basex,
 - 		  sfp_fixup_ignore_tx_fault_and_los),
@@ -3388,6 +3420,224 @@ index 5a939d9b28..5d67e0ea8f 100644
 + 
 + 	for (i = 0; i < GPIO_MAX; i++)
 + 		if (changed & BIT(i))
+diff --git a/target/linux/generic/pending-6.6/360-Revert-MIPS-mm-kmalloc-tlb_vpn-array-to-avoid-stack-.patch b/target/linux/generic/pending-6.6/360-Revert-MIPS-mm-kmalloc-tlb_vpn-array-to-avoid-stack-.patch
+new file mode 100644
+index 0000000000..1b53919a0c
+--- /dev/null
++++ b/target/linux/generic/pending-6.6/360-Revert-MIPS-mm-kmalloc-tlb_vpn-array-to-avoid-stack-.patch
+@@ -0,0 +1,60 @@
++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
++From: Hauke Mehrtens <hauke@hauke-m.de>
++Date: Mon, 15 Dec 2025 01:45:07 +0100
++Subject: Revert "MIPS: mm: kmalloc tlb_vpn array to avoid stack overflow"
++
++This reverts commit 231ac951fabae2aaed8b2c00b4a097107be49c8c.
++---
++ arch/mips/mm/tlb-r4k.c | 18 ++----------------
++ 1 file changed, 2 insertions(+), 16 deletions(-)
++
++--- a/arch/mips/mm/tlb-r4k.c
+++++ b/arch/mips/mm/tlb-r4k.c
++@@ -12,7 +12,6 @@
++ #include <linux/init.h>
++ #include <linux/sched.h>
++ #include <linux/smp.h>
++-#include <linux/memblock.h>
++ #include <linux/mm.h>
++ #include <linux/hugetlb.h>
++ #include <linux/export.h>
++@@ -521,26 +520,17 @@ static int r4k_vpn_cmp(const void *a, co
++  * Initialise all TLB entries with unique values that do not clash with
++  * what we have been handed over and what we'll be using ourselves.
++  */
++-static void __ref r4k_tlb_uniquify(void)
+++static void r4k_tlb_uniquify(void)
++ {
+++	unsigned long tlb_vpns[1 << MIPS_CONF1_TLBS_SIZE];
++ 	int tlbsize = current_cpu_data.tlbsize;
++-	bool use_slab = slab_is_available();
++ 	int start = num_wired_entries();
++-	phys_addr_t tlb_vpn_size;
++-	unsigned long *tlb_vpns;
++ 	unsigned long vpn_mask;
++ 	int cnt, ent, idx, i;
++ 
++ 	vpn_mask = GENMASK(cpu_vmbits - 1, 13);
++ 	vpn_mask |= IS_ENABLED(CONFIG_64BIT) ? 3ULL << 62 : 1 << 31;
++ 
++-	tlb_vpn_size = tlbsize * sizeof(*tlb_vpns);
++-	tlb_vpns = (use_slab ?
++-		    kmalloc(tlb_vpn_size, GFP_KERNEL) :
++-		    memblock_alloc_raw(tlb_vpn_size, sizeof(*tlb_vpns)));
++-	if (WARN_ON(!tlb_vpns))
++-		return; /* Pray local_flush_tlb_all() is good enough. */
++-
++ 	htw_stop();
++ 
++ 	for (i = start, cnt = 0; i < tlbsize; i++, cnt++) {
++@@ -593,10 +583,6 @@ static void __ref r4k_tlb_uniquify(void)
++ 	tlbw_use_hazard();
++ 	htw_start();
++ 	flush_micro_tlb();
++-	if (use_slab)
++-		kfree(tlb_vpns);
++-	else
++-		memblock_free(tlb_vpns, tlb_vpn_size);
++ }
++ 
++ /*
+diff --git a/target/linux/generic/pending-6.6/361-Revert-MIPS-mm-Prevent-a-TLB-shutdown-on-initial-uni.patch b/target/linux/generic/pending-6.6/361-Revert-MIPS-mm-Prevent-a-TLB-shutdown-on-initial-uni.patch
+new file mode 100644
+index 0000000000..17d0b50ad8
+--- /dev/null
++++ b/target/linux/generic/pending-6.6/361-Revert-MIPS-mm-Prevent-a-TLB-shutdown-on-initial-uni.patch
+@@ -0,0 +1,146 @@
++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
++From: Hauke Mehrtens <hauke@hauke-m.de>
++Date: Mon, 15 Dec 2025 01:45:20 +0100
++Subject: Revert "MIPS: mm: Prevent a TLB shutdown on initial uniquification"
++
++This reverts commit 135713cd0751bf296e515f5fdec234320f73bbd8.
++---
++ arch/mips/mm/tlb-r4k.c | 100 +++++++++++++++--------------------------
++ 1 file changed, 37 insertions(+), 63 deletions(-)
++
++--- a/arch/mips/mm/tlb-r4k.c
+++++ b/arch/mips/mm/tlb-r4k.c
++@@ -15,7 +15,6 @@
++ #include <linux/mm.h>
++ #include <linux/hugetlb.h>
++ #include <linux/export.h>
++-#include <linux/sort.h>
++ 
++ #include <asm/cpu.h>
++ #include <asm/cpu-type.h>
++@@ -507,79 +506,55 @@ static int __init set_ntlb(char *str)
++ 
++ __setup("ntlb=", set_ntlb);
++ 
++-
++-/* Comparison function for EntryHi VPN fields.  */
++-static int r4k_vpn_cmp(const void *a, const void *b)
++-{
++-	long v = *(unsigned long *)a - *(unsigned long *)b;
++-	int s = sizeof(long) > sizeof(int) ? sizeof(long) * 8 - 1: 0;
++-	return s ? (v != 0) | v >> s : v;
++-}
++-
++-/*
++- * Initialise all TLB entries with unique values that do not clash with
++- * what we have been handed over and what we'll be using ourselves.
++- */
+++/* Initialise all TLB entries with unique values */
++ static void r4k_tlb_uniquify(void)
++ {
++-	unsigned long tlb_vpns[1 << MIPS_CONF1_TLBS_SIZE];
++-	int tlbsize = current_cpu_data.tlbsize;
++-	int start = num_wired_entries();
++-	unsigned long vpn_mask;
++-	int cnt, ent, idx, i;
++-
++-	vpn_mask = GENMASK(cpu_vmbits - 1, 13);
++-	vpn_mask |= IS_ENABLED(CONFIG_64BIT) ? 3ULL << 62 : 1 << 31;
+++	int entry = num_wired_entries();
++ 
++ 	htw_stop();
+++	write_c0_entrylo0(0);
+++	write_c0_entrylo1(0);
++ 
++-	for (i = start, cnt = 0; i < tlbsize; i++, cnt++) {
++-		unsigned long vpn;
+++	while (entry < current_cpu_data.tlbsize) {
+++		unsigned long asid_mask = cpu_asid_mask(&current_cpu_data);
+++		unsigned long asid = 0;
+++		int idx;
++ 
++-		write_c0_index(i);
++-		mtc0_tlbr_hazard();
++-		tlb_read();
++-		tlb_read_hazard();
++-		vpn = read_c0_entryhi();
++-		vpn &= vpn_mask & PAGE_MASK;
++-		tlb_vpns[cnt] = vpn;
+++		/* Skip wired MMID to make ginvt_mmid work */
+++		if (cpu_has_mmid)
+++			asid = MMID_KERNEL_WIRED + 1;
++ 
++-		/* Prevent any large pages from overlapping regular ones.  */
++-		write_c0_pagemask(read_c0_pagemask() & PM_DEFAULT_MASK);
+++		/* Check for match before using UNIQUE_ENTRYHI */
+++		do {
+++			if (cpu_has_mmid) {
+++				write_c0_memorymapid(asid);
+++				write_c0_entryhi(UNIQUE_ENTRYHI(entry));
+++			} else {
+++				write_c0_entryhi(UNIQUE_ENTRYHI(entry) | asid);
+++			}
+++			mtc0_tlbw_hazard();
+++			tlb_probe();
+++			tlb_probe_hazard();
+++			idx = read_c0_index();
+++			/* No match or match is on current entry */
+++			if (idx < 0 || idx == entry)
+++				break;
+++			/*
+++			 * If we hit a match, we need to try again with
+++			 * a different ASID.
+++			 */
+++			asid++;
+++		} while (asid < asid_mask);
+++
+++		if (idx >= 0 && idx != entry)
+++			panic("Unable to uniquify TLB entry %d", idx);
+++
+++		write_c0_index(entry);
++ 		mtc0_tlbw_hazard();
++ 		tlb_write_indexed();
++-		tlbw_use_hazard();
+++		entry++;
++ 	}
++ 
++-	sort(tlb_vpns, cnt, sizeof(tlb_vpns[0]), r4k_vpn_cmp, NULL);
++-
++-	write_c0_pagemask(PM_DEFAULT_MASK);
++-	write_c0_entrylo0(0);
++-	write_c0_entrylo1(0);
++-
++-	idx = 0;
++-	ent = tlbsize;
++-	for (i = start; i < tlbsize; i++)
++-		while (1) {
++-			unsigned long entryhi, vpn;
++-
++-			entryhi = UNIQUE_ENTRYHI(ent);
++-			vpn = entryhi & vpn_mask & PAGE_MASK;
++-
++-			if (idx >= cnt || vpn < tlb_vpns[idx]) {
++-				write_c0_entryhi(entryhi);
++-				write_c0_index(i);
++-				mtc0_tlbw_hazard();
++-				tlb_write_indexed();
++-				ent++;
++-				break;
++-			} else if (vpn == tlb_vpns[idx]) {
++-				ent++;
++-			} else {
++-				idx++;
++-			}
++-		}
++-
++ 	tlbw_use_hazard();
++ 	htw_start();
++ 	flush_micro_tlb();
++@@ -625,7 +600,6 @@ static void r4k_tlb_configure(void)
++ 
++ 	/* From this point on the ARC firmware is dead.	 */
++ 	r4k_tlb_uniquify();
++-	local_flush_tlb_all();
++ 
++ 	/* Did I tell you that ARC SUCKS?  */
++ }
 diff --git a/target/linux/generic/pending-6.6/402-mtd-spi-nor-write-support-for-minor-aligned-partitions.patch b/target/linux/generic/pending-6.6/402-mtd-spi-nor-write-support-for-minor-aligned-partitions.patch
 index 74fbc691ff..5a812b86bf 100644
 --- a/target/linux/generic/pending-6.6/402-mtd-spi-nor-write-support-for-minor-aligned-partitions.patch
@@ -3463,6 +3713,136 @@ index 2c4399bb4d..8fbc915881 100644
    * NET_IP_ALIGN(2) + ethernet_header(14) + IP_header(20/40) + ports(8)
    */
   #ifndef NET_SKB_PAD
+diff --git a/target/linux/generic/pending-6.6/666-Add-support-for-MAP-E-FMRs-mesh-mode.patch b/target/linux/generic/pending-6.6/666-Add-support-for-MAP-E-FMRs-mesh-mode.patch
+index f8c4c99dfc..53b78b70da 100644
+--- a/target/linux/generic/pending-6.6/666-Add-support-for-MAP-E-FMRs-mesh-mode.patch
++++ b/target/linux/generic/pending-6.6/666-Add-support-for-MAP-E-FMRs-mesh-mode.patch
+@@ -167,7 +167,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	if (dev == ip6n->fb_tnl_dev)
+  		RCU_INIT_POINTER(ip6n->tnls_wc[0], NULL);
+  	else
+-@@ -793,6 +818,107 @@ int ip6_tnl_rcv_ctl(struct ip6_tnl *t,
++@@ -788,6 +813,107 @@ int ip6_tnl_rcv_ctl(struct ip6_tnl *t,
+  }
+  EXPORT_SYMBOL_GPL(ip6_tnl_rcv_ctl);
+  
+@@ -275,7 +275,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  static int __ip6_tnl_rcv(struct ip6_tnl *tunnel, struct sk_buff *skb,
+  			 const struct tnl_ptk_info *tpi,
+  			 struct metadata_dst *tun_dst,
+-@@ -860,6 +986,27 @@ static int __ip6_tnl_rcv(struct ip6_tnl
++@@ -855,6 +981,27 @@ static int __ip6_tnl_rcv(struct ip6_tnl
+  
+  	memset(skb->cb, 0, sizeof(struct inet6_skb_parm));
+  
+@@ -303,7 +303,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	__skb_tunnel_rx(skb, tunnel->dev, tunnel->net);
+  
+  	err = dscp_ecn_decapsulate(tunnel, ipv6h, skb);
+-@@ -1007,6 +1154,7 @@ static void init_tel_txopt(struct ipv6_t
++@@ -1002,6 +1149,7 @@ static void init_tel_txopt(struct ipv6_t
+  	opt->ops.opt_nflen = 8;
+  }
+  
+@@ -311,7 +311,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  /**
+   * ip6_tnl_addr_conflict - compare packet addresses to tunnel's own
+   *   @t: the outgoing tunnel device
+-@@ -1296,6 +1444,7 @@ ipxip6_tnl_xmit(struct sk_buff *skb, str
++@@ -1291,6 +1439,7 @@ ipxip6_tnl_xmit(struct sk_buff *skb, str
+  		u8 protocol)
+  {
+  	struct ip6_tnl *t = netdev_priv(dev);
+@@ -319,7 +319,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	struct ipv6hdr *ipv6h;
+  	const struct iphdr  *iph;
+  	int encap_limit = -1;
+-@@ -1395,6 +1544,18 @@ ipxip6_tnl_xmit(struct sk_buff *skb, str
++@@ -1390,6 +1539,18 @@ ipxip6_tnl_xmit(struct sk_buff *skb, str
+  	fl6.flowi6_uid = sock_net_uid(dev_net(dev), NULL);
+  	dsfield = INET_ECN_encapsulate(dsfield, orig_dsfield);
+  
+@@ -338,7 +338,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	if (iptunnel_handle_offloads(skb, SKB_GSO_IPXIP6))
+  		return -1;
+  
+-@@ -1548,6 +1709,14 @@ ip6_tnl_change(struct ip6_tnl *t, const
++@@ -1543,6 +1704,14 @@ ip6_tnl_change(struct ip6_tnl *t, const
+  	t->parms.link = p->link;
+  	t->parms.proto = p->proto;
+  	t->parms.fwmark = p->fwmark;
+@@ -353,7 +353,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	dst_cache_reset(&t->dst_cache);
+  	ip6_tnl_link_config(t);
+  }
+-@@ -1582,6 +1751,7 @@ ip6_tnl_parm_from_user(struct __ip6_tnl_
++@@ -1577,6 +1746,7 @@ ip6_tnl_parm_from_user(struct __ip6_tnl_
+  	p->flowinfo = u->flowinfo;
+  	p->link = u->link;
+  	p->proto = u->proto;
+@@ -361,7 +361,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	memcpy(p->name, u->name, sizeof(u->name));
+  }
+  
+-@@ -1970,6 +2140,15 @@ static int ip6_tnl_validate(struct nlatt
++@@ -1965,6 +2135,15 @@ static int ip6_tnl_validate(struct nlatt
+  	return 0;
+  }
+  
+@@ -377,7 +377,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  static void ip6_tnl_netlink_parms(struct nlattr *data[],
+  				  struct __ip6_tnl_parm *parms)
+  {
+-@@ -2007,6 +2186,46 @@ static void ip6_tnl_netlink_parms(struct
++@@ -2002,6 +2181,46 @@ static void ip6_tnl_netlink_parms(struct
+  
+  	if (data[IFLA_IPTUN_FWMARK])
+  		parms->fwmark = nla_get_u32(data[IFLA_IPTUN_FWMARK]);
+@@ -424,7 +424,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  }
+  
+  static int ip6_tnl_newlink(struct net *src_net, struct net_device *dev,
+-@@ -2090,6 +2309,12 @@ static void ip6_tnl_dellink(struct net_d
++@@ -2085,6 +2304,12 @@ static void ip6_tnl_dellink(struct net_d
+  
+  static size_t ip6_tnl_get_size(const struct net_device *dev)
+  {
+@@ -437,7 +437,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	return
+  		/* IFLA_IPTUN_LINK */
+  		nla_total_size(4) +
+-@@ -2119,6 +2344,24 @@ static size_t ip6_tnl_get_size(const str
++@@ -2114,6 +2339,24 @@ static size_t ip6_tnl_get_size(const str
+  		nla_total_size(0) +
+  		/* IFLA_IPTUN_FWMARK */
+  		nla_total_size(4) +
+@@ -462,7 +462,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  		0;
+  }
+  
+-@@ -2126,6 +2369,9 @@ static int ip6_tnl_fill_info(struct sk_b
++@@ -2121,6 +2364,9 @@ static int ip6_tnl_fill_info(struct sk_b
+  {
+  	struct ip6_tnl *tunnel = netdev_priv(dev);
+  	struct __ip6_tnl_parm *parm = &tunnel->parms;
+@@ -472,7 +472,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  
+  	if (nla_put_u32(skb, IFLA_IPTUN_LINK, parm->link) ||
+  	    nla_put_in6_addr(skb, IFLA_IPTUN_LOCAL, &parm->laddr) ||
+-@@ -2135,9 +2381,27 @@ static int ip6_tnl_fill_info(struct sk_b
++@@ -2130,9 +2376,27 @@ static int ip6_tnl_fill_info(struct sk_b
+  	    nla_put_be32(skb, IFLA_IPTUN_FLOWINFO, parm->flowinfo) ||
+  	    nla_put_u32(skb, IFLA_IPTUN_FLAGS, parm->flags) ||
+  	    nla_put_u8(skb, IFLA_IPTUN_PROTO, parm->proto) ||
+@@ -501,7 +501,7 @@ Signed-off-by: Steven Barth <cyrus@openwrt.org>
+  	if (nla_put_u16(skb, IFLA_IPTUN_ENCAP_TYPE, tunnel->encap.type) ||
+  	    nla_put_be16(skb, IFLA_IPTUN_ENCAP_SPORT, tunnel->encap.sport) ||
+  	    nla_put_be16(skb, IFLA_IPTUN_ENCAP_DPORT, tunnel->encap.dport) ||
+-@@ -2177,6 +2441,7 @@ static const struct nla_policy ip6_tnl_p
++@@ -2172,6 +2436,7 @@ static const struct nla_policy ip6_tnl_p
+  	[IFLA_IPTUN_ENCAP_DPORT]	= { .type = NLA_U16 },
+  	[IFLA_IPTUN_COLLECT_METADATA]	= { .type = NLA_FLAG },
+  	[IFLA_IPTUN_FWMARK]		= { .type = NLA_U32 },
 diff --git a/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch b/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch
 index 6f34a5e51f..4601737c5e 100644
 --- a/target/linux/generic/pending-6.6/670-ipv6-allow-rejecting-with-source-address-failed-policy.patch
@@ -4113,6 +4493,19 @@ index 7519e7b830..431ddf6dd6 100644
   		page_pool_get_stats(ring->page_pool, &stats);
   	}
   	page_pool_ethtool_stats_get(data, &stats);
+diff --git a/target/linux/generic/pending-6.6/791-tg3-Fix-DMA-allocations-on-57766-devices.patch b/target/linux/generic/pending-6.6/791-tg3-Fix-DMA-allocations-on-57766-devices.patch
+index 6c394d5d14..f2302432cb 100644
+--- a/target/linux/generic/pending-6.6/791-tg3-Fix-DMA-allocations-on-57766-devices.patch
++++ b/target/linux/generic/pending-6.6/791-tg3-Fix-DMA-allocations-on-57766-devices.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Pavan Chebbi <pavan.chebbi@broadcom.com>
+ 
+ --- a/drivers/net/ethernet/broadcom/tg3.c
+ +++ b/drivers/net/ethernet/broadcom/tg3.c
+-@@ -17740,8 +17740,10 @@ static int tg3_init_one(struct pci_dev *
++@@ -17729,8 +17729,10 @@ static int tg3_init_one(struct pci_dev *
+  	} else
+  		persist_dma_mask = dma_mask = DMA_BIT_MASK(64);
+  
 diff --git a/target/linux/generic/pending-6.6/810-pci_disable_common_quirks.patch b/target/linux/generic/pending-6.6/810-pci_disable_common_quirks.patch
 index cd624c9984..2d138d123a 100644
 --- a/target/linux/generic/pending-6.6/810-pci_disable_common_quirks.patch
@@ -4581,6 +4974,70 @@ index f24088cbb5..de3438427d 100644
   	help
   	  Support for the timer/counter of goldfish-rtc
   
+diff --git a/target/linux/ramips/patches-6.6/100-mips-ralink-update-CPU-clock-index.patch b/target/linux/ramips/patches-6.6/100-mips-ralink-update-CPU-clock-index.patch
+new file mode 100644
+index 0000000000..c19771ee87
+--- /dev/null
++++ b/target/linux/ramips/patches-6.6/100-mips-ralink-update-CPU-clock-index.patch
+@@ -0,0 +1,58 @@
++From ef57412d070fe663a66a5473ffc708bd89671259 Mon Sep 17 00:00:00 2001
++From: Signed-off-by: Shiji Yang <yangshiji66@outlook.com>
++Date: Sun, 2 Feb 2025 17:10:14 +0800
++Subject: [PATCH] mips: ralink: update CPU clock index
++
++Some clock indexes have been reorganized in commit d34db686a3d7
++("clk: ralink: mtmips: fix clocks probe order in oldest ralink SoCs").
++Update CPU clock index to match the clock driver changes.
++
++Signed-off-by: Shiji Yang <yangshiji66@outlook.com>
++Co-authored-by: Mieczyslaw Nalewaj <namiltd@yahoo.com>
++---
++ arch/mips/ralink/clk.c | 11 ++---------
++ 1 file changed, 2 insertions(+), 9 deletions(-)
++
++--- a/arch/mips/ralink/clk.c
+++++ b/arch/mips/ralink/clk.c
++@@ -19,27 +19,22 @@
++ 
++ static const char *clk_cpu(int *idx)
++ {
+++	*idx = 1;
+++
++ 	switch (ralink_soc) {
++ 	case RT2880_SOC:
++-		*idx = 0;
++ 		return "ralink,rt2880-sysc";
++ 	case RT3883_SOC:
++-		*idx = 0;
++ 		return "ralink,rt3883-sysc";
++ 	case RT305X_SOC_RT3050:
++-		*idx = 0;
++ 		return "ralink,rt3050-sysc";
++ 	case RT305X_SOC_RT3052:
++-		*idx = 0;
++ 		return "ralink,rt3052-sysc";
++ 	case RT305X_SOC_RT3350:
++-		*idx = 1;
++ 		return "ralink,rt3350-sysc";
++ 	case RT305X_SOC_RT3352:
++-		*idx = 1;
++ 		return "ralink,rt3352-sysc";
++ 	case RT305X_SOC_RT5350:
++-		*idx = 1;
++ 		return "ralink,rt5350-sysc";
++ 	case MT762X_SOC_MT7620A:
++ 		*idx = 2;
++@@ -48,10 +43,8 @@ static const char *clk_cpu(int *idx)
++ 		*idx = 2;
++ 		return "ralink,mt7620-sysc";
++ 	case MT762X_SOC_MT7628AN:
++-		*idx = 1;
++ 		return "ralink,mt7628-sysc";
++ 	case MT762X_SOC_MT7688:
++-		*idx = 1;
++ 		return "ralink,mt7688-sysc";
++ 	default:
++ 		*idx = -1;
 diff --git a/target/linux/ramips/patches-6.6/311-MIPS-use-set_mode-to-enable-disable-the-cevt-r4k-irq.patch b/target/linux/ramips/patches-6.6/311-MIPS-use-set_mode-to-enable-disable-the-cevt-r4k-irq.patch
 index a9d3ca4d7f..3162d669e1 100644
 --- a/target/linux/ramips/patches-6.6/311-MIPS-use-set_mode-to-enable-disable-the-cevt-r4k-irq.patch
@@ -4608,27 +5065,27 @@ index 06505f3ea1..1a68ba4430 100644
   		return -ENOMEM;
   
 diff --git a/target/linux/realtek/patches-6.6/710-net-phy-sfp-re-probe-modules-on-DEV_UP-event.patch b/target/linux/realtek/patches-6.6/710-net-phy-sfp-re-probe-modules-on-DEV_UP-event.patch
-index 9ad189a9de..76a722f0d5 100644
+index b6663c0f14..76a722f0d5 100644
 --- a/target/linux/realtek/patches-6.6/710-net-phy-sfp-re-probe-modules-on-DEV_UP-event.patch
 +++ b/target/linux/realtek/patches-6.6/710-net-phy-sfp-re-probe-modules-on-DEV_UP-event.patch
 @@ -10,7 +10,7 @@ Signed-off-by: Antoine Tenart <antoine.tenart@bootlin.com>
  
  --- a/drivers/net/phy/sfp.c
  +++ b/drivers/net/phy/sfp.c
--@@ -2477,6 +2477,13 @@ static void sfp_sm_module(struct sfp *sf
+-@@ -2482,6 +2482,13 @@ static void sfp_sm_module(struct sfp *sf
 +@@ -2434,6 +2434,13 @@ static void sfp_sm_module(struct sfp *sf
   		return;
   	}
   
 diff --git a/target/linux/realtek/patches-6.6/714-net-phy-sfp-add-support-for-SMBus.patch b/target/linux/realtek/patches-6.6/714-net-phy-sfp-add-support-for-SMBus.patch
-index 570bf011da..4d0bb28c3b 100644
+index bba5e47fdf..4d0bb28c3b 100644
 --- a/target/linux/realtek/patches-6.6/714-net-phy-sfp-add-support-for-SMBus.patch
 +++ b/target/linux/realtek/patches-6.6/714-net-phy-sfp-add-support-for-SMBus.patch
 @@ -10,7 +10,7 @@ Signed-off-by: Antoine Tenart <antoine.tenart@bootlin.com>
  
  --- a/drivers/net/phy/sfp.c
  +++ b/drivers/net/phy/sfp.c
--@@ -720,10 +720,64 @@ static int sfp_i2c_write(struct sfp *sfp
+-@@ -725,10 +725,64 @@ static int sfp_i2c_write(struct sfp *sfp
 +@@ -680,10 +680,64 @@ static int sfp_i2c_write(struct sfp *sfp
   	return ret == ARRAY_SIZE(msgs) ? len : 0;
   }
@@ -4637,7 +5094,7 @@ index 570bf011da..4d0bb28c3b 100644
   
   	sfp->i2c = i2c;
   	sfp->read = sfp_i2c_read;
--@@ -755,6 +809,29 @@ static int sfp_i2c_mdiobus_create(struct
+-@@ -760,6 +814,29 @@ static int sfp_i2c_mdiobus_create(struct
 +@@ -715,6 +769,29 @@ static int sfp_i2c_mdiobus_create(struct
   	return 0;
   }
@@ -4646,7 +5103,7 @@ index 570bf011da..4d0bb28c3b 100644
   static void sfp_i2c_mdiobus_destroy(struct sfp *sfp)
   {
   	mdiobus_unregister(sfp->i2c_mii);
--@@ -1929,8 +2006,15 @@ static void sfp_sm_fault(struct sfp *sfp
+-@@ -1934,8 +2011,15 @@ static void sfp_sm_fault(struct sfp *sfp
 +@@ -1888,8 +1965,15 @@ static void sfp_sm_fault(struct sfp *sfp
   
   static int sfp_sm_add_mdio_bus(struct sfp *sfp)
