@@ -49,6 +49,7 @@ function config_json_input_set() {
 	echo -e "Cache=$(echo $CONFIG_JSON_INPUT | jq -r ".Cache")" >> "$GITHUB_ENV"
 	echo -e "CacheLinux=$(echo $CONFIG_JSON_INPUT | jq -r ".CacheLinux")" >> "$GITHUB_ENV"
 	echo -e "CachePKGS=$(echo $CONFIG_JSON_INPUT | jq -r ".CachePKGS")" >> "$GITHUB_ENV"
+	echo -e "CacheSave=$(echo $CONFIG_JSON_INPUT | jq -r ".CacheSave")" >> "$GITHUB_ENV"
 	echo -e "UPLOAD_RELEASE=$(echo $CONFIG_JSON_INPUT | jq -r ".UPLOAD_RELEASE")" >> "$GITHUB_ENV"
 	echo -e "ALLKMOD=$(echo $CONFIG_JSON_INPUT | jq -r ".ALLKMOD")" >> "$GITHUB_ENV"
 }

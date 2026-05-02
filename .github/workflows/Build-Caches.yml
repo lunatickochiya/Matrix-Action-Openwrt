@@ -86,7 +86,7 @@ on:
       config_repo:
         description: 'Use json config repo true(1) or false(0) See ReadME'
         required: true
-        default: '{"Cache": "1", "CacheLinux": "1", "CachePKGS": "1", "UPLOAD_RELEASE": "1", "ALLKMOD": "1"}'
+        default: '{"Cache": "1", "CacheLinux": "1", "CachePKGS": "1", "CacheSave": "false", "UPLOAD_RELEASE": "1", "ALLKMOD": "1"}'
 
 env:
   TZ: Asia/Shanghai
@@ -306,6 +306,7 @@ jobs:
         ccache: 'true'
         mixkey: ${{ matrix.target }}${{ env.eBPF }}${{ env.Branch }}
         prefix: ${{ github.workspace }}/openwrt
+        skip_saving: ${{ env.CacheSave }}
 
     - name: 编译Caches
       id: compile
