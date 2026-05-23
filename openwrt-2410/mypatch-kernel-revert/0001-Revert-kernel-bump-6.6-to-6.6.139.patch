@@ -1,7 +1,11 @@
-From 844a76a7fac9e39ce2cba80c423680ce0f06b737 Mon Sep 17 00:00:00 2001
+From 9b6039c69a7eacb81e49f528ac7b552c50a64bf7 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Mon, 13 Apr 2026 20:01:11 +0800
-Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.128"
+Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.139"
+
+This reverts commit ee6134d0fddba5e4051b4d30ec5511ef0dbc8fd3.
+
+Revert "kernel: bump 6.6 to 6.6.128"
 
 This reverts commit ea7c6f03ac1991bd2e8b1f54dc6d5133d32f4724.
 Revert "kernel: bump 6.6 to 6.6.129"
@@ -31,6 +35,15 @@ This reverts commit 2c5ede098089dad15ec1ccea73136d461d53d6bb.
 Revert "kernel: bump 6.6 to 6.6.137"
 
 This reverts commit f296d2b93b3ed0ddb6d8f4725db1541155d26fe3.
+Revert "kernel: bump 6.6 to 6.6.138"
+
+This reverts commit 561b5dac9d015a4067ec6c636e11f2f2bbd724ff.
+Revert "generic: backport new field_prep()/get() helper for non-const bitmask"
+
+This reverts commit c6d7bbae72465646ceddb2cc2cd58975e975c94f.
+Revert "kernel: bump 6.6 to 6.6.139"
+
+This reverts commit ee6134d0fddba5e4051b4d30ec5511ef0dbc8fd3.
 ---
  include/kernel-6.6                            |   4 +-
  ...-resource-set-range-and-size-helpers.patch |  73 ++++++++
@@ -104,6 +117,8 @@ This reverts commit f296d2b93b3ed0ddb6d8f4725db1541155d26fe3.
  ...SMS-registers-for-power-on-off-and-r.patch |   2 +-
  ...m_sf2-enable-GPHY-for-switch-probing.patch |   2 +-
  ...sf2-keep-GPHY-enabled-on-the-BCM4908.patch |   2 +-
+ ...-Add-less-checking-__FIELD_-GET-PREP.patch | 103 ----------
+ ...non-constant-field_-prep-get-helpers.patch | 114 -----------
  ...nand-Support-write-protection-settin.patch |   2 +-
  ...tional-threaded-NAPI-wakeup-based-on.patch |   6 +-
  ...-to-use-SMP-threads-for-backlog-NAPI.patch |  22 +--
@@ -143,6 +158,8 @@ This reverts commit f296d2b93b3ed0ddb6d8f4725db1541155d26fe3.
  ...factor-.add_cells-callback-arguments.patch |   2 +-
  ...mem-drop-nvmem_layout_get_match_data.patch |   2 +-
  ...1-nvmem-imx-ocotp-ele-support-i.MX95.patch |   2 +-
+ ...rt-to-common-field_-get-prep-helpers.patch |  40 ----
+ ...vert-to-common-field_-get-prep-helpe.patch |  37 ----
  ...-support-for-PHY-LEDs-polarity-modes.patch |   4 +-
  ...rt-active-high-property-for-PHY-LEDs.patch |   2 +-
  ...et-free_netdev-exit-earlier-if-dummy.patch |   2 +-
@@ -211,23 +228,27 @@ This reverts commit f296d2b93b3ed0ddb6d8f4725db1541155d26fe3.
  ...ove-performance-usb-using-lowmem-for.patch |   2 +-
  ...dd-starfive-jh7100-hsuart-compatible.patch |   2 +-
  .../1009-net-stmmac-use-GFP_DMA32.patch       |   2 +-
- 179 files changed, 1216 insertions(+), 526 deletions(-)
+ 183 files changed, 1216 insertions(+), 820 deletions(-)
  create mode 100644 target/linux/airoha/patches-6.6/083-01-v6.13-resource-Add-resource-set-range-and-size-helpers.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0291-media-i2c-ov5647-Correct-pixel-array-offset.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0292-media-i2c-ov5647-Correct-minimum-VBLANK-value.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0310-media-i2c-ov5647-Sensor-should-report-RAW-color-spac.patch
+ delete mode 100644 target/linux/generic/backport-6.6/211-01-v6.19-bitfield-Add-less-checking-__FIELD_-GET-PREP.patch
+ delete mode 100644 target/linux/generic/backport-6.6/211-02-v6.19-bitfield-Add-non-constant-field_-prep-get-helpers.patch
+ delete mode 100644 target/linux/generic/backport-6.6/825-v6.19-clk-at91-Convert-to-common-field_-get-prep-helpers.patch
+ delete mode 100644 target/linux/generic/backport-6.6/826-v6.19-iio-mlx90614-Convert-to-common-field_-get-prep-helpe.patch
  create mode 100644 target/linux/generic/pending-6.6/360-Revert-MIPS-mm-kmalloc-tlb_vpn-array-to-avoid-stack-.patch
  create mode 100644 target/linux/generic/pending-6.6/361-Revert-MIPS-mm-Prevent-a-TLB-shutdown-on-initial-uni.patch
  create mode 100644 target/linux/generic/pending-6.6/685-net-gso-fix-tcp-fraglist-segmentation-after-pull-fro.patch
  create mode 100644 target/linux/ramips/patches-6.6/100-mips-ralink-update-CPU-clock-index.patch
 
 diff --git a/include/kernel-6.6 b/include/kernel-6.6
-index 30ad958aa8..55a5b8c57c 100644
+index 30fece5618..55a5b8c57c 100644
 --- a/include/kernel-6.6
 +++ b/include/kernel-6.6
 @@ -1,2 +1,2 @@
--LINUX_VERSION-6.6 = .137
--LINUX_KERNEL_HASH-6.6.137 = 92f1e90d8be49f9d7f989e563c97a4f39cd7731025d7b81152814c68b5bd56c4
+-LINUX_VERSION-6.6 = .139
+-LINUX_KERNEL_HASH-6.6.139 = a7cd71371dae38ac94c6c332fe16391b83fe173158020e2ea1b37277f8f3d740
 +LINUX_VERSION-6.6 = .127
 +LINUX_KERNEL_HASH-6.6.127 = a7cd9c97b4f0b31cc030bcdc60abe5434fffb2556e293f7438ce7909dff8c9fe
 diff --git a/target/linux/airoha/patches-6.6/083-01-v6.13-resource-Add-resource-set-range-and-size-helpers.patch b/target/linux/airoha/patches-6.6/083-01-v6.13-resource-Add-resource-set-range-and-size-helpers.patch
@@ -2332,6 +2353,235 @@ index 69fb63c6f7..ff3f44910b 100644
   		 priv->hw_params.core_rev >> 8, priv->hw_params.core_rev & 0xff,
   		 priv->irq0, priv->irq1);
   
+diff --git a/target/linux/generic/backport-6.6/211-01-v6.19-bitfield-Add-less-checking-__FIELD_-GET-PREP.patch b/target/linux/generic/backport-6.6/211-01-v6.19-bitfield-Add-less-checking-__FIELD_-GET-PREP.patch
+deleted file mode 100644
+index 05b2a1ae92..0000000000
+--- a/target/linux/generic/backport-6.6/211-01-v6.19-bitfield-Add-less-checking-__FIELD_-GET-PREP.patch
++++ /dev/null
+@@ -1,103 +0,0 @@
+-From 2a6c045640c38a407a39cd40c3c4d8dd2fd89aa8 Mon Sep 17 00:00:00 2001
+-From: Geert Uytterhoeven <geert+renesas@glider.be>
+-Date: Thu, 6 Nov 2025 14:34:00 +0100
+-Subject: [PATCH 1/2] bitfield: Add less-checking __FIELD_{GET,PREP}()
+-
+-The BUILD_BUG_ON_MSG() check against "~0ull" works only with "unsigned
+-(long) long" _mask types.  For constant masks, that condition is usually
+-met, as GENMASK() yields an UL value.  The few places where the
+-constant mask is stored in an intermediate variable were fixed by
+-changing the variable type to u64 (see e.g. [1] and [2]).
+-
+-However, for non-constant masks, smaller unsigned types should be valid,
+-too, but currently lead to "result of comparison of constant
+-18446744073709551615 with expression of type ... is always
+-false"-warnings with clang and W=1.
+-
+-Hence refactor the __BF_FIELD_CHECK() helper, and factor out
+-__FIELD_{GET,PREP}().  The later lack the single problematic check, but
+-are otherwise identical to FIELD_{GET,PREP}(), and are intended to be
+-used in the fully non-const variants later.
+-
+-[1] commit 5c667d5a5a3ec166 ("clk: sp7021: Adjust width of _m in
+-    HWM_FIELD_PREP()")
+-[2] commit cfd6fb45cfaf46fa ("crypto: ccree - avoid out-of-range
+-    warnings from clang")
+-
+-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+-Link: https://git.kernel.org/torvalds/c/5c667d5a5a3ec166 [1]
+-Signed-off-by: Yury Norov (NVIDIA) <yury.norov@gmail.com>
+----
+- include/linux/bitfield.h | 36 ++++++++++++++++++++++++++++--------
+- 1 file changed, 28 insertions(+), 8 deletions(-)
+-
+---- a/include/linux/bitfield.h
+-+++ b/include/linux/bitfield.h
+-@@ -60,7 +60,7 @@
+- 
+- #define __bf_cast_unsigned(type, x)	((__unsigned_scalar_typeof(type))(x))
+- 
+--#define __BF_FIELD_CHECK(_mask, _reg, _val, _pfx)			\
+-+#define __BF_FIELD_CHECK_MASK(_mask, _val, _pfx)			\
+- 	({								\
+- 		BUILD_BUG_ON_MSG(!__builtin_constant_p(_mask),		\
+- 				 _pfx "mask is not constant");		\
+-@@ -68,13 +68,33 @@
+- 		BUILD_BUG_ON_MSG(__builtin_constant_p(_val) ?		\
+- 				 ~((_mask) >> __bf_shf(_mask)) & (_val) : 0, \
+- 				 _pfx "value too large for the field"); \
+--		BUILD_BUG_ON_MSG(__bf_cast_unsigned(_mask, _mask) >	\
+--				 __bf_cast_unsigned(_reg, ~0ull),	\
+--				 _pfx "type of reg too small for mask"); \
+- 		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
+- 					      (1ULL << __bf_shf(_mask))); \
+- 	})
+- 
+-+#define __BF_FIELD_CHECK_REG(mask, reg, pfx)				\
+-+	BUILD_BUG_ON_MSG(__bf_cast_unsigned(mask, mask) >		\
+-+			 __bf_cast_unsigned(reg, ~0ull),		\
+-+			 pfx "type of reg too small for mask")
+-+
+-+#define __BF_FIELD_CHECK(mask, reg, val, pfx)				\
+-+	({								\
+-+		__BF_FIELD_CHECK_MASK(mask, val, pfx);			\
+-+		__BF_FIELD_CHECK_REG(mask, reg, pfx);			\
+-+	})
+-+
+-+#define __FIELD_PREP(mask, val, pfx)					\
+-+	({								\
+-+		__BF_FIELD_CHECK_MASK(mask, val, pfx);			\
+-+		((typeof(mask))(val) << __bf_shf(mask)) & (mask);	\
+-+	})
+-+
+-+#define __FIELD_GET(mask, reg, pfx)					\
+-+	({								\
+-+		__BF_FIELD_CHECK_MASK(mask, 0U, pfx);			\
+-+		(typeof(mask))(((reg) & (mask)) >> __bf_shf(mask));	\
+-+	})
+-+
+- /**
+-  * FIELD_MAX() - produce the maximum value representable by a field
+-  * @_mask: shifted mask defining the field's length and position
+-@@ -111,8 +131,8 @@
+-  */
+- #define FIELD_PREP(_mask, _val)						\
+- 	({								\
+--		__BF_FIELD_CHECK(_mask, 0ULL, _val, "FIELD_PREP: ");	\
+--		((typeof(_mask))(_val) << __bf_shf(_mask)) & (_mask);	\
+-+		__BF_FIELD_CHECK_REG(_mask, 0ULL, "FIELD_PREP: ");	\
+-+		__FIELD_PREP(_mask, _val, "FIELD_PREP: ");		\
+- 	})
+- 
+- #define __BF_CHECK_POW2(n)	BUILD_BUG_ON_ZERO(((n) & ((n) - 1)) != 0)
+-@@ -151,8 +171,8 @@
+-  */
+- #define FIELD_GET(_mask, _reg)						\
+- 	({								\
+--		__BF_FIELD_CHECK(_mask, _reg, 0U, "FIELD_GET: ");	\
+--		(typeof(_mask))(((_reg) & (_mask)) >> __bf_shf(_mask));	\
+-+		__BF_FIELD_CHECK_REG(_mask, _reg, "FIELD_GET: ");	\
+-+		__FIELD_GET(_mask, _reg, "FIELD_GET: ");		\
+- 	})
+- 
+- extern void __compiletime_error("value doesn't fit into mask")
+diff --git a/target/linux/generic/backport-6.6/211-02-v6.19-bitfield-Add-non-constant-field_-prep-get-helpers.patch b/target/linux/generic/backport-6.6/211-02-v6.19-bitfield-Add-non-constant-field_-prep-get-helpers.patch
+deleted file mode 100644
+index 902ec27675..0000000000
+--- a/target/linux/generic/backport-6.6/211-02-v6.19-bitfield-Add-non-constant-field_-prep-get-helpers.patch
++++ /dev/null
+@@ -1,114 +0,0 @@
+-From c1c6ab80b25c8db1e2ef5ae3ac8075d2c242ae13 Mon Sep 17 00:00:00 2001
+-From: Geert Uytterhoeven <geert+renesas@glider.be>
+-Date: Thu, 6 Nov 2025 14:34:01 +0100
+-Subject: [PATCH 2/2] bitfield: Add non-constant field_{prep,get}() helpers
+-MIME-Version: 1.0
+-Content-Type: text/plain; charset=UTF-8
+-Content-Transfer-Encoding: 8bit
+-
+-The existing FIELD_{GET,PREP}() macros are limited to compile-time
+-constants.  However, it is very common to prepare or extract bitfield
+-elements where the bitfield mask is not a compile-time constant.
+-
+-To avoid this limitation, the AT91 clock driver and several other
+-drivers already have their own non-const field_{prep,get}() macros.
+-Make them available for general use by adding them to
+-<linux/bitfield.h>, and improve them slightly:
+-  1. Avoid evaluating macro parameters more than once,
+-  2. Replace "ffs() - 1" by "__ffs()",
+-  3. Support 64-bit use on 32-bit architectures,
+-  4. Wire field_{get,prep}() to FIELD_{GET,PREP}() when mask is
+-     actually constant.
+-
+-This is deliberately not merged into the existing FIELD_{GET,PREP}()
+-macros, as people expressed the desire to keep stricter variants for
+-increased safety, or for performance critical paths.
+-
+-Yury: use __mask withing new macros.
+-
+-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+-Acked-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+-Acked-by: Crt Mori <cmo@melexis.com>
+-Acked-by: Nuno Sá <nuno.sa@analog.com>
+-Acked-by: Richard Genoud <richard.genoud@bootlin.com>
+-Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
+-Reviewed-by: Yury Norov (NVIDIA) <yury.norov@gmail.com>
+-Signed-off-by: Yury Norov (NVIDIA) <yury.norov@gmail.com>
+----
+- include/linux/bitfield.h | 59 ++++++++++++++++++++++++++++++++++++++++
+- 1 file changed, 59 insertions(+)
+-
+---- a/include/linux/bitfield.h
+-+++ b/include/linux/bitfield.h
+-@@ -16,6 +16,7 @@
+-  * FIELD_{GET,PREP} macros take as first parameter shifted mask
+-  * from which they extract the base mask and shift amount.
+-  * Mask must be a compilation time constant.
+-+ * field_{get,prep} are variants that take a non-const mask.
+-  *
+-  * Example:
+-  *
+-@@ -222,4 +223,62 @@ __MAKE_OP(64)
+- #undef __MAKE_OP
+- #undef ____MAKE_OP
+- 
+-+#define __field_prep(mask, val)						\
+-+	({								\
+-+		__auto_type __mask = (mask);				\
+-+		typeof(__mask) __val = (val);				\
+-+		unsigned int __shift = BITS_PER_TYPE(__mask) <= 32 ?	\
+-+				       __ffs(__mask) : __ffs64(__mask);	\
+-+		(__val << __shift) & __mask;				\
+-+	})
+-+
+-+#define __field_get(mask, reg)						\
+-+	({								\
+-+		__auto_type __mask = (mask);				\
+-+		typeof(__mask) __reg =  (reg);				\
+-+		unsigned int __shift = BITS_PER_TYPE(__mask) <= 32 ?	\
+-+				       __ffs(__mask) : __ffs64(__mask);	\
+-+		(__reg & __mask) >> __shift;				\
+-+	})
+-+
+-+/**
+-+ * field_prep() - prepare a bitfield element
+-+ * @mask: shifted mask defining the field's length and position, must be
+-+ *        non-zero
+-+ * @val:  value to put in the field
+-+ *
+-+ * Return: field value masked and shifted to its final destination
+-+ *
+-+ * field_prep() masks and shifts up the value.  The result should be
+-+ * combined with other fields of the bitfield using logical OR.
+-+ * Unlike FIELD_PREP(), @mask is not limited to a compile-time constant.
+-+ * Typical usage patterns are a value stored in a table, or calculated by
+-+ * shifting a constant by a variable number of bits.
+-+ * If you want to ensure that @mask is a compile-time constant, please use
+-+ * FIELD_PREP() directly instead.
+-+ */
+-+#define field_prep(mask, val)						\
+-+	(__builtin_constant_p(mask) ? __FIELD_PREP(mask, val, "field_prep: ") \
+-+				    : __field_prep(mask, val))
+-+
+-+/**
+-+ * field_get() - extract a bitfield element
+-+ * @mask: shifted mask defining the field's length and position, must be
+-+ *        non-zero
+-+ * @reg:  value of entire bitfield
+-+ *
+-+ * Return: extracted field value
+-+ *
+-+ * field_get() extracts the field specified by @mask from the
+-+ * bitfield passed in as @reg by masking and shifting it down.
+-+ * Unlike FIELD_GET(), @mask is not limited to a compile-time constant.
+-+ * Typical usage patterns are a value stored in a table, or calculated by
+-+ * shifting a constant by a variable number of bits.
+-+ * If you want to ensure that @mask is a compile-time constant, please use
+-+ * FIELD_GET() directly instead.
+-+ */
+-+#define field_get(mask, reg)						\
+-+	(__builtin_constant_p(mask) ? __FIELD_GET(mask, reg, "field_get: ") \
+-+				    : __field_get(mask, reg))
+-+
+- #endif
 diff --git a/target/linux/generic/backport-6.6/400-v6.9-mtd-rawnand-brcmnand-Support-write-protection-settin.patch b/target/linux/generic/backport-6.6/400-v6.9-mtd-rawnand-brcmnand-Support-write-protection-settin.patch
 index 090e72d007..a7186208b2 100644
 --- a/target/linux/generic/backport-6.6/400-v6.9-mtd-rawnand-brcmnand-Support-write-protection-settin.patch
@@ -3786,6 +4036,95 @@ index 5a641f0255..04ac6f1334 100644
   	},
   };
   
+diff --git a/target/linux/generic/backport-6.6/825-v6.19-clk-at91-Convert-to-common-field_-get-prep-helpers.patch b/target/linux/generic/backport-6.6/825-v6.19-clk-at91-Convert-to-common-field_-get-prep-helpers.patch
+deleted file mode 100644
+index c95a6d5369..0000000000
+--- a/target/linux/generic/backport-6.6/825-v6.19-clk-at91-Convert-to-common-field_-get-prep-helpers.patch
++++ /dev/null
+@@ -1,40 +0,0 @@
+-From 0f8407a1f1c795c417e4c7750654a6024a3ec68b Mon Sep 17 00:00:00 2001
+-From: Geert Uytterhoeven <geert+renesas@glider.be>
+-Date: Thu, 6 Nov 2025 14:34:02 +0100
+-Subject: [PATCH] clk: at91: Convert to common field_{get,prep}() helpers
+-
+-Drop the driver-specific field_get() and field_prep() macros, in favor
+-of the globally available variants from <linux/bitfield.h>.
+-
+-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+-Acked-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+-Acked-by: Stephen Boyd <sboyd@kernel.org>
+-Acked-by: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+-Signed-off-by: Yury Norov (NVIDIA) <yury.norov@gmail.com>
+----
+- drivers/clk/at91/clk-peripheral.c | 1 +
+- drivers/clk/at91/pmc.h            | 5 -----
+- 2 files changed, 1 insertion(+), 5 deletions(-)
+-
+---- a/drivers/clk/at91/clk-peripheral.c
+-+++ b/drivers/clk/at91/clk-peripheral.c
+-@@ -3,6 +3,7 @@
+-  *  Copyright (C) 2013 Boris BREZILLON <b.brezillon@overkiz.com>
+-  */
+- 
+-+#include <linux/bitfield.h>
+- #include <linux/bitops.h>
+- #include <linux/clk-provider.h>
+- #include <linux/clkdev.h>
+---- a/drivers/clk/at91/pmc.h
+-+++ b/drivers/clk/at91/pmc.h
+-@@ -114,9 +114,6 @@ struct at91_clk_pms {
+- 	unsigned int parent;
+- };
+- 
+--#define field_get(_mask, _reg) (((_reg) & (_mask)) >> (ffs(_mask) - 1))
+--#define field_prep(_mask, _val) (((_val) << (ffs(_mask) - 1)) & (_mask))
+--
+- #define ndck(a, s) (a[s - 1].id + 1)
+- #define nck(a) (a[ARRAY_SIZE(a) - 1].id + 1)
+- struct pmc_data *pmc_data_allocate(unsigned int ncore, unsigned int nsystem,
+diff --git a/target/linux/generic/backport-6.6/826-v6.19-iio-mlx90614-Convert-to-common-field_-get-prep-helpe.patch b/target/linux/generic/backport-6.6/826-v6.19-iio-mlx90614-Convert-to-common-field_-get-prep-helpe.patch
+deleted file mode 100644
+index 8b502ec61a..0000000000
+--- a/target/linux/generic/backport-6.6/826-v6.19-iio-mlx90614-Convert-to-common-field_-get-prep-helpe.patch
++++ /dev/null
+@@ -1,37 +0,0 @@
+-From 1fe1c28a108e4953f083c0106575ee0eccc296ae Mon Sep 17 00:00:00 2001
+-From: Geert Uytterhoeven <geert+renesas@glider.be>
+-Date: Thu, 6 Nov 2025 14:34:07 +0100
+-Subject: [PATCH] iio: mlx90614: Convert to common field_{get,prep}() helpers
+-
+-Drop the driver-specific field_get() and field_prep() macros, in favor
+-of the globally available variants from <linux/bitfield.h>.
+-
+-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+-Acked-by: Crt Mori <cmo@melexis.com>
+-Signed-off-by: Yury Norov (NVIDIA) <yury.norov@gmail.com>
+----
+- drivers/iio/temperature/mlx90614.c | 7 +------
+- 1 file changed, 1 insertion(+), 6 deletions(-)
+-
+---- a/drivers/iio/temperature/mlx90614.c
+-+++ b/drivers/iio/temperature/mlx90614.c
+-@@ -22,6 +22,7 @@
+-  * the "wakeup" GPIO is not given, power management will be disabled.
+-  */
+- 
+-+#include <linux/bitfield.h>
+- #include <linux/delay.h>
+- #include <linux/err.h>
+- #include <linux/gpio/consumer.h>
+-@@ -68,10 +69,6 @@
+- #define MLX90614_CONST_SCALE 20 /* Scale in milliKelvin (0.02 * 1000) */
+- #define MLX90614_CONST_FIR 0x7 /* Fixed value for FIR part of low pass filter */
+- 
+--/* Non-constant mask variant of FIELD_GET() and FIELD_PREP() */
+--#define field_get(_mask, _reg)	(((_reg) & (_mask)) >> (ffs(_mask) - 1))
+--#define field_prep(_mask, _val)	(((_val) << (ffs(_mask) - 1)) & (_mask))
+--
+- struct mlx_chip_info {
+- 	/* EEPROM offsets with 16-bit data, MSB first */
+- 	/* emissivity correction coefficient */
 diff --git a/target/linux/generic/backport-6.6/835-v6.9-net-phy-add-support-for-PHY-LEDs-polarity-modes.patch b/target/linux/generic/backport-6.6/835-v6.9-net-phy-add-support-for-PHY-LEDs-polarity-modes.patch
 index d22cd516b6..6cd25416d1 100644
 --- a/target/linux/generic/backport-6.6/835-v6.9-net-phy-add-support-for-PHY-LEDs-polarity-modes.patch
