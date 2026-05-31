@@ -1,0 +1,18 @@
+--- a/backport-include/linux/device.h
++++ b/backport-include/linux/device.h
+@@ -2,6 +2,14 @@
+ #define __BACKPORT_DEVICE_H_
+ #include_next <linux/device.h>
+
++#if LINUX_VERSION_IS_LESS(6,11,0)
++static inline void *devm_kmemdup_array(struct device *dev, const void *src,
++				       size_t n, size_t size, gfp_t flags)
++{
++	return devm_kmemdup(dev, src, size_mul(size, n), flags);
++}
++#endif /* <6.11 */
++
+ #ifndef DEVICE_ATTR_ADMIN_RW
+ #define DEVICE_ATTR_ADMIN_RW(_name) \
+ 	struct device_attribute dev_attr_##_name = __ATTR_RW_MODE(_name, 0600)
+
