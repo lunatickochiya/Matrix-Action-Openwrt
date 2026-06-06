@@ -1,0 +1,2281 @@
+From 0e5b6084dd5c984b3583912b6e11cc8672dbd00f Mon Sep 17 00:00:00 2001
+From: lunatickochiya <125438787@qq.com>
+Date: Sat, 6 Jun 2026 09:43:07 +0800
+Subject: [PATCH 1/2] Revert "kernel: bump 6.6 to 6.6.142"
+
+This reverts commit 2e0a69c9dc7ff42dcb0938deb3102bb3e5dd085d.
+---
+ include/kernel-6.6                            |   4 +-
+ ...12-net-dsa-mt7530-Add-EN7581-support.patch |  12 +-
+ ...t7530-Enable-Rx-sptag-for-EN7581-SoC.patch |   2 +-
+ ...02-net-dsa-mt7530-Add-AN7583-support.patch |   8 +-
+ ...ip-irq-ath79-cpu-drop-OF-init-helper.patch |  23 +++
+ ...v-Fix-CS-polarity-if-GPIO-descriptor.patch |   4 +-
+ ...ompletely-disable-the-spidev-warning.patch |   2 +-
+ ...Better-coalescing-parameter-defaults.patch |   4 +-
+ ...t-Workaround-2-for-Pi4-Ethernet-fail.patch |   2 +-
+ ...et-bcmgenet-Add-eee-module-parameter.patch |   2 +-
+ ...dev-Restore-loading-from-Device-Tree.patch |   2 +-
+ ...-cortina-Rename-adjust-link-callback.patch |   4 +-
+ ...t-cortina-Use-negotiated-TX-RX-pause.patch |   4 +-
+ ...et-cortina-Implement-.set_pauseparam.patch |   4 +-
+ ...HY-package-API-to-support-multiple-g.patch |   4 +-
+ ...pport-for-PHY-package-MMD-read-write.patch |   2 +-
+ ...-add-devm-of_phy_package_join-helper.patch |   2 +-
+ ...dd-genphy_c45_pma_read_ext_abilities.patch | 180 ++++++++++++++++++
+ ...3x-remove-mt753x_phylink_pcs_link_up.patch |   4 +-
+ ...upport-OF-based-registration-of-swit.patch |   4 +-
+ ...lways-trap-frames-to-active-CPU-port.patch |   6 +-
+ ...tore-port-5-SGMII-capability-of-MT75.patch |  16 +-
+ ...mprove-comments-regarding-switch-por.patch |  12 +-
+ ...mprove-code-path-for-setting-up-port.patch |   6 +-
+ ...o-not-set-priv-p5_interface-on-mt753.patch |   2 +-
+ ...o-not-run-mt7530_setup_port5-if-port.patch |   6 +-
+ ...mpty-default-case-on-mt7530_setup_po.patch |   4 +-
+ ...7530-move-XTAL-check-to-mt7530_setup.patch |   2 +-
+ ...all-port-6-setup-from-mt7530_mac_con.patch |   2 +-
+ ...30-remove-pad_setup-function-pointer.patch |  16 +-
+ ...-correct-port-capabilities-of-MT7988.patch |   2 +-
+ ...o-not-clear-config-supported_interfa.patch |   2 +-
+ ...emove-.mac_port_config-for-MT7988-an.patch |   8 +-
+ ...et-interrupt-register-only-for-MT753.patch |   2 +-
+ ...o-not-use-SW_PHY_RST-to-reset-MT7531.patch |   2 +-
+ ...et-rid-of-useless-error-returns-on-p.patch |  16 +-
+ ...get-rid-of-priv-info-cpu_port_config.patch |  26 +--
+ ...-mt7530-get-rid-of-mt753x_mac_config.patch |   4 +-
+ ...ut-initialising-PCS-devices-code-bac.patch |   4 +-
+ ...ort-link-settings-ops-and-force-link.patch |   8 +-
+ ...-dsa-mt7530-simplify-link-operations.patch |   2 +-
+ ...dsa-mt7530-disable-LEDs-before-reset.patch |   2 +-
+ ...revent-possible-incorrect-XTAL-frequ.patch |   2 +-
+ ...0-provide-own-phylink-MAC-operations.patch |  10 +-
+ ...dio-read-PHY-address-of-switch-from-.patch |   2 +-
+ ...et-dsa-mt7530-refactor-MT7530_PMCR_P.patch |  18 +-
+ ...ename-p5_intf_sel-and-use-only-for-M.patch |  12 +-
+ ...ename-mt753x_bpdu_port_fw-enum-to-mt.patch | 169 ++++++++++++++++
+ ...efactor-MT7530_MFC-and-MT7531_CFC-ad.patch |  12 +-
+ ...efactor-MT7530_HWTRAP-and-MT7530_MHW.patch |  14 +-
+ ...ove-MT753X_MTRAP-operations-for-MT75.patch |  12 +-
+ ...eturn-mt7530_setup_mdio-mt7531_setup.patch |   4 +-
+ ...efine-MAC-speed-capabilities-per-swi.patch |   8 +-
+ ...530-get-rid-of-function-sanity-check.patch |   2 +-
+ ...dsa-mt7530-refactor-MT7530_PMEEECR_P.patch |   4 +-
+ ...se-priv-ds-num_ports-instead-of-MT75.patch |   8 +-
+ ...o-not-pass-port-variable-to-mt7531_r.patch |   4 +-
+ ...xplain-exposing-MDIO-bus-of-MT7531AE.patch |   2 +-
+ ...0-do-not-set-MT7530_P5_DIS-when-PHY-.patch |   2 +-
+ ...etect-PHY-muxing-when-PHY-is-defined.patch |   2 +-
+ ...0-factor-out-bridge-join-leave-logic.patch |   6 +-
+ ...dd-support-for-bridge-port-isolation.patch |   8 +-
+ ...680-net-add-TCP-fraglist-GRO-support.patch |   2 +-
+ 63 files changed, 549 insertions(+), 177 deletions(-)
+ create mode 100644 target/linux/ath79/patches-6.6/301-irqchip-irq-ath79-cpu-drop-OF-init-helper.patch
+ create mode 100644 target/linux/generic/backport-6.6/750-01-v6.8-net-phy-add-genphy_c45_pma_read_ext_abilities.patch
+ create mode 100644 target/linux/generic/backport-6.6/790-41-v6.10-net-dsa-mt7530-rename-mt753x_bpdu_port_fw-enum-to-mt.patch
+
+diff --git a/include/kernel-6.6 b/include/kernel-6.6
+index 8a012f6f84..207a3bc528 100644
+--- a/include/kernel-6.6
++++ b/include/kernel-6.6
+@@ -1,2 +1,2 @@
+-LINUX_VERSION-6.6 = .142
+-LINUX_KERNEL_HASH-6.6.142 = b2f6607a75cd27b2e368cf2d25e1637e1e0da9dfed4cda536658879eee6f2b70
++LINUX_VERSION-6.6 = .141
++LINUX_KERNEL_HASH-6.6.141 = 3bc2652eb62ab90a90a8b0aa156b91d276f92eb84702971df62fe1a3f1eb7fe1
+diff --git a/target/linux/airoha/patches-6.6/029-v6.12-net-dsa-mt7530-Add-EN7581-support.patch b/target/linux/airoha/patches-6.6/029-v6.12-net-dsa-mt7530-Add-EN7581-support.patch
+index d641ebca87..d07163902d 100644
+--- a/target/linux/airoha/patches-6.6/029-v6.12-net-dsa-mt7530-Add-EN7581-support.patch
++++ b/target/linux/airoha/patches-6.6/029-v6.12-net-dsa-mt7530-Add-EN7581-support.patch
+@@ -34,7 +34,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  };
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -1159,7 +1159,8 @@ mt753x_cpu_port_enable(struct dsa_switch
++@@ -1152,7 +1152,8 @@ mt753x_cpu_port_enable(struct dsa_switch
+  	 * the MT7988 SoC. Trapped frames will be forwarded to the CPU port that
+  	 * is affine to the inbound user port.
+  	 */
+@@ -44,7 +44,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  		mt7530_set(priv, MT7531_CFC, MT7531_CPU_PMAP(BIT(port)));
+  
+  	/* CPU port gets connected to all user ports of
+-@@ -2214,7 +2215,7 @@ mt7530_setup_irq(struct mt7530_priv *pri
++@@ -2207,7 +2208,7 @@ mt7530_setup_irq(struct mt7530_priv *pri
+  		return priv->irq ? : -EINVAL;
+  	}
+  
+@@ -53,7 +53,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  		priv->irq_domain = irq_domain_add_linear(np, MT7530_NUM_PHYS,
+  							 &mt7988_irq_domain_ops,
+  							 priv);
+-@@ -2447,8 +2448,10 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2438,8 +2439,10 @@ mt7530_setup(struct dsa_switch *ds)
+  		/* Clear link settings and enable force mode to force link down
+  		 * on all ports until they're enabled later.
+  		 */
+@@ -66,7 +66,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  
+  		/* Disable forwarding by default on all ports */
+  		mt7530_rmw(priv, MT7530_PCR_P(i), PCR_MATRIX_MASK,
+-@@ -2564,8 +2567,10 @@ mt7531_setup_common(struct dsa_switch *d
++@@ -2553,8 +2556,10 @@ mt7531_setup_common(struct dsa_switch *d
+  		/* Clear link settings and enable force mode to force link down
+  		 * on all ports until they're enabled later.
+  		 */
+@@ -79,7 +79,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  
+  		/* Disable forwarding by default on all ports */
+  		mt7530_rmw(priv, MT7530_PCR_P(i), PCR_MATRIX_MASK,
+-@@ -2790,6 +2795,28 @@ static void mt7988_mac_port_get_caps(str
++@@ -2779,6 +2784,28 @@ static void mt7988_mac_port_get_caps(str
+  	}
+  }
+  
+@@ -108,7 +108,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  static void
+  mt7530_mac_config(struct dsa_switch *ds, int port, unsigned int mode,
+  		  phy_interface_t interface)
+-@@ -3227,6 +3254,16 @@ const struct mt753x_info mt753x_table[]
++@@ -3216,6 +3243,16 @@ const struct mt753x_info mt753x_table[]
+  		.phy_write_c45 = mt7531_ind_c45_phy_write,
+  		.mac_port_get_caps = mt7988_mac_port_get_caps,
+  	},
+diff --git a/target/linux/airoha/patches-6.6/048-06-v6.15-net-dsa-mt7530-Enable-Rx-sptag-for-EN7581-SoC.patch b/target/linux/airoha/patches-6.6/048-06-v6.15-net-dsa-mt7530-Enable-Rx-sptag-for-EN7581-SoC.patch
+index 71822d69d9..27956d553a 100644
+--- a/target/linux/airoha/patches-6.6/048-06-v6.15-net-dsa-mt7530-Enable-Rx-sptag-for-EN7581-SoC.patch
++++ b/target/linux/airoha/patches-6.6/048-06-v6.15-net-dsa-mt7530-Enable-Rx-sptag-for-EN7581-SoC.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2599,6 +2599,11 @@ mt7531_setup_common(struct dsa_switch *d
++@@ -2588,6 +2588,11 @@ mt7531_setup_common(struct dsa_switch *d
+  	/* Allow mirroring frames received on the local port (monitor port). */
+  	mt7530_set(priv, MT753X_AGC, LOCAL_EN);
+  
+diff --git a/target/linux/airoha/patches-6.6/401-02-net-dsa-mt7530-Add-AN7583-support.patch b/target/linux/airoha/patches-6.6/401-02-net-dsa-mt7530-Add-AN7583-support.patch
+index ad95475401..0d72a59ad9 100644
+--- a/target/linux/airoha/patches-6.6/401-02-net-dsa-mt7530-Add-AN7583-support.patch
++++ b/target/linux/airoha/patches-6.6/401-02-net-dsa-mt7530-Add-AN7583-support.patch
+@@ -28,7 +28,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	{ /* sentinel */ },
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -1160,7 +1160,7 @@ mt753x_cpu_port_enable(struct dsa_switch
++@@ -1153,7 +1153,7 @@ mt753x_cpu_port_enable(struct dsa_switch
+  	 * is affine to the inbound user port.
+  	 */
+  	if (priv->id == ID_MT7531 || priv->id == ID_MT7988 ||
+@@ -37,7 +37,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  		mt7530_set(priv, MT7531_CFC, MT7531_CPU_PMAP(BIT(port)));
+  
+  	/* CPU port gets connected to all user ports of
+-@@ -2600,7 +2600,7 @@ mt7531_setup_common(struct dsa_switch *d
++@@ -2589,7 +2589,7 @@ mt7531_setup_common(struct dsa_switch *d
+  	mt7530_set(priv, MT753X_AGC, LOCAL_EN);
+  
+  	/* Enable Special Tag for rx frames */
+@@ -46,7 +46,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  		mt7530_write(priv, MT753X_CPORT_SPTAG_CFG,
+  			     CPORT_SW2FE_STAG_EN | CPORT_FE2SW_STAG_EN);
+  
+-@@ -3168,6 +3168,16 @@ static int mt7988_setup(struct dsa_switc
++@@ -3157,6 +3157,16 @@ static int mt7988_setup(struct dsa_switc
+  	reset_control_deassert(priv->rstc);
+  	usleep_range(20, 50);
+  
+@@ -63,7 +63,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+  	/* Reset the switch PHYs */
+  	mt7530_write(priv, MT7530_SYS_CTRL, SYS_CTRL_PHY_RST);
+  
+-@@ -3264,6 +3274,16 @@ const struct mt753x_info mt753x_table[]
++@@ -3253,6 +3263,16 @@ const struct mt753x_info mt753x_table[]
+  		.pcs_ops = &mt7530_pcs_ops,
+  		.sw_setup = mt7988_setup,
+  		.phy_read_c22 = mt7531_ind_c22_phy_read,
+diff --git a/target/linux/ath79/patches-6.6/301-irqchip-irq-ath79-cpu-drop-OF-init-helper.patch b/target/linux/ath79/patches-6.6/301-irqchip-irq-ath79-cpu-drop-OF-init-helper.patch
+new file mode 100644
+index 0000000000..13117d9a8e
+--- /dev/null
++++ b/target/linux/ath79/patches-6.6/301-irqchip-irq-ath79-cpu-drop-OF-init-helper.patch
+@@ -0,0 +1,23 @@
++From e029f998594f151008ecbfa024e2957edd2a5189 Mon Sep 17 00:00:00 2001
++From: John Crispin <john@phrozen.org>
++Date: Tue, 6 Mar 2018 09:58:19 +0100
++Subject: [PATCH 08/33] irqchip/irq-ath79-cpu: drop !OF init helper
++
++Signed-off-by: John Crispin <john@phrozen.org>
++---
++ drivers/irqchip/irq-ath79-cpu.c | 7 -------
++ 1 file changed, 7 deletions(-)
++
++--- a/drivers/irqchip/irq-ath79-cpu.c
+++++ b/drivers/irqchip/irq-ath79-cpu.c
++@@ -85,10 +85,3 @@ static int __init ar79_cpu_intc_of_init(
++ }
++ IRQCHIP_DECLARE(ar79_cpu_intc, "qca,ar7100-cpu-intc",
++ 		ar79_cpu_intc_of_init);
++-
++-void __init ath79_cpu_irq_init(unsigned irq_wb_chan2, unsigned irq_wb_chan3)
++-{
++-	irq_wb_chan[2] = irq_wb_chan2;
++-	irq_wb_chan[3] = irq_wb_chan3;
++-	mips_cpu_irq_init();
++-}
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0057-Revert-spi-spidev-Fix-CS-polarity-if-GPIO-descriptor.patch b/target/linux/bcm27xx/patches-6.6/950-0057-Revert-spi-spidev-Fix-CS-polarity-if-GPIO-descriptor.patch
+index df73a17ff1..2bbbbac614 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0057-Revert-spi-spidev-Fix-CS-polarity-if-GPIO-descriptor.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0057-Revert-spi-spidev-Fix-CS-polarity-if-GPIO-descriptor.patch
+@@ -11,7 +11,7 @@ This reverts commit 83b2a8fe43bda0c11981ad6afa5dd0104d78be28.
+ 
+ --- a/drivers/spi/spidev.c
+ +++ b/drivers/spi/spidev.c
+-@@ -411,7 +411,6 @@ spidev_ioctl(struct file *filp, unsigned
++@@ -424,7 +424,6 @@ spidev_ioctl(struct file *filp, unsigned
+  		else
+  			retval = get_user(tmp, (u32 __user *)arg);
+  		if (retval == 0) {
+@@ -19,7 +19,7 @@ This reverts commit 83b2a8fe43bda0c11981ad6afa5dd0104d78be28.
+  			u32	save = spi->mode;
+  
+  			if (tmp & ~SPI_MODE_MASK) {
+-@@ -419,10 +418,6 @@ spidev_ioctl(struct file *filp, unsigned
++@@ -432,10 +431,6 @@ spidev_ioctl(struct file *filp, unsigned
+  				break;
+  			}
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0070-spi-spidev-Completely-disable-the-spidev-warning.patch b/target/linux/bcm27xx/patches-6.6/950-0070-spi-spidev-Completely-disable-the-spidev-warning.patch
+index fc877d3b89..a83a51eae2 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0070-spi-spidev-Completely-disable-the-spidev-warning.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0070-spi-spidev-Completely-disable-the-spidev-warning.patch
+@@ -13,7 +13,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+ 
+ --- a/drivers/spi/spidev.c
+ +++ b/drivers/spi/spidev.c
+-@@ -703,7 +703,7 @@ MODULE_DEVICE_TABLE(spi, spidev_spi_ids)
++@@ -721,7 +721,7 @@ MODULE_DEVICE_TABLE(spi, spidev_spi_ids)
+   */
+  static int spidev_of_check(struct device *dev)
+  {
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0158-bcmgenet-Better-coalescing-parameter-defaults.patch b/target/linux/bcm27xx/patches-6.6/950-0158-bcmgenet-Better-coalescing-parameter-defaults.patch
+index 8ad429a9ea..18996c2fe5 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0158-bcmgenet-Better-coalescing-parameter-defaults.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0158-bcmgenet-Better-coalescing-parameter-defaults.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+ 
+ --- a/drivers/net/ethernet/broadcom/genet/bcmgenet.c
+ +++ b/drivers/net/ethernet/broadcom/genet/bcmgenet.c
+-@@ -2683,7 +2683,7 @@ static void bcmgenet_init_tx_ring(struct
++@@ -2684,7 +2684,7 @@ static void bcmgenet_init_tx_ring(struct
+  
+  	bcmgenet_tdma_ring_writel(priv, index, 0, TDMA_PROD_INDEX);
+  	bcmgenet_tdma_ring_writel(priv, index, 0, TDMA_CONS_INDEX);
+@@ -27,7 +27,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  	/* Disable rate control for now */
+  	bcmgenet_tdma_ring_writel(priv, index, flow_period_val,
+  				  TDMA_FLOW_PERIOD);
+-@@ -4082,9 +4082,10 @@ static int bcmgenet_probe(struct platfor
++@@ -4083,9 +4083,10 @@ static int bcmgenet_probe(struct platfor
+  	netif_set_real_num_rx_queues(priv->dev, priv->hw_params->rx_queues + 1);
+  
+  	/* Set default coalescing parameters */
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0170-net-bcmgenet-Workaround-2-for-Pi4-Ethernet-fail.patch b/target/linux/bcm27xx/patches-6.6/950-0170-net-bcmgenet-Workaround-2-for-Pi4-Ethernet-fail.patch
+index ea17dae9b5..64873a3c5f 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0170-net-bcmgenet-Workaround-2-for-Pi4-Ethernet-fail.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0170-net-bcmgenet-Workaround-2-for-Pi4-Ethernet-fail.patch
+@@ -37,7 +37,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  
+  static inline void bcmgenet_writel(u32 value, void __iomem *offset)
+  {
+-@@ -2521,6 +2524,11 @@ static void reset_umac(struct bcmgenet_p
++@@ -2522,6 +2525,11 @@ static void reset_umac(struct bcmgenet_p
+  	bcmgenet_rbuf_ctrl_set(priv, 0);
+  	udelay(10);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0400-net-bcmgenet-Add-eee-module-parameter.patch b/target/linux/bcm27xx/patches-6.6/950-0400-net-bcmgenet-Add-eee-module-parameter.patch
+index 4f50e159b2..dd65f3edb7 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0400-net-bcmgenet-Add-eee-module-parameter.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0400-net-bcmgenet-Add-eee-module-parameter.patch
+@@ -26,7 +26,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+  
+  static inline void bcmgenet_writel(u32 value, void __iomem *offset)
+  {
+-@@ -3368,6 +3371,17 @@ static int bcmgenet_open(struct net_devi
++@@ -3369,6 +3372,17 @@ static int bcmgenet_open(struct net_devi
+  
+  	bcmgenet_phy_pause_set(dev, priv->rx_pause, priv->tx_pause);
+  
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1232-spi-spidev-Restore-loading-from-Device-Tree.patch b/target/linux/bcm27xx/patches-6.6/950-1232-spi-spidev-Restore-loading-from-Device-Tree.patch
+index 4aa3280f89..8384559dad 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-1232-spi-spidev-Restore-loading-from-Device-Tree.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-1232-spi-spidev-Restore-loading-from-Device-Tree.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.com>
+ 
+ --- a/drivers/spi/spidev.c
+ +++ b/drivers/spi/spidev.c
+-@@ -693,6 +693,7 @@ static const struct spi_device_id spidev
++@@ -711,6 +711,7 @@ static const struct spi_device_id spidev
+  	{ .name = "spi-authenta" },
+  	{ .name = "em3581" },
+  	{ .name = "si3210" },
+diff --git a/target/linux/gemini/patches-6.6/0006-net-ethernet-cortina-Rename-adjust-link-callback.patch b/target/linux/gemini/patches-6.6/0006-net-ethernet-cortina-Rename-adjust-link-callback.patch
+index 47110dbd96..bbdef8fefc 100644
+--- a/target/linux/gemini/patches-6.6/0006-net-ethernet-cortina-Rename-adjust-link-callback.patch
++++ b/target/linux/gemini/patches-6.6/0006-net-ethernet-cortina-Rename-adjust-link-callback.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+ 
+ --- a/drivers/net/ethernet/cortina/gemini.c
+ +++ b/drivers/net/ethernet/cortina/gemini.c
+-@@ -291,7 +291,7 @@ static void gmac_set_flow_control(struct
++@@ -288,7 +288,7 @@ static void gmac_set_flow_control(struct
+  	spin_unlock_irqrestore(&port->config_lock, flags);
+  }
+  
+@@ -25,7 +25,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+  {
+  	struct gemini_ethernet_port *port = netdev_priv(netdev);
+  	struct phy_device *phydev = netdev->phydev;
+-@@ -370,7 +370,7 @@ static int gmac_setup_phy(struct net_dev
++@@ -367,7 +367,7 @@ static int gmac_setup_phy(struct net_dev
+  
+  	phy = of_phy_get_and_connect(netdev,
+  				     dev->of_node,
+diff --git a/target/linux/gemini/patches-6.6/0007-net-ethernet-cortina-Use-negotiated-TX-RX-pause.patch b/target/linux/gemini/patches-6.6/0007-net-ethernet-cortina-Use-negotiated-TX-RX-pause.patch
+index a8f9f82d66..a1b8707f72 100644
+--- a/target/linux/gemini/patches-6.6/0007-net-ethernet-cortina-Use-negotiated-TX-RX-pause.patch
++++ b/target/linux/gemini/patches-6.6/0007-net-ethernet-cortina-Use-negotiated-TX-RX-pause.patch
+@@ -15,7 +15,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+ 
+ --- a/drivers/net/ethernet/cortina/gemini.c
+ +++ b/drivers/net/ethernet/cortina/gemini.c
+-@@ -296,8 +296,8 @@ static void gmac_adjust_link(struct net_
++@@ -293,8 +293,8 @@ static void gmac_adjust_link(struct net_
+  	struct gemini_ethernet_port *port = netdev_priv(netdev);
+  	struct phy_device *phydev = netdev->phydev;
+  	union gmac_status status, old_status;
+@@ -26,7 +26,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+  
+  	status.bits32 = readl(port->gmac_base + GMAC_STATUS);
+  	old_status.bits32 = status.bits32;
+-@@ -332,14 +332,9 @@ static void gmac_adjust_link(struct net_
++@@ -329,14 +329,9 @@ static void gmac_adjust_link(struct net_
+  	}
+  
+  	if (phydev->duplex == DUPLEX_FULL) {
+diff --git a/target/linux/gemini/patches-6.6/0008-net-ethernet-cortina-Implement-.set_pauseparam.patch b/target/linux/gemini/patches-6.6/0008-net-ethernet-cortina-Implement-.set_pauseparam.patch
+index 58e0eed29f..687c352911 100644
+--- a/target/linux/gemini/patches-6.6/0008-net-ethernet-cortina-Implement-.set_pauseparam.patch
++++ b/target/linux/gemini/patches-6.6/0008-net-ethernet-cortina-Implement-.set_pauseparam.patch
+@@ -16,7 +16,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+ 
+ --- a/drivers/net/ethernet/cortina/gemini.c
+ +++ b/drivers/net/ethernet/cortina/gemini.c
+-@@ -2164,6 +2164,19 @@ static void gmac_get_pauseparam(struct n
++@@ -2147,6 +2147,19 @@ static void gmac_get_pauseparam(struct n
+  	pparam->autoneg = true;
+  }
+  
+@@ -36,7 +36,7 @@ Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+  static void gmac_get_ringparam(struct net_device *netdev,
+  			       struct ethtool_ringparam *rp,
+  			       struct kernel_ethtool_ringparam *kernel_rp,
+-@@ -2284,6 +2297,7 @@ static const struct ethtool_ops gmac_351
++@@ -2267,6 +2280,7 @@ static const struct ethtool_ops gmac_351
+  	.set_link_ksettings = gmac_set_ksettings,
+  	.nway_reset	= gmac_nway_reset,
+  	.get_pauseparam	= gmac_get_pauseparam,
+diff --git a/target/linux/generic/backport-6.6/714-v6.8-02-net-phy-extend-PHY-package-API-to-support-multiple-g.patch b/target/linux/generic/backport-6.6/714-v6.8-02-net-phy-extend-PHY-package-API-to-support-multiple-g.patch
+index 3047d34a27..9a8950d8ab 100644
+--- a/target/linux/generic/backport-6.6/714-v6.8-02-net-phy-extend-PHY-package-API-to-support-multiple-g.patch
++++ b/target/linux/generic/backport-6.6/714-v6.8-02-net-phy-extend-PHY-package-API-to-support-multiple-g.patch
+@@ -242,7 +242,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  	refcount_t refcnt;
+  	unsigned long flags;
+  	size_t priv_size;
+-@@ -1967,10 +1968,10 @@ int phy_ethtool_get_link_ksettings(struc
++@@ -1966,10 +1967,10 @@ int phy_ethtool_get_link_ksettings(struc
+  int phy_ethtool_set_link_ksettings(struct net_device *ndev,
+  				   const struct ethtool_link_ksettings *cmd);
+  int phy_ethtool_nway_reset(struct net_device *ndev);
+@@ -255,7 +255,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  
+  int __init mdio_bus_init(void);
+  void mdio_bus_exit(void);
+-@@ -1993,46 +1994,65 @@ int __phy_hwtstamp_set(struct phy_device
++@@ -1992,46 +1993,65 @@ int __phy_hwtstamp_set(struct phy_device
+  		       struct kernel_hwtstamp_config *config,
+  		       struct netlink_ext_ack *extack);
+  
+diff --git a/target/linux/generic/backport-6.6/714-v6.8-04-net-phy-add-support-for-PHY-package-MMD-read-write.patch b/target/linux/generic/backport-6.6/714-v6.8-04-net-phy-add-support-for-PHY-package-MMD-read-write.patch
+index 13df783a3f..d42da1b71f 100644
+--- a/target/linux/generic/backport-6.6/714-v6.8-04-net-phy-add-support-for-PHY-package-MMD-read-write.patch
++++ b/target/linux/generic/backport-6.6/714-v6.8-04-net-phy-add-support-for-PHY-package-MMD-read-write.patch
+@@ -171,7 +171,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+   * @regnum: register number to modify
+ --- a/include/linux/phy.h
+ +++ b/include/linux/phy.h
+-@@ -2055,6 +2055,22 @@ static inline int __phy_package_write(st
++@@ -2054,6 +2054,22 @@ static inline int __phy_package_write(st
+  	return __mdiobus_write(phydev->mdio.bus, addr, regnum, val);
+  }
+  
+diff --git a/target/linux/generic/backport-6.6/716-v6.9-03-net-phy-add-devm-of_phy_package_join-helper.patch b/target/linux/generic/backport-6.6/716-v6.9-03-net-phy-add-devm-of_phy_package_join-helper.patch
+index efed67325e..c2de8356dc 100644
+--- a/target/linux/generic/backport-6.6/716-v6.9-03-net-phy-add-devm-of_phy_package_join-helper.patch
++++ b/target/linux/generic/backport-6.6/716-v6.9-03-net-phy-add-devm-of_phy_package_join-helper.patch
+@@ -170,7 +170,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  	refcount_t refcnt;
+  	unsigned long flags;
+  	size_t priv_size;
+-@@ -1969,9 +1972,12 @@ int phy_ethtool_set_link_ksettings(struc
++@@ -1968,9 +1971,12 @@ int phy_ethtool_set_link_ksettings(struc
+  				   const struct ethtool_link_ksettings *cmd);
+  int phy_ethtool_nway_reset(struct net_device *ndev);
+  int phy_package_join(struct phy_device *phydev, int base_addr, size_t priv_size);
+diff --git a/target/linux/generic/backport-6.6/750-01-v6.8-net-phy-add-genphy_c45_pma_read_ext_abilities.patch b/target/linux/generic/backport-6.6/750-01-v6.8-net-phy-add-genphy_c45_pma_read_ext_abilities.patch
+new file mode 100644
+index 0000000000..343dc3133f
+--- /dev/null
++++ b/target/linux/generic/backport-6.6/750-01-v6.8-net-phy-add-genphy_c45_pma_read_ext_abilities.patch
+@@ -0,0 +1,180 @@
++From 0c476157085fe2ad13b9bec70ea672e86647fa1a Mon Sep 17 00:00:00 2001
++From: Oleksij Rempel <o.rempel@pengutronix.de>
++Date: Tue, 12 Dec 2023 06:41:43 +0100
++Subject: [PATCH] net: phy: c45: add genphy_c45_pma_read_ext_abilities()
++ function
++
++Move part of the genphy_c45_pma_read_abilities() code to a separate
++function.
++
++Some PHYs do not implement PMA/PMD status 2 register (Register 1.8) but
++do implement PMA/PMD extended ability register (Register 1.11). To make
++use of it, we need to be able to access this part of code separately.
++
++Signed-off-by: Oleksij Rempel <o.rempel@pengutronix.de>
++Reviewed-by: Andrew Lunn <andrew@lunn.ch>
++Reviewed-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk>
++Link: https://lore.kernel.org/r/20231212054144.87527-2-o.rempel@pengutronix.de
++Signed-off-by: Jakub Kicinski <kuba@kernel.org>
++---
++ drivers/net/phy/phy-c45.c | 129 ++++++++++++++++++++++----------------
++ include/linux/phy.h       |   1 +
++ 2 files changed, 75 insertions(+), 55 deletions(-)
++
++--- a/drivers/net/phy/phy-c45.c
+++++ b/drivers/net/phy/phy-c45.c
++@@ -920,6 +920,79 @@ int genphy_c45_pma_baset1_read_abilities
++ EXPORT_SYMBOL_GPL(genphy_c45_pma_baset1_read_abilities);
++ 
++ /**
+++ * genphy_c45_pma_read_ext_abilities - read supported link modes from PMA
+++ * @phydev: target phy_device struct
+++ *
+++ * Read the supported link modes from the PMA/PMD extended ability register
+++ * (Register 1.11).
+++ */
+++int genphy_c45_pma_read_ext_abilities(struct phy_device *phydev)
+++{
+++	int val;
+++
+++	val = phy_read_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_PMA_EXTABLE);
+++	if (val < 0)
+++		return val;
+++
+++	linkmode_mod_bit(ETHTOOL_LINK_MODE_10000baseLRM_Full_BIT,
+++			 phydev->supported,
+++			 val & MDIO_PMA_EXTABLE_10GBLRM);
+++	linkmode_mod_bit(ETHTOOL_LINK_MODE_10000baseT_Full_BIT,
+++			 phydev->supported,
+++			 val & MDIO_PMA_EXTABLE_10GBT);
+++	linkmode_mod_bit(ETHTOOL_LINK_MODE_10000baseKX4_Full_BIT,
+++			 phydev->supported,
+++			 val & MDIO_PMA_EXTABLE_10GBKX4);
+++	linkmode_mod_bit(ETHTOOL_LINK_MODE_10000baseKR_Full_BIT,
+++			 phydev->supported,
+++			 val & MDIO_PMA_EXTABLE_10GBKR);
+++	linkmode_mod_bit(ETHTOOL_LINK_MODE_1000baseT_Full_BIT,
+++			 phydev->supported,
+++			 val & MDIO_PMA_EXTABLE_1000BT);
+++	linkmode_mod_bit(ETHTOOL_LINK_MODE_1000baseKX_Full_BIT,
+++			 phydev->supported,
+++			 val & MDIO_PMA_EXTABLE_1000BKX);
+++
+++	linkmode_mod_bit(ETHTOOL_LINK_MODE_100baseT_Full_BIT,
+++			 phydev->supported,
+++			 val & MDIO_PMA_EXTABLE_100BTX);
+++	linkmode_mod_bit(ETHTOOL_LINK_MODE_100baseT_Half_BIT,
+++			 phydev->supported,
+++			 val & MDIO_PMA_EXTABLE_100BTX);
+++
+++	linkmode_mod_bit(ETHTOOL_LINK_MODE_10baseT_Full_BIT,
+++			 phydev->supported,
+++			 val & MDIO_PMA_EXTABLE_10BT);
+++	linkmode_mod_bit(ETHTOOL_LINK_MODE_10baseT_Half_BIT,
+++			 phydev->supported,
+++			 val & MDIO_PMA_EXTABLE_10BT);
+++
+++	if (val & MDIO_PMA_EXTABLE_NBT) {
+++		val = phy_read_mmd(phydev, MDIO_MMD_PMAPMD,
+++				   MDIO_PMA_NG_EXTABLE);
+++		if (val < 0)
+++			return val;
+++
+++		linkmode_mod_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT,
+++				 phydev->supported,
+++				 val & MDIO_PMA_NG_EXTABLE_2_5GBT);
+++
+++		linkmode_mod_bit(ETHTOOL_LINK_MODE_5000baseT_Full_BIT,
+++				 phydev->supported,
+++				 val & MDIO_PMA_NG_EXTABLE_5GBT);
+++	}
+++
+++	if (val & MDIO_PMA_EXTABLE_BT1) {
+++		val = genphy_c45_pma_baset1_read_abilities(phydev);
+++		if (val < 0)
+++			return val;
+++	}
+++
+++	return 0;
+++}
+++EXPORT_SYMBOL_GPL(genphy_c45_pma_read_ext_abilities);
+++
+++/**
++  * genphy_c45_pma_read_abilities - read supported link modes from PMA
++  * @phydev: target phy_device struct
++  *
++@@ -962,63 +1035,9 @@ int genphy_c45_pma_read_abilities(struct
++ 			 val & MDIO_PMA_STAT2_10GBER);
++ 
++ 	if (val & MDIO_PMA_STAT2_EXTABLE) {
++-		val = phy_read_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_PMA_EXTABLE);
+++		val = genphy_c45_pma_read_ext_abilities(phydev);
++ 		if (val < 0)
++ 			return val;
++-
++-		linkmode_mod_bit(ETHTOOL_LINK_MODE_10000baseLRM_Full_BIT,
++-				 phydev->supported,
++-				 val & MDIO_PMA_EXTABLE_10GBLRM);
++-		linkmode_mod_bit(ETHTOOL_LINK_MODE_10000baseT_Full_BIT,
++-				 phydev->supported,
++-				 val & MDIO_PMA_EXTABLE_10GBT);
++-		linkmode_mod_bit(ETHTOOL_LINK_MODE_10000baseKX4_Full_BIT,
++-				 phydev->supported,
++-				 val & MDIO_PMA_EXTABLE_10GBKX4);
++-		linkmode_mod_bit(ETHTOOL_LINK_MODE_10000baseKR_Full_BIT,
++-				 phydev->supported,
++-				 val & MDIO_PMA_EXTABLE_10GBKR);
++-		linkmode_mod_bit(ETHTOOL_LINK_MODE_1000baseT_Full_BIT,
++-				 phydev->supported,
++-				 val & MDIO_PMA_EXTABLE_1000BT);
++-		linkmode_mod_bit(ETHTOOL_LINK_MODE_1000baseKX_Full_BIT,
++-				 phydev->supported,
++-				 val & MDIO_PMA_EXTABLE_1000BKX);
++-
++-		linkmode_mod_bit(ETHTOOL_LINK_MODE_100baseT_Full_BIT,
++-				 phydev->supported,
++-				 val & MDIO_PMA_EXTABLE_100BTX);
++-		linkmode_mod_bit(ETHTOOL_LINK_MODE_100baseT_Half_BIT,
++-				 phydev->supported,
++-				 val & MDIO_PMA_EXTABLE_100BTX);
++-
++-		linkmode_mod_bit(ETHTOOL_LINK_MODE_10baseT_Full_BIT,
++-				 phydev->supported,
++-				 val & MDIO_PMA_EXTABLE_10BT);
++-		linkmode_mod_bit(ETHTOOL_LINK_MODE_10baseT_Half_BIT,
++-				 phydev->supported,
++-				 val & MDIO_PMA_EXTABLE_10BT);
++-
++-		if (val & MDIO_PMA_EXTABLE_NBT) {
++-			val = phy_read_mmd(phydev, MDIO_MMD_PMAPMD,
++-					   MDIO_PMA_NG_EXTABLE);
++-			if (val < 0)
++-				return val;
++-
++-			linkmode_mod_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT,
++-					 phydev->supported,
++-					 val & MDIO_PMA_NG_EXTABLE_2_5GBT);
++-
++-			linkmode_mod_bit(ETHTOOL_LINK_MODE_5000baseT_Full_BIT,
++-					 phydev->supported,
++-					 val & MDIO_PMA_NG_EXTABLE_5GBT);
++-		}
++-
++-		if (val & MDIO_PMA_EXTABLE_BT1) {
++-			val = genphy_c45_pma_baset1_read_abilities(phydev);
++-			if (val < 0)
++-				return val;
++-		}
++ 	}
++ 
++ 	/* This is optional functionality. If not supported, we may get an error
++--- a/include/linux/phy.h
+++++ b/include/linux/phy.h
++@@ -1861,6 +1861,7 @@ int genphy_c45_an_config_aneg(struct phy
++ int genphy_c45_an_disable_aneg(struct phy_device *phydev);
++ int genphy_c45_read_mdix(struct phy_device *phydev);
++ int genphy_c45_pma_read_abilities(struct phy_device *phydev);
+++int genphy_c45_pma_read_ext_abilities(struct phy_device *phydev);
++ int genphy_c45_pma_baset1_read_abilities(struct phy_device *phydev);
++ int genphy_c45_read_eee_abilities(struct phy_device *phydev);
++ int genphy_c45_pma_baset1_read_master_slave(struct phy_device *phydev);
+diff --git a/target/linux/generic/backport-6.6/790-02-v6.7-net-dsa-mt753x-remove-mt753x_phylink_pcs_link_up.patch b/target/linux/generic/backport-6.6/790-02-v6.7-net-dsa-mt753x-remove-mt753x_phylink_pcs_link_up.patch
+index 21a3ebeb16..d99822a2e0 100644
+--- a/target/linux/generic/backport-6.6/790-02-v6.7-net-dsa-mt753x-remove-mt753x_phylink_pcs_link_up.patch
++++ b/target/linux/generic/backport-6.6/790-02-v6.7-net-dsa-mt753x-remove-mt753x_phylink_pcs_link_up.patch
+@@ -24,7 +24,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -3036,15 +3036,6 @@ static void mt753x_phylink_mac_link_down
++@@ -3033,15 +3033,6 @@ static void mt753x_phylink_mac_link_down
+  	mt7530_clear(priv, MT7530_PMCR_P(port), PMCR_LINK_SETTINGS_MASK);
+  }
+  
+@@ -40,7 +40,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  static void mt753x_phylink_mac_link_up(struct dsa_switch *ds, int port,
+  				       unsigned int mode,
+  				       phy_interface_t interface,
+-@@ -3132,8 +3123,6 @@ mt7531_cpu_port_config(struct dsa_switch
++@@ -3129,8 +3120,6 @@ mt7531_cpu_port_config(struct dsa_switch
+  		return ret;
+  	mt7530_write(priv, MT7530_PMCR_P(port),
+  		     PMCR_CPU_PORT_SETTING(priv->id));
+diff --git a/target/linux/generic/backport-6.6/790-04-v6.9-net-dsa-mt7530-support-OF-based-registration-of-swit.patch b/target/linux/generic/backport-6.6/790-04-v6.9-net-dsa-mt7530-support-OF-based-registration-of-swit.patch
+index d0ef90dc5d..74f6c1129c 100644
+--- a/target/linux/generic/backport-6.6/790-04-v6.9-net-dsa-mt7530-support-OF-based-registration-of-swit.patch
++++ b/target/linux/generic/backport-6.6/790-04-v6.9-net-dsa-mt7530-support-OF-based-registration-of-swit.patch
+@@ -46,7 +46,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2344,24 +2344,40 @@ mt7530_free_irq_common(struct mt7530_pri
++@@ -2345,24 +2345,40 @@ mt7530_free_irq_common(struct mt7530_pri
+  static void
+  mt7530_free_irq(struct mt7530_priv *priv)
+  {
+@@ -92,7 +92,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	bus->priv = priv;
+  	bus->name = KBUILD_MODNAME "-mii";
+  	snprintf(bus->id, MII_BUS_ID_SIZE, KBUILD_MODNAME "-%d", idx++);
+-@@ -2372,16 +2388,18 @@ mt7530_setup_mdio(struct mt7530_priv *pr
++@@ -2373,16 +2389,18 @@ mt7530_setup_mdio(struct mt7530_priv *pr
+  	bus->parent = dev;
+  	bus->phy_mask = ~ds->phys_mii_mask;
+  
+diff --git a/target/linux/generic/backport-6.6/790-05-v6.9-net-dsa-mt7530-always-trap-frames-to-active-CPU-port.patch b/target/linux/generic/backport-6.6/790-05-v6.9-net-dsa-mt7530-always-trap-frames-to-active-CPU-port.patch
+index 91447fd46c..8fab36a4aa 100644
+--- a/target/linux/generic/backport-6.6/790-05-v6.9-net-dsa-mt7530-always-trap-frames-to-active-CPU-port.patch
++++ b/target/linux/generic/backport-6.6/790-05-v6.9-net-dsa-mt7530-always-trap-frames-to-active-CPU-port.patch
+@@ -38,7 +38,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -1231,10 +1231,6 @@ mt753x_cpu_port_enable(struct dsa_switch
++@@ -1232,10 +1232,6 @@ mt753x_cpu_port_enable(struct dsa_switch
+  	mt7530_set(priv, MT7530_MFC, BC_FFP(BIT(port)) | UNM_FFP(BIT(port)) |
+  		   UNU_FFP(BIT(port)));
+  
+@@ -49,7 +49,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	/* Add the CPU port to the CPU port bitmap for MT7531 and the switch on
+  	 * the MT7988 SoC. Trapped frames will be forwarded to the CPU port that
+  	 * is affine to the inbound user port.
+-@@ -3304,6 +3300,36 @@ static int mt753x_set_mac_eee(struct dsa
++@@ -3301,6 +3297,36 @@ static int mt753x_set_mac_eee(struct dsa
+  	return 0;
+  }
+  
+@@ -86,7 +86,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  static int mt7988_pad_setup(struct dsa_switch *ds, phy_interface_t interface)
+  {
+  	return 0;
+-@@ -3359,6 +3385,7 @@ const struct dsa_switch_ops mt7530_switc
++@@ -3356,6 +3382,7 @@ const struct dsa_switch_ops mt7530_switc
+  	.phylink_mac_link_up	= mt753x_phylink_mac_link_up,
+  	.get_mac_eee		= mt753x_get_mac_eee,
+  	.set_mac_eee		= mt753x_set_mac_eee,
+diff --git a/target/linux/generic/backport-6.6/790-07-v6.9-net-dsa-mt7530-store-port-5-SGMII-capability-of-MT75.patch b/target/linux/generic/backport-6.6/790-07-v6.9-net-dsa-mt7530-store-port-5-SGMII-capability-of-MT75.patch
+index 8f56fe207c..43730f8aaa 100644
+--- a/target/linux/generic/backport-6.6/790-07-v6.9-net-dsa-mt7530-store-port-5-SGMII-capability-of-MT75.patch
++++ b/target/linux/generic/backport-6.6/790-07-v6.9-net-dsa-mt7530-store-port-5-SGMII-capability-of-MT75.patch
+@@ -91,7 +91,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	val = mt7530_read(priv, MT7531_CREV);
+  	top_sig = mt7530_read(priv, MT7531_TOP_SIG_SR);
+  	hwstrap = mt7530_read(priv, MT7531_HWTRAP);
+-@@ -924,8 +912,6 @@ static const char *p5_intf_modes(unsigne
++@@ -920,8 +908,6 @@ static const char *p5_intf_modes(unsigne
+  		return "PHY P4";
+  	case P5_INTF_SEL_GMAC5:
+  		return "GMAC5";
+@@ -100,7 +100,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	default:
+  		return "unknown";
+  	}
+-@@ -2701,6 +2687,12 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2698,6 +2684,12 @@ mt7531_setup(struct dsa_switch *ds)
+  		return -ENODEV;
+  	}
+  
+@@ -113,7 +113,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	/* all MACs must be forced link-down before sw reset */
+  	for (i = 0; i < MT7530_NUM_PORTS; i++)
+  		mt7530_write(priv, MT7530_PMCR_P(i), MT7531_FORCE_LNK);
+-@@ -2710,21 +2702,18 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2707,21 +2699,18 @@ mt7531_setup(struct dsa_switch *ds)
+  		     SYS_CTRL_PHY_RST | SYS_CTRL_SW_RST |
+  		     SYS_CTRL_REG_RST);
+  
+@@ -141,7 +141,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  
+  	mt7530_rmw(priv, MT7531_GPIO_MODE0, MT7531_GPIO0_MASK,
+  		   MT7531_GPIO0_INTERRUPT);
+-@@ -2783,11 +2772,6 @@ static void mt7530_mac_port_get_caps(str
++@@ -2780,11 +2769,6 @@ static void mt7530_mac_port_get_caps(str
+  	}
+  }
+  
+@@ -153,7 +153,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  static void mt7531_mac_port_get_caps(struct dsa_switch *ds, int port,
+  				     struct phylink_config *config)
+  {
+-@@ -2800,7 +2784,7 @@ static void mt7531_mac_port_get_caps(str
++@@ -2797,7 +2781,7 @@ static void mt7531_mac_port_get_caps(str
+  		break;
+  
+  	case 5: /* 2nd cpu port supports either rgmii or sgmii/8023z */
+@@ -162,7 +162,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  			phy_interface_set_rgmii(config->supported_interfaces);
+  			break;
+  		}
+-@@ -2867,7 +2851,7 @@ static int mt7531_rgmii_setup(struct mt7
++@@ -2864,7 +2848,7 @@ static int mt7531_rgmii_setup(struct mt7
+  {
+  	u32 val;
+  
+@@ -171,7 +171,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		dev_err(priv->dev, "RGMII mode is not available for port %d\n",
+  			port);
+  		return -EINVAL;
+-@@ -3110,7 +3094,7 @@ mt7531_cpu_port_config(struct dsa_switch
++@@ -3107,7 +3091,7 @@ mt7531_cpu_port_config(struct dsa_switch
+  
+  	switch (port) {
+  	case 5:
+@@ -180,7 +180,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  			interface = PHY_INTERFACE_MODE_RGMII;
+  		else
+  			interface = PHY_INTERFACE_MODE_2500BASEX;
+-@@ -3262,7 +3246,7 @@ mt753x_setup(struct dsa_switch *ds)
++@@ -3259,7 +3243,7 @@ mt753x_setup(struct dsa_switch *ds)
+  		mt7530_free_irq_common(priv);
+  
+  	if (priv->create_sgmii) {
+diff --git a/target/linux/generic/backport-6.6/790-08-v6.9-net-dsa-mt7530-improve-comments-regarding-switch-por.patch b/target/linux/generic/backport-6.6/790-08-v6.9-net-dsa-mt7530-improve-comments-regarding-switch-por.patch
+index dd654affd9..3dddbbeee8 100644
+--- a/target/linux/generic/backport-6.6/790-08-v6.9-net-dsa-mt7530-improve-comments-regarding-switch-por.patch
++++ b/target/linux/generic/backport-6.6/790-08-v6.9-net-dsa-mt7530-improve-comments-regarding-switch-por.patch
+@@ -37,7 +37,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2750,12 +2750,14 @@ static void mt7530_mac_port_get_caps(str
++@@ -2747,12 +2747,14 @@ static void mt7530_mac_port_get_caps(str
+  				     struct phylink_config *config)
+  {
+  	switch (port) {
+@@ -54,7 +54,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		phy_interface_set_rgmii(config->supported_interfaces);
+  		__set_bit(PHY_INTERFACE_MODE_MII,
+  			  config->supported_interfaces);
+-@@ -2763,7 +2765,8 @@ static void mt7530_mac_port_get_caps(str
++@@ -2760,7 +2762,8 @@ static void mt7530_mac_port_get_caps(str
+  			  config->supported_interfaces);
+  		break;
+  
+@@ -64,7 +64,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		__set_bit(PHY_INTERFACE_MODE_RGMII,
+  			  config->supported_interfaces);
+  		__set_bit(PHY_INTERFACE_MODE_TRGMII,
+-@@ -2778,19 +2781,24 @@ static void mt7531_mac_port_get_caps(str
++@@ -2775,19 +2778,24 @@ static void mt7531_mac_port_get_caps(str
+  	struct mt7530_priv *priv = ds->priv;
+  
+  	switch (port) {
+@@ -92,7 +92,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		__set_bit(PHY_INTERFACE_MODE_SGMII,
+  			  config->supported_interfaces);
+  		__set_bit(PHY_INTERFACE_MODE_1000BASEX,
+-@@ -2809,11 +2817,13 @@ static void mt7988_mac_port_get_caps(str
++@@ -2806,11 +2814,13 @@ static void mt7988_mac_port_get_caps(str
+  	phy_interface_zero(config->supported_interfaces);
+  
+  	switch (port) {
+@@ -107,7 +107,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	case 6:
+  		__set_bit(PHY_INTERFACE_MODE_INTERNAL,
+  			  config->supported_interfaces);
+-@@ -2977,12 +2987,12 @@ mt753x_phylink_mac_config(struct dsa_swi
++@@ -2974,12 +2984,12 @@ mt753x_phylink_mac_config(struct dsa_swi
+  	u32 mcr_cur, mcr_new;
+  
+  	switch (port) {
+@@ -122,7 +122,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		if (priv->p5_interface == state->interface)
+  			break;
+  
+-@@ -2992,7 +3002,7 @@ mt753x_phylink_mac_config(struct dsa_swi
++@@ -2989,7 +2999,7 @@ mt753x_phylink_mac_config(struct dsa_swi
+  		if (priv->p5_intf_sel != P5_DISABLED)
+  			priv->p5_interface = state->interface;
+  		break;
+diff --git a/target/linux/generic/backport-6.6/790-09-v6.9-net-dsa-mt7530-improve-code-path-for-setting-up-port.patch b/target/linux/generic/backport-6.6/790-09-v6.9-net-dsa-mt7530-improve-code-path-for-setting-up-port.patch
+index 688a1a86a2..9d1b155d4a 100644
+--- a/target/linux/generic/backport-6.6/790-09-v6.9-net-dsa-mt7530-improve-code-path-for-setting-up-port.patch
++++ b/target/linux/generic/backport-6.6/790-09-v6.9-net-dsa-mt7530-improve-code-path-for-setting-up-port.patch
+@@ -52,7 +52,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2530,16 +2530,15 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2529,16 +2529,15 @@ mt7530_setup(struct dsa_switch *ds)
+  		return ret;
+  
+  	/* Setup port 5 */
+@@ -75,7 +75,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		for_each_child_of_node(dn, mac_np) {
+  			if (!of_device_is_compatible(mac_np,
+  						     "mediatek,eth-mac"))
+-@@ -2570,6 +2569,8 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2569,6 +2568,8 @@ mt7530_setup(struct dsa_switch *ds)
+  			of_node_put(phy_node);
+  			break;
+  		}
+@@ -84,7 +84,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	}
+  
+  #ifdef CONFIG_GPIOLIB
+-@@ -2580,8 +2581,6 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2579,8 +2580,6 @@ mt7530_setup(struct dsa_switch *ds)
+  	}
+  #endif /* CONFIG_GPIOLIB */
+  
+diff --git a/target/linux/generic/backport-6.6/790-10-v6.9-net-dsa-mt7530-do-not-set-priv-p5_interface-on-mt753.patch b/target/linux/generic/backport-6.6/790-10-v6.9-net-dsa-mt7530-do-not-set-priv-p5_interface-on-mt753.patch
+index 03faf13080..0b021f07c6 100644
+--- a/target/linux/generic/backport-6.6/790-10-v6.9-net-dsa-mt7530-do-not-set-priv-p5_interface-on-mt753.patch
++++ b/target/linux/generic/backport-6.6/790-10-v6.9-net-dsa-mt7530-do-not-set-priv-p5_interface-on-mt753.patch
+@@ -31,7 +31,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -982,8 +982,6 @@ static void mt7530_setup_port5(struct ds
++@@ -978,8 +978,6 @@ static void mt7530_setup_port5(struct ds
+  	dev_dbg(ds->dev, "Setup P5, HWTRAP=0x%x, intf_sel=%s, phy-mode=%s\n",
+  		val, p5_intf_modes(priv->p5_intf_sel), phy_modes(interface));
+  
+diff --git a/target/linux/generic/backport-6.6/790-11-v6.9-net-dsa-mt7530-do-not-run-mt7530_setup_port5-if-port.patch b/target/linux/generic/backport-6.6/790-11-v6.9-net-dsa-mt7530-do-not-run-mt7530_setup_port5-if-port.patch
+index 89585e5c33..4f93d37e96 100644
+--- a/target/linux/generic/backport-6.6/790-11-v6.9-net-dsa-mt7530-do-not-run-mt7530_setup_port5-if-port.patch
++++ b/target/linux/generic/backport-6.6/790-11-v6.9-net-dsa-mt7530-do-not-run-mt7530_setup_port5-if-port.patch
+@@ -30,7 +30,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -946,9 +946,6 @@ static void mt7530_setup_port5(struct ds
++@@ -942,9 +942,6 @@ static void mt7530_setup_port5(struct ds
+  		/* MT7530_P5_MODE_GMAC: P5 -> External phy or 2nd GMAC */
+  		val &= ~MHWTRAP_P5_DIS;
+  		break;
+@@ -40,7 +40,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	default:
+  		dev_err(ds->dev, "Unsupported p5_intf_sel %d\n",
+  			priv->p5_intf_sel);
+-@@ -2535,8 +2532,6 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2534,8 +2531,6 @@ mt7530_setup(struct dsa_switch *ds)
+  		 * Set priv->p5_intf_sel to the appropriate value if PHY muxing
+  		 * is detected.
+  		 */
+@@ -49,7 +49,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		for_each_child_of_node(dn, mac_np) {
+  			if (!of_device_is_compatible(mac_np,
+  						     "mediatek,eth-mac"))
+-@@ -2568,7 +2563,9 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2567,7 +2562,9 @@ mt7530_setup(struct dsa_switch *ds)
+  			break;
+  		}
+  
+diff --git a/target/linux/generic/backport-6.6/790-12-v6.9-net-dsa-mt7530-empty-default-case-on-mt7530_setup_po.patch b/target/linux/generic/backport-6.6/790-12-v6.9-net-dsa-mt7530-empty-default-case-on-mt7530_setup_po.patch
+index 12f7cbdf2f..c9a57e36a3 100644
+--- a/target/linux/generic/backport-6.6/790-12-v6.9-net-dsa-mt7530-empty-default-case-on-mt7530_setup_po.patch
++++ b/target/linux/generic/backport-6.6/790-12-v6.9-net-dsa-mt7530-empty-default-case-on-mt7530_setup_po.patch
+@@ -37,7 +37,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -947,9 +947,7 @@ static void mt7530_setup_port5(struct ds
++@@ -943,9 +943,7 @@ static void mt7530_setup_port5(struct ds
+  		val &= ~MHWTRAP_P5_DIS;
+  		break;
+  	default:
+@@ -48,7 +48,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	}
+  
+  	/* Setup RGMII settings */
+-@@ -979,7 +977,6 @@ static void mt7530_setup_port5(struct ds
++@@ -975,7 +973,6 @@ static void mt7530_setup_port5(struct ds
+  	dev_dbg(ds->dev, "Setup P5, HWTRAP=0x%x, intf_sel=%s, phy-mode=%s\n",
+  		val, p5_intf_modes(priv->p5_intf_sel), phy_modes(interface));
+  
+diff --git a/target/linux/generic/backport-6.6/790-13-v6.9-net-dsa-mt7530-move-XTAL-check-to-mt7530_setup.patch b/target/linux/generic/backport-6.6/790-13-v6.9-net-dsa-mt7530-move-XTAL-check-to-mt7530_setup.patch
+index 13ecf9d2ed..8058257c53 100644
+--- a/target/linux/generic/backport-6.6/790-13-v6.9-net-dsa-mt7530-move-XTAL-check-to-mt7530_setup.patch
++++ b/target/linux/generic/backport-6.6/790-13-v6.9-net-dsa-mt7530-move-XTAL-check-to-mt7530_setup.patch
+@@ -38,7 +38,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	switch (interface) {
+  	case PHY_INTERFACE_MODE_RGMII:
+  		trgint = 0;
+-@@ -2459,6 +2452,12 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2458,6 +2451,12 @@ mt7530_setup(struct dsa_switch *ds)
+  		return -ENODEV;
+  	}
+  
+diff --git a/target/linux/generic/backport-6.6/790-15-v6.9-net-dsa-mt7530-call-port-6-setup-from-mt7530_mac_con.patch b/target/linux/generic/backport-6.6/790-15-v6.9-net-dsa-mt7530-call-port-6-setup-from-mt7530_mac_con.patch
+index af15efb83a..2180436aba 100644
+--- a/target/linux/generic/backport-6.6/790-15-v6.9-net-dsa-mt7530-call-port-6-setup-from-mt7530_mac_con.patch
++++ b/target/linux/generic/backport-6.6/790-15-v6.9-net-dsa-mt7530-call-port-6-setup-from-mt7530_mac_con.patch
+@@ -79,7 +79,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  	return 0;
+  }
+  
+-@@ -2825,11 +2829,10 @@ mt7530_mac_config(struct dsa_switch *ds,
++@@ -2822,11 +2826,10 @@ mt7530_mac_config(struct dsa_switch *ds,
+  {
+  	struct mt7530_priv *priv = ds->priv;
+  
+diff --git a/target/linux/generic/backport-6.6/790-16-v6.9-net-dsa-mt7530-remove-pad_setup-function-pointer.patch b/target/linux/generic/backport-6.6/790-16-v6.9-net-dsa-mt7530-remove-pad_setup-function-pointer.patch
+index 133698b504..c7e2af8ca8 100644
+--- a/target/linux/generic/backport-6.6/790-16-v6.9-net-dsa-mt7530-remove-pad_setup-function-pointer.patch
++++ b/target/linux/generic/backport-6.6/790-16-v6.9-net-dsa-mt7530-remove-pad_setup-function-pointer.patch
+@@ -47,7 +47,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  static void
+  mt7531_pll_setup(struct mt7530_priv *priv)
+  {
+-@@ -2816,14 +2804,6 @@ static void mt7988_mac_port_get_caps(str
++@@ -2813,14 +2801,6 @@ static void mt7988_mac_port_get_caps(str
+  }
+  
+  static int
+@@ -62,7 +62,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  mt7530_mac_config(struct dsa_switch *ds, int port, unsigned int mode,
+  		  phy_interface_t interface)
+  {
+-@@ -2988,8 +2968,6 @@ mt753x_phylink_mac_config(struct dsa_swi
++@@ -2985,8 +2965,6 @@ mt753x_phylink_mac_config(struct dsa_swi
+  		if (priv->p6_interface == state->interface)
+  			break;
+  
+@@ -71,7 +71,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		if (mt753x_mac_config(ds, port, mode, state) < 0)
+  			goto unsupported;
+  
+-@@ -3306,11 +3284,6 @@ mt753x_conduit_state_change(struct dsa_s
++@@ -3303,11 +3281,6 @@ mt753x_conduit_state_change(struct dsa_s
+  	mt7530_rmw(priv, MT7530_MFC, CPU_EN | CPU_PORT_MASK, val);
+  }
+  
+@@ -83,7 +83,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  static int mt7988_setup(struct dsa_switch *ds)
+  {
+  	struct mt7530_priv *priv = ds->priv;
+-@@ -3374,7 +3347,6 @@ const struct mt753x_info mt753x_table[]
++@@ -3371,7 +3344,6 @@ const struct mt753x_info mt753x_table[]
+  		.phy_write_c22 = mt7530_phy_write_c22,
+  		.phy_read_c45 = mt7530_phy_read_c45,
+  		.phy_write_c45 = mt7530_phy_write_c45,
+@@ -91,7 +91,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		.mac_port_get_caps = mt7530_mac_port_get_caps,
+  		.mac_port_config = mt7530_mac_config,
+  	},
+-@@ -3386,7 +3358,6 @@ const struct mt753x_info mt753x_table[]
++@@ -3383,7 +3355,6 @@ const struct mt753x_info mt753x_table[]
+  		.phy_write_c22 = mt7530_phy_write_c22,
+  		.phy_read_c45 = mt7530_phy_read_c45,
+  		.phy_write_c45 = mt7530_phy_write_c45,
+@@ -99,7 +99,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		.mac_port_get_caps = mt7530_mac_port_get_caps,
+  		.mac_port_config = mt7530_mac_config,
+  	},
+-@@ -3398,7 +3369,6 @@ const struct mt753x_info mt753x_table[]
++@@ -3395,7 +3366,6 @@ const struct mt753x_info mt753x_table[]
+  		.phy_write_c22 = mt7531_ind_c22_phy_write,
+  		.phy_read_c45 = mt7531_ind_c45_phy_read,
+  		.phy_write_c45 = mt7531_ind_c45_phy_write,
+@@ -107,7 +107,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		.cpu_port_config = mt7531_cpu_port_config,
+  		.mac_port_get_caps = mt7531_mac_port_get_caps,
+  		.mac_port_config = mt7531_mac_config,
+-@@ -3411,7 +3381,6 @@ const struct mt753x_info mt753x_table[]
++@@ -3408,7 +3378,6 @@ const struct mt753x_info mt753x_table[]
+  		.phy_write_c22 = mt7531_ind_c22_phy_write,
+  		.phy_read_c45 = mt7531_ind_c45_phy_read,
+  		.phy_write_c45 = mt7531_ind_c45_phy_write,
+@@ -115,7 +115,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+  		.cpu_port_config = mt7988_cpu_port_config,
+  		.mac_port_get_caps = mt7988_mac_port_get_caps,
+  		.mac_port_config = mt7988_mac_config,
+-@@ -3441,9 +3410,8 @@ mt7530_probe_common(struct mt7530_priv *
++@@ -3438,9 +3407,8 @@ mt7530_probe_common(struct mt7530_priv *
+  	/* Sanity check if these required device operations are filled
+  	 * properly.
+  	 */
+diff --git a/target/linux/generic/backport-6.6/790-17-v6.9-net-dsa-mt7530-correct-port-capabilities-of-MT7988.patch b/target/linux/generic/backport-6.6/790-17-v6.9-net-dsa-mt7530-correct-port-capabilities-of-MT7988.patch
+index 7c3e08b02e..b833522deb 100644
+--- a/target/linux/generic/backport-6.6/790-17-v6.9-net-dsa-mt7530-correct-port-capabilities-of-MT7988.patch
++++ b/target/linux/generic/backport-6.6/790-17-v6.9-net-dsa-mt7530-correct-port-capabilities-of-MT7988.patch
+@@ -25,7 +25,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2789,7 +2789,7 @@ static void mt7988_mac_port_get_caps(str
++@@ -2786,7 +2786,7 @@ static void mt7988_mac_port_get_caps(str
+  
+  	switch (port) {
+  	/* Ports which are connected to switch PHYs. There is no MII pinout. */
+diff --git a/target/linux/generic/backport-6.6/790-18-v6.9-net-dsa-mt7530-do-not-clear-config-supported_interfa.patch b/target/linux/generic/backport-6.6/790-18-v6.9-net-dsa-mt7530-do-not-clear-config-supported_interfa.patch
+index 2f0b53524b..2b12c3bc71 100644
+--- a/target/linux/generic/backport-6.6/790-18-v6.9-net-dsa-mt7530-do-not-clear-config-supported_interfa.patch
++++ b/target/linux/generic/backport-6.6/790-18-v6.9-net-dsa-mt7530-do-not-clear-config-supported_interfa.patch
+@@ -27,7 +27,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2785,8 +2785,6 @@ static void mt7531_mac_port_get_caps(str
++@@ -2782,8 +2782,6 @@ static void mt7531_mac_port_get_caps(str
+  static void mt7988_mac_port_get_caps(struct dsa_switch *ds, int port,
+  				     struct phylink_config *config)
+  {
+diff --git a/target/linux/generic/backport-6.6/790-19-v6.9-net-dsa-mt7530-remove-.mac_port_config-for-MT7988-an.patch b/target/linux/generic/backport-6.6/790-19-v6.9-net-dsa-mt7530-remove-.mac_port_config-for-MT7988-an.patch
+index 6c1d323ec1..f38c0e80e8 100644
+--- a/target/linux/generic/backport-6.6/790-19-v6.9-net-dsa-mt7530-remove-.mac_port_config-for-MT7988-an.patch
++++ b/target/linux/generic/backport-6.6/790-19-v6.9-net-dsa-mt7530-remove-.mac_port_config-for-MT7988-an.patch
+@@ -33,7 +33,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2868,17 +2868,6 @@ static bool mt753x_is_mac_port(u32 port)
++@@ -2865,17 +2865,6 @@ static bool mt753x_is_mac_port(u32 port)
+  }
+  
+  static int
+@@ -51,7 +51,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  mt7531_mac_config(struct dsa_switch *ds, int port, unsigned int mode,
+  		  phy_interface_t interface)
+  {
+-@@ -2918,6 +2907,9 @@ mt753x_mac_config(struct dsa_switch *ds,
++@@ -2915,6 +2904,9 @@ mt753x_mac_config(struct dsa_switch *ds,
+  {
+  	struct mt7530_priv *priv = ds->priv;
+  
+@@ -61,7 +61,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	return priv->info->mac_port_config(ds, port, mode, state->interface);
+  }
+  
+-@@ -3381,7 +3373,6 @@ const struct mt753x_info mt753x_table[]
++@@ -3378,7 +3370,6 @@ const struct mt753x_info mt753x_table[]
+  		.phy_write_c45 = mt7531_ind_c45_phy_write,
+  		.cpu_port_config = mt7988_cpu_port_config,
+  		.mac_port_get_caps = mt7988_mac_port_get_caps,
+@@ -69,7 +69,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	},
+  };
+  EXPORT_SYMBOL_GPL(mt753x_table);
+-@@ -3409,8 +3400,7 @@ mt7530_probe_common(struct mt7530_priv *
++@@ -3406,8 +3397,7 @@ mt7530_probe_common(struct mt7530_priv *
+  	 * properly.
+  	 */
+  	if (!priv->info->sw_setup || !priv->info->phy_read_c22 ||
+diff --git a/target/linux/generic/backport-6.6/790-20-v6.9-net-dsa-mt7530-set-interrupt-register-only-for-MT753.patch b/target/linux/generic/backport-6.6/790-20-v6.9-net-dsa-mt7530-set-interrupt-register-only-for-MT753.patch
+index d653da3a27..d6eaaaf1d5 100644
+--- a/target/linux/generic/backport-6.6/790-20-v6.9-net-dsa-mt7530-set-interrupt-register-only-for-MT753.patch
++++ b/target/linux/generic/backport-6.6/790-20-v6.9-net-dsa-mt7530-set-interrupt-register-only-for-MT753.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2253,7 +2253,7 @@ mt7530_setup_irq(struct mt7530_priv *pri
++@@ -2254,7 +2254,7 @@ mt7530_setup_irq(struct mt7530_priv *pri
+  	}
+  
+  	/* This register must be set for MT7530 to properly fire interrupts */
+diff --git a/target/linux/generic/backport-6.6/790-21-v6.9-net-dsa-mt7530-do-not-use-SW_PHY_RST-to-reset-MT7531.patch b/target/linux/generic/backport-6.6/790-21-v6.9-net-dsa-mt7530-do-not-use-SW_PHY_RST-to-reset-MT7531.patch
+index cc58a6f6f2..95bf3caaa8 100644
+--- a/target/linux/generic/backport-6.6/790-21-v6.9-net-dsa-mt7530-do-not-use-SW_PHY_RST-to-reset-MT7531.patch
++++ b/target/linux/generic/backport-6.6/790-21-v6.9-net-dsa-mt7530-do-not-use-SW_PHY_RST-to-reset-MT7531.patch
+@@ -22,7 +22,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2664,14 +2664,12 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2661,14 +2661,12 @@ mt7531_setup(struct dsa_switch *ds)
+  	val = mt7530_read(priv, MT7531_TOP_SIG_SR);
+  	priv->p5_sgmii = !!(val & PAD_DUAL_SGMII_EN);
+  
+diff --git a/target/linux/generic/backport-6.6/790-22-v6.9-net-dsa-mt7530-get-rid-of-useless-error-returns-on-p.patch b/target/linux/generic/backport-6.6/790-22-v6.9-net-dsa-mt7530-get-rid-of-useless-error-returns-on-p.patch
+index fea8309f64..e037c9883e 100644
+--- a/target/linux/generic/backport-6.6/790-22-v6.9-net-dsa-mt7530-get-rid-of-useless-error-returns-on-p.patch
++++ b/target/linux/generic/backport-6.6/790-22-v6.9-net-dsa-mt7530-get-rid-of-useless-error-returns-on-p.patch
+@@ -36,7 +36,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2799,7 +2799,7 @@ static void mt7988_mac_port_get_caps(str
++@@ -2796,7 +2796,7 @@ static void mt7988_mac_port_get_caps(str
+  	}
+  }
+  
+@@ -45,7 +45,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  mt7530_mac_config(struct dsa_switch *ds, int port, unsigned int mode,
+  		  phy_interface_t interface)
+  {
+-@@ -2809,22 +2809,14 @@ mt7530_mac_config(struct dsa_switch *ds,
++@@ -2806,22 +2806,14 @@ mt7530_mac_config(struct dsa_switch *ds,
+  		mt7530_setup_port5(priv->ds, interface);
+  	else if (port == 6)
+  		mt7530_setup_port6(priv->ds, interface);
+@@ -71,7 +71,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	val = mt7530_read(priv, MT7531_CLKGEN_CTRL);
+  	val |= GP_CLK_EN;
+  	val &= ~GP_MODE_MASK;
+-@@ -2852,20 +2844,14 @@ static int mt7531_rgmii_setup(struct mt7
++@@ -2849,20 +2841,14 @@ static int mt7531_rgmii_setup(struct mt7
+  		case PHY_INTERFACE_MODE_RGMII_ID:
+  			break;
+  		default:
+@@ -95,7 +95,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  mt7531_mac_config(struct dsa_switch *ds, int port, unsigned int mode,
+  		  phy_interface_t interface)
+  {
+-@@ -2873,42 +2859,21 @@ mt7531_mac_config(struct dsa_switch *ds,
++@@ -2870,42 +2856,21 @@ mt7531_mac_config(struct dsa_switch *ds,
+  	struct phy_device *phydev;
+  	struct dsa_port *dp;
+  
+@@ -143,7 +143,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  }
+  
+  static struct phylink_pcs *
+-@@ -2937,17 +2902,11 @@ mt753x_phylink_mac_config(struct dsa_swi
++@@ -2934,17 +2899,11 @@ mt753x_phylink_mac_config(struct dsa_swi
+  	u32 mcr_cur, mcr_new;
+  
+  	switch (port) {
+@@ -162,7 +162,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  
+  		if (priv->p5_intf_sel != P5_DISABLED)
+  			priv->p5_interface = state->interface;
+-@@ -2956,16 +2915,10 @@ mt753x_phylink_mac_config(struct dsa_swi
++@@ -2953,16 +2912,10 @@ mt753x_phylink_mac_config(struct dsa_swi
+  		if (priv->p6_interface == state->interface)
+  			break;
+  
+@@ -180,7 +180,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	}
+  
+  	mcr_cur = mt7530_read(priv, MT7530_PMCR_P(port));
+-@@ -3048,7 +3001,6 @@ mt7531_cpu_port_config(struct dsa_switch
++@@ -3045,7 +2998,6 @@ mt7531_cpu_port_config(struct dsa_switch
+  	struct mt7530_priv *priv = ds->priv;
+  	phy_interface_t interface;
+  	int speed;
+@@ -188,7 +188,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  
+  	switch (port) {
+  	case 5:
+-@@ -3073,9 +3025,8 @@ mt7531_cpu_port_config(struct dsa_switch
++@@ -3070,9 +3022,8 @@ mt7531_cpu_port_config(struct dsa_switch
+  	else
+  		speed = SPEED_1000;
+  
+diff --git a/target/linux/generic/backport-6.6/790-23-v6.9-net-dsa-mt7530-get-rid-of-priv-info-cpu_port_config.patch b/target/linux/generic/backport-6.6/790-23-v6.9-net-dsa-mt7530-get-rid-of-priv-info-cpu_port_config.patch
+index d66e77767b..eef308d787 100644
+--- a/target/linux/generic/backport-6.6/790-23-v6.9-net-dsa-mt7530-get-rid-of-priv-info-cpu_port_config.patch
++++ b/target/linux/generic/backport-6.6/790-23-v6.9-net-dsa-mt7530-get-rid-of-priv-info-cpu_port_config.patch
+@@ -57,8 +57,8 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -1162,18 +1162,10 @@ mt753x_trap_frames(struct mt7530_priv *p
+- 			   TO_CPU_FW_CPU_ONLY);
++@@ -1163,18 +1163,10 @@ mt753x_trap_frames(struct mt7530_priv *p
++ 			   MT753X_BPDU_CPU_ONLY);
+  }
+  
+ -static int
+@@ -77,7 +77,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  
+  	/* Enable Mediatek header mode on the cpu port */
+  	mt7530_write(priv, MT7530_PVC_P(port),
+-@@ -1199,8 +1191,6 @@ mt753x_cpu_port_enable(struct dsa_switch
++@@ -1200,8 +1192,6 @@ mt753x_cpu_port_enable(struct dsa_switch
+  	/* Set to fallback mode for independent VLAN learning */
+  	mt7530_rmw(priv, MT7530_PCR_P(port), PCR_PORT_VLAN_MASK,
+  		   MT7530_PORT_FALLBACK_MODE);
+@@ -86,7 +86,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  }
+  
+  static int
+-@@ -2459,8 +2449,6 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2458,8 +2448,6 @@ mt7530_setup(struct dsa_switch *ds)
+  	val |= MHWTRAP_MANUAL;
+  	mt7530_write(priv, MT7530_MHWTRAP, val);
+  
+@@ -95,7 +95,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	if ((val & HWTRAP_XTAL_MASK) == HWTRAP_XTAL_40MHZ)
+  		mt7530_pll_setup(priv);
+  
+-@@ -2478,9 +2466,7 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2477,9 +2465,7 @@ mt7530_setup(struct dsa_switch *ds)
+  		mt7530_set(priv, MT7530_PSC_P(i), SA_DIS);
+  
+  		if (dsa_is_cpu_port(ds, i)) {
+@@ -106,7 +106,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  		} else {
+  			mt7530_port_disable(ds, i);
+  
+-@@ -2592,9 +2578,7 @@ mt7531_setup_common(struct dsa_switch *d
++@@ -2589,9 +2575,7 @@ mt7531_setup_common(struct dsa_switch *d
+  		mt7530_set(priv, MT7531_DBG_CNT(i), MT7531_DIS_CLR);
+  
+  		if (dsa_is_cpu_port(ds, i)) {
+@@ -117,7 +117,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  		} else {
+  			mt7530_port_disable(ds, i);
+  
+-@@ -2687,10 +2671,6 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2684,10 +2668,6 @@ mt7531_setup(struct dsa_switch *ds)
+  	mt7530_rmw(priv, MT7531_GPIO_MODE0, MT7531_GPIO0_MASK,
+  		   MT7531_GPIO0_INTERRUPT);
+  
+@@ -128,7 +128,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	/* Enable Energy-Efficient Ethernet (EEE) and PHY core PLL, since
+  	 * phy_device has not yet been created provided for
+  	 * phy_[read,write]_mmd_indirect is called, we provide our own
+-@@ -2901,26 +2881,9 @@ mt753x_phylink_mac_config(struct dsa_swi
++@@ -2898,26 +2878,9 @@ mt753x_phylink_mac_config(struct dsa_swi
+  	struct mt7530_priv *priv = ds->priv;
+  	u32 mcr_cur, mcr_new;
+  
+@@ -156,7 +156,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	mcr_cur = mt7530_read(priv, MT7530_PMCR_P(port));
+  	mcr_new = mcr_cur;
+  	mcr_new &= ~PMCR_LINK_SETTINGS_MASK;
+-@@ -2956,17 +2919,10 @@ static void mt753x_phylink_mac_link_up(s
++@@ -2953,17 +2916,10 @@ static void mt753x_phylink_mac_link_up(s
+  
+  	mcr = PMCR_RX_EN | PMCR_TX_EN | PMCR_FORCE_LNK;
+  
+@@ -176,7 +176,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  		mcr |= PMCR_FORCE_SPEED_1000;
+  		break;
+  	case SPEED_100:
+-@@ -2984,6 +2940,7 @@ static void mt753x_phylink_mac_link_up(s
++@@ -2981,6 +2937,7 @@ static void mt753x_phylink_mac_link_up(s
+  	if (mode == MLO_AN_PHY && phydev && phy_init_eee(phydev, false) >= 0) {
+  		switch (speed) {
+  		case SPEED_1000:
+@@ -184,7 +184,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  			mcr |= PMCR_FORCE_EEE1G;
+  			break;
+  		case SPEED_100:
+-@@ -2995,61 +2952,6 @@ static void mt753x_phylink_mac_link_up(s
++@@ -2992,61 +2949,6 @@ static void mt753x_phylink_mac_link_up(s
+  	mt7530_set(priv, MT7530_PMCR_P(port), mcr);
+  }
+  
+@@ -246,7 +246,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  static void mt753x_phylink_get_caps(struct dsa_switch *ds, int port,
+  				    struct phylink_config *config)
+  {
+-@@ -3308,7 +3210,6 @@ const struct mt753x_info mt753x_table[]
++@@ -3305,7 +3207,6 @@ const struct mt753x_info mt753x_table[]
+  		.phy_write_c22 = mt7531_ind_c22_phy_write,
+  		.phy_read_c45 = mt7531_ind_c45_phy_read,
+  		.phy_write_c45 = mt7531_ind_c45_phy_write,
+@@ -254,7 +254,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  		.mac_port_get_caps = mt7531_mac_port_get_caps,
+  		.mac_port_config = mt7531_mac_config,
+  	},
+-@@ -3320,7 +3221,6 @@ const struct mt753x_info mt753x_table[]
++@@ -3317,7 +3218,6 @@ const struct mt753x_info mt753x_table[]
+  		.phy_write_c22 = mt7531_ind_c22_phy_write,
+  		.phy_read_c45 = mt7531_ind_c45_phy_read,
+  		.phy_write_c45 = mt7531_ind_c45_phy_write,
+diff --git a/target/linux/generic/backport-6.6/790-24-v6.9-net-dsa-mt7530-get-rid-of-mt753x_mac_config.patch b/target/linux/generic/backport-6.6/790-24-v6.9-net-dsa-mt7530-get-rid-of-mt753x_mac_config.patch
+index c4f6651ffd..47b77fca52 100644
+--- a/target/linux/generic/backport-6.6/790-24-v6.9-net-dsa-mt7530-get-rid-of-mt753x_mac_config.patch
++++ b/target/linux/generic/backport-6.6/790-24-v6.9-net-dsa-mt7530-get-rid-of-mt753x_mac_config.patch
+@@ -18,7 +18,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2846,16 +2846,6 @@ mt7531_mac_config(struct dsa_switch *ds,
++@@ -2843,16 +2843,6 @@ mt7531_mac_config(struct dsa_switch *ds,
+  	}
+  }
+  
+@@ -35,7 +35,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  static struct phylink_pcs *
+  mt753x_phylink_mac_select_pcs(struct dsa_switch *ds, int port,
+  			      phy_interface_t interface)
+-@@ -2881,8 +2871,8 @@ mt753x_phylink_mac_config(struct dsa_swi
++@@ -2878,8 +2868,8 @@ mt753x_phylink_mac_config(struct dsa_swi
+  	struct mt7530_priv *priv = ds->priv;
+  	u32 mcr_cur, mcr_new;
+  
+diff --git a/target/linux/generic/backport-6.6/790-25-v6.9-net-dsa-mt7530-put-initialising-PCS-devices-code-bac.patch b/target/linux/generic/backport-6.6/790-25-v6.9-net-dsa-mt7530-put-initialising-PCS-devices-code-bac.patch
+index 23c9ebfd24..84b6430937 100644
+--- a/target/linux/generic/backport-6.6/790-25-v6.9-net-dsa-mt7530-put-initialising-PCS-devices-code-bac.patch
++++ b/target/linux/generic/backport-6.6/790-25-v6.9-net-dsa-mt7530-put-initialising-PCS-devices-code-bac.patch
+@@ -20,7 +20,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -3024,17 +3024,9 @@ static int
++@@ -3021,17 +3021,9 @@ static int
+  mt753x_setup(struct dsa_switch *ds)
+  {
+  	struct mt7530_priv *priv = ds->priv;
+@@ -40,7 +40,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	if (ret)
+  		return ret;
+  
+-@@ -3046,6 +3038,14 @@ mt753x_setup(struct dsa_switch *ds)
++@@ -3043,6 +3035,14 @@ mt753x_setup(struct dsa_switch *ds)
+  	if (ret && priv->irq)
+  		mt7530_free_irq_common(priv);
+  
+diff --git a/target/linux/generic/backport-6.6/790-26-v6.9-net-dsa-mt7530-sort-link-settings-ops-and-force-link.patch b/target/linux/generic/backport-6.6/790-26-v6.9-net-dsa-mt7530-sort-link-settings-ops-and-force-link.patch
+index 95cefa8e08..7632a5a9f0 100644
+--- a/target/linux/generic/backport-6.6/790-26-v6.9-net-dsa-mt7530-sort-link-settings-ops-and-force-link.patch
++++ b/target/linux/generic/backport-6.6/790-26-v6.9-net-dsa-mt7530-sort-link-settings-ops-and-force-link.patch
+@@ -24,7 +24,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -1214,7 +1214,6 @@ mt7530_port_enable(struct dsa_switch *ds
++@@ -1215,7 +1215,6 @@ mt7530_port_enable(struct dsa_switch *ds
+  	priv->ports[port].enable = true;
+  	mt7530_rmw(priv, MT7530_PCR_P(port), PCR_MATRIX_MASK,
+  		   priv->ports[port].pm);
+@@ -32,7 +32,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  
+  	mutex_unlock(&priv->reg_mutex);
+  
+-@@ -1234,7 +1233,6 @@ mt7530_port_disable(struct dsa_switch *d
++@@ -1235,7 +1234,6 @@ mt7530_port_disable(struct dsa_switch *d
+  	priv->ports[port].enable = false;
+  	mt7530_rmw(priv, MT7530_PCR_P(port), PCR_MATRIX_MASK,
+  		   PCR_MATRIX_CLR);
+@@ -40,7 +40,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  
+  	mutex_unlock(&priv->reg_mutex);
+  }
+-@@ -2458,6 +2456,12 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2457,6 +2455,12 @@ mt7530_setup(struct dsa_switch *ds)
+  	mt7530_mib_reset(ds);
+  
+  	for (i = 0; i < MT7530_NUM_PORTS; i++) {
+@@ -53,7 +53,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  		/* Disable forwarding by default on all ports */
+  		mt7530_rmw(priv, MT7530_PCR_P(i), PCR_MATRIX_MASK,
+  			   PCR_MATRIX_CLR);
+-@@ -2568,6 +2572,12 @@ mt7531_setup_common(struct dsa_switch *d
++@@ -2565,6 +2569,12 @@ mt7531_setup_common(struct dsa_switch *d
+  		     UNU_FFP_MASK);
+  
+  	for (i = 0; i < MT7530_NUM_PORTS; i++) {
+diff --git a/target/linux/generic/backport-6.6/790-27-v6.9-net-dsa-mt7530-simplify-link-operations.patch b/target/linux/generic/backport-6.6/790-27-v6.9-net-dsa-mt7530-simplify-link-operations.patch
+index 5fab2c176b..51ccc69351 100644
+--- a/target/linux/generic/backport-6.6/790-27-v6.9-net-dsa-mt7530-simplify-link-operations.patch
++++ b/target/linux/generic/backport-6.6/790-27-v6.9-net-dsa-mt7530-simplify-link-operations.patch
+@@ -45,7 +45,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2879,23 +2879,13 @@ mt753x_phylink_mac_config(struct dsa_swi
++@@ -2876,23 +2876,13 @@ mt753x_phylink_mac_config(struct dsa_swi
+  			  const struct phylink_link_state *state)
+  {
+  	struct mt7530_priv *priv = ds->priv;
+diff --git a/target/linux/generic/backport-6.6/790-28-v6.9-net-dsa-mt7530-disable-LEDs-before-reset.patch b/target/linux/generic/backport-6.6/790-28-v6.9-net-dsa-mt7530-disable-LEDs-before-reset.patch
+index 10658d9976..af39929dba 100644
+--- a/target/linux/generic/backport-6.6/790-28-v6.9-net-dsa-mt7530-disable-LEDs-before-reset.patch
++++ b/target/linux/generic/backport-6.6/790-28-v6.9-net-dsa-mt7530-disable-LEDs-before-reset.patch
+@@ -79,7 +79,7 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2392,6 +2392,12 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2391,6 +2391,12 @@ mt7530_setup(struct dsa_switch *ds)
+  		}
+  	}
+  
+diff --git a/target/linux/generic/backport-6.6/790-30-v6.9-net-dsa-mt7530-prevent-possible-incorrect-XTAL-frequ.patch b/target/linux/generic/backport-6.6/790-30-v6.9-net-dsa-mt7530-prevent-possible-incorrect-XTAL-frequ.patch
+index a7e07b4293..c2eb3a2801 100644
+--- a/target/linux/generic/backport-6.6/790-30-v6.9-net-dsa-mt7530-prevent-possible-incorrect-XTAL-frequ.patch
++++ b/target/linux/generic/backport-6.6/790-30-v6.9-net-dsa-mt7530-prevent-possible-incorrect-XTAL-frequ.patch
+@@ -139,7 +139,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2392,12 +2392,6 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2391,12 +2391,6 @@ mt7530_setup(struct dsa_switch *ds)
+  		}
+  	}
+  
+diff --git a/target/linux/generic/backport-6.6/790-33-v6.10-net-dsa-mt7530-provide-own-phylink-MAC-operations.patch b/target/linux/generic/backport-6.6/790-33-v6.10-net-dsa-mt7530-provide-own-phylink-MAC-operations.patch
+index cb68189569..15d876d29c 100644
+--- a/target/linux/generic/backport-6.6/790-33-v6.10-net-dsa-mt7530-provide-own-phylink-MAC-operations.patch
++++ b/target/linux/generic/backport-6.6/790-33-v6.10-net-dsa-mt7530-provide-own-phylink-MAC-operations.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2857,28 +2857,34 @@ mt7531_mac_config(struct dsa_switch *ds,
++@@ -2854,28 +2854,34 @@ mt7531_mac_config(struct dsa_switch *ds,
+  }
+  
+  static struct phylink_pcs *
+@@ -60,7 +60,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  
+  	if ((port == 5 || port == 6) && priv->info->mac_port_config)
+  		priv->info->mac_port_config(ds, port, mode, state->interface);
+-@@ -2888,23 +2894,25 @@ mt753x_phylink_mac_config(struct dsa_swi
++@@ -2885,23 +2891,25 @@ mt753x_phylink_mac_config(struct dsa_swi
+  		mt7530_set(priv, MT7530_PMCR_P(port), PMCR_EXT_PHY);
+  }
+  
+@@ -92,7 +92,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  	u32 mcr;
+  
+  	mcr = PMCR_RX_EN | PMCR_TX_EN | PMCR_FORCE_LNK;
+-@@ -2939,7 +2947,7 @@ static void mt753x_phylink_mac_link_up(s
++@@ -2936,7 +2944,7 @@ static void mt753x_phylink_mac_link_up(s
+  		}
+  	}
+  
+@@ -101,7 +101,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  }
+  
+  static void mt753x_phylink_get_caps(struct dsa_switch *ds, int port,
+-@@ -3159,16 +3167,19 @@ const struct dsa_switch_ops mt7530_switc
++@@ -3156,16 +3164,19 @@ const struct dsa_switch_ops mt7530_switc
+  	.port_mirror_add	= mt753x_port_mirror_add,
+  	.port_mirror_del	= mt753x_port_mirror_del,
+  	.phylink_get_caps	= mt753x_phylink_get_caps,
+@@ -125,7 +125,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  const struct mt753x_info mt753x_table[] = {
+  	[ID_MT7621] = {
+  		.id = ID_MT7621,
+-@@ -3246,6 +3257,7 @@ mt7530_probe_common(struct mt7530_priv *
++@@ -3243,6 +3254,7 @@ mt7530_probe_common(struct mt7530_priv *
+  	priv->dev = dev;
+  	priv->ds->priv = priv;
+  	priv->ds->ops = &mt7530_switch_ops;
+diff --git a/target/linux/generic/backport-6.6/790-36-v6.10-net-dsa-mt7530-mdio-read-PHY-address-of-switch-from-.patch b/target/linux/generic/backport-6.6/790-36-v6.10-net-dsa-mt7530-mdio-read-PHY-address-of-switch-from-.patch
+index 1c62594731..896bc9914b 100644
+--- a/target/linux/generic/backport-6.6/790-36-v6.10-net-dsa-mt7530-mdio-read-PHY-address-of-switch-from-.patch
++++ b/target/linux/generic/backport-6.6/790-36-v6.10-net-dsa-mt7530-mdio-read-PHY-address-of-switch-from-.patch
+@@ -184,7 +184,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+  err:
+  	if (ret < 0)
+  		dev_err(&bus->dev,
+-@@ -2686,16 +2694,19 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2683,16 +2691,19 @@ mt7531_setup(struct dsa_switch *ds)
+  	 * phy_[read,write]_mmd_indirect is called, we provide our own
+  	 * mt7531_ind_mmd_phy_[read,write] to complete this function.
+  	 */
+diff --git a/target/linux/generic/backport-6.6/790-39-v6.10-net-dsa-mt7530-refactor-MT7530_PMCR_P.patch b/target/linux/generic/backport-6.6/790-39-v6.10-net-dsa-mt7530-refactor-MT7530_PMCR_P.patch
+index 68e32dda9e..33f9fc182f 100644
+--- a/target/linux/generic/backport-6.6/790-39-v6.10-net-dsa-mt7530-refactor-MT7530_PMCR_P.patch
++++ b/target/linux/generic/backport-6.6/790-39-v6.10-net-dsa-mt7530-refactor-MT7530_PMCR_P.patch
+@@ -33,7 +33,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -900,7 +900,7 @@ static void mt7530_setup_port5(struct ds
++@@ -896,7 +896,7 @@ static void mt7530_setup_port5(struct ds
+  		val &= ~MHWTRAP_P5_MAC_SEL & ~MHWTRAP_P5_DIS;
+  
+  		/* Setup the MAC by default for the cpu port */
+@@ -42,7 +42,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		break;
+  	case P5_INTF_SEL_GMAC5:
+  		/* MT7530_P5_MODE_GMAC: P5 -> External phy or 2nd GMAC */
+-@@ -2445,8 +2445,8 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2444,8 +2444,8 @@ mt7530_setup(struct dsa_switch *ds)
+  		/* Clear link settings and enable force mode to force link down
+  		 * on all ports until they're enabled later.
+  		 */
+@@ -53,7 +53,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  		/* Disable forwarding by default on all ports */
+  		mt7530_rmw(priv, MT7530_PCR_P(i), PCR_MATRIX_MASK,
+-@@ -2561,8 +2561,8 @@ mt7531_setup_common(struct dsa_switch *d
++@@ -2558,8 +2558,8 @@ mt7531_setup_common(struct dsa_switch *d
+  		/* Clear link settings and enable force mode to force link down
+  		 * on all ports until they're enabled later.
+  		 */
+@@ -64,7 +64,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  		/* Disable forwarding by default on all ports */
+  		mt7530_rmw(priv, MT7530_PCR_P(i), PCR_MATRIX_MASK,
+-@@ -2646,7 +2646,7 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2643,7 +2643,7 @@ mt7531_setup(struct dsa_switch *ds)
+  
+  	/* Force link down on all ports before internal reset */
+  	for (i = 0; i < MT7530_NUM_PORTS; i++)
+@@ -73,7 +73,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  	/* Reset the switch through internal reset */
+  	mt7530_write(priv, MT7530_SYS_CTRL, SYS_CTRL_SW_RST | SYS_CTRL_REG_RST);
+-@@ -2880,7 +2880,7 @@ mt753x_phylink_mac_config(struct phylink
++@@ -2877,7 +2877,7 @@ mt753x_phylink_mac_config(struct phylink
+  
+  	/* Are we connected to external phy */
+  	if (port == 5 && dsa_is_user_port(ds, 5))
+@@ -82,7 +82,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  }
+  
+  static void mt753x_phylink_mac_link_down(struct phylink_config *config,
+-@@ -2890,7 +2890,7 @@ static void mt753x_phylink_mac_link_down
++@@ -2887,7 +2887,7 @@ static void mt753x_phylink_mac_link_down
+  	struct dsa_port *dp = dsa_phylink_to_port(config);
+  	struct mt7530_priv *priv = dp->ds->priv;
+  
+@@ -91,7 +91,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  }
+  
+  static void mt753x_phylink_mac_link_up(struct phylink_config *config,
+-@@ -2904,7 +2904,7 @@ static void mt753x_phylink_mac_link_up(s
++@@ -2901,7 +2901,7 @@ static void mt753x_phylink_mac_link_up(s
+  	struct mt7530_priv *priv = dp->ds->priv;
+  	u32 mcr;
+  
+@@ -100,7 +100,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  	switch (speed) {
+  	case SPEED_1000:
+-@@ -2919,9 +2919,9 @@ static void mt753x_phylink_mac_link_up(s
++@@ -2916,9 +2916,9 @@ static void mt753x_phylink_mac_link_up(s
+  	if (duplex == DUPLEX_FULL) {
+  		mcr |= PMCR_FORCE_FDX;
+  		if (tx_pause)
+@@ -112,7 +112,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  	}
+  
+  	if (mode == MLO_AN_PHY && phydev && phy_init_eee(phydev, false) >= 0) {
+-@@ -2936,7 +2936,7 @@ static void mt753x_phylink_mac_link_up(s
++@@ -2933,7 +2933,7 @@ static void mt753x_phylink_mac_link_up(s
+  		}
+  	}
+  
+diff --git a/target/linux/generic/backport-6.6/790-40-v6.10-net-dsa-mt7530-rename-p5_intf_sel-and-use-only-for-M.patch b/target/linux/generic/backport-6.6/790-40-v6.10-net-dsa-mt7530-rename-p5_intf_sel-and-use-only-for-M.patch
+index cc3a9edf5a..a2c191c56e 100644
+--- a/target/linux/generic/backport-6.6/790-40-v6.10-net-dsa-mt7530-rename-p5_intf_sel-and-use-only-for-M.patch
++++ b/target/linux/generic/backport-6.6/790-40-v6.10-net-dsa-mt7530-rename-p5_intf_sel-and-use-only-for-M.patch
+@@ -25,7 +25,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -861,19 +861,15 @@ mt7530_set_ageing_time(struct dsa_switch
++@@ -857,19 +857,15 @@ mt7530_set_ageing_time(struct dsa_switch
+  	return 0;
+  }
+  
+@@ -52,7 +52,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  	}
+  }
+  
+-@@ -890,23 +886,23 @@ static void mt7530_setup_port5(struct ds
++@@ -886,23 +882,23 @@ static void mt7530_setup_port5(struct ds
+  	val |= MHWTRAP_MANUAL | MHWTRAP_P5_MAC_SEL | MHWTRAP_P5_DIS;
+  	val &= ~MHWTRAP_P5_RGMII_MODE & ~MHWTRAP_PHY0_SEL;
+  
+@@ -85,7 +85,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		break;
+  	}
+  
+-@@ -934,8 +930,8 @@ static void mt7530_setup_port5(struct ds
++@@ -930,8 +926,8 @@ static void mt7530_setup_port5(struct ds
+  
+  	mt7530_write(priv, MT7530_MHWTRAP, val);
+  
+@@ -96,7 +96,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  	mutex_unlock(&priv->reg_mutex);
+  }
+-@@ -2477,13 +2473,11 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2476,13 +2472,11 @@ mt7530_setup(struct dsa_switch *ds)
+  	if (ret)
+  		return ret;
+  
+@@ -114,7 +114,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		 */
+  		for_each_child_of_node(dn, mac_np) {
+  			if (!of_device_is_compatible(mac_np,
+-@@ -2507,17 +2501,16 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2506,17 +2500,16 @@ mt7530_setup(struct dsa_switch *ds)
+  				}
+  				id = of_mdio_parse_addr(ds->dev, phy_node);
+  				if (id == 0)
+@@ -135,7 +135,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  			mt7530_setup_port5(ds, interface);
+  	}
+  
+-@@ -2661,9 +2654,6 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2658,9 +2651,6 @@ mt7531_setup(struct dsa_switch *ds)
+  			   MT7531_EXT_P_MDIO_12);
+  	}
+  
+diff --git a/target/linux/generic/backport-6.6/790-41-v6.10-net-dsa-mt7530-rename-mt753x_bpdu_port_fw-enum-to-mt.patch b/target/linux/generic/backport-6.6/790-41-v6.10-net-dsa-mt7530-rename-mt753x_bpdu_port_fw-enum-to-mt.patch
+new file mode 100644
+index 0000000000..948baf58d0
+--- /dev/null
++++ b/target/linux/generic/backport-6.6/790-41-v6.10-net-dsa-mt7530-rename-mt753x_bpdu_port_fw-enum-to-mt.patch
+@@ -0,0 +1,169 @@
++From 83fe3df057e641cd0e88425e579d7a5a370ca430 Mon Sep 17 00:00:00 2001
++From: =?UTF-8?q?Ar=C4=B1n=C3=A7=20=C3=9CNAL?= <arinc.unal@arinc9.com>
++Date: Mon, 22 Apr 2024 10:15:11 +0300
++Subject: [PATCH 04/15] net: dsa: mt7530: rename mt753x_bpdu_port_fw enum to
++ mt753x_to_cpu_fw
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++The mt753x_bpdu_port_fw enum is globally used for manipulating the process
++of deciding the forwardable ports, specifically concerning the CPU port(s).
++Therefore, rename it and the values in it to mt753x_to_cpu_fw.
++
++Change FOLLOW_MFC to SYSTEM_DEFAULT to be on par with the switch documents.
++
++Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
++---
++ drivers/net/dsa/mt7530.c | 44 ++++++++++-------------
++ drivers/net/dsa/mt7530.h | 76 ++++++++++++++++++++--------------------
++ 2 files changed, 56 insertions(+), 64 deletions(-)
++
++--- a/drivers/net/dsa/mt7530.c
+++++ b/drivers/net/dsa/mt7530.c
++@@ -1107,42 +1107,34 @@ mt753x_trap_frames(struct mt7530_priv *p
++ 	 * VLAN-untagged.
++ 	 */
++ 	mt7530_rmw(priv, MT753X_BPC,
++-		   MT753X_PAE_BPDU_FR | MT753X_PAE_EG_TAG_MASK |
++-			   MT753X_PAE_PORT_FW_MASK | MT753X_BPDU_EG_TAG_MASK |
++-			   MT753X_BPDU_PORT_FW_MASK,
++-		   MT753X_PAE_BPDU_FR |
++-			   MT753X_PAE_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
++-			   MT753X_PAE_PORT_FW(MT753X_BPDU_CPU_ONLY) |
++-			   MT753X_BPDU_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
++-			   MT753X_BPDU_CPU_ONLY);
+++		   PAE_BPDU_FR | PAE_EG_TAG_MASK | PAE_PORT_FW_MASK |
+++			   BPDU_EG_TAG_MASK | BPDU_PORT_FW_MASK,
+++		   PAE_BPDU_FR | PAE_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
+++			   PAE_PORT_FW(TO_CPU_FW_CPU_ONLY) |
+++			   BPDU_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
+++			   TO_CPU_FW_CPU_ONLY);
++ 
++ 	/* Trap frames with :01 and :02 MAC DAs to the CPU port(s) and egress
++ 	 * them VLAN-untagged.
++ 	 */
++ 	mt7530_rmw(priv, MT753X_RGAC1,
++-		   MT753X_R02_BPDU_FR | MT753X_R02_EG_TAG_MASK |
++-			   MT753X_R02_PORT_FW_MASK | MT753X_R01_BPDU_FR |
++-			   MT753X_R01_EG_TAG_MASK | MT753X_R01_PORT_FW_MASK,
++-		   MT753X_R02_BPDU_FR |
++-			   MT753X_R02_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
++-			   MT753X_R02_PORT_FW(MT753X_BPDU_CPU_ONLY) |
++-			   MT753X_R01_BPDU_FR |
++-			   MT753X_R01_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
++-			   MT753X_BPDU_CPU_ONLY);
+++		   R02_BPDU_FR | R02_EG_TAG_MASK | R02_PORT_FW_MASK |
+++			   R01_BPDU_FR | R01_EG_TAG_MASK | R01_PORT_FW_MASK,
+++		   R02_BPDU_FR | R02_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
+++			   R02_PORT_FW(TO_CPU_FW_CPU_ONLY) | R01_BPDU_FR |
+++			   R01_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
+++			   TO_CPU_FW_CPU_ONLY);
++ 
++ 	/* Trap frames with :03 and :0E MAC DAs to the CPU port(s) and egress
++ 	 * them VLAN-untagged.
++ 	 */
++ 	mt7530_rmw(priv, MT753X_RGAC2,
++-		   MT753X_R0E_BPDU_FR | MT753X_R0E_EG_TAG_MASK |
++-			   MT753X_R0E_PORT_FW_MASK | MT753X_R03_BPDU_FR |
++-			   MT753X_R03_EG_TAG_MASK | MT753X_R03_PORT_FW_MASK,
++-		   MT753X_R0E_BPDU_FR |
++-			   MT753X_R0E_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
++-			   MT753X_R0E_PORT_FW(MT753X_BPDU_CPU_ONLY) |
++-			   MT753X_R03_BPDU_FR |
++-			   MT753X_R03_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
++-			   MT753X_BPDU_CPU_ONLY);
+++		   R0E_BPDU_FR | R0E_EG_TAG_MASK | R0E_PORT_FW_MASK |
+++			   R03_BPDU_FR | R03_EG_TAG_MASK | R03_PORT_FW_MASK,
+++		   R0E_BPDU_FR | R0E_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
+++			   R0E_PORT_FW(TO_CPU_FW_CPU_ONLY) | R03_BPDU_FR |
+++			   R03_EG_TAG(MT7530_VLAN_EG_UNTAGGED) |
+++			   TO_CPU_FW_CPU_ONLY);
++ }
++ 
++ static void
++--- a/drivers/net/dsa/mt7530.h
+++++ b/drivers/net/dsa/mt7530.h
++@@ -67,47 +67,47 @@ enum mt753x_id {
++ #define MT753X_MIRROR_MASK(id)		((((id) == ID_MT7531) || ((id) == ID_MT7988)) ?	\
++ 					 MT7531_MIRROR_MASK : MIRROR_MASK)
++ 
++-/* Registers for BPDU and PAE frame control*/
+++/* Register for BPDU and PAE frame control */
++ #define MT753X_BPC			0x24
++-#define  MT753X_PAE_BPDU_FR		BIT(25)
++-#define  MT753X_PAE_EG_TAG_MASK		GENMASK(24, 22)
++-#define  MT753X_PAE_EG_TAG(x)		FIELD_PREP(MT753X_PAE_EG_TAG_MASK, x)
++-#define  MT753X_PAE_PORT_FW_MASK	GENMASK(18, 16)
++-#define  MT753X_PAE_PORT_FW(x)		FIELD_PREP(MT753X_PAE_PORT_FW_MASK, x)
++-#define  MT753X_BPDU_EG_TAG_MASK	GENMASK(8, 6)
++-#define  MT753X_BPDU_EG_TAG(x)		FIELD_PREP(MT753X_BPDU_EG_TAG_MASK, x)
++-#define  MT753X_BPDU_PORT_FW_MASK	GENMASK(2, 0)
+++#define  PAE_BPDU_FR			BIT(25)
+++#define  PAE_EG_TAG_MASK		GENMASK(24, 22)
+++#define  PAE_EG_TAG(x)			FIELD_PREP(PAE_EG_TAG_MASK, x)
+++#define  PAE_PORT_FW_MASK		GENMASK(18, 16)
+++#define  PAE_PORT_FW(x)			FIELD_PREP(PAE_PORT_FW_MASK, x)
+++#define  BPDU_EG_TAG_MASK		GENMASK(8, 6)
+++#define  BPDU_EG_TAG(x)			FIELD_PREP(BPDU_EG_TAG_MASK, x)
+++#define  BPDU_PORT_FW_MASK		GENMASK(2, 0)
++ 
++-/* Register for :01 and :02 MAC DA frame control */
+++/* Register for 01-80-C2-00-00-[01,02] MAC DA frame control */
++ #define MT753X_RGAC1			0x28
++-#define  MT753X_R02_BPDU_FR		BIT(25)
++-#define  MT753X_R02_EG_TAG_MASK		GENMASK(24, 22)
++-#define  MT753X_R02_EG_TAG(x)		FIELD_PREP(MT753X_R02_EG_TAG_MASK, x)
++-#define  MT753X_R02_PORT_FW_MASK	GENMASK(18, 16)
++-#define  MT753X_R02_PORT_FW(x)		FIELD_PREP(MT753X_R02_PORT_FW_MASK, x)
++-#define  MT753X_R01_BPDU_FR		BIT(9)
++-#define  MT753X_R01_EG_TAG_MASK		GENMASK(8, 6)
++-#define  MT753X_R01_EG_TAG(x)		FIELD_PREP(MT753X_R01_EG_TAG_MASK, x)
++-#define  MT753X_R01_PORT_FW_MASK	GENMASK(2, 0)
+++#define  R02_BPDU_FR			BIT(25)
+++#define  R02_EG_TAG_MASK		GENMASK(24, 22)
+++#define  R02_EG_TAG(x)			FIELD_PREP(R02_EG_TAG_MASK, x)
+++#define  R02_PORT_FW_MASK		GENMASK(18, 16)
+++#define  R02_PORT_FW(x)			FIELD_PREP(R02_PORT_FW_MASK, x)
+++#define  R01_BPDU_FR			BIT(9)
+++#define  R01_EG_TAG_MASK		GENMASK(8, 6)
+++#define  R01_EG_TAG(x)			FIELD_PREP(R01_EG_TAG_MASK, x)
+++#define  R01_PORT_FW_MASK		GENMASK(2, 0)
++ 
++-/* Register for :03 and :0E MAC DA frame control */
+++/* Register for 01-80-C2-00-00-[03,0E] MAC DA frame control */
++ #define MT753X_RGAC2			0x2c
++-#define  MT753X_R0E_BPDU_FR		BIT(25)
++-#define  MT753X_R0E_EG_TAG_MASK		GENMASK(24, 22)
++-#define  MT753X_R0E_EG_TAG(x)		FIELD_PREP(MT753X_R0E_EG_TAG_MASK, x)
++-#define  MT753X_R0E_PORT_FW_MASK	GENMASK(18, 16)
++-#define  MT753X_R0E_PORT_FW(x)		FIELD_PREP(MT753X_R0E_PORT_FW_MASK, x)
++-#define  MT753X_R03_BPDU_FR		BIT(9)
++-#define  MT753X_R03_EG_TAG_MASK		GENMASK(8, 6)
++-#define  MT753X_R03_EG_TAG(x)		FIELD_PREP(MT753X_R03_EG_TAG_MASK, x)
++-#define  MT753X_R03_PORT_FW_MASK	GENMASK(2, 0)
+++#define  R0E_BPDU_FR			BIT(25)
+++#define  R0E_EG_TAG_MASK		GENMASK(24, 22)
+++#define  R0E_EG_TAG(x)			FIELD_PREP(R0E_EG_TAG_MASK, x)
+++#define  R0E_PORT_FW_MASK		GENMASK(18, 16)
+++#define  R0E_PORT_FW(x)			FIELD_PREP(R0E_PORT_FW_MASK, x)
+++#define  R03_BPDU_FR			BIT(9)
+++#define  R03_EG_TAG_MASK		GENMASK(8, 6)
+++#define  R03_EG_TAG(x)			FIELD_PREP(R03_EG_TAG_MASK, x)
+++#define  R03_PORT_FW_MASK		GENMASK(2, 0)
++ 
++-enum mt753x_bpdu_port_fw {
++-	MT753X_BPDU_FOLLOW_MFC,
++-	MT753X_BPDU_CPU_EXCLUDE = 4,
++-	MT753X_BPDU_CPU_INCLUDE = 5,
++-	MT753X_BPDU_CPU_ONLY = 6,
++-	MT753X_BPDU_DROP = 7,
+++enum mt753x_to_cpu_fw {
+++	TO_CPU_FW_SYSTEM_DEFAULT,
+++	TO_CPU_FW_CPU_EXCLUDE = 4,
+++	TO_CPU_FW_CPU_INCLUDE = 5,
+++	TO_CPU_FW_CPU_ONLY = 6,
+++	TO_CPU_FW_DROP = 7,
++ };
++ 
++ /* Registers for address table access */
+diff --git a/target/linux/generic/backport-6.6/790-42-v6.10-net-dsa-mt7530-refactor-MT7530_MFC-and-MT7531_CFC-ad.patch b/target/linux/generic/backport-6.6/790-42-v6.10-net-dsa-mt7530-refactor-MT7530_MFC-and-MT7531_CFC-ad.patch
+index 1912f21570..542c8c84ce 100644
+--- a/target/linux/generic/backport-6.6/790-42-v6.10-net-dsa-mt7530-refactor-MT7530_MFC-and-MT7531_CFC-ad.patch
++++ b/target/linux/generic/backport-6.6/790-42-v6.10-net-dsa-mt7530-refactor-MT7530_MFC-and-MT7531_CFC-ad.patch
+@@ -25,7 +25,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -1154,7 +1154,7 @@ mt753x_cpu_port_enable(struct dsa_switch
++@@ -1147,7 +1147,7 @@ mt753x_cpu_port_enable(struct dsa_switch
+  		     PORT_SPEC_TAG);
+  
+  	/* Enable flooding on the CPU port */
+@@ -34,7 +34,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		   UNU_FFP(BIT(port)));
+  
+  	/* Add the CPU port to the CPU port bitmap for MT7531 and the switch on
+-@@ -1318,15 +1318,15 @@ mt7530_port_bridge_flags(struct dsa_swit
++@@ -1311,15 +1311,15 @@ mt7530_port_bridge_flags(struct dsa_swit
+  			   flags.val & BR_LEARNING ? 0 : SA_DIS);
+  
+  	if (flags.mask & BR_FLOOD)
+@@ -53,7 +53,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  			   flags.val & BR_BCAST_FLOOD ? BC_FFP(BIT(port)) : 0);
+  
+  	return 0;
+-@@ -1862,20 +1862,6 @@ mt7530_port_vlan_del(struct dsa_switch *
++@@ -1855,20 +1855,6 @@ mt7530_port_vlan_del(struct dsa_switch *
+  	return 0;
+  }
+  
+@@ -74,7 +74,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  static int mt753x_port_mirror_add(struct dsa_switch *ds, int port,
+  				  struct dsa_mall_mirror_tc_entry *mirror,
+  				  bool ingress, struct netlink_ext_ack *extack)
+-@@ -1891,14 +1877,14 @@ static int mt753x_port_mirror_add(struct
++@@ -1884,14 +1870,14 @@ static int mt753x_port_mirror_add(struct
+  	val = mt7530_read(priv, MT753X_MIRROR_REG(priv->id));
+  
+  	/* MT7530 only supports one monitor port */
+@@ -92,7 +92,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  	mt7530_write(priv, MT753X_MIRROR_REG(priv->id), val);
+  
+  	val = mt7530_read(priv, MT7530_PCR_P(port));
+-@@ -2547,7 +2533,7 @@ mt7531_setup_common(struct dsa_switch *d
++@@ -2536,7 +2522,7 @@ mt7531_setup_common(struct dsa_switch *d
+  	mt7530_mib_reset(ds);
+  
+  	/* Disable flooding on all ports */
+@@ -101,7 +101,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		     UNU_FFP_MASK);
+  
+  	for (i = 0; i < MT7530_NUM_PORTS; i++) {
+-@@ -3096,10 +3082,12 @@ mt753x_conduit_state_change(struct dsa_s
++@@ -3085,10 +3071,12 @@ mt753x_conduit_state_change(struct dsa_s
+  	else
+  		priv->active_cpu_ports &= ~mask;
+  
+diff --git a/target/linux/generic/backport-6.6/790-43-v6.10-net-dsa-mt7530-refactor-MT7530_HWTRAP-and-MT7530_MHW.patch b/target/linux/generic/backport-6.6/790-43-v6.10-net-dsa-mt7530-refactor-MT7530_HWTRAP-and-MT7530_MHW.patch
+index 50048cbb54..4b1e18bccd 100644
+--- a/target/linux/generic/backport-6.6/790-43-v6.10-net-dsa-mt7530-refactor-MT7530_HWTRAP-and-MT7530_MHW.patch
++++ b/target/linux/generic/backport-6.6/790-43-v6.10-net-dsa-mt7530-refactor-MT7530_HWTRAP-and-MT7530_MHW.patch
+@@ -102,7 +102,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		val = mt7530_read(priv, MT7531_PLLGP_CR0);
+  		val &= ~RG_COREPLL_SDM_PCW_M;
+  		val |= 0x190000 << RG_COREPLL_SDM_PCW_S;
+-@@ -881,20 +882,20 @@ static void mt7530_setup_port5(struct ds
++@@ -877,20 +878,20 @@ static void mt7530_setup_port5(struct ds
+  
+  	mutex_lock(&priv->reg_mutex);
+  
+@@ -128,7 +128,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  		/* Setup the MAC by default for the cpu port */
+  		mt7530_write(priv, MT753X_PMCR_P(5), 0x56300);
+-@@ -902,13 +903,13 @@ static void mt7530_setup_port5(struct ds
++@@ -898,13 +899,13 @@ static void mt7530_setup_port5(struct ds
+  
+  	/* GMAC5: P5 -> SoC MAC or external PHY */
+  	default:
+@@ -144,7 +144,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  		/* P5 RGMII RX Clock Control: delay setting for 1000M */
+  		mt7530_write(priv, MT7530_P5RGMIIRXCR, CSR_RGMII_EDGE_ALIGN);
+-@@ -928,7 +929,7 @@ static void mt7530_setup_port5(struct ds
++@@ -924,7 +925,7 @@ static void mt7530_setup_port5(struct ds
+  			     P5_IO_CLK_DRV(1) | P5_IO_DATA_DRV(1));
+  	}
+  
+@@ -153,7 +153,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  	dev_dbg(ds->dev, "Setup P5, HWTRAP=0x%x, mode=%s, phy-mode=%s\n", val,
+  		mt7530_p5_mode_str(priv->p5_mode), phy_modes(interface));
+-@@ -2374,7 +2375,7 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2365,7 +2366,7 @@ mt7530_setup(struct dsa_switch *ds)
+  	}
+  
+  	/* Waiting for MT7530 got to stable */
+@@ -162,7 +162,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  	ret = readx_poll_timeout(_mt7530_read, &p, val, val != 0,
+  				 20, 1000000);
+  	if (ret < 0) {
+-@@ -2389,7 +2390,7 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2380,7 +2381,7 @@ mt7530_setup(struct dsa_switch *ds)
+  		return -ENODEV;
+  	}
+  
+@@ -171,7 +171,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		dev_err(priv->dev,
+  			"MT7530 with a 20MHz XTAL is not supported!\n");
+  		return -EINVAL;
+-@@ -2410,12 +2411,12 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2401,12 +2402,12 @@ mt7530_setup(struct dsa_switch *ds)
+  			   RD_TAP_MASK, RD_TAP(16));
+  
+  	/* Enable port 6 */
+@@ -189,7 +189,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		mt7530_pll_setup(priv);
+  
+  	mt753x_trap_frames(priv);
+-@@ -2601,7 +2602,7 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2590,7 +2591,7 @@ mt7531_setup(struct dsa_switch *ds)
+  	}
+  
+  	/* Waiting for MT7530 got to stable */
+diff --git a/target/linux/generic/backport-6.6/790-44-v6.10-net-dsa-mt7530-move-MT753X_MTRAP-operations-for-MT75.patch b/target/linux/generic/backport-6.6/790-44-v6.10-net-dsa-mt7530-move-MT753X_MTRAP-operations-for-MT75.patch
+index bbc6fee8ff..f7802c02db 100644
+--- a/target/linux/generic/backport-6.6/790-44-v6.10-net-dsa-mt7530-move-MT753X_MTRAP-operations-for-MT75.patch
++++ b/target/linux/generic/backport-6.6/790-44-v6.10-net-dsa-mt7530-move-MT753X_MTRAP-operations-for-MT75.patch
+@@ -28,7 +28,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -884,8 +884,7 @@ static void mt7530_setup_port5(struct ds
++@@ -880,8 +880,7 @@ static void mt7530_setup_port5(struct ds
+  
+  	val = mt7530_read(priv, MT753X_MTRAP);
+  
+@@ -38,7 +38,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  	switch (priv->p5_mode) {
+  	/* MUX_PHY_P0: P0 -> P5 -> SoC MAC */
+-@@ -895,15 +894,13 @@ static void mt7530_setup_port5(struct ds
++@@ -891,15 +890,13 @@ static void mt7530_setup_port5(struct ds
+  
+  	/* MUX_PHY_P4: P4 -> P5 -> SoC MAC */
+  	case MUX_PHY_P4:
+@@ -55,7 +55,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		break;
+  	}
+  
+-@@ -1200,6 +1197,14 @@ mt7530_port_enable(struct dsa_switch *ds
++@@ -1193,6 +1190,14 @@ mt7530_port_enable(struct dsa_switch *ds
+  
+  	mutex_unlock(&priv->reg_mutex);
+  
+@@ -70,7 +70,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  	return 0;
+  }
+  
+-@@ -1218,6 +1223,14 @@ mt7530_port_disable(struct dsa_switch *d
++@@ -1211,6 +1216,14 @@ mt7530_port_disable(struct dsa_switch *d
+  		   PCR_MATRIX_CLR);
+  
+  	mutex_unlock(&priv->reg_mutex);
+@@ -85,7 +85,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  }
+  
+  static int
+-@@ -2410,11 +2423,11 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2401,11 +2414,11 @@ mt7530_setup(struct dsa_switch *ds)
+  		mt7530_rmw(priv, MT7530_TRGMII_RD(i),
+  			   RD_TAP_MASK, RD_TAP(16));
+  
+@@ -102,7 +102,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  	if ((val & MT7530_XTAL_MASK) == MT7530_XTAL_40MHZ)
+  		mt7530_pll_setup(priv);
+-@@ -2497,8 +2510,11 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2488,8 +2501,11 @@ mt7530_setup(struct dsa_switch *ds)
+  			break;
+  		}
+  
+diff --git a/target/linux/generic/backport-6.6/790-45-v6.10-net-dsa-mt7530-return-mt7530_setup_mdio-mt7531_setup.patch b/target/linux/generic/backport-6.6/790-45-v6.10-net-dsa-mt7530-return-mt7530_setup_mdio-mt7531_setup.patch
+index 27e25a765a..1e2b965c1c 100644
+--- a/target/linux/generic/backport-6.6/790-45-v6.10-net-dsa-mt7530-return-mt7530_setup_mdio-mt7531_setup.patch
++++ b/target/linux/generic/backport-6.6/790-45-v6.10-net-dsa-mt7530-return-mt7530_setup_mdio-mt7531_setup.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2682,7 +2682,9 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2671,7 +2671,9 @@ mt7531_setup(struct dsa_switch *ds)
+  					 0);
+  	}
+  
+@@ -28,7 +28,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  	return 0;
+  }
+-@@ -3027,6 +3029,8 @@ mt753x_setup(struct dsa_switch *ds)
++@@ -3016,6 +3018,8 @@ mt753x_setup(struct dsa_switch *ds)
+  	ret = mt7530_setup_mdio(priv);
+  	if (ret && priv->irq)
+  		mt7530_free_irq_common(priv);
+diff --git a/target/linux/generic/backport-6.6/790-46-v6.10-net-dsa-mt7530-define-MAC-speed-capabilities-per-swi.patch b/target/linux/generic/backport-6.6/790-46-v6.10-net-dsa-mt7530-define-MAC-speed-capabilities-per-swi.patch
+index c33e32fe32..b7c2edf4c3 100644
+--- a/target/linux/generic/backport-6.6/790-46-v6.10-net-dsa-mt7530-define-MAC-speed-capabilities-per-swi.patch
++++ b/target/linux/generic/backport-6.6/790-46-v6.10-net-dsa-mt7530-define-MAC-speed-capabilities-per-swi.patch
+@@ -24,7 +24,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2692,6 +2692,8 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2681,6 +2681,8 @@ mt7531_setup(struct dsa_switch *ds)
+  static void mt7530_mac_port_get_caps(struct dsa_switch *ds, int port,
+  				     struct phylink_config *config)
+  {
+@@ -33,7 +33,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  	switch (port) {
+  	/* Ports which are connected to switch PHYs. There is no MII pinout. */
+  	case 0 ... 4:
+-@@ -2723,6 +2725,8 @@ static void mt7531_mac_port_get_caps(str
++@@ -2712,6 +2714,8 @@ static void mt7531_mac_port_get_caps(str
+  {
+  	struct mt7530_priv *priv = ds->priv;
+  
+@@ -42,7 +42,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  	switch (port) {
+  	/* Ports which are connected to switch PHYs. There is no MII pinout. */
+  	case 0 ... 4:
+-@@ -2762,14 +2766,17 @@ static void mt7988_mac_port_get_caps(str
++@@ -2751,14 +2755,17 @@ static void mt7988_mac_port_get_caps(str
+  	case 0 ... 3:
+  		__set_bit(PHY_INTERFACE_MODE_INTERNAL,
+  			  config->supported_interfaces);
+@@ -62,7 +62,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  	}
+  }
+  
+-@@ -2939,9 +2946,7 @@ static void mt753x_phylink_get_caps(stru
++@@ -2928,9 +2935,7 @@ static void mt753x_phylink_get_caps(stru
+  {
+  	struct mt7530_priv *priv = ds->priv;
+  
+diff --git a/target/linux/generic/backport-6.6/790-47-v6.10-net-dsa-mt7530-get-rid-of-function-sanity-check.patch b/target/linux/generic/backport-6.6/790-47-v6.10-net-dsa-mt7530-get-rid-of-function-sanity-check.patch
+index 446468db2b..8a933f0066 100644
+--- a/target/linux/generic/backport-6.6/790-47-v6.10-net-dsa-mt7530-get-rid-of-function-sanity-check.patch
++++ b/target/linux/generic/backport-6.6/790-47-v6.10-net-dsa-mt7530-get-rid-of-function-sanity-check.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -3239,13 +3239,6 @@ mt7530_probe_common(struct mt7530_priv *
++@@ -3228,13 +3228,6 @@ mt7530_probe_common(struct mt7530_priv *
+  	if (!priv->info)
+  		return -EINVAL;
+  
+diff --git a/target/linux/generic/backport-6.6/790-48-v6.10-net-dsa-mt7530-refactor-MT7530_PMEEECR_P.patch b/target/linux/generic/backport-6.6/790-48-v6.10-net-dsa-mt7530-refactor-MT7530_PMEEECR_P.patch
+index 4af3572152..50616f0524 100644
+--- a/target/linux/generic/backport-6.6/790-48-v6.10-net-dsa-mt7530-refactor-MT7530_PMEEECR_P.patch
++++ b/target/linux/generic/backport-6.6/790-48-v6.10-net-dsa-mt7530-refactor-MT7530_PMEEECR_P.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -3058,10 +3058,10 @@ static int mt753x_get_mac_eee(struct dsa
++@@ -3047,10 +3047,10 @@ static int mt753x_get_mac_eee(struct dsa
+  			      struct ethtool_eee *e)
+  {
+  	struct mt7530_priv *priv = ds->priv;
+@@ -32,7 +32,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  
+  	return 0;
+  }
+-@@ -3075,11 +3075,11 @@ static int mt753x_set_mac_eee(struct dsa
++@@ -3064,11 +3064,11 @@ static int mt753x_set_mac_eee(struct dsa
+  	if (e->tx_lpi_timer > 0xFFF)
+  		return -EINVAL;
+  
+diff --git a/target/linux/generic/backport-6.6/790-50-v6.10-net-dsa-mt7530-use-priv-ds-num_ports-instead-of-MT75.patch b/target/linux/generic/backport-6.6/790-50-v6.10-net-dsa-mt7530-use-priv-ds-num_ports-instead-of-MT75.patch
+index 4871d4acb8..4173bee9a0 100644
+--- a/target/linux/generic/backport-6.6/790-50-v6.10-net-dsa-mt7530-use-priv-ds-num_ports-instead-of-MT75.patch
++++ b/target/linux/generic/backport-6.6/790-50-v6.10-net-dsa-mt7530-use-priv-ds-num_ports-instead-of-MT75.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -1418,7 +1418,7 @@ mt7530_port_set_vlan_unaware(struct dsa_
++@@ -1411,7 +1411,7 @@ mt7530_port_set_vlan_unaware(struct dsa_
+  	mt7530_rmw(priv, MT7530_PPBV1_P(port), G0_PORT_VID_MASK,
+  		   G0_PORT_VID_DEF);
+  
+@@ -28,7 +28,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		if (dsa_is_user_port(ds, i) &&
+  		    dsa_port_is_vlan_filtering(dsa_to_port(ds, i))) {
+  			all_user_ports_removed = false;
+-@@ -2437,7 +2437,7 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2428,7 +2428,7 @@ mt7530_setup(struct dsa_switch *ds)
+  	/* Enable and reset MIB counters */
+  	mt7530_mib_reset(ds);
+  
+@@ -37,7 +37,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		/* Clear link settings and enable force mode to force link down
+  		 * on all ports until they're enabled later.
+  		 */
+-@@ -2553,7 +2553,7 @@ mt7531_setup_common(struct dsa_switch *d
++@@ -2542,7 +2542,7 @@ mt7531_setup_common(struct dsa_switch *d
+  	mt7530_clear(priv, MT753X_MFC, BC_FFP_MASK | UNM_FFP_MASK |
+  		     UNU_FFP_MASK);
+  
+@@ -46,7 +46,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  		/* Clear link settings and enable force mode to force link down
+  		 * on all ports until they're enabled later.
+  		 */
+-@@ -2641,7 +2641,7 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2630,7 +2630,7 @@ mt7531_setup(struct dsa_switch *ds)
+  	priv->p5_sgmii = !!(val & PAD_DUAL_SGMII_EN);
+  
+  	/* Force link down on all ports before internal reset */
+diff --git a/target/linux/generic/backport-6.6/790-51-v6.10-net-dsa-mt7530-do-not-pass-port-variable-to-mt7531_r.patch b/target/linux/generic/backport-6.6/790-51-v6.10-net-dsa-mt7530-do-not-pass-port-variable-to-mt7531_r.patch
+index c71bb55100..5d2a815cce 100644
+--- a/target/linux/generic/backport-6.6/790-51-v6.10-net-dsa-mt7530-do-not-pass-port-variable-to-mt7531_r.patch
++++ b/target/linux/generic/backport-6.6/790-51-v6.10-net-dsa-mt7530-do-not-pass-port-variable-to-mt7531_r.patch
+@@ -17,7 +17,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2792,7 +2792,7 @@ mt7530_mac_config(struct dsa_switch *ds,
++@@ -2781,7 +2781,7 @@ mt7530_mac_config(struct dsa_switch *ds,
+  		mt7530_setup_port6(priv->ds, interface);
+  }
+  
+@@ -26,7 +26,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+  			       phy_interface_t interface,
+  			       struct phy_device *phydev)
+  {
+-@@ -2843,7 +2843,7 @@ mt7531_mac_config(struct dsa_switch *ds,
++@@ -2832,7 +2832,7 @@ mt7531_mac_config(struct dsa_switch *ds,
+  	if (phy_interface_mode_is_rgmii(interface)) {
+  		dp = dsa_to_port(ds, port);
+  		phydev = dp->slave->phydev;
+diff --git a/target/linux/generic/backport-6.6/790-52-v6.10-net-dsa-mt7530-explain-exposing-MDIO-bus-of-MT7531AE.patch b/target/linux/generic/backport-6.6/790-52-v6.10-net-dsa-mt7530-explain-exposing-MDIO-bus-of-MT7531AE.patch
+index 0219561ea7..c6bc25837f 100644
+--- a/target/linux/generic/backport-6.6/790-52-v6.10-net-dsa-mt7530-explain-exposing-MDIO-bus-of-MT7531AE.patch
++++ b/target/linux/generic/backport-6.6/790-52-v6.10-net-dsa-mt7530-explain-exposing-MDIO-bus-of-MT7531AE.patch
+@@ -19,7 +19,7 @@ Signed-off-by: Arınç ÜNAL <arinc.unal@arinc9.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2650,7 +2650,10 @@ mt7531_setup(struct dsa_switch *ds)
++@@ -2639,7 +2639,10 @@ mt7531_setup(struct dsa_switch *ds)
+  	if (!priv->p5_sgmii) {
+  		mt7531_pll_setup(priv);
+  	} else {
+diff --git a/target/linux/generic/backport-6.6/790-53-v6.10-net-dsa-mt7530-do-not-set-MT7530_P5_DIS-when-PHY-.patch b/target/linux/generic/backport-6.6/790-53-v6.10-net-dsa-mt7530-do-not-set-MT7530_P5_DIS-when-PHY-.patch
+index 29079e03c5..cee3d01728 100644
+--- a/target/linux/generic/backport-6.6/790-53-v6.10-net-dsa-mt7530-do-not-set-MT7530_P5_DIS-when-PHY-.patch
++++ b/target/linux/generic/backport-6.6/790-53-v6.10-net-dsa-mt7530-do-not-set-MT7530_P5_DIS-when-PHY-.patch
+@@ -33,7 +33,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -1227,7 +1227,8 @@ mt7530_port_disable(struct dsa_switch *d
++@@ -1220,7 +1220,8 @@ mt7530_port_disable(struct dsa_switch *d
+  	if (priv->id != ID_MT7530 && priv->id != ID_MT7621)
+  		return;
+  
+diff --git a/target/linux/generic/backport-6.6/790-54-v6.10-796-net-dsa-mt7530-detect-PHY-muxing-when-PHY-is-defined.patch b/target/linux/generic/backport-6.6/790-54-v6.10-796-net-dsa-mt7530-detect-PHY-muxing-when-PHY-is-defined.patch
+index 10b659a342..d369c4e05e 100644
+--- a/target/linux/generic/backport-6.6/790-54-v6.10-796-net-dsa-mt7530-detect-PHY-muxing-when-PHY-is-defined.patch
++++ b/target/linux/generic/backport-6.6/790-54-v6.10-796-net-dsa-mt7530-detect-PHY-muxing-when-PHY-is-defined.patch
+@@ -33,7 +33,7 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -2493,7 +2493,8 @@ mt7530_setup(struct dsa_switch *ds)
++@@ -2484,7 +2484,8 @@ mt7530_setup(struct dsa_switch *ds)
+  			if (!phy_node)
+  				continue;
+  
+diff --git a/target/linux/generic/backport-6.6/790-55-v6.11-net-dsa-mt7530-factor-out-bridge-join-leave-logic.patch b/target/linux/generic/backport-6.6/790-55-v6.11-net-dsa-mt7530-factor-out-bridge-join-leave-logic.patch
+index 5e022d4c8e..fdba021c17 100644
+--- a/target/linux/generic/backport-6.6/790-55-v6.11-net-dsa-mt7530-factor-out-bridge-join-leave-logic.patch
++++ b/target/linux/generic/backport-6.6/790-55-v6.11-net-dsa-mt7530-factor-out-bridge-join-leave-logic.patch
+@@ -40,7 +40,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -1309,6 +1309,52 @@ mt7530_stp_state_set(struct dsa_switch *
++@@ -1302,6 +1302,52 @@ mt7530_stp_state_set(struct dsa_switch *
+  		   FID_PST(FID_BRIDGED, stp_state));
+  }
+  
+@@ -93,7 +93,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  static int
+  mt7530_port_pre_bridge_flags(struct dsa_switch *ds, int port,
+  			     struct switchdev_brport_flags flags,
+-@@ -1352,39 +1398,11 @@ mt7530_port_bridge_join(struct dsa_switc
++@@ -1345,39 +1391,11 @@ mt7530_port_bridge_join(struct dsa_switc
+  			struct dsa_bridge bridge, bool *tx_fwd_offload,
+  			struct netlink_ext_ack *extack)
+  {
+@@ -134,7 +134,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  
+  	/* Set to fallback mode for independent VLAN learning */
+  	mt7530_rmw(priv, MT7530_PCR_P(port), PCR_PORT_VLAN_MASK,
+-@@ -1485,38 +1503,11 @@ static void
++@@ -1478,38 +1496,11 @@ static void
+  mt7530_port_bridge_leave(struct dsa_switch *ds, int port,
+  			 struct dsa_bridge bridge)
+  {
+diff --git a/target/linux/generic/backport-6.6/790-56-v6.11-net-dsa-mt7530-add-support-for-bridge-port-isolation.patch b/target/linux/generic/backport-6.6/790-56-v6.11-net-dsa-mt7530-add-support-for-bridge-port-isolation.patch
+index 120ac715b0..2eb7859052 100644
+--- a/target/linux/generic/backport-6.6/790-56-v6.11-net-dsa-mt7530-add-support-for-bridge-port-isolation.patch
++++ b/target/linux/generic/backport-6.6/790-56-v6.11-net-dsa-mt7530-add-support-for-bridge-port-isolation.patch
+@@ -21,7 +21,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+ 
+ --- a/drivers/net/dsa/mt7530.c
+ +++ b/drivers/net/dsa/mt7530.c
+-@@ -1318,6 +1318,7 @@ static void mt7530_update_port_member(st
++@@ -1311,6 +1311,7 @@ static void mt7530_update_port_member(st
+  	struct dsa_port *cpu_dp = dp->cpu_dp;
+  	u32 port_bitmap = BIT(cpu_dp->index);
+  	int other_port;
+@@ -29,7 +29,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  
+  	dsa_switch_for_each_user_port(other_dp, priv->ds) {
+  		other_port = other_dp->index;
+-@@ -1334,7 +1335,9 @@ static void mt7530_update_port_member(st
++@@ -1327,7 +1328,9 @@ static void mt7530_update_port_member(st
+  		if (!dsa_port_offloads_bridge_dev(other_dp, bridge_dev))
+  			continue;
+  
+@@ -40,7 +40,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  			other_p->pm |= PCR_MATRIX(BIT(port));
+  			port_bitmap |= BIT(other_port);
+  		} else {
+-@@ -1361,7 +1364,7 @@ mt7530_port_pre_bridge_flags(struct dsa_
++@@ -1354,7 +1357,7 @@ mt7530_port_pre_bridge_flags(struct dsa_
+  			     struct netlink_ext_ack *extack)
+  {
+  	if (flags.mask & ~(BR_LEARNING | BR_FLOOD | BR_MCAST_FLOOD |
+@@ -49,7 +49,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
+  		return -EINVAL;
+  
+  	return 0;
+-@@ -1390,6 +1393,17 @@ mt7530_port_bridge_flags(struct dsa_swit
++@@ -1383,6 +1386,17 @@ mt7530_port_bridge_flags(struct dsa_swit
+  		mt7530_rmw(priv, MT753X_MFC, BC_FFP(BIT(port)),
+  			   flags.val & BR_BCAST_FLOOD ? BC_FFP(BIT(port)) : 0);
+  
+diff --git a/target/linux/generic/pending-6.6/680-net-add-TCP-fraglist-GRO-support.patch b/target/linux/generic/pending-6.6/680-net-add-TCP-fraglist-GRO-support.patch
+index fdb2eba01a..3e914298e8 100644
+--- a/target/linux/generic/pending-6.6/680-net-add-TCP-fraglist-GRO-support.patch
++++ b/target/linux/generic/pending-6.6/680-net-add-TCP-fraglist-GRO-support.patch
+@@ -45,7 +45,7 @@ Signe-off-by: Felix Fietkau <nbd@nbd.name>
+  INDIRECT_CALLABLE_DECLARE(int tcp6_gro_complete(struct sk_buff *skb, int thoff));
+ --- a/net/core/gro.c
+ +++ b/net/core/gro.c
+-@@ -230,6 +230,35 @@ done:
++@@ -227,6 +227,35 @@ done:
+  	return 0;
+  }
+  
+-- 
+2.43.0
+

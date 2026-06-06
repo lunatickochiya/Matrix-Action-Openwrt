@@ -1,7 +1,7 @@
-From 26a9920553c46d236bc642374ef613a070705ad5 Mon Sep 17 00:00:00 2001
+From be3a333af90d2c47685c2752dac780189d3e8d4c Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Mon, 13 Apr 2026 20:01:11 +0800
-Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.139"
+Subject: [PATCH 2/2] Revert "kernel: bump 6.6 to 6.6.139"
 
 This reverts commit ee6134d0fddba5e4051b4d30ec5511ef0dbc8fd3.
 
