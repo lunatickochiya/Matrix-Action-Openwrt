@@ -187,6 +187,13 @@ CONFIG_IB=y
 		echo "----$Matrix_Target----IB---"
 	fi
 
+	if [ "$ADD_ROOTFS" = "1" ]; then
+		for file2 in package-configs/$OpenWrt_PATCH_FILE_DIR/*.config; do     echo "# ADD ROOTFS
+CONFIG_TARGET_ROOTFS_TARGZ=y
+		" >> "$file2"; done
+		echo "----$Matrix_Target----CONFIG_TARGET_ROOTFS_TARGZ---"
+	fi
+
 	if [ "$TEST_KERNEL" = "1" ]; then
 		[ -d $OpenWrt_PATCH_FILE_DIR/core-6-12 ] && cp -r $OpenWrt_PATCH_FILE_DIR/core-6-12/* $OpenWrt_PATCH_FILE_DIR/mypatch-custom-$Matrix_Target
 		#rm -rf $OpenWrt_PATCH_FILE_DIR/mypatch-core/0010-mediatek-dts-update-6.12.patch
