@@ -458,7 +458,7 @@ function add_openwrt_files() {
 	if [ "$Target_CFG_Machine" = "tpm312" ] || [ "$Target_CFG_Machine" = "tpm312_lite" ]; then
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* openwrt/mypatch-core/
 	fi
-	if [ "$Target_CFG_Machine" = "fmx1_pro" ] || [ "$Target_CFG_Machine" = "fmx1_pro_lite" ]; then
+	if [ "$Target_CFG_Machine" = "fmx1_pro" ] || [ "$Target_CFG_Machine" = "fmx1_pro_lite" ] || [ "$Target_CFG_Machine" = "fmx1_pro_docker" ]; then
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* openwrt/mypatch-core/
 	fi
 	# if [ "$Target_CFG_Machine" = "jdcloud_re-ss-01" ]; then
