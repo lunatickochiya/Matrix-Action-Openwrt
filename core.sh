@@ -866,7 +866,6 @@ add_openwrt_sfe_ipt_k66
 add_openwrt_sfe_nft_k66
 add_openwrt_sfe_kernel_k612
 add_openwrt_sfe_kmods
-add_openwrt_sfe_patch_fix_66
 elif [ "$1" == "add-openwrt-sfe-2410-ipq" ]; then
 add_openwrt_sfe_ipt_k66
 add_openwrt_sfe_nft_k66
@@ -878,6 +877,7 @@ add_openwrt_nosfe_nss_pkgs
 elif [ "$1" == "add-openwrt-files-2410" ]; then
 add_openwrt_files
 patch_openwrt_core_pre
+add_openwrt_sfe_patch_fix_66
 elif [ "$1" == "add-openwrt-kmods" ]; then
 add_openwrt_kmods
 elif [ "$1" == "fix-openwrt-feeds" ]; then
