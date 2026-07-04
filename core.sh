@@ -64,6 +64,7 @@ function patch_json_input_set() {
 	echo -e "ADD_SDK=$(echo $PATCH_JSON_INPUT | jq -r ".ADD_SDK")" >> "$GITHUB_ENV"
 	echo -e "MAC80211_616=$(echo $PATCH_JSON_INPUT | jq -r ".MAC80211_616")" >> "$GITHUB_ENV"
 	echo -e "MAC80211_618=$(echo $PATCH_JSON_INPUT | jq -r ".MAC80211_618")" >> "$GITHUB_ENV"
+	echo -e "ADD_ROOTFS=$(echo $PATCH_JSON_INPUT | jq -r ".ADD_ROOTFS")" >> "$GITHUB_ENV"
 }
 
 function init_gh_env_common() {
@@ -188,9 +189,9 @@ CONFIG_IB=y
 	fi
 
 	if [ "$ADD_ROOTFS" = "1" ]; then
-		for file2 in package-configs/$OpenWrt_PATCH_FILE_DIR/*.config; do     echo "# ADD ROOTFS
+		for file3 in package-configs/$OpenWrt_PATCH_FILE_DIR/*.config; do     echo "# ADD ROOTFS
 CONFIG_TARGET_ROOTFS_TARGZ=y
-		" >> "$file2"; done
+		" >> "$file3"; done
 		echo "----$Matrix_Target----CONFIG_TARGET_ROOTFS_TARGZ---"
 	fi
 
