@@ -20,6 +20,7 @@ on:
         - 'mpc1917'
         - 'mpc1917_lite'
         - 'fmx1_pro'
+        - 'fmx1_pro_docker'
       REPO:
         description: 'Choose repo'
         required: true
@@ -103,6 +104,7 @@ jobs:
         - rockchip: tpm312
         - rockchip: tpm312_lite
         - rockchip: fmx1_pro
+        - rockchip: fmx1_pro_docker
 
     steps:
       - name: 检查

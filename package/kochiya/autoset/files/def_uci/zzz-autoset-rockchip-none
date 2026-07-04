@@ -1,0 +1,84 @@
+#!/bin/sh
+
+#sed -i '2isrc/gz lunaticurey_luci http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/packages/luci' /etc/opkg/distfeeds.conf
+#sed -i '2isrc/gz lunaticurey_packages http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/packages/packages' /etc/opkg/distfeeds.conf
+#sed -i '2isrc/gz lunaticurey_telephony http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/packages/telephony' /etc/opkg/distfeeds.conf
+#sed -i '2isrc/gz lunaticurey_routing http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/packages/routing' /etc/opkg/distfeeds.conf
+#sed -i '2isrc/gz lunaticurey_management http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/packages/management' /etc/opkg/distfeeds.conf
+#sed -i '2i	option flow_offloading_hw 1' /etc/config/firewall
+#sed -i '2i	option flow_offloading 1' /etc/config/firewall
+
+
+#uci -q batch <<-EOF >/dev/null
+#	set system.@system[0].hostname=Tpm312
+#	set network.lan.ipaddr=192.168.7.200
+#	set network.lan.gateway=192.168.7.1
+#	set network.lan.netmask=255.255.255.0
+#	set network.lan.dns=223.5.5.5
+#	set firewall.@zone[1].input='ACCEPT'
+#	set wireless.@wifi-device[0].disabled=0
+#	set wireless.@wifi-device[1].disabled=0
+#	commit
+#EOF
+#	set network.wan.macaddr=F0:D7:DC:00:56:12
+#	set wireless.@wifi-iface[0].macaddr=F0:D7:DC:00:56:11
+#	set network.lan.macaddr=F0:D7:DC:00:56:10
+
+uci -q batch <<-EOF >/dev/null
+	set system.@system[0].hostname=Rockchip
+	set system.@system[0].timezone=CST-8
+	set system.@system[0].zonename=Asia/Shanghai
+	set system.@system[0].log_size='256'
+	set firewall.@zone[1].input='ACCEPT'
+	set ttyd.@ttyd[0].interface='eth0'
+	del_list uhttpd.main.listen_https='0.0.0.0:443'
+	del_list uhttpd.main.listen_https='[::]:443'
+	add_list system.ntp.server='ntp.tencent.com'
+	add_list system.ntp.server='ntp1.aliyun.com'
+	set luci.main.mediaurlbase='/luci-static/argon'
+	commit
+EOF
+
+# sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/openwrt#g' /etc/opkg/distfeeds.conf
+
+#sed -i '/DISTRIB_REVISION/d' /etc/openwrt_release
+
+sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
+
+
+
+cat <<EOF >> /etc/sysupgrade.conf
+/root/docker/
+/usr/bin/cloudreve.db
+/etc/xiaoya/
+EOF
+
+#sed -i '/ath9k/d' /etc/modules.d/ath9k
+#echo "ath9k debug=0x00000200" >> /etc/modules.d/ath9k
+#sed -i '202,207d' /www/luci-static/material/js/script.js
+#/etc/init.d/dnscrypt-proxy stop
+/etc/init.d/qos_gargoyle disable
+/etc/init.d/umdns stop
+/etc/init.d/umdns disable
+/etc/init.d/dawn stop
+/etc/init.d/dawn disable
+/etc/init.d/cloudflared stop
+/etc/init.d/olsrd stop
+/etc/init.d/olsrd disable
+/etc/init.d/olsrd6 stop
+/etc/init.d/olsrd6 disable
+/etc/init.d/advancedplus stop
+/etc/init.d/advancedplus disable
+/etc/init.d/tailscale stop
+/etc/init.d/tailscale disable
+/etc/init.d/adguardhome stop
+/etc/init.d/adguardhome disable
+/etc/init.d/netdata stop
+/etc/init.d/netdata disable
+/etc/init.d/frpc stop
+/etc/init.d/frpc disable
+/etc/init.d/frps stop
+/etc/init.d/frps disable
+#/etc/modechange start
+
+exit 0
