@@ -321,7 +321,7 @@ CONFIG_PACKAGE_kmod-nft-fullcone=y
 
 
 function add_openwrt_sfe_patch_fix_66() {
-  local FILE="include/kernel-6.6"
+  local FILE="openwrt/include/kernel-6.6"
 
   # 取出 LINUX_VERSION-6.6 的小版本
   local LINUX_MINOR
@@ -344,10 +344,10 @@ function add_openwrt_sfe_patch_fix_66() {
 
   if [[ "$SMALLEST" == "$CURRENT_VER" ]] && [[ "$CURRENT_VER" != "6.6.129" ]]; then
     echo "${CURRENT_VER} < 6.6.129，开始下载并覆盖补丁..."
-    mkdir -p "target/linux/generic/hack-6.6/"
+    mkdir -p "openwrt/target/linux/generic/hack-6.6/"
     wget -N "https://raw.githubusercontent.com/chenmozhijin/turboacc/a82479aaebb34c90134d66be2200a9dd50f469fb/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch" \
-      -O "target/linux/generic/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch"
-    echo "完成：target/linux/generic/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch"
+      -O "openwrt/target/linux/generic/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch"
+    echo "完成：openwrt/target/linux/generic/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch"
   else
     echo "${CURRENT_VER} >= 6.6.129，不执行 wget。"
   fi
