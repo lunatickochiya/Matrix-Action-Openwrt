@@ -319,6 +319,41 @@ CONFIG_PACKAGE_kmod-nft-fullcone=y
 	fi
 }
 
+
+function add_openwrt_sfe_patch_fix_66() {
+  local FILE="include/kernel-6.6"
+
+  # 取出 LINUX_VERSION-6.6 的小版本
+  local LINUX_MINOR
+  LINUX_MINOR="$(awk -F'=' '/^LINUX_VERSION-6\.6[[:space:]]*/ { gsub(/[[:space:]]/, "", $2); print $2; exit }' "$FILE")"
+  [[ -z "$LINUX_MINOR" ]] && { echo "未在 ${FILE} 中找到 LINUX_VERSION-6.6，退出。"; exit 1; }
+
+  # 构造当前版本，例如 6.6.129
+  local CURRENT_VER
+  if [[ "$LINUX_MINOR" == .* ]]; then
+    CURRENT_VER="6.6${LINUX_MINOR}"
+  else
+    CURRENT_VER="6.6.${LINUX_MINOR}"
+  fi
+
+  echo "检测到当前内核版本：${CURRENT_VER}（来自 ${FILE}）"
+
+  # 目标版本直接写死在比较里
+  local SMALLEST
+  SMALLEST="$(printf '%s\n%s\n' "$CURRENT_VER" '6.6.129' | sort -V | head -n 1)"
+
+  if [[ "$SMALLEST" == "$CURRENT_VER" ]] && [[ "$CURRENT_VER" != "6.6.129" ]]; then
+    echo "${CURRENT_VER} < 6.6.129，开始下载并覆盖补丁..."
+    mkdir -p "target/linux/generic/hack-6.6/"
+    wget -N "https://raw.githubusercontent.com/chenmozhijin/turboacc/a82479aaebb34c90134d66be2200a9dd50f469fb/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch" \
+      -O "target/linux/generic/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch"
+    echo "完成：target/linux/generic/hack-6.6/952-add-net-conntrack-events-support-multiple-registrant.patch"
+  else
+    echo "${CURRENT_VER} >= 6.6.129，不执行 wget。"
+  fi
+}
+
+
 function add_openwrt_sfe_kernel_k612() {
 	if [ "$TEST_KERNEL" = "1" ]; then
 		cd openwrt
@@ -831,6 +866,7 @@ add_openwrt_sfe_ipt_k66
 add_openwrt_sfe_nft_k66
 add_openwrt_sfe_kernel_k612
 add_openwrt_sfe_kmods
+add_openwrt_sfe_patch_fix_66
 elif [ "$1" == "add-openwrt-sfe-2410-ipq" ]; then
 add_openwrt_sfe_ipt_k66
 add_openwrt_sfe_nft_k66
