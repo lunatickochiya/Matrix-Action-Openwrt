@@ -396,7 +396,7 @@ jobs:
         cp openwrt/.config  ./firmware/${{matrix.target}}.config
         cp openwrt/build_dir/target-*/linux-*/linux-*/.config ./firmware/${{matrix.target}}_kernel.config
         mv -f openwrt/bin/targets/*/*/{*combined*,*ext4*,*sdk*,*imagebuilder*,*buildinfo*,*manifest*,*json*,*sha256sums*} ./firmware/ 2>/dev/null || true
-        [ $UPLOAD_SYSUPGRADE = true ] && mv -f openwrt/bin/targets/*/*/{*squashfs*,*sysupgrade*} ./firmware/ 2>/dev/null || true
+        [ $UPLOAD_SYSUPGRADE = true ] && mv -f openwrt/bin/targets/*/*/{*squashfs*,*sysupgrade*,*rootfs*} ./firmware/ 2>/dev/null || true
         cd firmware
         echo "v${{ env.date2 }}" > version.txt
         echo ${{matrix.target}} >> version.txt

@@ -263,8 +263,8 @@ jobs:
         mv -f openwrt-2305/K61/tele openwrt/feeds/telephony
         mv -f openwrt-2305/K61/packages/* openwrt-2305/feeds-package-patch-23056
         fi
-        rm -rf feeds/packages/lang/golang
-        git clone https://github.com/sbwml/packages_lang_golang -b 26.x feeds/packages/lang/golang
+        rm -rf openwrt/feeds/packages/lang/golang
+        git clone https://github.com/sbwml/packages_lang_golang -b 26.x openwrt/feeds/packages/lang/golang
         [ -d openwrt-2305/lunatic7-revert ] && mv -f openwrt-2305/lunatic7-revert openwrt/feeds/lunatic7/lunatic7-revert
         [ -d openwrt-2305/luci-patch-2305 ] && mv -f openwrt-2305/luci-patch-2305 openwrt/feeds/luci/luci-patch-2305
         [ -d openwrt-2305/feeds-package-patch-23056 ] && mv -f openwrt-2305/feeds-package-patch-23056 openwrt/feeds/packages/feeds-package-patch-2305
