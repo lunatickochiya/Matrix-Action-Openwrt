@@ -1,7 +1,7 @@
-From e69e2a627af7c932892556eb5d6b8b7f5ce51646 Mon Sep 17 00:00:00 2001
+From dd5f43ff8947f2c28e40d65e7e60b351641a9840 Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Mon, 13 Apr 2026 20:01:11 +0800
-Subject: [PATCH 1/2] Revert "kernel: bump 6.6 to 6.6.143"
+Subject: [PATCH] Revert "kernel: bump 6.6 to 6.6.144"
 
 This reverts commit ee6134d0fddba5e4051b4d30ec5511ef0dbc8fd3.
 
@@ -62,6 +62,9 @@ This reverts commit 819d7ef105ccc8ec1c843bcf1b7da86eff5edfa3.
 Revert "kernel: bump 6.6 to 6.6.143"
 
 This reverts commit ca01d602b3df5c7f666b734e69ef2c4eb450c53c.
+Revert "kernel: bump 6.6 to 6.6.144"
+
+This reverts commit 3cd90044c185e60640c5e9da855fac192017929a.
 ---
  include/kernel-6.6                            |    4 +-
  ...12-net-dsa-mt7530-Add-EN7581-support.patch |   12 +-
@@ -99,12 +102,13 @@ This reverts commit ca01d602b3df5c7f666b734e69ef2c4eb450c53c.
  ...genet-constrain-max-DMA-burst-length.patch |    2 +-
  ...Better-coalescing-parameter-defaults.patch |   17 +-
  ...hci_fixup_endpoint-for-interval-adju.patch |    2 +-
- ...m-v3d-Clock-V3D-down-when-not-in-use.patch |    6 +-
+ ...m-v3d-Clock-V3D-down-when-not-in-use.patch |    8 +-
  ...ce-quirks-for-Freeway-Airmouse-T3-an.patch |    8 +-
  ...t-Workaround-2-for-Pi4-Ethernet-fail.patch |    4 +-
  ...7-Support-for-the-Sony-IMX477-sensor.patch |    2 +-
  ...9-Support-for-the-Sony-IMX519-sensor.patch |    2 +-
  ...vicetree-Add-documentation-for-imx37.patch |    2 +-
+ ...Suppress-all-but-the-first-MMU-error.patch |    6 +-
  ...Handle-missing-clock-more-gracefully.patch |    2 +-
  ...-clock-so-firmware-knows-we-are-usin.patch |    2 +-
  ...t-Disable-skip_umac_reset-by-default.patch |    2 +-
@@ -133,6 +137,7 @@ This reverts commit ca01d602b3df5c7f666b734e69ef2c4eb450c53c.
  ...a-i2c-Replace-IMX708-sensor-binding-.patch |    2 +-
  ...ci_sync-Add-fallback-bd-address-prop.patch |    4 +-
  ...a-imx258-Rename-to-include-vendor-pr.patch |    2 +-
+ ...gfs-end-points-to-query-GPU-usage-st.patch |   40 +-
  ...5-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch |    6 +-
  ...ertise-embedded-data-node-on-media-p.patch |    2 +-
  .../950-0514-sdhci-Add-SD-Express-hook.patch  |    4 +-
@@ -141,6 +146,7 @@ This reverts commit ca01d602b3df5c7f666b734e69ef2c4eb450c53c.
  ...f-dwcmshc-define-sdio-timeout-clocks.patch |    6 +-
  ...mc-sdhci-of-dwcmshc-rp1-sdio-changes.patch |    8 +-
  ...cm2835-power-Add-support-for-BCM2712.patch |    8 +-
+ ...ix-up-register-addresses-for-V3D-7.x.patch |   28 +-
  ...-drm-vc4-hdmi-Enable-the-audio-clock.patch |    4 +-
  ...vc4-Introduce-generation-number-enum.patch |   40 +-
  ...-paths-unavailable-on-any-generation.patch |   40 +-
@@ -155,6 +161,7 @@ This reverts commit ca01d602b3df5c7f666b734e69ef2c4eb450c53c.
  ...0-Use-MEDIA_BUS_FMT_UYVY8_1X16-for-C.patch |    4 +-
  ...0-Add-support-for-V4L2_CID_LINK_FREQ.patch |   10 +-
  ...-add-FS-LS-bus-instance-parkmode-dis.patch |    4 +-
+ ...nable-V3D-to-use-different-PAGE_SIZE.patch |    4 +-
  ...-jack-detection-to-HDMI-audio-driver.patch |    4 +-
  ...llocate-a-block-for-SD-extension-reg.patch |    2 +-
  ...debugfs-entries-for-SD-extension-reg.patch |    2 +-
@@ -196,8 +203,9 @@ This reverts commit ca01d602b3df5c7f666b734e69ef2c4eb450c53c.
  ...arn-if-no-host-bridge-NUMA-node-info.patch |    2 +-
  ...rd-CQ-support-based-on-an-allow-list.patch |    8 +-
  ...wc3-Set-DMA-and-coherent-masks-early.patch |    6 +-
- ...e-a-V3D-tech-revision-to-all-support.patch |    4 +-
- ...SMS-registers-for-power-on-off-and-r.patch |    2 +-
+ ...pointer-to-NULL-when-the-job-s-fence.patch |   84 +
+ ...e-a-V3D-tech-revision-to-all-support.patch |   22 +-
+ ...SMS-registers-for-power-on-off-and-r.patch |    8 +-
  ...m_sf2-enable-GPHY-for-switch-probing.patch |    2 +-
  ...sf2-keep-GPHY-enabled-on-the-BCM4908.patch |    2 +-
  ...-cortina-Rename-adjust-link-callback.patch |    4 +-
@@ -423,19 +431,20 @@ This reverts commit ca01d602b3df5c7f666b734e69ef2c4eb450c53c.
  ...ET_CONFIG_DEVICE_WAIT_MS-waiting-tim.patch |    6 +-
  ...NTAINERS-Update-all-StarFive-entries.patch |   20 +-
  ...t-8250-Add-dw-auto-flow-ctrl-support.patch |    2 +-
- ...50-add-reset-operation-in-runtime-PM.patch |    6 +-
+ ...50-add-reset-operation-in-runtime-PM.patch |    8 +-
  ...ove-performance-usb-using-lowmem-for.patch |    4 +-
  ...dd-starfive-jh7100-hsuart-compatible.patch |    2 +-
  ...-dmac-Handle-xfer-start-while-non-id.patch |    2 +-
  ...axi-dmac-Add-StarFive-JH7100-support.patch |    6 +-
  .../1009-net-stmmac-use-GFP_DMA32.patch       |    2 +-
  ...arfive-Add-JH7100-audio-reset-driver.patch |    2 +-
- 367 files changed, 10000 insertions(+), 1319 deletions(-)
+ 372 files changed, 10137 insertions(+), 1372 deletions(-)
  create mode 100644 target/linux/airoha/patches-6.6/083-01-v6.13-resource-Add-resource-set-range-and-size-helpers.patch
  create mode 100644 target/linux/ath79/patches-6.6/301-irqchip-irq-ath79-cpu-drop-OF-init-helper.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0291-media-i2c-ov5647-Correct-pixel-array-offset.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0292-media-i2c-ov5647-Correct-minimum-VBLANK-value.patch
  create mode 100644 target/linux/bcm27xx/patches-6.6/950-0310-media-i2c-ov5647-Sensor-should-report-RAW-color-spac.patch
+ create mode 100644 target/linux/bcm27xx/patches-6.6/950-1552-drm-v3d-Set-job-pointer-to-NULL-when-the-job-s-fence.patch
  delete mode 100644 target/linux/generic/backport-6.6/211-01-v6.19-bitfield-Add-less-checking-__FIELD_-GET-PREP.patch
  delete mode 100644 target/linux/generic/backport-6.6/211-02-v6.19-bitfield-Add-non-constant-field_-prep-get-helpers.patch
  create mode 100644 target/linux/generic/backport-6.6/702-01-v6.7-net-phy-aquantia-move-to-separate-directory.patch
@@ -451,12 +460,12 @@ This reverts commit ca01d602b3df5c7f666b734e69ef2c4eb450c53c.
  create mode 100644 target/linux/ramips/patches-6.6/100-mips-ralink-update-CPU-clock-index.patch
 
 diff --git a/include/kernel-6.6 b/include/kernel-6.6
-index 5c1963a8dc..55a5b8c57c 100644
+index 12de780cf1..55a5b8c57c 100644
 --- a/include/kernel-6.6
 +++ b/include/kernel-6.6
 @@ -1,2 +1,2 @@
--LINUX_VERSION-6.6 = .143
--LINUX_KERNEL_HASH-6.6.143 = dace1f8dc9c0dbf5df14f47e3229cd62c298e83049681731ef229f2ba7592932
+-LINUX_VERSION-6.6 = .144
+-LINUX_KERNEL_HASH-6.6.144 = ec19b8307b495078cdc03749e63cb3802ac23cf6122c82eb9719feeb4557ecc3
 +LINUX_VERSION-6.6 = .127
 +LINUX_KERNEL_HASH-6.6.127 = a7cd9c97b4f0b31cc030bcdc60abe5434fffb2556e293f7438ce7909dff8c9fe
 diff --git a/target/linux/airoha/patches-6.6/029-v6.12-net-dsa-mt7530-Add-EN7581-support.patch b/target/linux/airoha/patches-6.6/029-v6.12-net-dsa-mt7530-Add-EN7581-support.patch
@@ -1250,7 +1259,7 @@ index fc149dbe2f..2cf32f792b 100644
   	.check_bandwidth =	xhci_check_bandwidth,
   	.reset_bandwidth =	xhci_reset_bandwidth,
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0167-drm-v3d-Clock-V3D-down-when-not-in-use.patch b/target/linux/bcm27xx/patches-6.6/950-0167-drm-v3d-Clock-V3D-down-when-not-in-use.patch
-index fab52c63d0..099cf75a81 100644
+index da4eb8f561..099cf75a81 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0167-drm-v3d-Clock-V3D-down-when-not-in-use.patch
 +++ b/target/linux/bcm27xx/patches-6.6/950-0167-drm-v3d-Clock-V3D-down-when-not-in-use.patch
 @@ -25,7 +25,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
@@ -1271,6 +1280,15 @@ index fab52c63d0..099cf75a81 100644
   	if (ret)
   		goto irq_disable;
   
+@@ -59,7 +59,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  irq_disable:
+ --- a/drivers/gpu/drm/v3d/v3d_drv.h
+ +++ b/drivers/gpu/drm/v3d/v3d_drv.h
+-@@ -87,6 +87,12 @@ struct v3d_dev {
++@@ -84,6 +84,12 @@ struct v3d_dev {
+  	void __iomem *bridge_regs;
+  	void __iomem *gca_regs;
+  	struct clk *clk;
 @@ -155,7 +155,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
   	kref_init(&job->refcount);
   
@@ -1381,6 +1399,37 @@ index 933cf60517..3af5c0e95c 100644
   L:	linux-media@vger.kernel.org
   S:	Maintained
   T:	git git://linuxtv.org/media_tree.git
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0183-drm-v3d-Suppress-all-but-the-first-MMU-error.patch b/target/linux/bcm27xx/patches-6.6/950-0183-drm-v3d-Suppress-all-but-the-first-MMU-error.patch
+index 1138d54995..d41fab9d94 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0183-drm-v3d-Suppress-all-but-the-first-MMU-error.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0183-drm-v3d-Suppress-all-but-the-first-MMU-error.patch
+@@ -13,7 +13,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+ 
+ --- a/drivers/gpu/drm/v3d/v3d_irq.c
+ +++ b/drivers/gpu/drm/v3d/v3d_irq.c
+-@@ -193,6 +193,7 @@ v3d_hub_irq(int irq, void *arg)
++@@ -189,6 +189,7 @@ v3d_hub_irq(int irq, void *arg)
+  			"GMP",
+  		};
+  		const char *client = "?";
+@@ -21,7 +21,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  
+  		V3D_WRITE(V3D_MMU_CTL, V3D_READ(V3D_MMU_CTL));
+  
+-@@ -202,6 +203,7 @@ v3d_hub_irq(int irq, void *arg)
++@@ -198,6 +199,7 @@ v3d_hub_irq(int irq, void *arg)
+  				client = v3d41_axi_ids[axi_id];
+  		}
+  
+@@ -29,7 +29,7 @@ Signed-off-by: Phil Elwell <phil@raspberrypi.org>
+  		dev_err(v3d->drm.dev, "MMU error from client %s (%d) at 0x%llx%s%s%s\n",
+  			client, axi_id, (long long)vio_addr,
+  			((intsts & V3D_HUB_INT_MMU_WRV) ?
+-@@ -210,6 +212,7 @@ v3d_hub_irq(int irq, void *arg)
++@@ -206,6 +208,7 @@ v3d_hub_irq(int irq, void *arg)
+  			 ", pte invalid" : ""),
+  			((intsts & V3D_HUB_INT_MMU_CAP) ?
+  			 ", cap exceeded" : ""));
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0187-v3d_drv-Handle-missing-clock-more-gracefully.patch b/target/linux/bcm27xx/patches-6.6/950-0187-v3d_drv-Handle-missing-clock-more-gracefully.patch
 index e0c38917e3..dc601a6697 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0187-v3d_drv-Handle-missing-clock-more-gracefully.patch
@@ -1902,6 +1951,154 @@ index 57079cb207..50ae214755 100644
   L:	linux-media@vger.kernel.org
   S:	Maintained
   T:	git git://linuxtv.org/media_tree.git
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0464-drm-v3d-New-debugfs-end-points-to-query-GPU-usage-st.patch b/target/linux/bcm27xx/patches-6.6/950-0464-drm-v3d-New-debugfs-end-points-to-query-GPU-usage-st.patch
+index c79666ddbb..edf49764b7 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0464-drm-v3d-New-debugfs-end-points-to-query-GPU-usage-st.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0464-drm-v3d-New-debugfs-end-points-to-query-GPU-usage-st.patch
+@@ -156,8 +156,8 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  struct v3d_queue_state {
+  	struct drm_gpu_scheduler sched;
+  
+-@@ -31,6 +44,44 @@ struct v3d_queue_state {
+- 	struct v3d_job *active_job;
++@@ -28,6 +41,44 @@ struct v3d_queue_state {
++ 	u64 emit_seqno;
+  };
+  
+ +struct v3d_queue_pid_stats {
+@@ -201,7 +201,7 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  /* Performance monitor object. The perform lifetime is controlled by userspace
+   * using perfmon related ioctls. A perfmon can be attached to a submit_cl
+   * request, and when this is the case, HW perf counters will be activated just
+-@@ -153,6 +204,8 @@ struct v3d_dev {
++@@ -155,6 +206,8 @@ struct v3d_dev {
+  		u32 num_allocated;
+  		u32 pages_allocated;
+  	} bo_stats;
+@@ -210,7 +210,7 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  };
+  
+  static inline struct v3d_dev *
+-@@ -250,6 +303,11 @@ struct v3d_job {
++@@ -252,6 +305,11 @@ struct v3d_job {
+  	 */
+  	struct v3d_perfmon *perfmon;
+  
+@@ -222,7 +222,7 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  	/* Callback for the freeing of the job on refcount going to 0. */
+  	void (*free)(struct kref *ref);
+  };
+-@@ -414,6 +472,7 @@ void v3d_mmu_remove_ptes(struct v3d_bo *
++@@ -416,6 +474,7 @@ void v3d_mmu_remove_ptes(struct v3d_bo *
+  /* v3d_sched.c */
+  int v3d_sched_init(struct v3d_dev *v3d);
+  void v3d_sched_fini(struct v3d_dev *v3d);
+@@ -250,34 +250,34 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  
+  #include "v3d_drv.h"
+  #include "v3d_regs.h"
+-@@ -104,6 +105,7 @@ v3d_irq(int irq, void *arg)
++@@ -100,6 +101,7 @@ v3d_irq(int irq, void *arg)
+  	if (intsts & V3D_INT_FLDONE) {
+  		struct v3d_fence *fence =
+- 			to_v3d_fence(v3d->queue[V3D_BIN].active_job->irq_fence);
++ 			to_v3d_fence(v3d->bin_job->base.irq_fence);
+ +		v3d->gpu_queue_stats[V3D_BIN].last_exec_end = local_clock();
+  
+  		trace_v3d_bcl_irq(&v3d->drm, fence->seqno);
+  
+-@@ -116,6 +118,7 @@ v3d_irq(int irq, void *arg)
++@@ -112,6 +114,7 @@ v3d_irq(int irq, void *arg)
+  	if (intsts & V3D_INT_FRDONE) {
+  		struct v3d_fence *fence =
+- 			to_v3d_fence(v3d->queue[V3D_RENDER].active_job->irq_fence);
++ 			to_v3d_fence(v3d->render_job->base.irq_fence);
+ +		v3d->gpu_queue_stats[V3D_RENDER].last_exec_end = local_clock();
+  
+  		trace_v3d_rcl_irq(&v3d->drm, fence->seqno);
+  
+-@@ -128,6 +131,7 @@ v3d_irq(int irq, void *arg)
++@@ -124,6 +127,7 @@ v3d_irq(int irq, void *arg)
+  	if (intsts & V3D_INT_CSDDONE) {
+  		struct v3d_fence *fence =
+- 			to_v3d_fence(v3d->queue[V3D_CSD].active_job->irq_fence);
++ 			to_v3d_fence(v3d->csd_job->base.irq_fence);
+ +		v3d->gpu_queue_stats[V3D_CSD].last_exec_end = local_clock();
+  
+  		trace_v3d_csd_irq(&v3d->drm, fence->seqno);
+  
+-@@ -167,6 +171,7 @@ v3d_hub_irq(int irq, void *arg)
++@@ -163,6 +167,7 @@ v3d_hub_irq(int irq, void *arg)
+  	if (intsts & V3D_HUB_INT_TFUC) {
+  		struct v3d_fence *fence =
+- 			to_v3d_fence(v3d->queue[V3D_TFU].active_job->irq_fence);
++ 			to_v3d_fence(v3d->tfu_job->base.irq_fence);
+ +		v3d->gpu_queue_stats[V3D_TFU].last_exec_end = local_clock();
+  
+  		trace_v3d_tfu_irq(&v3d->drm, fence->seqno);
+@@ -407,7 +407,7 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  static struct dma_fence *v3d_bin_job_run(struct drm_sched_job *sched_job)
+  {
+  	struct v3d_bin_job *job = to_bin_job(sched_job);
+-@@ -111,6 +220,7 @@ static struct dma_fence *v3d_bin_job_run
++@@ -107,6 +216,7 @@ static struct dma_fence *v3d_bin_job_run
+  	trace_v3d_submit_cl(dev, false, to_v3d_fence(fence)->seqno,
+  			    job->start, job->end);
+  
+@@ -415,7 +415,7 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  	v3d_switch_perfmon(v3d, &job->base);
+  
+  	/* Set the current and end address of the control list.
+-@@ -164,6 +274,7 @@ static struct dma_fence *v3d_render_job_
++@@ -158,6 +268,7 @@ static struct dma_fence *v3d_render_job_
+  	trace_v3d_submit_cl(dev, true, to_v3d_fence(fence)->seqno,
+  			    job->start, job->end);
+  
+@@ -423,7 +423,7 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  	v3d_switch_perfmon(v3d, &job->base);
+  
+  	/* XXX: Set the QCFG */
+-@@ -202,6 +313,7 @@ v3d_tfu_job_run(struct drm_sched_job *sc
++@@ -194,6 +305,7 @@ v3d_tfu_job_run(struct drm_sched_job *sc
+  
+  	trace_v3d_submit_tfu(dev, to_v3d_fence(fence)->seqno);
+  
+@@ -431,7 +431,7 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  	V3D_WRITE(V3D_TFU_IIA, job->args.iia);
+  	V3D_WRITE(V3D_TFU_IIS, job->args.iis);
+  	V3D_WRITE(V3D_TFU_ICA, job->args.ica);
+-@@ -258,6 +370,7 @@ v3d_csd_job_run(struct drm_sched_job *sc
++@@ -238,6 +350,7 @@ v3d_csd_job_run(struct drm_sched_job *sc
+  
+  	trace_v3d_submit_csd(dev, to_v3d_fence(fence)->seqno);
+  
+@@ -439,7 +439,7 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  	v3d_switch_perfmon(v3d, &job->base);
+  
+  	for (i = 1; i <= 6; i++)
+-@@ -274,7 +387,10 @@ v3d_cache_clean_job_run(struct drm_sched
++@@ -254,7 +367,10 @@ v3d_cache_clean_job_run(struct drm_sched
+  	struct v3d_job *job = to_v3d_job(sched_job);
+  	struct v3d_dev *v3d = job->v3d;
+  
+@@ -450,7 +450,7 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  
+  	return NULL;
+  }
+-@@ -426,8 +542,18 @@ v3d_sched_init(struct v3d_dev *v3d)
++@@ -406,8 +522,18 @@ v3d_sched_init(struct v3d_dev *v3d)
+  	int hw_jobs_limit = 1;
+  	int job_hang_limit = 0;
+  	int hang_limit_ms = 500;
+@@ -469,7 +469,7 @@ Signed-off-by: Jose Maria Casanova Crespo <jmcasanova@igalia.com>
+  	ret = drm_sched_init(&v3d->queue[V3D_BIN].sched,
+  			     &v3d_bin_sched_ops,
+  			     hw_jobs_limit, job_hang_limit,
+-@@ -481,9 +607,20 @@ void
++@@ -461,9 +587,20 @@ void
+  v3d_sched_fini(struct v3d_dev *v3d)
+  {
+  	enum v3d_queue q;
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0485-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch b/target/linux/bcm27xx/patches-6.6/950-0485-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch
 index 25ce5cb6d7..d55227f633 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0485-usb-xhci-add-XHCI_VLI_HUB_TT_QUIRK.patch
@@ -2269,6 +2466,115 @@ index 9de58e16b3..2a1989c3ce 100644
   	power->asb = pm->asb;
   	power->rpivid_asb = pm->rpivid_asb;
   
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0555-drm-v3d-fix-up-register-addresses-for-V3D-7.x.patch b/target/linux/bcm27xx/patches-6.6/950-0555-drm-v3d-fix-up-register-addresses-for-V3D-7.x.patch
+index 4e95b1754c..b755c393b5 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0555-drm-v3d-fix-up-register-addresses-for-V3D-7.x.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0555-drm-v3d-fix-up-register-addresses-for-V3D-7.x.patch
+@@ -295,7 +295,7 @@ v2: fix kernel panic with debug-fs interface to list registers
+  
+  static irqreturn_t
+  v3d_hub_irq(int irq, void *arg);
+-@@ -128,7 +129,8 @@ v3d_irq(int irq, void *arg)
++@@ -124,7 +125,8 @@ v3d_irq(int irq, void *arg)
+  		status = IRQ_HANDLED;
+  	}
+  
+@@ -303,9 +303,9 @@ v2: fix kernel panic with debug-fs interface to list registers
+ +	if ((v3d->ver < 71 && (intsts & V3D_INT_CSDDONE)) ||
+ +	    (v3d->ver >= 71 && (intsts & V3D_V7_INT_CSDDONE))) {
+  		struct v3d_fence *fence =
+- 			to_v3d_fence(v3d->queue[V3D_CSD].active_job->irq_fence);
++ 			to_v3d_fence(v3d->csd_job->base.irq_fence);
+  		v3d->gpu_queue_stats[V3D_CSD].last_exec_end = local_clock();
+-@@ -144,7 +146,7 @@ v3d_irq(int irq, void *arg)
++@@ -140,7 +142,7 @@ v3d_irq(int irq, void *arg)
+  	/* We shouldn't be triggering these if we have GMP in
+  	 * always-allowed mode.
+  	 */
+@@ -314,7 +314,7 @@ v2: fix kernel panic with debug-fs interface to list registers
+  		dev_err(v3d->drm.dev, "GMP violation\n");
+  
+  	/* V3D 4.2 wires the hub and core IRQs together, so if we &
+-@@ -221,6 +223,11 @@ v3d_hub_irq(int irq, void *arg)
++@@ -217,6 +219,11 @@ v3d_hub_irq(int irq, void *arg)
+  		status = IRQ_HANDLED;
+  	}
+  
+@@ -326,7 +326,7 @@ v2: fix kernel panic with debug-fs interface to list registers
+  	return status;
+  }
+  
+-@@ -235,8 +242,8 @@ v3d_irq_init(struct v3d_dev *v3d)
++@@ -231,8 +238,8 @@ v3d_irq_init(struct v3d_dev *v3d)
+  	 * for us.
+  	 */
+  	for (core = 0; core < v3d->cores; core++)
+@@ -337,7 +337,7 @@ v2: fix kernel panic with debug-fs interface to list registers
+  
+  	irq = platform_get_irq_optional(v3d_to_pdev(v3d), 1);
+  	if (irq == -EPROBE_DEFER)
+-@@ -291,12 +298,12 @@ v3d_irq_enable(struct v3d_dev *v3d)
++@@ -287,12 +294,12 @@ v3d_irq_enable(struct v3d_dev *v3d)
+  
+  	/* Enable our set of interrupts, masking out any others. */
+  	for (core = 0; core < v3d->cores; core++) {
+@@ -354,7 +354,7 @@ v2: fix kernel panic with debug-fs interface to list registers
+  }
+  
+  void
+-@@ -317,8 +324,8 @@ v3d_irq_disable(struct v3d_dev *v3d)
++@@ -313,8 +320,8 @@ v3d_irq_disable(struct v3d_dev *v3d)
+  
+  	/* Clear any pending interrupts we might have left. */
+  	for (core = 0; core < v3d->cores; core++)
+@@ -591,7 +591,7 @@ v2: fix kernel panic with debug-fs interface to list registers
+  # define V3D_CSD_CURRENT_ID0_WG_Y_MASK                 V3D_MASK(15, 0)
+ --- a/drivers/gpu/drm/v3d/v3d_sched.c
+ +++ b/drivers/gpu/drm/v3d/v3d_sched.c
+-@@ -288,6 +288,8 @@ static struct dma_fence *v3d_render_job_
++@@ -282,6 +282,8 @@ static struct dma_fence *v3d_render_job_
+  	return fence;
+  }
+  
+@@ -600,7 +600,7 @@ v2: fix kernel panic with debug-fs interface to list registers
+  static struct dma_fence *
+  v3d_tfu_job_run(struct drm_sched_job *sched_job)
+  {
+-@@ -314,20 +316,22 @@ v3d_tfu_job_run(struct drm_sched_job *sc
++@@ -306,20 +308,22 @@ v3d_tfu_job_run(struct drm_sched_job *sc
+  	trace_v3d_submit_tfu(dev, to_v3d_fence(fence)->seqno);
+  
+  	v3d_sched_stats_add_job(&v3d->gpu_queue_stats[V3D_TFU], sched_job);
+@@ -635,16 +635,16 @@ v2: fix kernel panic with debug-fs interface to list registers
+  
+  	return fence;
+  }
+-@@ -339,7 +343,7 @@ v3d_csd_job_run(struct drm_sched_job *sc
++@@ -331,7 +335,7 @@ v3d_csd_job_run(struct drm_sched_job *sc
+  	struct v3d_dev *v3d = job->base.v3d;
+  	struct drm_device *dev = &v3d->drm;
+  	struct dma_fence *fence;
+ -	int i;
+ +	int i, csd_cfg0_reg, csd_cfg_reg_count;
+  
+- 	if (unlikely(job->base.base.s_fence->finished.error)) {
+- 		v3d->queue[V3D_CSD].active_job = NULL;
+-@@ -373,10 +377,12 @@ v3d_csd_job_run(struct drm_sched_job *sc
++ 	if (unlikely(job->base.base.s_fence->finished.error))
++ 		return NULL;
++@@ -353,10 +357,12 @@ v3d_csd_job_run(struct drm_sched_job *sc
+  	v3d_sched_stats_add_job(&v3d->gpu_queue_stats[V3D_CSD], sched_job);
+  	v3d_switch_perfmon(v3d, &job->base);
+  
+@@ -660,7 +660,7 @@ v2: fix kernel panic with debug-fs interface to list registers
+  
+  	return fence;
+  }
+-@@ -491,7 +497,8 @@ v3d_csd_job_timedout(struct drm_sched_jo
++@@ -471,7 +477,8 @@ v3d_csd_job_timedout(struct drm_sched_jo
+  {
+  	struct v3d_csd_job *job = to_csd_job(sched_job);
+  	struct v3d_dev *v3d = job->base.v3d;
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0578-drm-vc4-hdmi-Enable-the-audio-clock.patch b/target/linux/bcm27xx/patches-6.6/950-0578-drm-vc4-hdmi-Enable-the-audio-clock.patch
 index adf78de184..ab082c6a19 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0578-drm-vc4-hdmi-Enable-the-audio-clock.patch
@@ -2901,6 +3207,21 @@ index c8953dfb77..2661bebb27 100644
   	unsigned		ulpi_ext_vbus_drv:1;
   	unsigned		parkmode_disable_ss_quirk:1;
   	unsigned		parkmode_disable_hs_quirk:1;
+diff --git a/target/linux/bcm27xx/patches-6.6/950-0905-drm-v3d-Enable-V3D-to-use-different-PAGE_SIZE.patch b/target/linux/bcm27xx/patches-6.6/950-0905-drm-v3d-Enable-V3D-to-use-different-PAGE_SIZE.patch
+index 3ac8826844..429df82ee7 100644
+--- a/target/linux/bcm27xx/patches-6.6/950-0905-drm-v3d-Enable-V3D-to-use-different-PAGE_SIZE.patch
++++ b/target/linux/bcm27xx/patches-6.6/950-0905-drm-v3d-Enable-V3D-to-use-different-PAGE_SIZE.patch
+@@ -96,8 +96,8 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  static inline char *
+ --- a/drivers/gpu/drm/v3d/v3d_irq.c
+ +++ b/drivers/gpu/drm/v3d/v3d_irq.c
+-@@ -74,7 +74,7 @@ v3d_overflow_mem_work(struct work_struct
+- 	list_add_tail(&bo->unref_head, &bin_job->render->unref_list);
++@@ -70,7 +70,7 @@ v3d_overflow_mem_work(struct work_struct
++ 	list_add_tail(&bo->unref_head, &v3d->bin_job->render->unref_list);
+  	spin_unlock_irqrestore(&v3d->job_lock, irqflags);
+  
+ -	V3D_CORE_WRITE(0, V3D_PTB_BPOA, bo->node.start << PAGE_SHIFT);
 diff --git a/target/linux/bcm27xx/patches-6.6/950-0930-vc4-Add-jack-detection-to-HDMI-audio-driver.patch b/target/linux/bcm27xx/patches-6.6/950-0930-vc4-Add-jack-detection-to-HDMI-audio-driver.patch
 index 98b7375004..325f0d6124 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-0930-vc4-Add-jack-detection-to-HDMI-audio-driver.patch
@@ -3658,14 +3979,14 @@ index afbe2be8a9..878c56b579 100644
  +	/*
  +	 * Larger Integral SD cards using rebranded Phison controllers trash
 diff --git a/target/linux/bcm27xx/patches-6.6/950-1339-arm64-numa-Add-NUMA-emulation-for-ARM64.patch b/target/linux/bcm27xx/patches-6.6/950-1339-arm64-numa-Add-NUMA-emulation-for-ARM64.patch
-index 1f17fa4d40..93fbbfc47f 100644
+index 6bf268d4b4..93fbbfc47f 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-1339-arm64-numa-Add-NUMA-emulation-for-ARM64.patch
 +++ b/target/linux/bcm27xx/patches-6.6/950-1339-arm64-numa-Add-NUMA-emulation-for-ARM64.patch
 @@ -20,7 +20,7 @@ Cc: “Rafael J. Wysocki" <rafael@kernel.org>
  
  --- a/arch/arm64/Kconfig
  +++ b/arch/arm64/Kconfig
--@@ -1551,6 +1551,16 @@ config NODES_SHIFT
+-@@ -1552,6 +1552,16 @@ config NODES_SHIFT
 +@@ -1501,6 +1501,16 @@ config NODES_SHIFT
   	  Specify the maximum number of NUMA Nodes available on the target
   	  system.  Increases memory reserved to accommodate various tables.
@@ -3932,8 +4253,98 @@ index 315db1310c..29be3f2fd3 100644
   	u8			tx_max_burst_prd;
   	u8			tx_fifo_resize_max_num;
   	u8			clear_stall_protocol;
+diff --git a/target/linux/bcm27xx/patches-6.6/950-1552-drm-v3d-Set-job-pointer-to-NULL-when-the-job-s-fence.patch b/target/linux/bcm27xx/patches-6.6/950-1552-drm-v3d-Set-job-pointer-to-NULL-when-the-job-s-fence.patch
+new file mode 100644
+index 0000000000..3bf33ffc75
+--- /dev/null
++++ b/target/linux/bcm27xx/patches-6.6/950-1552-drm-v3d-Set-job-pointer-to-NULL-when-the-job-s-fence.patch
+@@ -0,0 +1,84 @@
++From 131564261399a36a5cf2ac2731ed1ceffba93d10 Mon Sep 17 00:00:00 2001
++From: =?UTF-8?q?Ma=C3=ADra=20Canal?= <mcanal@igalia.com>
++Date: Sat, 22 Feb 2025 14:56:46 -0300
++Subject: [PATCH] drm/v3d: Set job pointer to NULL when the job's fence has an
++ error
++MIME-Version: 1.0
++Content-Type: text/plain; charset=UTF-8
++Content-Transfer-Encoding: 8bit
++
++Similar to commit e4b5ccd392b9 ("drm/v3d: Ensure job pointer is set to
++NULL after job completion"), ensure the job pointer is set to `NULL` when
++a job's fence has an error. Failing to do so can trigger kernel warnings
++in specific scenarios, such as:
++
++1. v3d_csd_job_run() assigns `v3d->csd_job = job`
++2. CSD job exceeds hang limit, causing a timeout → v3d_gpu_reset_for_timeout()
++3. GPU reset
++4. drm_sched_resubmit_jobs() sets the job's fence to `-ECANCELED`.
++5. v3d_csd_job_run() detects the fence error and returns NULL, not
++   submitting the job to the GPU
++6. User-space runs `modprobe -r v3d`
++7. v3d_gem_destroy()
++
++v3d_gem_destroy() triggers a warning indicating that the CSD job never
++ended, as we didn't set `v3d->csd_job` to NULL after the timeout. The same
++can also happen to BIN, RENDER, and TFU jobs.
++
++Signed-off-by: Maíra Canal <mcanal@igalia.com>
++---
++ drivers/gpu/drm/v3d/v3d_sched.c | 18 ++++++++++++++----
++ 1 file changed, 14 insertions(+), 4 deletions(-)
++
++--- a/drivers/gpu/drm/v3d/v3d_sched.c
+++++ b/drivers/gpu/drm/v3d/v3d_sched.c
++@@ -189,8 +189,12 @@ static struct dma_fence *v3d_bin_job_run
++ 	struct dma_fence *fence;
++ 	unsigned long irqflags;
++ 
++-	if (unlikely(job->base.base.s_fence->finished.error))
+++	if (unlikely(job->base.base.s_fence->finished.error)) {
+++		spin_lock_irqsave(&v3d->job_lock, irqflags);
+++		v3d->bin_job = NULL;
+++		spin_unlock_irqrestore(&v3d->job_lock, irqflags);
++ 		return NULL;
+++	}
++ 
++ 	/* Lock required around bin_job update vs
++ 	 * v3d_overflow_mem_work().
++@@ -244,8 +248,10 @@ static struct dma_fence *v3d_render_job_
++ 	struct drm_device *dev = &v3d->drm;
++ 	struct dma_fence *fence;
++ 
++-	if (unlikely(job->base.base.s_fence->finished.error))
+++	if (unlikely(job->base.base.s_fence->finished.error)) {
+++		v3d->render_job = NULL;
++ 		return NULL;
+++	}
++ 
++ 	v3d->render_job = job;
++ 
++@@ -292,8 +298,10 @@ v3d_tfu_job_run(struct drm_sched_job *sc
++ 	struct drm_device *dev = &v3d->drm;
++ 	struct dma_fence *fence;
++ 
++-	if (unlikely(job->base.base.s_fence->finished.error))
+++	if (unlikely(job->base.base.s_fence->finished.error)) {
+++		v3d->tfu_job = NULL;
++ 		return NULL;
+++	}
++ 
++ 	v3d->tfu_job = job;
++ 
++@@ -337,8 +345,10 @@ v3d_csd_job_run(struct drm_sched_job *sc
++ 	struct dma_fence *fence;
++ 	int i, csd_cfg0_reg, csd_cfg_reg_count;
++ 
++-	if (unlikely(job->base.base.s_fence->finished.error))
+++	if (unlikely(job->base.base.s_fence->finished.error)) {
+++		v3d->csd_job = NULL;
++ 		return NULL;
+++	}
++ 
++ 	v3d->csd_job = job;
++ 
 diff --git a/target/linux/bcm27xx/patches-6.6/950-1553-drm-v3d-Associate-a-V3D-tech-revision-to-all-support.patch b/target/linux/bcm27xx/patches-6.6/950-1553-drm-v3d-Associate-a-V3D-tech-revision-to-all-support.patch
-index bef7ceb96a..0b3f80704b 100644
+index 70c4de8c22..0b3f80704b 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-1553-drm-v3d-Associate-a-V3D-tech-revision-to-all-support.patch
 +++ b/target/linux/bcm27xx/patches-6.6/950-1553-drm-v3d-Associate-a-V3D-tech-revision-to-all-support.patch
 @@ -252,7 +252,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
@@ -3954,8 +4365,83 @@ index bef7ceb96a..0b3f80704b 100644
   	v3d->clk_down_rate =
   		(clk_get_rate(clk_get_parent(v3d->clk)) / (1 << 4)) + 10000;
   
+@@ -275,7 +275,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  			goto clk_disable;
+ --- a/drivers/gpu/drm/v3d/v3d_drv.h
+ +++ b/drivers/gpu/drm/v3d/v3d_drv.h
+-@@ -124,13 +124,20 @@ enum v3d_irq {
++@@ -121,13 +121,20 @@ enum v3d_irq {
+  	V3D_MAX_IRQS,
+  };
+  
+@@ -297,7 +297,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  	bool single_irq_line;
+  
+  	int irq[V3D_MAX_IRQS];
+-@@ -219,7 +226,7 @@ to_v3d_dev(struct drm_device *dev)
++@@ -221,7 +228,7 @@ to_v3d_dev(struct drm_device *dev)
+  static inline bool
+  v3d_has_csd(struct v3d_dev *v3d)
+  {
+@@ -362,7 +362,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  	V3D_CORE_WRITE(core, V3D_CTL_L2CACTL,
+ --- a/drivers/gpu/drm/v3d/v3d_irq.c
+ +++ b/drivers/gpu/drm/v3d/v3d_irq.c
+-@@ -129,8 +129,8 @@ v3d_irq(int irq, void *arg)
++@@ -125,8 +125,8 @@ v3d_irq(int irq, void *arg)
+  		status = IRQ_HANDLED;
+  	}
+  
+@@ -371,9 +371,9 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+ +	if ((v3d->ver < V3D_GEN_71 && (intsts & V3D_INT_CSDDONE)) ||
+ +	    (v3d->ver >= V3D_GEN_71 && (intsts & V3D_V7_INT_CSDDONE))) {
+  		struct v3d_fence *fence =
+- 			to_v3d_fence(v3d->queue[V3D_CSD].active_job->irq_fence);
++ 			to_v3d_fence(v3d->csd_job->base.irq_fence);
+  		v3d->gpu_queue_stats[V3D_CSD].last_exec_end = local_clock();
+-@@ -146,7 +146,7 @@ v3d_irq(int irq, void *arg)
++@@ -142,7 +142,7 @@ v3d_irq(int irq, void *arg)
+  	/* We shouldn't be triggering these if we have GMP in
+  	 * always-allowed mode.
+  	 */
+@@ -382,7 +382,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  		dev_err(v3d->drm.dev, "GMP violation\n");
+  
+  	/* V3D 4.2 wires the hub and core IRQs together, so if we &
+-@@ -204,7 +204,7 @@ v3d_hub_irq(int irq, void *arg)
++@@ -200,7 +200,7 @@ v3d_hub_irq(int irq, void *arg)
+  
+  		V3D_WRITE(V3D_MMU_CTL, V3D_READ(V3D_MMU_CTL));
+  
+@@ -391,7 +391,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  			axi_id = axi_id >> 5;
+  			if (axi_id < ARRAY_SIZE(v3d41_axi_ids))
+  				client = v3d41_axi_ids[axi_id];
+-@@ -223,7 +223,7 @@ v3d_hub_irq(int irq, void *arg)
++@@ -219,7 +219,7 @@ v3d_hub_irq(int irq, void *arg)
+  		status = IRQ_HANDLED;
+  	}
+  
+@@ -425,7 +425,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  		V3D_WRITE(V3D_TFU_REG(COEF1), job->args.coef[1]);
+  		V3D_WRITE(V3D_TFU_REG(COEF2), job->args.coef[2]);
+  		V3D_WRITE(V3D_TFU_REG(COEF3), job->args.coef[3]);
+-@@ -377,8 +377,8 @@ v3d_csd_job_run(struct drm_sched_job *sc
++@@ -367,8 +367,8 @@ v3d_csd_job_run(struct drm_sched_job *sc
+  	v3d_sched_stats_add_job(&v3d->gpu_queue_stats[V3D_CSD], sched_job);
+  	v3d_switch_perfmon(v3d, &job->base);
+  
+@@ -436,7 +436,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  	for (i = 1; i <= csd_cfg_reg_count; i++)
+  		V3D_CORE_WRITE(0, csd_cfg0_reg + 4 * i, job->args.cfg[i]);
+  	/* CFG0 write kicks off the job. */
+-@@ -497,7 +497,7 @@ v3d_csd_job_timedout(struct drm_sched_jo
++@@ -487,7 +487,7 @@ v3d_csd_job_timedout(struct drm_sched_jo
+  {
+  	struct v3d_csd_job *job = to_csd_job(sched_job);
+  	struct v3d_dev *v3d = job->base.v3d;
 diff --git a/target/linux/bcm27xx/patches-6.6/950-1555-drm-v3d-Use-V3D_SMS-registers-for-power-on-off-and-r.patch b/target/linux/bcm27xx/patches-6.6/950-1555-drm-v3d-Use-V3D_SMS-registers-for-power-on-off-and-r.patch
-index a8e4ea681f..b405938cef 100644
+index 490be78929..b405938cef 100644
 --- a/target/linux/bcm27xx/patches-6.6/950-1555-drm-v3d-Use-V3D_SMS-registers-for-power-on-off-and-r.patch
 +++ b/target/linux/bcm27xx/patches-6.6/950-1555-drm-v3d-Use-V3D_SMS-registers-for-power-on-off-and-r.patch
 @@ -87,7 +87,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
@@ -3967,6 +4453,33 @@ index a8e4ea681f..b405938cef 100644
   	dma_free_wc(v3d->drm.dev, 4096, v3d->mmu_scratch,
   		    v3d->mmu_scratch_paddr);
   
+@@ -98,7 +98,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  
+ --- a/drivers/gpu/drm/v3d/v3d_drv.h
+ +++ b/drivers/gpu/drm/v3d/v3d_drv.h
+-@@ -146,6 +146,7 @@ struct v3d_dev {
++@@ -143,6 +143,7 @@ struct v3d_dev {
+  	void __iomem *core_regs[3];
+  	void __iomem *bridge_regs;
+  	void __iomem *gca_regs;
+@@ -106,7 +106,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  	struct clk *clk;
+  	struct delayed_work clk_down_work;
+  	unsigned long clk_up_rate, clk_down_rate;
+-@@ -283,6 +284,15 @@ to_v3d_fence(struct dma_fence *fence)
++@@ -285,6 +286,15 @@ to_v3d_fence(struct dma_fence *fence)
+  #define V3D_GCA_READ(offset) readl(v3d->gca_regs + offset)
+  #define V3D_GCA_WRITE(offset, val) writel(val, v3d->gca_regs + offset)
+  
+@@ -122,7 +122,7 @@ Signed-off-by: Maíra Canal <mcanal@igalia.com>
+  #define V3D_CORE_READ(core, offset) readl(v3d->core_regs[core] + offset)
+  #define V3D_CORE_WRITE(core, offset, val) writel(val, v3d->core_regs[core] + offset)
+  
+-@@ -461,6 +471,7 @@ int v3d_wait_bo_ioctl(struct drm_device
++@@ -463,6 +473,7 @@ int v3d_wait_bo_ioctl(struct drm_device
+  		      struct drm_file *file_priv);
+  void v3d_job_cleanup(struct v3d_job *job);
+  void v3d_job_put(struct v3d_job *job);
 diff --git a/target/linux/bcm4908/patches-6.6/700-net-dsa-bcm_sf2-enable-GPHY-for-switch-probing.patch b/target/linux/bcm4908/patches-6.6/700-net-dsa-bcm_sf2-enable-GPHY-for-switch-probing.patch
 index 6b5aaa99a0..8961bb298c 100644
 --- a/target/linux/bcm4908/patches-6.6/700-net-dsa-bcm_sf2-enable-GPHY-for-switch-probing.patch
@@ -17814,14 +18327,14 @@ index 0000000000..ea0fe0c9ab
 + 	if (unlikely(skb->ip_summed != CHECKSUM_PARTIAL)) {
 + 		const struct ipv6hdr *ipv6h = ipv6_hdr(skb);
 diff --git a/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch b/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
-index dc42775276..418a903846 100644
+index 642afec742..418a903846 100644
 --- a/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
 +++ b/target/linux/generic/pending-6.6/701-netfilter-nf_tables-ignore-EOPNOTSUPP-on-flowtable-d.patch
 @@ -18,7 +18,7 @@ Signed-off-by: Felix Fietkau <nbd@nbd.name>
  
  --- a/net/netfilter/nf_tables_api.c
  +++ b/net/netfilter/nf_tables_api.c
--@@ -8530,7 +8530,7 @@ static int nft_register_flowtable_net_ho
+-@@ -8528,7 +8528,7 @@ static int nft_register_flowtable_net_ho
 +@@ -8527,7 +8527,7 @@ static int nft_register_flowtable_net_ho
   		err = flowtable->data.type->setup(&flowtable->data,
   						  hook->ops.dev,
@@ -18599,14 +19112,14 @@ index e8c921cda8..629b124125 100644
   
   static const struct phylink_pcs_ops mvpp2_phylink_gmac_pcs_ops = {
 diff --git a/target/linux/mediatek/patches-6.6/901-arm-add-cmdline-override.patch b/target/linux/mediatek/patches-6.6/901-arm-add-cmdline-override.patch
-index b027a45e8f..2c1ff1c994 100644
+index 1f707fedbd..2c1ff1c994 100644
 --- a/target/linux/mediatek/patches-6.6/901-arm-add-cmdline-override.patch
 +++ b/target/linux/mediatek/patches-6.6/901-arm-add-cmdline-override.patch
 @@ -37,7 +37,7 @@
   	 * CONFIG_CMDLINE is meant to be a default in case nothing else
  --- a/arch/arm64/Kconfig
  +++ b/arch/arm64/Kconfig
--@@ -2360,6 +2360,14 @@ config CMDLINE_FORCE
+-@@ -2361,6 +2361,14 @@ config CMDLINE_FORCE
 +@@ -2310,6 +2310,14 @@ config CMDLINE_FORCE
   
   endchoice
@@ -19107,7 +19620,7 @@ index 198ad0b777..92e9bf6c86 100644
   	int err;
   
 diff --git a/target/linux/rockchip/patches-6.6/022-v6.15-irqchip-gic-v3-Add-Rockchip-3568002-erratum-workaround.patch b/target/linux/rockchip/patches-6.6/022-v6.15-irqchip-gic-v3-Add-Rockchip-3568002-erratum-workaround.patch
-index 146377fc71..b5c548ecce 100644
+index 76d33b3ebe..b5c548ecce 100644
 --- a/target/linux/rockchip/patches-6.6/022-v6.15-irqchip-gic-v3-Add-Rockchip-3568002-erratum-workaround.patch
 +++ b/target/linux/rockchip/patches-6.6/022-v6.15-irqchip-gic-v3-Add-Rockchip-3568002-erratum-workaround.patch
 @@ -24,7 +24,7 @@ Link: https://lore.kernel.org/all/20250216221634.364158-2-dmitry.osipenko@collab
@@ -19123,7 +19636,7 @@ index 146377fc71..b5c548ecce 100644
   | Fujitsu        | A64FX           | E#010001        | FUJITSU_ERRATUM_010001      |
  --- a/arch/arm64/Kconfig
  +++ b/arch/arm64/Kconfig
--@@ -1318,6 +1318,15 @@ config NVIDIA_CARMEL_CNP_ERRATUM
+-@@ -1319,6 +1319,15 @@ config NVIDIA_CARMEL_CNP_ERRATUM
 +@@ -1268,6 +1268,15 @@ config NVIDIA_CARMEL_CNP_ERRATUM
   
   	  If unsure, say Y.
@@ -19297,14 +19810,23 @@ index 5839ccf59f..68e495112c 100644
   			up->mcr |= UART_MCR_AFE;
   	}
 diff --git a/target/linux/starfive/patches-6.6/0068-uart-8250-add-reset-operation-in-runtime-PM.patch b/target/linux/starfive/patches-6.6/0068-uart-8250-add-reset-operation-in-runtime-PM.patch
-index 1612c47dcd..8f27dba5aa 100644
+index cbcf3d9b98..8f27dba5aa 100644
 --- a/target/linux/starfive/patches-6.6/0068-uart-8250-add-reset-operation-in-runtime-PM.patch
 +++ b/target/linux/starfive/patches-6.6/0068-uart-8250-add-reset-operation-in-runtime-PM.patch
+@@ -12,7 +12,7 @@ Signed-off-by: William Qiu <william.qiu@starfivetech.com>
+ 
+ --- a/drivers/tty/serial/8250/8250_dw.c
+ +++ b/drivers/tty/serial/8250/8250_dw.c
+-@@ -749,6 +749,8 @@ static int dw8250_runtime_suspend(struct
++@@ -747,6 +747,8 @@ static int dw8250_runtime_suspend(struct
+  {
+  	struct dw8250_data *data = dev_get_drvdata(dev);
+  
 @@ -21,9 +21,9 @@ Signed-off-by: William Qiu <william.qiu@starfivetech.com>
   	clk_disable_unprepare(data->clk);
   
   	clk_disable_unprepare(data->pclk);
--@@ -769,6 +771,8 @@ static int dw8250_runtime_resume(struct
+-@@ -771,6 +773,8 @@ static int dw8250_runtime_resume(struct
 - 		return ret;
 - 	}
 +@@ -762,6 +764,8 @@ static int dw8250_runtime_resume(struct
@@ -19336,14 +19858,14 @@ index 9eee71fda5..3b99a4fcdc 100644
   	full_len = urb->transfer_buffer_length;
   	/* If we have scatter/gather list, we use it. */
 diff --git a/target/linux/starfive/patches-6.6/1000-serial-8250_dw-Add-starfive-jh7100-hsuart-compatible.patch b/target/linux/starfive/patches-6.6/1000-serial-8250_dw-Add-starfive-jh7100-hsuart-compatible.patch
-index 8372da35c4..eec64fb6fe 100644
+index d667952a23..eec64fb6fe 100644
 --- a/target/linux/starfive/patches-6.6/1000-serial-8250_dw-Add-starfive-jh7100-hsuart-compatible.patch
 +++ b/target/linux/starfive/patches-6.6/1000-serial-8250_dw-Add-starfive-jh7100-hsuart-compatible.patch
 @@ -15,7 +15,7 @@ Signed-off-by: Emil Renner Berthing <kernel@esmil.dk>
  
  --- a/drivers/tty/serial/8250/8250_dw.c
  +++ b/drivers/tty/serial/8250/8250_dw.c
--@@ -812,6 +812,7 @@ static const struct of_device_id dw8250_
+-@@ -814,6 +814,7 @@ static const struct of_device_id dw8250_
 +@@ -805,6 +805,7 @@ static const struct of_device_id dw8250_
   	{ .compatible = "marvell,armada-38x-uart", .data = &dw8250_armada_38x_data },
   	{ .compatible = "renesas,rzn1-uart", .data = &dw8250_renesas_rzn1_data },
