@@ -1,11 +1,17 @@
 #!/bin/sh
+lan_ipaddr=192.168.10.1
+. /etc/openwrt_release
+case "$DISTRIB_RELEASE" in
+	SNAPSHOT*|25.12*|25.1[3-9]*|25.[2-9]*|2[6-9].*|[3-9][0-9].*) lan_ipaddr=192.168.10.1/24 ;;
+esac
+
 uci -q batch <<-EOF >/dev/null
 	set luci.main.lang=zh_cn
 	set system.@system[0].hostname=Lunatic_Atheros
 	set system.@system[0].timezone=CST-8
 	set system.@system[0].zonename=Asia/Shanghai
 	set fstab.@global[0].anon_mount=1
-	set network.lan.ipaddr=192.168.10.1
+	set network.lan.ipaddr=$lan_ipaddr
 	add_list umdns.@umdns[0].network='wan'
 	add_list system.ntp.server='ntp.tencent.com'
 	add_list system.ntp.server='ntp1.aliyun.com'
@@ -33,8 +39,6 @@ sed -i '202,207d' /www/luci-static/material/js/script.js
 
 
 exit 0
-
-
 
 
 

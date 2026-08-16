@@ -24,6 +24,12 @@
 #	set wireless.@wifi-iface[0].macaddr=F0:D7:DC:00:56:11
 #	set network.lan.macaddr=F0:D7:DC:00:56:10
 
+lan_ipaddr=192.168.10.1
+. /etc/openwrt_release
+case "$DISTRIB_RELEASE" in
+	SNAPSHOT*|25.12*|25.1[3-9]*|25.[2-9]*|2[6-9].*|[3-9][0-9].*) lan_ipaddr=192.168.10.1/24 ;;
+esac
+
 uci -q batch <<-EOF >/dev/null
 	set system.@system[0].hostname=Meson
 	set system.@system[0].timezone=CST-8
@@ -31,7 +37,7 @@ uci -q batch <<-EOF >/dev/null
 	set system.@system[0].log_size='128'
 	set firewall.@zone[1].input='ACCEPT'
 	set ttyd.@ttyd[0].interface='eth0'
-	set network.lan.ipaddr=192.168.66.1
+	set network.lan.ipaddr=$lan_ipaddr
 	del_list uhttpd.main.listen_https='0.0.0.0:443'
 	del_list uhttpd.main.listen_https='[::]:443'
 	add_list system.ntp.server='ntp.tencent.com'
