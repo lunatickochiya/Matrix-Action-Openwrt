@@ -8,7 +8,7 @@ XHR.poll(3, '<%=url([[admin]], [[services]], [[opencode2api-go_status]])%>', nul
 		var tb = document.getElementById('opencode2api-go_status');
 		if (data && tb) {
 			if (data.running) {
-				var port = "<%=luci.model.uci.cursor():get_first(\"opencode2api-go\", \"opencode2api-go\", \"port\") %>";
+				var port = "<%=luci.model.uci.cursor():get_first("opencode2api-go", "opencode2api-go", "port") %>";
 				var host = window.location.hostname;
 				var url = "<%=protocol%>" + host + ":" + port;
 				tb.innerHTML = ''

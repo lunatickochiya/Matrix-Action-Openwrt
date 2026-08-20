@@ -11,7 +11,7 @@
 <script type="text/javascript">
 	document.addEventListener('DOMContentLoaded', function() {
 		var proto = window.location.protocol + "//";
-		var port = "<%=luci.model.uci.cursor():get_first(\"opencode2api-go\", \"opencode2api-go\", \"port\") %>";
+		var port = "<%=luci.model.uci.cursor():get_first("opencode2api-go", "opencode2api-go", "port") %>";
 		var src = proto + window.location.hostname + ":" + port;
 		var frame = document.getElementById("opencode2api-go");
 		if (!frame) return;
