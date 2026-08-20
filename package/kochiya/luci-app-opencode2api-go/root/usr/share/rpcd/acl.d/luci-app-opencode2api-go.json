@@ -1,0 +1,11 @@
+{
+	"luci-app-opencode2api-go": {
+		"description": "Grant UCI access for luci-app-opencode2api-go",
+		"read": {
+			"uci": [ "opencode2api-go" ]
+		},
+		"write": {
+			"uci": [ "opencode2api-go" ]
+		}
+	}
+}

@@ -1,0 +1,10 @@
+config opencode2api-go
+	option enabled '0'
+	option prog_path '/usr/bin/opencode2api'
+	option port '8000'
+	option config_path '/etc/opencode2api-go/config.json'
+	option admin_password '123456'
+	option debug '0'
+	option log_level 'info'
+	option log_file '/var/log/opencode2api-go.log'
+	option fwan '0'

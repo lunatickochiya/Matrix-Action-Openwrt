@@ -1,0 +1,179 @@
+<%+header%>
+<div class="log-toolbar">
+	<div class="log-toolbar-left">
+		<button class="btn cbi-button-action" id="refreshBtn" onclick="toggleRefresh()">
+			&#x23F3; 停止刷新
+		</button>
+	</div>
+	<div class="log-toolbar-right">
+		<button class="btn cbi-button-action" onclick="clearLog()">
+			&#128465; 清空日志
+		</button>
+	</div>
+</div>
+<pre id="logContent">
+<%
+local fs = require "nixio.fs"
+local uci = luci.model.uci.cursor()
+local log_file_path = uci:get("opencode2api-go", "opencode2api-go", "log_file") or "/var/log/opencode2api-go.log"
+local raw_log_content = fs.readfile(log_file_path) or "没有日志."
+local log_lines = {}
+for line in raw_log_content:gmatch("[^\r\n]+") do
+    table.insert(log_lines, line)
+end
+local log_content = table.concat(log_lines, "\n")
+%>
+<%=log_content%>
+</pre>
+<%+footer%>
+<style>
+:root {
+	--log-bg: #1e1e2e;
+	--log-text: #cdd6f4;
+	--log-border: #45475a;
+	--toolbar-bg: #f5f5f5;
+	--toolbar-border: #ddd;
+	--btn-bg: #e8e8e8;
+	--btn-text: #333;
+	--btn-hover: #d0d0d0;
+}
+@media (prefers-color-scheme: dark) {
+	:root {
+		--log-bg: #1e1e2e;
+		--log-text: #cdd6f4;
+		--log-border: #45475a;
+		--toolbar-bg: #181825;
+		--toolbar-border: #313244;
+		--btn-bg: #313244;
+		--btn-text: #cdd6f4;
+		--btn-hover: #45475a;
+	}
+}
+.log-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px 12px;
+	background: var(--toolbar-bg);
+	border: 1px solid var(--toolbar-border);
+	border-radius: 8px 8px 0 0;
+	margin-top: 12px;
+}
+.log-toolbar-left,
+.log-toolbar-right {
+	display: flex;
+	gap: 8px;
+}
+.log-toolbar .btn {
+	padding: 6px 14px;
+	font-size: 13px;
+	border: 1px solid var(--toolbar-border);
+	border-radius: 6px;
+	background: var(--btn-bg);
+	color: var(--btn-text);
+	cursor: pointer;
+	transition: background .15s;
+	white-space: nowrap;
+}
+.log-toolbar .btn:hover {
+	background: var(--btn-hover);
+}
+#logContent {
+	background: var(--log-bg);
+	color: var(--log-text);
+	border: 1px solid var(--log-border);
+	border-top: none;
+	border-radius: 0 0 8px 8px;
+	padding: 12px 16px;
+	margin: 0;
+	font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+	white-space: pre-wrap;
+	word-break: break-all;
+	min-height: 60vh;
+	max-height: 80vh;
+	overflow-y: auto;
+	tab-size: 4;
+}
+@media (max-width: 600px) {
+	.log-toolbar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.log-toolbar-left,
+	.log-toolbar-right {
+		justify-content: center;
+	}
+	.log-toolbar .btn {
+		flex: 1;
+		text-align: center;
+	}
+	#logContent {
+		font-size: 11px;
+		padding: 8px 10px;
+		min-height: 50vh;
+		max-height: 70vh;
+	}
+}
+</style>
+<script>
+var refreshInterval = null;
+
+function scrollToBottom() {
+	var el = document.getElementById("logContent");
+	el.scrollTop = el.scrollHeight;
+}
+
+function fetchLog() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', '/cgi-bin/luci/admin/services/opencode2api-go/fetch_log', true);
+	xhr.onload = function () {
+		if (xhr.status >= 200 && xhr.status < 300) {
+			document.getElementById('logContent').textContent = xhr.responseText;
+			if (refreshInterval) scrollToBottom();
+		} else {
+			document.getElementById('logContent').textContent = '加载失败.';
+		}
+	};
+	xhr.onerror = function () {
+		document.getElementById('logContent').textContent = '加载出现错误.';
+	};
+	xhr.send();
+}
+
+function clearLog() {
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', '/cgi-bin/luci/admin/services/opencode2api-go/clear_log', true);
+	xhr.onload = function () {
+		if (xhr.status >= 200 && xhr.status < 300) {
+			fetchLog();
+		} else {
+			alert('清理失败.');
+		}
+	};
+	xhr.onerror = function () {
+		alert('清理出现错误.');
+	};
+	xhr.send();
+}
+
+function toggleRefresh() {
+	var btn = document.getElementById('refreshBtn');
+	if (refreshInterval) {
+		clearInterval(refreshInterval);
+		refreshInterval = null;
+		btn.innerHTML = '&#x25B6; 开始刷新';
+	} else {
+		fetchLog();
+		refreshInterval = setInterval(fetchLog, 1000);
+		btn.innerHTML = '&#x23F3; 停止刷新';
+	}
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+	toggleRefresh();
+});
+</script>

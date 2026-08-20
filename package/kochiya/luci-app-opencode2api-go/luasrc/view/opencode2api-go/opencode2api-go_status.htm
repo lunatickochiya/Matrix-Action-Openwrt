@@ -1,0 +1,88 @@
+<%
+protocol = "http://"
+%>
+
+<script type="text/javascript">//<![CDATA[
+XHR.poll(3, '<%=url([[admin]], [[services]], [[opencode2api-go_status]])%>', null,
+	function(x, data) {
+		var tb = document.getElementById('opencode2api-go_status');
+		if (data && tb) {
+			if (data.running) {
+				var port = "<%=luci.model.uci.cursor():get_first(\"opencode2api-go\", \"opencode2api-go\", \"port\") %>";
+				var host = window.location.hostname;
+				var url = "<%=protocol%>" + host + ":" + port;
+				tb.innerHTML = ''
+					+ '<div class="status-row running">'
+					+ '\t<span class="status-dot">●</span>'
+					+ '\t<span class="status-txt">运行中</span>'
+					+ '\t<span class="status-addr">' + host + ':' + port + '</span>'
+					+ '\t<input class="cbi-button cbi-button-reload" type="button" value="打开主页" onclick="window.open(\\'' + url + '/\\')"/>'
+					+ '</div>';
+			} else {
+				tb.innerHTML = ''
+					+ '<div class="status-row stopped">'
+					+ '\t<span class="status-dot">●</span>'
+					+ '\t<span class="status-txt">未运行</span>'
+					+ '\t<span class="status-addr">请先在「配置」页面中启用并保存</span>'
+					+ '</div>';
+			}
+		}
+	}
+);
+//]]></script>
+<style>
+.status-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	border-radius: 8px;
+	margin: 0;
+	width: fit-content;
+	max-width: 100%;
+	box-sizing: border-box;
+}
+.status-row.running {
+	background: rgba(46, 204, 113, .08);
+	border: 1px solid rgba(46, 204, 113, .25);
+}
+.status-row.stopped {
+	background: rgba(231, 76, 60, .08);
+	border: 1px solid rgba(231, 76, 60, .25);
+}
+.status-dot {
+	font-size: 16px;
+	flex-shrink: 0;
+}
+.status-row.running .status-dot { color: #27ae60; }
+.status-row.stopped .status-dot { color: #e74c3c; }
+.status-txt {
+	font-size: 14px;
+	font-weight: 600;
+	flex-shrink: 0;
+}
+.status-row.running .status-txt { color: #27ae60; }
+.status-row.stopped .status-txt { color: #e74c3c; }
+.status-addr {
+	font-size: 11px;
+	color: var(--text-sec, #6a7180);
+	flex-shrink: 0;
+}
+.status-row input {
+	white-space: nowrap !important;
+	width: auto !important;
+	flex-shrink: 0 !important;
+	margin-left: auto;
+}
+@media (max-width: 600px) {
+	.status-row {
+		flex-wrap: wrap;
+		gap: 4px;
+	}
+}
+</style>
+<fieldset class="cbi-section">
+	<div id="opencode2api-go_status_wrap">
+		<div id="opencode2api-go_status"><em>收集数据...</em></div>
+	</div>
+</fieldset>

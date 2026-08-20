@@ -1,0 +1,51 @@
+<%
+	local running = luci.sys.exec("pidof opencode2api | awk -F ' ' '{print $1}'")
+%>
+<%+header%>
+<div class="cbi-map">
+
+<% if tonumber(running) ~= nil then %>
+<iframe id="opencode2api-go" style="width: 100%; min-height: 580px; border: none; border-radius: .375rem; box-shadow: rgba(0, 0, 0, 0.75) 0px 0px 15px -5px;"></iframe>
+
+</div>
+<script type="text/javascript">
+	document.addEventListener('DOMContentLoaded', function() {
+		var proto = window.location.protocol + "//";
+		var port = "<%=luci.model.uci.cursor():get_first(\"opencode2api-go\", \"opencode2api-go\", \"port\") %>";
+		var src = proto + window.location.hostname + ":" + port;
+		var frame = document.getElementById("opencode2api-go");
+		if (!frame) return;
+		if (window.location.protocol === "https:") {
+			frame.style.display = "none";
+			document.getElementById("opencode2api-go-warn").style.display = "block";
+			document.getElementById("opencode2api-go-link").onclick = function() {
+				window.open("http://" + window.location.hostname + ":" + port, "_blank");
+			};
+		} else {
+			frame.src = src;
+		}
+		frame.height = document.documentElement.clientHeight;
+		window.onresize = function(){
+			frame.height = document.documentElement.clientHeight;
+		}
+	});
+</script>
+<div id="opencode2api-go-warn" style="display:none;text-align:center;padding:40px 20px">
+	<h2 style="color:var(--text-sec,#6a7180);font-size:16px;font-weight:400">⚠ HTTPS 混合内容</h2>
+	<p style="font-size:13px;color:var(--text-sec,#6a7180);margin-top:8px">
+	当前页面通过 HTTPS 访问，但服务监听的是 HTTP 端口。<br>
+	浏览器会阻止在 HTTPS 页面中加载 HTTP 内容。<br><br>
+	请通过 <a id="opencode2api-go-link" href="#" style="color:var(--accent,#6c8aff);text-decoration:underline">HTTP 地址</a> 直接访问，<br>
+	或者为 opencode2api 配置 HTTPS 反向代理。
+	</p>
+</div>
+<% else %>
+	<style>.running{text-align: center;} .running>h1{font-size: 25px; color: #333; margin: 1rem;} .running>p{ font-size: 1.2rem; color: #8391a2; margin: 1rem;}</style>
+	<div class="running">
+	<img src="data:image/svg+xml;base64,PCEtLSBHZW5lcmF0ZWQgYnkgSWNvTW9vbi5pbyAtLT4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMjQiIGhlaWdodD0iMTAyNCIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCI+Cjx0aXRsZT48L3RpdGxlPgo8ZyBpZD0iaWNvbW9uLWlnbm9yZSI+CjwvZz4KPHBhdGggZmlsbD0iI2RmMDAwMCIgZD0iTTk0Mi40MjEgMjM0LjYyNGw4MC44MTEtODAuODExLTE1My4wNDUtMTUzLjA0NS04MC44MTEgODAuODExYy03OS45NTctNTEuNjI3LTE3NS4xNDctODEuNTc5LTI3Ny4zNzYtODEuNTc5LTI4Mi43NTIgMC01MTIgMjI5LjI0OC01MTIgNTEyIDAgMTAyLjIyOSAyOS45NTIgMTk3LjQxOSA4MS41NzkgMjc3LjM3NmwtODAuODExIDgwLjgxMSAxNTMuMDQ1IDE1My4wNDUgODAuODExLTgwLjgxMWM3OS45NTcgNTEuNjI3IDE3NS4xNDcgODEuNTc5IDI3Ny4zNzYgODEuNTc5IDI4Mi43NTIgMCA1MTItMjI5LjI0OCA1MTItNTEyIDAtMTAyLjIyOS0yOS45NTItMTk3LjQxOS04MS41NzktMjc3LjM3NnpNMTk0Ljk0NCA1MTJjMC0xNzUuMTA0IDE0MS45NTItMzE3LjA1NiAzMTcuMDU2LTMxNy4wNTYgNDggMCA5My40ODMgMTAuNjY3IDEzNC4yMjkgMjkuNzgxbC00MjEuNTQ3IDQyMS41NDdjLTE5LjA3Mi00MC43ODktMjkuNzM5LTg2LjI3Mi0yOS43MzktMTM0LjI3MnpNNTEyIDgyOS4wNTZjLTQ4IDAtOTMuNDgzLTEwLjY2Ny0xMzQuMjI5LTI5Ljc4MWw0MjEuNTQ3LTQyMS41NDdjMTkuMDcyIDQwLjc4OSAyOS43ODEgODYuMjcyIDI5Ljc4MSAxMzQuMjI5LTAuMDQzIDE3NS4xNDctMTQxLjk5NSAzMTcuMDk5LTMxNy4wOTkgMzE3LjA5OXoiPjwvcGF0aD4KPC9zdmc+Cg==" height="100">
+		<h1><font color="color:red">未运行</font></h1>
+		<p>请先运行服务</p>
+	</div>
+<% end -%>
+</div>
+<%+footer%>

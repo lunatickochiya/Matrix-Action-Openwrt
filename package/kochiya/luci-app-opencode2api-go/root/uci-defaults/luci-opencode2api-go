@@ -1,0 +1,12 @@
+#!/bin/sh
+
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@opencode2api-go[-1]
+	add ucitrack opencode2api-go
+	set ucitrack.@opencode2api-go[-1].init=opencode2api-go
+	commit ucitrack
+EOF
+
+chmod +x /etc/init.d/opencode2api-go
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache
+exit 0
