@@ -3,32 +3,45 @@ protocol = "http://"
 %>
 
 <script type="text/javascript">//<![CDATA[
-XHR.poll(3, '<%=url([[admin]], [[services]], [[opencode2api-go_status]])%>', null,
-	function(x, data) {
-		var tb = document.getElementById('opencode2api-go_status');
-		if (data && tb) {
-			if (data.running) {
+(function() {
+	var st_url = '<%=url([[admin]], [[services]], [[opencode2api-go_status]])%>';
+	function findEl() {
+		return document.getElementById('opencode2api-go_status');
+	}
+	function refresh() {
+		var tb = findEl();
+		if (!tb) return;
+		XHR.get(st_url, null, function(x, data) {
+			var tb2 = findEl();
+			if (!tb2) return;
+			if (data && data.running) {
 				var port = "<%=luci.model.uci.cursor():get_first("opencode2api-go", "opencode2api-go", "port") %>";
 				var host = window.location.hostname;
 				var url = "<%=protocol%>" + host + ":" + port;
-				tb.innerHTML = ''
+				tb2.innerHTML = ''
 					+ '<div class="status-row running">'
 					+ '\t<span class="status-dot">●</span>'
 					+ '\t<span class="status-txt">运行中</span>'
 					+ '\t<span class="status-addr">' + host + ':' + port + '</span>'
-					+ '\t<input class="cbi-button cbi-button-reload" type="button" value="打开主页" onclick="window.open(\\'' + url + '/\\')"/>'
+					+ '\t<input class="cbi-button cbi-button-reload" type="button" value="打开主页" onclick="window.open(\'' + url + '/\')"/>'
 					+ '</div>';
 			} else {
-				tb.innerHTML = ''
+				tb2.innerHTML = ''
 					+ '<div class="status-row stopped">'
 					+ '\t<span class="status-dot">●</span>'
 					+ '\t<span class="status-txt">未运行</span>'
 					+ '\t<span class="status-addr">请先在「配置」页面中启用并保存</span>'
 					+ '</div>';
 			}
-		}
+		});
 	}
-);
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', refresh);
+	} else {
+		refresh();
+	}
+	setInterval(refresh, 3000);
+})();
 //]]></script>
 <style>
 .status-row {
