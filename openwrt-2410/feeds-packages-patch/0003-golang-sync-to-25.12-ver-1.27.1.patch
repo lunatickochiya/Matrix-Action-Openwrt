@@ -1,7 +1,7 @@
 From 394ba6328953705ee6a43696c20f8506214a12aa Mon Sep 17 00:00:00 2001
 From: lunatickochiya <125438787@qq.com>
 Date: Wed, 1 Apr 2026 20:16:03 +0800
-Subject: [PATCH] golang:sync to 25.12 ver 1.26.1
+Subject: [PATCH] golang:sync to 25.12 ver 1.27.1
 
 ---
  lang/golang/{golang/files => }/go-gcc-helper |   7 +-
@@ -17,8 +17,8 @@ Subject: [PATCH] golang:sync to 25.12 ver 1.26.1
  lang/golang/golang/Config.in                 |  33 --
  lang/golang/golang/Makefile                  | 424 +------------------
  lang/golang/golang/test.sh                   |   5 -
- lang/golang/golang1.26/Makefile              | 104 +++++
- lang/golang/golang1.26/test.sh               |   9 +
+ lang/golang/golang1.27/Makefile              | 104 +++++
+ lang/golang/golang1.27/test.sh               |   9 +
  15 files changed, 1072 insertions(+), 580 deletions(-)
  rename lang/golang/{golang/files => }/go-gcc-helper (79%)
  create mode 100755 lang/golang/go-strip-helper
@@ -27,8 +27,8 @@ Subject: [PATCH] golang:sync to 25.12 ver 1.26.1
  create mode 100644 lang/golang/golang-version.mk
  delete mode 100644 lang/golang/golang/Config.in
  delete mode 100644 lang/golang/golang/test.sh
- create mode 100644 lang/golang/golang1.26/Makefile
- create mode 100755 lang/golang/golang1.26/test.sh
+ create mode 100644 lang/golang/golang1.27/Makefile
+ create mode 100755 lang/golang/golang1.27/test.sh
 
 diff --git a/lang/golang/golang/files/go-gcc-helper b/lang/golang/go-gcc-helper
 similarity index 79%
@@ -990,7 +990,7 @@ index 727739e2d2..4d2c61e64c 100644
    GOBOOTSTRAP_TOOLEXEC
  
  
-+GO_DEFAULT_VERSION:=1.26
++GO_DEFAULT_VERSION:=1.27
 +GO_HOST_VERSION:=$(patsubst golang%/host,%,$(filter golang%/host,$(PKG_BUILD_DEPENDS)))
 +ifeq ($(GO_HOST_VERSION),)
 +  GO_HOST_VERSION:=$(GO_DEFAULT_VERSION)
@@ -1951,11 +1951,11 @@ index 114b427ef1..0000000000
 -[ "$1" = golang ] || exit 0
 -
 -go version | grep -F " go$PKG_VERSION "
-diff --git a/lang/golang/golang1.26/Makefile b/lang/golang/golang1.26/Makefile
+diff --git a/lang/golang/golang1.27/Makefile b/lang/golang/golang1.27/Makefile
 new file mode 100644
 index 0000000000..18ba445e9b
 --- /dev/null
-+++ b/lang/golang/golang1.26/Makefile
++++ b/lang/golang/golang1.27/Makefile
 @@ -0,0 +1,104 @@
 +#
 +# Copyright (C) 2018-2023 Jeffery To
@@ -1965,12 +1965,12 @@ index 0000000000..18ba445e9b
 +
 +include $(TOPDIR)/rules.mk
 +
-+PKG_NAME:=golang1.26
-+GO_VERSION_MAJOR_MINOR:=1.26
++PKG_NAME:=golang1.27
++GO_VERSION_MAJOR_MINOR:=1.27
 +GO_VERSION_PATCH:=1
 +GO_VERSION_RC:=
 +GO_BOOTSTRAP_VERSION:=bootstrap
-+PKG_HASH:=3172293d04b209dc1144698e7ba13f0477f6ba8c5ffd0be66c20fdbc9785dfbb
++PKG_HASH:=4e408abae126d916b6164627193f2c54f0e3ca1312d693b86db45f862ab238b1
 +
 +PKG_VERSION:=$(GO_VERSION_MAJOR_MINOR)$(if $(GO_VERSION_RC),.0)$(if $(GO_VERSION_PATCH),.$(GO_VERSION_PATCH))
 +PKG_FILE_VERSION:=$(GO_VERSION_MAJOR_MINOR)$(if $(GO_VERSION_RC),rc$(GO_VERSION_RC))$(if $(GO_VERSION_PATCH),.$(GO_VERSION_PATCH))
@@ -2061,11 +2061,11 @@ index 0000000000..18ba445e9b
 +$(eval $(call BuildPackage,$(PKG_NAME)-misc))
 +$(eval $(call BuildPackage,$(PKG_NAME)-src))
 +$(eval $(call BuildPackage,$(PKG_NAME)-tests))
-diff --git a/lang/golang/golang1.26/test.sh b/lang/golang/golang1.26/test.sh
+diff --git a/lang/golang/golang1.27/test.sh b/lang/golang/golang1.27/test.sh
 new file mode 100755
 index 0000000000..09d3e3fcaf
 --- /dev/null
-+++ b/lang/golang/golang1.26/test.sh
++++ b/lang/golang/golang1.27/test.sh
 @@ -0,0 +1,9 @@
 +#!/bin/sh
 +#
