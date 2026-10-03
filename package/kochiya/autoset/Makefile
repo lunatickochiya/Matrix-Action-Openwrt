@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/target.mk
 
 PKG_NAME:=autoset
 PKG_VERSION:=5.0
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -32,6 +32,7 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ath79 \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ar71xx \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_ipq \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_uci_airoha \
 	CONFIG_PACKAGE_$(PKG_NAME)_SIDE_ROUTER_rockchip
 
 define Package/autoset/default
@@ -102,6 +103,13 @@ endef
 define Package/autoset-uci-ipq
   $(Package/autoset/default)
   TITLE:=Support Packages for ipq router uci
+  DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
+  HIDDEN:=1
+endef
+
+define Package/autoset-uci-airoha
+  $(Package/autoset/default)
+  TITLE:=Support Packages for airoha pon uci
   DEPENDS:=autoset +luci-theme-material +luci +@LUCI_LANG_zh_Hans +luci-compat
   HIDDEN:=1
 endef
@@ -199,7 +207,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_temperature
 config PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script
 	bool "Temperature Show script"
 	select PACKAGE_luci-temperature-script
-	default y if TARGET_meson=y||TARGET_rockchip=y||i386||x86_64
+	default y if TARGET_meson=y||TARGET_rockchip=y||i386||x86_64||TARGET_airoha=y
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_temperature_script_mtk
 	bool "Temperature Show script for mtk"
@@ -234,6 +242,7 @@ choice
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ramips if TARGET_ramips=y
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ath79 if TARGET_ath79=y
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ipq if TARGET_qualcommax=y || TARGET_ipq50xx=y
+	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_airoha if TARGET_airoha=y
 	default PACKAGE_$(PKG_NAME)_INCLUDE_uci_ar71xx if TARGET_ar71xx=y
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci
@@ -267,6 +276,10 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_uci_ath79
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci_ipq
 	bool "IPQ SUPPORT"
 	select PACKAGE_autoset-uci-ipq
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_uci_airoha
+	bool "Airoha SUPPORT"
+	select PACKAGE_autoset-uci-airoha
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_uci_ar71xx
 	bool "ar71xx SUPPORT"
@@ -318,6 +331,8 @@ define Package/autoset-uci-mediatek/install
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./files/def_uci/zzz-autoset-mediatek $(1)/etc/uci-defaults/zz99-autoset
 	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
+	$(INSTALL_DIR) $(1)/sbin
+	$(INSTALL_BIN) ./files/arm/usage $(1)/sbin/usage
 endef
 
 define Package/autoset-uci-ramips/install
@@ -344,6 +359,18 @@ define Package/autoset-uci-ipq/install
 	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
 	$(INSTALL_DIR) $(1)/sbin
 	$(INSTALL_BIN) ./files/arm/usage $(1)/sbin/usage
+endef
+
+define Package/autoset-uci-airoha/install
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./files/def_uci/zzz-autoset-airoha $(1)/etc/uci-defaults/zz99-autoset
+	$(INSTALL_BIN) ./files/def_uci/998-wireless-set $(1)/etc/uci-defaults/z998-wireless
+	$(INSTALL_DIR) $(1)/sbin
+	$(INSTALL_BIN) ./files/arm/usage $(1)/sbin/usage
+	$(INSTALL_DIR) $(1)/www/luci-static/resources/view/status/include
+	$(INSTALL_DATA) ./files/generic/70_pon.js $(1)/www/luci-static/resources/view/status/include/
+	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
+	$(INSTALL_DATA) ./files/generic/luci-app-pon-status.json $(1)/usr/share/rpcd/acl.d/
 endef
 
 define Package/autoset-uci/install
@@ -395,6 +422,7 @@ $(eval $(call BuildPackage,autoset-uci-ramips))
 $(eval $(call BuildPackage,autoset-uci-ath79))
 $(eval $(call BuildPackage,autoset-uci-ar71xx))
 $(eval $(call BuildPackage,autoset-uci-ipq))
+$(eval $(call BuildPackage,autoset-uci-airoha))
 $(eval $(call BuildPackage,autoset-uci-meson))
 $(eval $(call BuildPackage,autoset-resize-rootfs-script))
 $(eval $(call BuildPackage,luci-temperature-script))

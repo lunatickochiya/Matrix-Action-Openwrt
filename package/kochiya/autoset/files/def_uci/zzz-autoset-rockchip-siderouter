@@ -59,8 +59,8 @@ sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
 #sed -i '202,207d' /www/luci-static/material/js/script.js
 #/etc/init.d/dnscrypt-proxy stop
 /etc/init.d/qos_gargoyle disable
-/etc/init.d/umdns stop
-/etc/init.d/umdns disable
+# /etc/init.d/umdns stop
+# /etc/init.d/umdns disable
 /etc/init.d/dawn stop
 /etc/init.d/dawn disable
 /etc/init.d/cloudflared stop
