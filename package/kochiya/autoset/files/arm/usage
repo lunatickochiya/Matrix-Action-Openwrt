@@ -1,8 +1,15 @@
 #!/bin/sh
+. /etc/openwrt_release
 
-NSS_PATH="/sys/kernel/debug/qca-nss-drv/stats"
+# 板级标识：OPENWRT_BOARD 优先（如 airoha/an7581），老固件退回 DISTRIB_TARGET
+BOARD="${OPENWRT_BOARD:-$DISTRIB_TARGET}"
 
 cpu_usage="$(busybox top -n1 | awk '/^CPU/ {printf("%d", 100 - $8)}')"
+
+case "$BOARD" in
+
+qualcommax/*)
+NSS_PATH="/sys/kernel/debug/qca-nss-drv/stats"
 
 combined_output=""
 
@@ -20,7 +27,6 @@ if [ -r "/sys/kernel/debug/ecm/ecm_db/connection_count_simple" ]; then
 	connection_count=$(cat /sys/kernel/debug/ecm/ecm_db/connection_count_simple)
 fi
 
-
 if [ -n "$combined_output" ] && [ -n "$connection_count" ]; then
 	echo -n "CPU: ${cpu_usage}% NPU: ${combined_output} ECM: ${connection_count} "
 elif [ -n "$combined_output" ]; then
@@ -30,3 +36,30 @@ elif [ -n "$connection_count" ]; then
 else
 	echo -n "CPU: ${cpu_usage}%"
 fi
+	;;
+
+mediatek/*|airoha/*)
+
+read -r usr sys < <(top -bn1 | awk 'NR==2 {print $2, $4}')
+output="USR: ${usr} SYS: ${sys}"
+
+for ppe in /sys/kernel/debug/ppe*/entries; do
+	[ -f "$ppe" ] || continue
+
+	name="$(basename "$(dirname "$ppe")" | tr 'a-z' 'A-Z')"
+	read -r total ipv4 ipv6 < <(awk '/IPv4/{a++}/IPv6/{b++} END {print NR, a+0, b+0}' "$ppe")
+
+	[ -n "$total" ] && output="${output} ${name}: ${total} (IPv4: ${ipv4} IPv6: ${ipv6})"
+done
+
+echo -n "CPU: ${cpu_usage}% $output"
+	;;
+
+*)
+	echo -n "CPU: ${cpu_usage}%"
+	;;
+esac
+
+
+
+

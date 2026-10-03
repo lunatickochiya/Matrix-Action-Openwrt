@@ -1,0 +1,15 @@
+{
+	"luci-app-pon-status": {
+		"description": "Grant access to PON optical status",
+		"read": {
+			"ubus": {
+				"file": [ "exec" ]
+			},
+			"uci": [ "pon" ],
+			"file": {
+				"/usr/sbin/ponctl --device * status": [ "exec" ],
+				"/usr/sbin/ponctl --device * status --json": [ "exec" ]
+			}
+		}
+	}
+}

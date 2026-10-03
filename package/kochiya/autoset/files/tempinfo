@@ -1,23 +1,70 @@
 #!/bin/sh
+# /sbin/tempinfo —— 概览页「温度」行数据源
+#
+# 按 /etc/openwrt_release 的板级信息分支（OPENWRT_BOARD / DISTRIB_TARGET，
+# 形如 airoha/an7581），采集：
+#   CPU  —— /sys/class/thermal/thermal_zone0
+#   WiFi —— mt76 hwmon（phy*/hwmon* 或 phy*/device/hwmon/hwmon*）
+#   PON  —— airoha 平台经 ponctl 读取光模块温度（可选光功率/电流/电压）
+#
+# 输出示例：
+#   CPU: 58.7°C, WiFi: 46.0°C 48.0°C, PON: 48.5°C
 
 . /etc/openwrt_release
 
 IEEE_PATH="/sys/class/ieee80211"
 THERMAL_PATH="/sys/class/thermal"
 
-case "$DISTRIB_TARGET" in
+# 板级标识：OPENWRT_BOARD 与 DISTRIB_TARGET 取值相同（<target>/<subtarget>），
+# 老固件的 /etc/openwrt_release 里可能只有 DISTRIB_TARGET，故优先前者。
+BOARD="${OPENWRT_BOARD:-$DISTRIB_TARGET}"
+
+# airoha PON 设备：是否在「温度」行附带 PON 光功率 / 偏置电流 / 电压。
+# 1 = 附带（一行显示整套光模块信息）；0 = 只显示 PON 温度。
+# 注：若同时装了 luci-app-pon-status 卡片，卡片会重复展示这组数值，故默认 0。
+SHOW_PON_OPTICS=0
+
+# 浮点字符串 → 保留 1 位小数（PON 温度，与 CPU/WiFi 的 %.1f 一致）
+f1() { [ -n "$1" ] && awk -v v="$1" 'BEGIN { printf("%.1f", v) }' 2>"/dev/null"; }
+
+# 浮点字符串 → 保留 2 位小数（光功率 / 电流 / 电压）
+f2() { [ -n "$1" ] && awk -v v="$1" 'BEGIN { printf("%.2f", v) }' 2>"/dev/null"; }
+
+# 从 PON JSON 快照里取值（jsonfilter）；缺任一环节返回空
+jf() {
+	[ -n "$pon_json" ] || return 0
+	[ -x /usr/bin/jsonfilter ] || return 0
+	printf '%s' "$pon_json" | /usr/bin/jsonfilter -q -e "$1" 2>"/dev/null"
+}
+
+case "$BOARD" in
 ipq40xx/*|ipq806x/*)
 	wifi_temp="$(awk '{printf("%.1f°C ", $0 / 1000)}' "$IEEE_PATH"/phy*/device/hwmon/hwmon*/temp1_input 2>"/dev/null" | awk '$1=$1')"
 	;;
 mediatek/mt7622)
 	wifi_temp="$(awk '{printf("%.1f°C ", $0 / 1000)}' "$IEEE_PATH"/wl*/hwmon*/temp1_input 2>"/dev/null" | awk '$1=$1')"
 	;;
+airoha/*)
+	# mt76 的 hwmon 可能挂在 phy*/hwmon*，也可能在 phy*/device/hwmon/hwmon*，
+	# 两种路径都试，并按真实路径去重（两种 glob 可能指向同一个 hwmon）
+	wifi_seen=""
+	for p in "$IEEE_PATH"/phy*/hwmon*/temp1_input \
+	         "$IEEE_PATH"/phy*/device/hwmon/hwmon*/temp1_input; do
+		[ -r "$p" ] || continue
+		rp="$(readlink -f "$p" 2>"/dev/null")"
+		[ -n "$rp" ] || rp="$p"
+		case " $wifi_seen " in *" $rp "*) continue ;; esac
+		wifi_seen="$wifi_seen $rp"
+		t="$(awk '{printf("%.1f°C", $0 / 1000)}' "$p" 2>"/dev/null")"
+		[ -n "$t" ] && wifi_temp="${wifi_temp:+$wifi_temp }$t"
+	done
+	;;
 *)
 	wifi_temp="$(awk '{printf("%.1f°C ", $0 / 1000)}' "$IEEE_PATH"/phy*/hwmon*/temp1_input 2>"/dev/null" | awk '$1=$1')"
 	;;
 esac
 
-case "$DISTRIB_TARGET" in
+case "$BOARD" in
 ipq40xx/*)
 	if [ -e "$IEEE_PATH/phy0/hwmon0/temp1_input" ]; then
 		mt76_temp="$(awk -F ': ' '{print $2}' "$IEEE_PATH/phy0/hwmon0/temp1_input" 2>"/dev/null")°C"
@@ -29,18 +76,60 @@ ipq40xx/*)
 	;;
 esac
 
-case "$DISTRIB_TARGET" in
+case "$BOARD" in
 ipq50xx/*)
 	cpu_temp=""$(cat /sys/class/thermal/thermal_zone0/temp)°C""
 	;;
 esac
 
-if [ -n "$cpu_temp" ] && [ -z "$wifi_temp" ]; then
-	echo -n "CPU: $cpu_temp"
-elif [ -z "$cpu_temp" ] && [ -n "$wifi_temp" ]; then
-	echo -n "WiFi: $wifi_temp"
-elif [ -n "$cpu_temp" ] && [ -n "$wifi_temp" ]; then
-	echo -n "CPU: $cpu_temp, WiFi: $wifi_temp"
-else
-	echo -n "No temperature info"
+# ---------------------------------------------------------------- PON 光模块
+# ponctl 由 airoha-ponctl 提供，status --json 已换算好温度/光功率/电流/电压：
+#   temperature_celsius(°C) / tx_power_dbm(dBm) / rx_power_dbm(dBm) /
+#   tx_bias_ma(mA) / voltage_volts(V)
+pon_json=""
+pon_temp="" pon_tx="" pon_rx="" pon_bias="" pon_volt=""
+
+case "$BOARD" in
+airoha/*)
+	if [ -x /usr/sbin/ponctl ]; then
+		pon_dev=""
+		if [ -x /sbin/uci ]; then
+			pon_dev="$(/sbin/uci -q get pon.@xpon[0].device 2>"/dev/null")"
+		fi
+		if [ -n "$pon_dev" ]; then
+			pon_json="$(/usr/sbin/ponctl --device "$pon_dev" status --json 2>"/dev/null")"
+		else
+			pon_json="$(/usr/sbin/ponctl status --json 2>"/dev/null")"
+		fi
+	fi
+
+	if [ -n "$pon_json" ]; then
+		pon_temp="$(f1 "$(jf '@.frontend.temperature_celsius')")"
+		if [ "$SHOW_PON_OPTICS" = "1" ]; then
+			pon_tx="$(f2 "$(jf '@.frontend.tx_power_dbm')")"
+			pon_rx="$(f2 "$(jf '@.frontend.rx_power_dbm')")"
+			pon_bias="$(f2 "$(jf '@.frontend.tx_bias_ma')")"
+			pon_volt="$(f2 "$(jf '@.frontend.voltage_volts')")"
+		fi
+	fi
+	;;
+esac
+
+# ---------------------------------------------------------------- 组装
+out=""
+
+[ -n "$cpu_temp" ]  && out="CPU: $cpu_temp"
+[ -n "$wifi_temp" ] && out="${out:+$out, }WiFi: $wifi_temp"
+
+if [ -n "$pon_temp" ]; then
+	pon="PON: ${pon_temp}°C"
+	[ -n "$pon_tx" ]   && pon="$pon ↑${pon_tx}dBm"
+	[ -n "$pon_rx" ]   && pon="$pon ↓${pon_rx}dBm"
+	[ -n "$pon_bias" ] && pon="$pon ${pon_bias}mA"
+	[ -n "$pon_volt" ] && pon="$pon ${pon_volt}V"
+	out="${out:+$out, }$pon"
 fi
+
+[ -n "$out" ] || out="No temperature info"
+
+printf '%s' "$out"
