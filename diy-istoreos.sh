@@ -171,6 +171,33 @@ function patch_rockchip() {
             echo Applying tpm312 $rockpatch
             patch -p1 --no-backup-if-mismatch --quiet< tpm312/core-istoreos/$rockpatch
         done
+        # 启用 RK3399 VPU 硬解码（hantro: H.264/VP8；rkvdec: H.264/VP9），
+        # 供 ffmpeg 的 v4l2m2m 解码器做转码（降码率）时使用
+        for cfgfile in target/linux/rockchip/config-*; do
+            [ -f "$cfgfile" ] || continue
+            for cfg in \
+                CONFIG_MEDIA_SUPPORT=y \
+                CONFIG_MEDIA_SUPPORT_FILTER=y \
+                CONFIG_MEDIA_PLATFORM_SUPPORT=y \
+                CONFIG_MEDIA_CONTROLLER=y \
+                CONFIG_VIDEO_DEV=y \
+                CONFIG_V4L2_MEM2MEM_DEV=y \
+                CONFIG_VIDEOBUF2_CORE=y \
+                CONFIG_VIDEOBUF2_V4L2=y \
+                CONFIG_VIDEOBUF2_MEMOPS=y \
+                CONFIG_VIDEOBUF2_DMA_CONTIG=y \
+                CONFIG_VIDEOBUF2_VMALLOC=y \
+                CONFIG_VIDEO_HANTRO=y \
+                CONFIG_VIDEO_HANTRO_ROCKCHIP=y \
+                CONFIG_VIDEO_ROCKCHIP_VDEC=y ; do
+                sym="${cfg%%=*}"
+                if grep -q "^${sym}=" "$cfgfile"; then
+                    sed -i "s|^${sym}=.*|${cfg}|" "$cfgfile"
+                else
+                    echo "${cfg}" >> "$cfgfile"
+                fi
+            done
+        done
         rm -rf tpm312
         }
 
