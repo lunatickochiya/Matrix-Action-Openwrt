@@ -1,0 +1,21 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+USE_PROCD=0
+
+start() {
+	/usr/banmac/nft/reapply.sh
+}
+
+reload() {
+	/usr/banmac/nft/reapply.sh
+}
+
+restart() {
+	/usr/banmac/nft/reapply.sh
+}
+
+stop() {
+	return 0
+}

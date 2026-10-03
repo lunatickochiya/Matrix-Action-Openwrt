@@ -1,0 +1,14 @@
+#!/bin/sh
+# Register the banmac reapply script as a firewall include so the rules
+# survive firewall restarts/reloads as well as reboots.
+
+[ -f /etc/config/banmac ] || exit 0
+
+if ! uci -q show firewall 2>/dev/null | grep -qF '/usr/banmac/nft/reapply.sh'; then
+	uci -q add firewall include
+	uci -q set firewall.@include[-1].path='/usr/banmac/nft/reapply.sh'
+	uci -q set firewall.@include[-1].reload='1'
+	uci -q commit firewall
+fi
+
+exit 0
