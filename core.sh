@@ -531,6 +531,7 @@ function fix_openwrt_feeds() {
 	autosetver
 	remove_error_package_not_install
 	patch_openwrt_feeds
+	fix_containerd_linkname
 	patch_lunatic7
 	change_qca_start_order
 	if [ "$Matrix_Target" == 'ramips-iptables' ] || [ "$Matrix_Target" == 'ramips-nftables' ] || \
@@ -621,6 +622,24 @@ function patch_openwrt_feeds() {
         patch -p1 --no-backup-if-mismatch --quiet < feeds-routing-patch/$routingpatch
     cd ../..
     done
+}
+
+function fix_containerd_linkname() {
+	# containerd 1.7.22 内置的 cpuid v2.0.4 使用 //go:linkname runtime.sched_getaffinity，
+	# Go >= 1.23 链接器（arm64 目标）默认拒绝：
+	#   link: github.com/klauspost/cpuid/v2: invalid reference to runtime.sched_getaffinity
+	#
+	# MAKE_FLAGS 在 $(eval $(call BuildPackage,...)) 展开时就被冻结进编译 recipe，
+	# 因此必须在 eval 之前注入（紧跟 Build/Compile= 行）；EXTRA_LDFLAGS 作为命令行
+	# 变量会覆盖 containerd 自身的 "EXTRA_LDFLAGS += -s -w"，所以显式带上 -s -w。
+	# 参考：github.com/MedyMa/BananaPi-BPI-R4/commit/66d5025927063c3c9a5177ae704a3f4f8b28e9dc
+	local f=feeds/packages/utils/containerd/Makefile
+	if [ ! -f "$f" ]; then
+		echo "containerd Makefile not found: $f" >&2
+	elif ! grep -q 'checklinkname=0' "$f"; then
+		awk '{print} /^Build\/Compile=/ {print "MAKE_FLAGS += EXTRA_LDFLAGS=-s -w -checklinkname=0"}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+		echo "containerd: -checklinkname=0 injected=$(grep -c 'checklinkname=0' "$f")"
+	fi
 }
 
 function patch_lunatic7() {
