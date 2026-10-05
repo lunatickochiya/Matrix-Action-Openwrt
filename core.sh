@@ -458,12 +458,6 @@ function add_openwrt_files() {
 	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* openwrt/mypatch-core/
 	[ -d openwrt-24104/mypatch-pick ] && mv -f openwrt-24104/mypatch-pick/* openwrt/mypatch-core/
 	fi
-	if [ "$Target_CFG_Machine" = "tpm312" ] || [ "$Target_CFG_Machine" = "tpm312_lite" ]; then
-	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* openwrt/mypatch-core/
-	fi
-	if [ "$Target_CFG_Machine" = "fmx1_pro" ] || [ "$Target_CFG_Machine" = "fmx1_pro_lite" ] || [ "$Target_CFG_Machine" = "ztl-joyrock" ]; then
-	[ -d $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert ] && mv -f $OpenWrt_PATCH_FILE_DIR/mypatch-kernel-revert/* openwrt/mypatch-core/
-	fi
 	# if [ "$Target_CFG_Machine" = "jdcloud_re-ss-01" ]; then
 	# [ -d $OpenWrt_PATCH_FILE_DIR/ipq6000-jd-re-ss-01 ] && cp -r $OpenWrt_PATCH_FILE_DIR/ipq6000-jd-re-ss-01/* openwrt/mypatch-core
 	# fi
