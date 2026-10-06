@@ -272,6 +272,39 @@ function ln_openwrt() {
 	ls -l /workdir/openwrt
 }
 
+function apply_sfe_live_conntrack_fix() {
+	# fast-classifier 缓存了 nf_conn 指针，5 元组复用/销毁通知丢失时会解引用已释放的
+	# conntrack（内核 panic），改用当前报文引用的 ct。见
+	# openwrt-2410/sfe-fast-classifier-use-live-conntrack.patch
+	# （移植自 AP-action-IPQ 7337ea2 / efba8ce）。
+	# 调用位置：add_openwrt_sfe_ipt_k66（package/shortcut-fe）、
+	# add_openwrt_sfe_nft_k66（package/turboacc/shortcut-fe），cwd 为 openwrt。
+	local patch_file="../$OpenWrt_PATCH_FILE_DIR/sfe-fast-classifier-use-live-conntrack.patch"
+	local base=""
+
+	if [ -f package/turboacc/shortcut-fe/fast-classifier/src/fast-classifier.c ]; then
+		base="package/turboacc"
+	elif [ -f package/shortcut-fe/fast-classifier/src/fast-classifier.c ]; then
+		base="package"
+	fi
+
+	if [ ! -f "$patch_file" ]; then
+		echo "sfe live-conntrack fix patch not found: $patch_file" >&2
+		return 0
+	fi
+	if [ -z "$base" ]; then
+		echo "sfe: shortcut-fe source not found, skip live-conntrack fix" >&2
+		return 0
+	fi
+	if grep -q 'fast_classifier_update_protocol(conn->sic, ct)' "$base/shortcut-fe/fast-classifier/src/fast-classifier.c"; then
+		echo "sfe: live-conntrack fix already applied"
+		return 0
+	fi
+
+	echo "----sfe: applying fast-classifier stale-conntrack fix ($base)----"
+	patch -d "$base" -p1 --no-backup-if-mismatch --quiet < "$patch_file" || exit 1
+}
+
 function add_openwrt_sfe_ipt_k66() {
 	if [[ "$Matrix_Target" == *iptables ]]; then
 		for file4 in package-configs/$OpenWrt_PATCH_FILE_DIR/*-iptables.config; do     echo "# ADD TURBOACC
@@ -294,6 +327,7 @@ CONFIG_PACKAGE_kmod-shortcut-fe-cm=n
 		echo "# CONFIG_SHORTCUT_FE is not set" >> "./target/linux/generic/config-6.6"
 		git clone --depth=1 --single-branch --branch "package" https://github.com/chenmozhijin/turboacc
 		mv -n turboacc/shortcut-fe ./package
+		apply_sfe_live_conntrack_fix
 		rm -rf turboacc
 		cd ../
 	fi
@@ -314,6 +348,7 @@ CONFIG_PACKAGE_kmod-nft-fullcone=y
 " >> "$file5"; done
 		cd openwrt
 		curl -sSL https://raw.githubusercontent.com/chenmozhijin/turboacc/luci/add_turboacc.sh -o add_turboacc.sh && bash add_turboacc.sh
+		apply_sfe_live_conntrack_fix
 		echo "----$Matrix_Target-----NFT-acc----"
 		cd ../
 	fi

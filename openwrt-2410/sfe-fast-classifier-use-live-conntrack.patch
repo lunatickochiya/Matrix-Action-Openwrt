@@ -1,0 +1,42 @@
+From: AP-action local patch
+Subject: [PATCH] shortcut-fe: fix use-after-free of the cached conntrack
+
+fast-classifier keeps a raw struct nf_conn pointer (sfe_connection.ct) for
+every offload entry and relies on the conntrack-destroy notifier to remove
+the entry.  When a 5-tuple is reused (or the destroy notification misses the
+entry) that pointer goes stale, and
+
+  fast_classifier_update_protocol(conn->sic, conn->ct)
+
+then dereferences freed memory through nf_ct_net(ct) ->
+net->ct.nf_ct_proto.tcp.  Observed on ramips/mt7621 (MSG1500, MT7621):
+
+  CPU 3 Unable to handle kernel paging request at virtual address 000012c3
+  epc : fast_classifier_recv+0xe04 [fast_classifier]   (inlined
+        fast_classifier_update_protocol -> nf_tcp_pernet ->
+        tn->tcp_no_window_check; 0x788 + 0x3a == 0x7c2 == BadVA - 0x0b01)
+  Kernel panic - not syncing: Fatal exception in interrupt
+
+The entry is looked up with the 5-tuple of the packet being processed, so
+use that packet's (referenced) conntrack instead of the cached snapshot.
+
+Ported from AP-action-IPQ 7337ea2 / efba8ce.
+Applied by core.sh apply_sfe_live_conntrack_fix (add-openwrt-sfe-2410).
+--- a/shortcut-fe/fast-classifier/src/fast-classifier.c
++++ b/shortcut-fe/fast-classifier/src/fast-classifier.c
+@@ -1061,7 +1061,14 @@
+ 			if (conn->offload_permit || conn->hits >= offload_at_pkts) {
+ 				DEBUG_TRACE("OFFLOADING CONNECTION, TOO MANY HITS\n");
+ 
+-				if (fast_classifier_update_protocol(conn->sic, conn->ct) == 0) {
++				/*
++				 * conn->ct is a snapshot taken when this SFE entry was created.
++				 * The conntrack it points to can already be gone (expired
++				 * connection / reused 5-tuple); nf_ct_net() would then read
++				 * freed memory and panic the box.  Use the conntrack of the
++				 * packet that is being processed here instead.
++				 */
++				if (fast_classifier_update_protocol(conn->sic, ct) == 0) {
+ 					spin_unlock_bh(&sfe_connections_lock);
+ 					fast_classifier_incr_exceptions(FAST_CL_EXCEPTION_UPDATE_PROTOCOL_FAIL);
+ 					DEBUG_TRACE("UNKNOWN PROTOCOL OR CONNECTION CLOSING, SKIPPING\n");
