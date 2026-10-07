@@ -68,33 +68,7 @@ jobs:
           restore-keys: rockchip-nftables-cache-openwrt-
           lookup-only: true
 
-      # ---- 2305 rockchip / meson / istoreos（mixkey = target）----
-      - name: Touch rockchip-ipt
-        id: rk2305-ipt
-        continue-on-error: true
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            staging_dir/host*
-            staging_dir/tool*
-            .ccache
-          key: rockchip-ipt-cache-openwrt-
-          restore-keys: rockchip-ipt-cache-openwrt-
-          lookup-only: true
-
-      - name: Touch rockchip-nft
-        id: rk2305-nft
-        continue-on-error: true
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            staging_dir/host*
-            staging_dir/tool*
-            .ccache
-          key: rockchip-nft-cache-openwrt-
-          restore-keys: rockchip-nft-cache-openwrt-
-          lookup-only: true
-
+      # ---- meson（2305，mixkey = target）----
       - name: Touch meson-ipt
         id: meson-ipt
         continue-on-error: true
@@ -128,7 +102,5 @@ jobs:
           echo "  rockchip-nftables_eBPF: ${{ steps.rk-nft-ebpf.outputs.cache-matched-key }}"
           echo "  rockchip-iptables     : ${{ steps.rk-ipt.outputs.cache-matched-key }}"
           echo "  rockchip-nftables     : ${{ steps.rk-nft.outputs.cache-matched-key }}"
-          echo "  rockchip-ipt (2305)   : ${{ steps.rk2305-ipt.outputs.cache-matched-key }}"
-          echo "  rockchip-nft (2305)   : ${{ steps.rk2305-nft.outputs.cache-matched-key }}"
           echo "  meson-ipt             : ${{ steps.meson-ipt.outputs.cache-matched-key }}"
           echo "  meson-nft             : ${{ steps.meson-nft.outputs.cache-matched-key }}"
