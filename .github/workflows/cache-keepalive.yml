@@ -1,0 +1,110 @@
+name: Keep Cache Alive
+
+# actions/cache 的条目 7 天不访问会被回收。
+# cachewrtbuild 生成的缓存 key 形如：
+#   <mixkey>-cache-openwrt-<toolchain-hash>-<timestamp>
+# 每 5 天用 lookup-only（只查询不下载）触碰一次各 mixkey 的最近缓存，
+# 保证常用机型的工具链/ccache 缓存不被回收、不用每次重编工具链。
+# 参考：qwe3017/Actions-OpenWrt-AN758X/.github/workflows/cache-keepalive.yml
+on:
+  schedule:
+    - cron: '0 0 */5 * *'
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      # ---- 2410 rockchip（build-rockchip-2410 / Build-Caches，含 eBPF 变体）----
+      - name: Touch rockchip-iptables_eBPF
+        id: rk-ipt-ebpf
+        continue-on-error: true
+        uses: actions/cache/restore@v5
+        with:
+          path: /tmp/dummy
+          key: rockchip-iptables_eBPF-cache-openwrt-
+          restore-keys: rockchip-iptables_eBPF-cache-openwrt-
+          lookup-only: true
+
+      - name: Touch rockchip-nftables_eBPF
+        id: rk-nft-ebpf
+        continue-on-error: true
+        uses: actions/cache/restore@v5
+        with:
+          path: /tmp/dummy
+          key: rockchip-nftables_eBPF-cache-openwrt-
+          restore-keys: rockchip-nftables_eBPF-cache-openwrt-
+          lookup-only: true
+
+      - name: Touch rockchip-iptables
+        id: rk-ipt
+        continue-on-error: true
+        uses: actions/cache/restore@v5
+        with:
+          path: /tmp/dummy
+          key: rockchip-iptables-cache-openwrt-
+          restore-keys: rockchip-iptables-cache-openwrt-
+          lookup-only: true
+
+      - name: Touch rockchip-nftables
+        id: rk-nft
+        continue-on-error: true
+        uses: actions/cache/restore@v5
+        with:
+          path: /tmp/dummy
+          key: rockchip-nftables-cache-openwrt-
+          restore-keys: rockchip-nftables-cache-openwrt-
+          lookup-only: true
+
+      # ---- 2305 rockchip / meson / istoreos（mixkey = target）----
+      - name: Touch rockchip-ipt
+        id: rk2305-ipt
+        continue-on-error: true
+        uses: actions/cache/restore@v5
+        with:
+          path: /tmp/dummy
+          key: rockchip-ipt-cache-openwrt-
+          restore-keys: rockchip-ipt-cache-openwrt-
+          lookup-only: true
+
+      - name: Touch rockchip-nft
+        id: rk2305-nft
+        continue-on-error: true
+        uses: actions/cache/restore@v5
+        with:
+          path: /tmp/dummy
+          key: rockchip-nft-cache-openwrt-
+          restore-keys: rockchip-nft-cache-openwrt-
+          lookup-only: true
+
+      - name: Touch meson-ipt
+        id: meson-ipt
+        continue-on-error: true
+        uses: actions/cache/restore@v5
+        with:
+          path: /tmp/dummy
+          key: meson-ipt-cache-openwrt-
+          restore-keys: meson-ipt-cache-openwrt-
+          lookup-only: true
+
+      - name: Touch meson-nft
+        id: meson-nft
+        continue-on-error: true
+        uses: actions/cache/restore@v5
+        with:
+          path: /tmp/dummy
+          key: meson-nft-cache-openwrt-
+          restore-keys: meson-nft-cache-openwrt-
+          lookup-only: true
+
+      - name: Summary
+        run: |
+          echo "matched cache keys:"
+          echo "  rockchip-iptables_eBPF: ${{ steps.rk-ipt-ebpf.outputs.cache-matched-key }}"
+          echo "  rockchip-nftables_eBPF: ${{ steps.rk-nft-ebpf.outputs.cache-matched-key }}"
+          echo "  rockchip-iptables     : ${{ steps.rk-ipt.outputs.cache-matched-key }}"
+          echo "  rockchip-nftables     : ${{ steps.rk-nft.outputs.cache-matched-key }}"
+          echo "  rockchip-ipt (2305)   : ${{ steps.rk2305-ipt.outputs.cache-matched-key }}"
+          echo "  rockchip-nft (2305)   : ${{ steps.rk2305-nft.outputs.cache-matched-key }}"
+          echo "  meson-ipt             : ${{ steps.meson-ipt.outputs.cache-matched-key }}"
+          echo "  meson-nft             : ${{ steps.meson-nft.outputs.cache-matched-key }}"
