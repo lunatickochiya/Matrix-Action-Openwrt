@@ -21,7 +21,10 @@ jobs:
         continue-on-error: true
         uses: actions/cache/restore@v5
         with:
-          path: /tmp/dummy
+          path: |
+            staging_dir/host*
+            staging_dir/tool*
+            .ccache
           key: rockchip-iptables_eBPF-cache-openwrt-
           restore-keys: rockchip-iptables_eBPF-cache-openwrt-
           lookup-only: true
@@ -31,7 +34,10 @@ jobs:
         continue-on-error: true
         uses: actions/cache/restore@v5
         with:
-          path: /tmp/dummy
+          path: |
+            staging_dir/host*
+            staging_dir/tool*
+            .ccache
           key: rockchip-nftables_eBPF-cache-openwrt-
           restore-keys: rockchip-nftables_eBPF-cache-openwrt-
           lookup-only: true
@@ -41,7 +47,10 @@ jobs:
         continue-on-error: true
         uses: actions/cache/restore@v5
         with:
-          path: /tmp/dummy
+          path: |
+            staging_dir/host*
+            staging_dir/tool*
+            .ccache
           key: rockchip-iptables-cache-openwrt-
           restore-keys: rockchip-iptables-cache-openwrt-
           lookup-only: true
@@ -51,7 +60,10 @@ jobs:
         continue-on-error: true
         uses: actions/cache/restore@v5
         with:
-          path: /tmp/dummy
+          path: |
+            staging_dir/host*
+            staging_dir/tool*
+            .ccache
           key: rockchip-nftables-cache-openwrt-
           restore-keys: rockchip-nftables-cache-openwrt-
           lookup-only: true
@@ -62,7 +74,10 @@ jobs:
         continue-on-error: true
         uses: actions/cache/restore@v5
         with:
-          path: /tmp/dummy
+          path: |
+            staging_dir/host*
+            staging_dir/tool*
+            .ccache
           key: rockchip-ipt-cache-openwrt-
           restore-keys: rockchip-ipt-cache-openwrt-
           lookup-only: true
@@ -72,7 +87,10 @@ jobs:
         continue-on-error: true
         uses: actions/cache/restore@v5
         with:
-          path: /tmp/dummy
+          path: |
+            staging_dir/host*
+            staging_dir/tool*
+            .ccache
           key: rockchip-nft-cache-openwrt-
           restore-keys: rockchip-nft-cache-openwrt-
           lookup-only: true
@@ -82,7 +100,10 @@ jobs:
         continue-on-error: true
         uses: actions/cache/restore@v5
         with:
-          path: /tmp/dummy
+          path: |
+            staging_dir/host*
+            staging_dir/tool*
+            .ccache
           key: meson-ipt-cache-openwrt-
           restore-keys: meson-ipt-cache-openwrt-
           lookup-only: true
@@ -92,7 +113,10 @@ jobs:
         continue-on-error: true
         uses: actions/cache/restore@v5
         with:
-          path: /tmp/dummy
+          path: |
+            staging_dir/host*
+            staging_dir/tool*
+            .ccache
           key: meson-nft-cache-openwrt-
           restore-keys: meson-nft-cache-openwrt-
           lookup-only: true
