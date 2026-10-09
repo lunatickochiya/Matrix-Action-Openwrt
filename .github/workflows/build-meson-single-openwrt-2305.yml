@@ -34,24 +34,9 @@ on:
         - 'ws1508'
         - 'onecloud'
       SETIP:
-        description: 'Set ip address'
+        description: 'Set LAN IP address'
         default: '192.168.66.1'
         required: false
-        type: choice
-        options:
-        - '192.168.66.1'
-        - '192.168.8.1'
-        - '192.168.88.1'
-        - '192.168.10.1'
-        - '192.168.22.1'
-        - '192.168.16.1'
-        - '192.168.19.1'
-        - '192.168.9.1'
-        - '192.168.166.1'
-        - '172.16.0.1'
-        - '172.18.0.1'
-        - '10.0.0.1'
-        - '10.88.0.1'
       ALLKMOD:
         description: 'Compile All Kmods'
         required: true
@@ -238,7 +223,7 @@ jobs:
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: 设置 IP 地址
-      if: github.event.inputs.SETIP != '192.168.66.1'
+      if: github.event.inputs.SETIP != '' && github.event.inputs.SETIP != '192.168.66.1'
       id: setip
       run: |
         IPSET_VALUE="${{ github.event.inputs.SETIP }}"
