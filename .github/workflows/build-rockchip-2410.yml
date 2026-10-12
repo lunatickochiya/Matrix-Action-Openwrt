@@ -21,6 +21,7 @@ on:
         - 'mpc1917_lite'
         - 'fmx1_pro'
         - 'ztl-joyrock'
+        - 'shimeta_aiot3588a'
       REPO:
         description: 'Choose repo'
         required: true
@@ -68,6 +69,7 @@ jobs:
         - rockchip: tpm312_lite
         - rockchip: fmx1_pro
         - rockchip: ztl-joyrock
+        - rockchip: shimeta_aiot3588a
 
     steps:
       - name: 检查
