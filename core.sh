@@ -901,6 +901,16 @@ function add_openwrt_kmods() {
 	drop_builtin_kmod_overrides
 	fix_openwrt_config_eror
 
+	# 上面的后处理是从 .config 里删/改行，会让它和 kconfig 归一化后的结果不一致。
+	# OpenWrt toplevel 的 "%::" 规则会对 .config 重新跑一次
+	# `conf --defconfig` 再与 .config 逐符号比较（scripts/kconfig.pl '>'，注意它连
+	# “被规范化后的值”也算差异），于是每次 make 都打
+	# "WARNING: your configuration is out of sync"。
+	# 这里最后再归一化一次，让 .config 就是 kconfig 认定的值（排除项/内置 kmod
+	# 重新落成 "# ... is not set" 或按 select 取值），警告消失，而且 .config 在
+	# metadata、依赖解析、包编译三个阶段完全一致。
+	cd openwrt && make defconfig && cd ../
+
 }
 
 function awk_openwrt_config() {
