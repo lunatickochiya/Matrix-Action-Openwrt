@@ -818,6 +818,28 @@ sed -n  '/^# CONFIG_PACKAGE_kmod/p' openwrt/.config | sed '/# CONFIG_PACKAGE_kmo
 echo "::notice ::当前内核版本$(grep CONFIG_LINUX openwrt/.config | cut -d'=' -f1 | cut -d'_' -f3-)"
 }
 
+function drop_builtin_kmod_overrides() {
+# add_all_kmod_config 会把所有 "# CONFIG_PACKAGE_kmod-X is not set" 一律改写成 "=m"。
+# 但对 KCONFIG 全是 built-in 的 kmod（.config-package.in 里没有 prompt，例如
+# kmod-thermal / kmod-backlight，其 CONFIG_THERMAL=y / CONFIG_BACKLIGHT_CLASS_DEVICE=y
+# 由目标 config 固定），kconfig 不会采纳这个 =m 值；然而生成 package metadata 时，
+# 依赖方的 "+PACKAGE_kmod-X:kmod-X" 会按当时 .config 解析成真实运行依赖，最终镜像
+# 组装阶段 opkg 报 "cannot find dependency kmod-X"（如 kmod-hwmon-pwmfan ← kmod-thermal、
+# kmod-drm ← kmod-backlight、kmod-rknpu ← kmod-backlight）导致编译失败。
+# 这里把这些没有 prompt 的 kmod 的 =m 覆盖删除，交回 kconfig 的默认/select 决定。
+local pkgini=openwrt/tmp/.config-package.in cfg=openwrt/.config
+[ -f "$pkgini" ] && [ -f "$cfg" ] || return 0
+awk '
+	/^[ \t]*config PACKAGE_kmod-/ { sym=$2; next }
+	sym != "" && /^[ \t]*(tristate|bool)[ \t]*$/ { print sym; sym=""; next }
+	sym != "" && /^[ \t]*(tristate|bool)[ \t]+"/ { sym=""; next }
+	/^[ \t]*config / { sym="" }
+' "$pkgini" | while read -r sym; do
+	[ -n "$sym" ] || continue
+	sed -i "/^CONFIG_${sym}=m$/d" "$cfg"
+done
+}
+
 function fix_openwrt_config_eror() {
 if [[ "$Matrix_Target" == *iptables ]]; then
 sed -i 's/CONFIG_PACKAGE_perl-test-harness=y/# CONFIG_PACKAGE_perl-test-harness is not set/g' openwrt/.config
@@ -862,6 +884,7 @@ function add_openwrt_kmods() {
 	cd openwrt && make defconfig && cd ../
 	fi
 
+	drop_builtin_kmod_overrides
 	fix_openwrt_config_eror
 
 }
