@@ -838,20 +838,6 @@ awk '
 	[ -n "$sym" ] || continue
 	sed -i "/^CONFIG_${sym}=m$/d" "$cfg"
 done
-
-# 排除列表（kmod_exclude_list*.config）的处理也要确定化：add_all_kmod_config 会把
-# 它们写成 "=n"，但 make defconfig 有时会把它规范成 "# ... is not set"、有时整行丢弃。
-# 而 scripts/package-metadata.pl 判断“包是否启用”只看 .config 里有没有
-# "CONFIG_PACKAGE_x=<值>" 这一行（不区分 =m/=n），残留的 "=n" 反而会把被排除
-# kmod 的 KCONFIG 内核符号注入内核配置。例如被排除的 kmod-rxrpc（CONFIG_AF_RXRPC）
-# 一旦残留 =n，内核里 AF_RXRPC 会被改成 m 并带出目标 config 中不存在的
-# AF_RXRPC_DEBUG；带 (NEW) 的符号在 OpenWrt 的 FAIL_ON_UNCONFIGURED=1 下会让
-# target/linux 的 syncconfig 直接失败。这里把 =m/=n 整行删掉，保证被排除的 kmod
-# 对内核配置等价于“未启用”（机器 config 里显式 =y 的行不受影响，此时 exclusion
-# 只是屏蔽 ALLKMOD 的自动 =m）。
-if [ -n "$kmod_compile_exclude_list" ]; then
-	sed -i "/^CONFIG_PACKAGE_$kmod_compile_exclude_list=[mn]$/d" "$cfg"
-fi
 }
 
 function fix_openwrt_config_eror() {
