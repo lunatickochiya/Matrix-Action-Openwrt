@@ -1,0 +1,70 @@
+#!/bin/sh
+# LuCI backend: Rockchip NPU / VPU status (RKNPU debugfs + rk_vcodec procfs)
+
+. /usr/share/libubox/jshn.sh
+
+rd() { cat "$1" 2>/dev/null; }
+rd_int() { v=$(cat "$1" 2>/dev/null); case "$v" in ''|*[!0-9]*) echo 0 ;; *) echo "$v" ;; esac; }
+
+get_status() {
+	json_init
+
+	# ---------- NPU (rknpu debugfs) ----------
+	npu_raw="$(rd /sys/kernel/debug/rknpu/load)"
+	json_add_string npu_raw "$npu_raw"
+	c0=$(echo "$npu_raw" | sed -n 's/.*Core0: *\([0-9][0-9]*\)%.*/\1/p')
+	c1=$(echo "$npu_raw" | sed -n 's/.*Core1: *\([0-9][0-9]*\)%.*/\1/p')
+	c2=$(echo "$npu_raw" | sed -n 's/.*Core2: *\([0-9][0-9]*\)%.*/\1/p')
+	json_add_int core0 "${c0:-0}"
+	json_add_int core1 "${c1:-0}"
+	json_add_int core2 "${c2:-0}"
+	json_add_string npu_ver "$(rd /sys/kernel/debug/rknpu/version)"
+	json_add_int npu_freq "$(rd_int /sys/kernel/debug/rknpu/freq)"
+
+	# ---------- VPU (rk_vcodec /proc/mpp_service) ----------
+	json_add_string vpu_ver "$(rd /proc/mpp_service/version)"
+	json_add_string vpu_sessions "$(rd /proc/mpp_service/sessions-summary)"
+
+	json_add_int dec0_clk "$(rd_int /proc/mpp_service/rkvdec-core0/aclk)"
+	json_add_int dec1_clk "$(rd_int /proc/mpp_service/rkvdec-core1/aclk)"
+	json_add_int enc0_clk "$(rd_int /proc/mpp_service/rkvenc-core0/aclk)"
+	json_add_int enc1_clk "$(rd_int /proc/mpp_service/rkvenc-core1/aclk)"
+	json_add_int dec0_tasks "$(rd_int /proc/mpp_service/rkvdec-core0/task_count)"
+	json_add_int dec1_tasks "$(rd_int /proc/mpp_service/rkvdec-core1/task_count)"
+	enc0_sessions=$(rd /proc/mpp_service/rkvenc-core0/sessions-info | wc -l)
+	enc1_sessions=$(rd /proc/mpp_service/rkvenc-core1/sessions-info | wc -l)
+	json_add_int enc0_tasks "$enc0_sessions"
+	json_add_int enc1_tasks "$enc1_sessions"
+
+	# ---------- 温度 (millidegrees) ----------
+	for z in /sys/class/thermal/thermal_zone*; do
+		t=$(rd "$z/type")
+		v=$(rd_int "$z/temp")
+		case "$t" in
+			package-thermal)   json_add_int temp_package "$v" ;;
+			npu-thermal)       json_add_int temp_npu "$v" ;;
+			gpu-thermal)       json_add_int temp_gpu "$v" ;;
+			bigcore0-thermal)  json_add_int temp_big0 "$v" ;;
+			bigcore2-thermal)  json_add_int temp_big2 "$v" ;;
+			littlecore-thermal) json_add_int temp_little "$v" ;;
+			center-thermal)    json_add_int temp_center "$v" ;;
+		esac
+	done
+
+	json_add_string loadavg "$(cut -d' ' -f1-3 /proc/loadavg 2>/dev/null)"
+	json_add_string uptime "$(cut -d' ' -f1 /proc/uptime 2>/dev/null)"
+
+	json_dump
+}
+
+case "$1" in
+	list)
+		echo '{"status":{}}'
+		;;
+	call)
+		read -r _input
+		case "$2" in
+			status) get_status ;;
+		esac
+		;;
+esac

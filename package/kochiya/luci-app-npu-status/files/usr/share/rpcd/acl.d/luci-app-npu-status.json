@@ -1,0 +1,11 @@
+{
+	"luci-app-npu-status": {
+		"description": "Grant access to NPU / VPU status",
+		"read": {
+			"ubus": {
+				"npu_status": [ "status" ]
+			}
+		},
+		"write": {}
+	}
+}
